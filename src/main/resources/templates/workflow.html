@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Common Workflow Language Viewer - Name Here</title>
+    <link rel="stylesheet" type="text/css" href="/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:600" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet" />
+</head>
+<body>
+<div id="header">
+    <h1>Common Workflow Language Viewer</h1>
+</div>
+<div id="container">
+    <h2>Workflow: <span th:text="${workflow.label}">Workflow Name</span></h2>
+    <p th:text="${workflow.doc}">Workflow Doc</p>
+    <h2>Inputs</h2>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Format</th>
+            <th>Depth</th>
+        </tr>
+        <tr th:each="input : ${workflow.inputs}">
+            <td th:text="${input.value.label}">Label</td>
+            <td th:text="${input.value.description}">Description</td>
+            <td th:text="${input.value.format}">Format</td>
+            <td th:text="${input.value.depth}">Depth</td>
+        </tr>
+    </table>
+    <h2>Outputs</h2>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Format</th>
+            <th>Depth</th>
+        </tr>
+        <tr th:each="output : ${workflow.outputs}">
+            <td th:text="${output.value.label}">Label</td>
+            <td th:text="${output.value.description}">Description</td>
+            <td th:text="${output.value.format}">Format</td>
+            <td th:text="${output.value.depth}">Depth</td>
+        </tr>
+    </table>
+</div>
+<div id="footer">
+    Copyright here or links to <a href="http://commonwl.org">commonwl.org</a>, <a href="http://researchobject.org">researchobject.org</a> etc
+</div>
+</body>
+</html>

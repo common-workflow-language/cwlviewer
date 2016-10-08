@@ -1,0 +1,92 @@
+body {
+    font-family: 'Arial', sans-serif;
+}
+
+a {
+    text-decoration: none;
+}
+
+h2 {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 16px;
+    margin-top: 0;
+    margin-bottom: 3px;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table td, table th {
+    border: 1px solid #ddd;
+}
+
+.material-icons {
+    display: inline;
+    vertical-align: middle;
+    margin-right: 3px;
+}
+
+#header h1 {
+    text-align: center;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 30px;
+}
+
+#container {
+    margin: 0 auto;
+    padding: 15px;
+    width: 600px;
+    background-color: #f8f8f8;
+    border: 1px solid #e7e7e7;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+}
+
+.error {
+    font-size: 14px;
+    margin: 7px 5px 0;
+    padding: 5px;
+    background-color: #ffc4c5;
+    border: 1px solid #ff0000;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+}
+
+h2#formTitle {
+    margin-left: 10px;
+}
+
+#add input[type=text] {
+    padding-left: 5px;
+    border: 1px solid #bebebe;
+    width: 380px;
+    height: 24px;
+    margin-right: 5px;
+}
+
+#add button {
+    width: 140px;
+    height: 30px;
+}
+
+#add #githubLogo {
+    vertical-align: -22px;
+    margin: 10px;
+}
+
+#footer {
+    text-align: center;
+    font-style: italic;
+    margin-top: 15px;
+}
+
+#footer a {
+    color: #939393;
+}
+
+#footer a:hover {
+    color: #494949;
+}
