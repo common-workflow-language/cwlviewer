@@ -3,8 +3,6 @@ package org.researchobject.services;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.taverna.cwl.utilities.CWLUtil;
-import org.apache.taverna.cwl.utilities.PortDetail;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.researchobject.domain.Workflow;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +12,6 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class WorkflowFactory {
@@ -65,6 +62,9 @@ public class WorkflowFactory {
                     }
                 }
 
+                // Set up CWL utility to collect the documents
+                CWLUtil cwlUtil = new CWLUtil();
+
                 // Loop through the cwl files
                 for (RepositoryContents workflowFile : workflowFiles) {
 
@@ -73,37 +73,18 @@ public class WorkflowFactory {
                     String fileContentBase64 = currentWorkflow.get(0).getContent();
                     String fileContent = new String(Base64.decodeBase64(fileContentBase64.getBytes()));
 
-                    // Parse as yaml
+                    // Parse yaml to JsonNode
                     Yaml reader = new Yaml();
                     ObjectMapper mapper = new ObjectMapper();
                     JsonNode cwlFile = mapper.valueToTree(reader.load(fileContent));
-                    CWLUtil cwlUtil = new CWLUtil(cwlFile);
 
-                    // Find the first file which is a workflow
-                    if (cwlFile.get("class").asText().equals("Workflow")) {
-
-                        // Get label, description and details of inputs/outputs
-                        PortDetail workflowDetails = new PortDetail();
-                        cwlUtil.extractLabel(cwlFile, workflowDetails);
-                        cwlUtil.extractDescription(cwlFile, workflowDetails);
-                        Map<String, PortDetail> inputs = cwlUtil.processInputDetails();
-                        Map<String, PortDetail> outputs = cwlUtil.processOutputDetails();
-
-                        // If the label for the workflow is null, use the filename
-                        if (workflowDetails.getLabel() == null) {
-                            workflowDetails.setLabel(workflowFile.getName());
-                        }
-
-                        // If the description of the workflow is null, use a default
-                        if (workflowDetails.getDescription() == null) {
-                            workflowDetails.setDescription("Missing workflow description");
-                        }
-
-                        // Construct new workflow from the details
-                        return new Workflow(workflowDetails.getLabel(), workflowDetails.getDescription(), inputs, outputs);
-                    }
+                    // Add document to those being considered
+                    cwlUtil.addDoc(cwlFile);
 
                 }
+
+                return cwlUtil.getWorkflow();
+
             } catch (IOException ex) {
                 System.out.println("API Error");
             }
