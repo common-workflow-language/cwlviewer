@@ -160,7 +160,7 @@ public class CWLUtil {
 
                 // Type is only for inputs
                 if (inputOutput.has("type")) {
-                    details.setDoc(extractTypes(inputOutput.get("type")));
+                    details.setType(extractTypes(inputOutput.get("type")));
                 }
             }
 
