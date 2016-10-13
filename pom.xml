@@ -53,11 +53,6 @@
 			<version>1.7</version>
 		</dependency>
         <dependency>
-            <groupId>org.apache.taverna.commonactivities</groupId>
-            <artifactId>taverna-cwl-utilities</artifactId>
-            <version>2.1.1-incubating-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.taverna.language</groupId>
             <artifactId>taverna-robundle</artifactId>
             <version>0.15.1-incubating</version>
