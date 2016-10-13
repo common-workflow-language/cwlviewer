@@ -78,8 +78,8 @@ public class WorkflowFormValidator implements Validator {
                         e.rejectValue("githubURL", "githubURL.missingWorkflow");
                     }
                 } catch (IOException ex) {
-                    // Given repository/branch/path does not exist
-                    e.rejectValue("githubURL", "githubURL.repositoryError");
+                    // Given repository/branch/path does not exist or API error occured
+                    e.rejectValue("githubURL", "githubURL.apiError");
                 }
             } else {
                 // The Github URL is not valid

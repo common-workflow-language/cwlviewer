@@ -4,6 +4,7 @@ import org.eclipse.egit.github.core.RepositoryContents;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.ContentsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +20,6 @@ import java.util.regex.Pattern;
 @Service
 public class GitHubUtil {
 
-    // Github configuration
-    @Value("${githubAPI.authentication}")
-    private boolean AUTH_ENABLED;
-    @Value("${githubAPI.oauthToken}")
-    private String AUTH_TOKEN;
-
     // Github API services
     private final ContentsService contentsService;
 
@@ -32,10 +27,13 @@ public class GitHubUtil {
     private final String GITHUB_DIR_REGEX = "^https:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree\\/([^/]+)\\/(.*))?$";
     private final Pattern githubDirPattern = Pattern.compile(GITHUB_DIR_REGEX);
 
-    public GitHubUtil() {
+    @Autowired
+    public GitHubUtil(@Value("${githubAPI.authentication}") boolean authEnabled,
+                      @Value("${githubAPI.username}") String username,
+                      @Value("${githubAPI.password}") String password) {
         GitHubClient client = new GitHubClient();
-        if (AUTH_ENABLED) {
-            client.setOAuth2Token(AUTH_TOKEN);
+        if (authEnabled) {
+            client.setCredentials(username, password);
         }
         this.contentsService = new ContentsService(client);
     }
