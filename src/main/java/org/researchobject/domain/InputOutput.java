@@ -1,5 +1,3 @@
-package org.researchobject.domain;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +16,8 @@ package org.researchobject.domain;
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package org.researchobject.domain;
 
 /**
  * Represents the input or output of a workflow/tool

@@ -1,5 +1,3 @@
-package org.researchobject.domain;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,7 +17,7 @@ package org.researchobject.domain;
  * under the License.
  */
 
-import org.apache.taverna.cwl.utilities.PortDetail;
+package org.researchobject.domain;
 
 import java.util.Map;
 
