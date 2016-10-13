@@ -5,8 +5,6 @@ This is a work-in-progress [Spring Boot](http://projects.spring.io/spring-boot/)
 
 ## Building and Running
 
-This application requires [taverna-cwl-utilities](https://github.com/apache/incubator-taverna-common-activities/tree/cwl-browse/taverna-cwl-utilities) to be installed in a local maven repository
-
 Spring Boot uses an embedded HTTP server. The Spring Boot Maven plugin includes a run goal which can be used to quickly compile and run it:
 
 ```
