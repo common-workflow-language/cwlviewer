@@ -18,31 +18,29 @@
     <h2>Inputs</h2>
     <table>
         <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Format</th>
-            <th>Depth</th>
+            <th>ID</th>
+            <th>Label</th>
+            <th>Doc</th>
+            <th>Type</th>
         </tr>
         <tr th:each="input : ${workflow.inputs}">
+            <td th:text="${input.key}">ID</td>
             <td th:text="${input.value.label}">Label</td>
-            <td th:text="${input.value.description}">Description</td>
-            <td th:text="${input.value.format}">Format</td>
-            <td th:text="${input.value.depth}">Depth</td>
+            <td th:text="${input.value.doc}">Description</td>
+            <td th:text="${input.value.type}">Type</td>
         </tr>
     </table>
     <h2>Outputs</h2>
     <table>
         <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Format</th>
-            <th>Depth</th>
+            <th>ID</th>
+            <th>Label</th>
+            <th>Doc</th>
         </tr>
         <tr th:each="output : ${workflow.outputs}">
+            <td th:text="${output.key}">ID</td>
             <td th:text="${output.value.label}">Label</td>
-            <td th:text="${output.value.description}">Description</td>
-            <td th:text="${output.value.format}">Format</td>
-            <td th:text="${output.value.depth}">Depth</td>
+            <td th:text="${output.value.doc}">Description</td>
         </tr>
     </table>
 </div>

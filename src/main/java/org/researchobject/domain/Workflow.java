@@ -11,10 +11,10 @@ public class Workflow {
 
     private String label;
     private String doc;
-    private Map<String, PortDetail> inputs;
-    private Map<String, PortDetail> outputs;
+    private Map<String, InputOutput> inputs;
+    private Map<String, InputOutput> outputs;
 
-    public Workflow(String label, String doc, Map<String, PortDetail> inputs, Map<String, PortDetail> outputs) {
+    public Workflow(String label, String doc, Map<String, InputOutput> inputs, Map<String, InputOutput> outputs) {
         this.label = label;
         this.doc = doc;
         this.inputs = inputs;
@@ -37,19 +37,19 @@ public class Workflow {
         this.doc = doc;
     }
 
-    public Map<String, PortDetail> getInputs() {
+    public Map<String, InputOutput> getInputs() {
         return inputs;
     }
 
-    public void setInputs(Map<String, PortDetail> inputs) {
+    public void setInputs(Map<String, InputOutput> inputs) {
         this.inputs = inputs;
     }
 
-    public Map<String, PortDetail> getOutputs() {
+    public Map<String, InputOutput> getOutputs() {
         return outputs;
     }
 
-    public void setOutputs(Map<String, PortDetail> outputs) {
+    public void setOutputs(Map<String, InputOutput> outputs) {
         this.outputs = outputs;
     }
 }
