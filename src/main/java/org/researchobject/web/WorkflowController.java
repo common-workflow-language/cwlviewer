@@ -1,5 +1,3 @@
-package org.researchobject.web;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +16,8 @@ package org.researchobject.web;
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package org.researchobject.web;
 
 import org.researchobject.domain.Workflow;
 import org.researchobject.domain.WorkflowForm;
