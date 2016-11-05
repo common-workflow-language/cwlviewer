@@ -22,6 +22,9 @@ package org.researchobject.services;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.taverna.robundle.Bundle;
+import org.apache.taverna.robundle.Bundles;
+import org.apache.taverna.robundle.manifest.Agent;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.researchobject.domain.Workflow;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,10 @@ import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,6 +91,36 @@ public class WorkflowFactory {
                 // Set up CWL utility to collect the documents
                 CWLUtil cwlUtil = new CWLUtil();
 
+                // Create a new RO bundle
+                Bundle bundle = Bundles.createBundle();
+
+                // Simplified attribution
+                try {
+
+                    // Attribution for this tool
+                    Agent githubCreator = new Agent("CWL Viewer");
+                    githubCreator.setUri(new URI("http://view.commonwl.org"));
+                    bundle.getManifest().setCreatedBy(githubCreator);
+
+                    // ID is the github URL
+                    bundle.getManifest().setId(new URI(githubURL));
+
+                    // Github author attribution
+                    // TODO: way to add all the contributors somehow
+                    List<Agent> authorList = new ArrayList<>(1);
+                    Agent author = new Agent(owner);
+                    author.setUri(new URI("https://github.com/" + owner));
+                    authorList.add(author);
+                    bundle.getManifest().setAuthoredBy(authorList);
+
+                } catch (URISyntaxException ex) {
+                    System.out.println("Incorrect URI Syntax");
+                }
+
+                // Make a directory to store the files
+                Path bundleFiles = bundle.getRoot().resolve("workflow");
+                Files.createDirectory(bundleFiles);
+
                 // Loop through the cwl files
                 for (RepositoryContents workflowFile : workflowFiles) {
 
@@ -91,6 +128,11 @@ public class WorkflowFactory {
                     List<RepositoryContents> currentWorkflow = githubUtil.getContents(owner, repoName, branch, workflowFile.getPath());
                     String fileContentBase64 = currentWorkflow.get(0).getContent();
                     String fileContent = new String(Base64.decodeBase64(fileContentBase64.getBytes()));
+
+                    // Get an input port:
+                    Path newFilePort = bundleFiles.resolve(workflowFile.getName());
+                    Bundles.setStringValue(newFilePort, fileContent);
+                    bundle.getManifest().getAggregates();
 
                     // Parse yaml to JsonNode
                     Yaml reader = new Yaml();
@@ -101,6 +143,9 @@ public class WorkflowFactory {
                     cwlUtil.addDoc(cwlFile);
 
                 }
+
+                Path zip = Files.createTempFile("bundle", ".zip");
+                Bundles.closeAndSaveBundle(bundle, zip);
 
                 return cwlUtil.getWorkflow();
 
