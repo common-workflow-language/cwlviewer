@@ -19,15 +19,19 @@
 
 package org.researchobject.services;
 
+import org.apache.commons.io.IOUtils;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.ContentsService;
+import org.eclipse.egit.github.core.service.DataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -41,6 +45,7 @@ public class GitHubUtil {
 
     // Github API services
     private final ContentsService contentsService;
+    private final DataService dataService;
 
     // URL validation for directory links
     private final String GITHUB_DIR_REGEX = "^https:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree\\/([^/]+)\\/(.*))?$";
@@ -55,6 +60,7 @@ public class GitHubUtil {
             client.setCredentials(username, password);
         }
         this.contentsService = new ContentsService(client);
+        this.dataService = new DataService(client);
     }
 
     /**
@@ -62,7 +68,7 @@ public class GitHubUtil {
      * @param url The Github directory URL
      * @return A list with the groups of the regex match, [owner, repo, branch, path]
      */
-    List<String> detailsFromDirURL(String url) {
+    public List<String> detailsFromDirURL(String url) {
         List<String> matchGroups = new ArrayList<String>(4);
         Matcher m = githubDirPattern.matcher(url);
         if (m.find()) {
@@ -80,8 +86,37 @@ public class GitHubUtil {
      * @param branch The branch of the repository to view the file(s)
      * @param path The path within the repository
      * @return A list of details for the file(s) or false if there is an API error
+     * @throws IOException Any API errors which may have occured
      */
-    List<RepositoryContents> getContents(String owner, String repoName, String branch, String path) throws IOException {
+    public List<RepositoryContents> getContents(String owner, String repoName, String branch, String path) throws IOException {
         return contentsService.getContents(new RepositoryId(owner, repoName), path, branch);
+    }
+
+    /**
+     * Download a single file from a Github repository
+     * @param owner The owner of the Github repository
+     * @param repoName The Github repository
+     * @param branch The branch of the repository to view the file(s)
+     * @param path The path within the repository
+     * @return A string with the contents of the file
+     * @throws IOException Any API errors which may have occured
+     */
+    public String downloadFile(String owner, String repoName, String branch, String path) throws IOException {
+
+        // Default to the master branch
+        if (branch == null || branch.isEmpty()) {
+            // TODO: get default branch name for this rather than assuming master
+            branch = "master";
+        }
+
+        // Download the file and return the contents
+        URL downloadURL = new URL("https://raw.githubusercontent.com/" + owner + "/" + repoName + "/" + branch + "/" + path);
+        InputStream download = downloadURL.openStream();
+        try {
+            return IOUtils.toString(download);
+        } finally {
+            IOUtils.closeQuietly(download);
+        }
+
     }
 }
