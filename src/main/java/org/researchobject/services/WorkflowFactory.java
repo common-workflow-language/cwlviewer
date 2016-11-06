@@ -49,14 +49,20 @@ public class WorkflowFactory {
     private final GitHubUtil githubUtil;
     private final int singleFileSizeLimit;
     private final int totalFileSizeLimit;
+    private final String applicationName;
+    private final String applicationURL;
 
     @Autowired
     public WorkflowFactory(GitHubUtil githubUtil,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
-                           @Value("${totalFileSizeLimit}") int totalFileSizeLimit) {
+                           @Value("${totalFileSizeLimit}") int totalFileSizeLimit,
+                           @Value("${applicationName}") String applicationName,
+                           @Value("${applicationURL}") String applicationURL) {
         this.githubUtil = githubUtil;
         this.singleFileSizeLimit = singleFileSizeLimit;
         this.totalFileSizeLimit = totalFileSizeLimit;
+        this.applicationName = applicationName;
+        this.applicationURL = applicationURL;
     }
 
     /**
@@ -101,8 +107,8 @@ public class WorkflowFactory {
                 try {
 
                     // Attribution for this tool
-                    Agent githubCreator = new Agent("CWL Viewer");
-                    githubCreator.setUri(new URI("http://view.commonwl.org"));
+                    Agent githubCreator = new Agent(applicationName);
+                    githubCreator.setUri(new URI(applicationURL));
                     manifest.setCreatedBy(githubCreator);
 
                     // ID is the github URL
@@ -132,7 +138,6 @@ public class WorkflowFactory {
                     if (repoContent.getType().equals("file")) {
 
                         // Check file size before downloading
-                        // TODO: Set total file size limit on the directory
                         if (repoContent.getSize() > singleFileSizeLimit) {
                             throw new IOException("Files within the Github directory can not be above " + singleFileSizeLimit + "B in size");
                         }
