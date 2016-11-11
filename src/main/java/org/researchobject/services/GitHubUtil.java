@@ -22,9 +22,11 @@ package org.researchobject.services;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.eclipse.egit.github.core.RepositoryId;
+import org.eclipse.egit.github.core.User;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.ContentsService;
 import org.eclipse.egit.github.core.service.DataService;
+import org.eclipse.egit.github.core.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -45,7 +47,7 @@ public class GitHubUtil {
 
     // Github API services
     private final ContentsService contentsService;
-    private final DataService dataService;
+    private final UserService userService;
 
     // URL validation for directory links
     private final String GITHUB_DIR_REGEX = "^https:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree\\/([^/]+)\\/(.*))?$";
@@ -60,7 +62,7 @@ public class GitHubUtil {
             client.setCredentials(username, password);
         }
         this.contentsService = new ContentsService(client);
-        this.dataService = new DataService(client);
+        this.userService = new UserService(client);
     }
 
     /**
@@ -90,6 +92,16 @@ public class GitHubUtil {
      */
     public List<RepositoryContents> getContents(String owner, String repoName, String branch, String path) throws IOException {
         return contentsService.getContents(new RepositoryId(owner, repoName), path, branch);
+    }
+
+    /**
+     * Get the details of a user from the Github API
+     * @param username The username of the user we want to get data about
+     * @return A user object containing the API information
+     * @throws IOException Any API errors which may have occured
+     */
+    public User getUser(String username) throws IOException {
+        return userService.getUser(username);
     }
 
     /**

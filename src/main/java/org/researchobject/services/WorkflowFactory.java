@@ -28,6 +28,7 @@ import org.apache.taverna.robundle.manifest.Agent;
 import org.apache.taverna.robundle.manifest.Manifest;
 import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.eclipse.egit.github.core.RepositoryContents;
+import org.eclipse.egit.github.core.User;
 import org.researchobject.domain.Workflow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +42,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class WorkflowFactory {
@@ -109,16 +112,26 @@ public class WorkflowFactory {
                 try {
 
                     // Attribution for this tool
-                    Agent githubCreator = new Agent(applicationName);
-                    githubCreator.setUri(new URI(applicationURL));
-                    manifest.setCreatedBy(githubCreator);
+                    Agent cwlViewer = new Agent(applicationName);
+                    cwlViewer.setUri(new URI(applicationURL));
+                    manifest.setCreatedBy(cwlViewer);
 
                     // Github author attribution
                     // TODO: way to add all the contributors somehow
                     // TODO: set the aggregates details according to the github information
+                    User authorDetails = githubUtil.getUser(owner);
+
                     List<Agent> authorList = new ArrayList<>(1);
-                    Agent author = new Agent(owner);
-                    author.setUri(new URI("https://github.com/" + owner));
+                    Agent author = new Agent(authorDetails.getName());
+                    author.setUri(new URI(authorDetails.getHtmlUrl()));
+
+                    // This tool supports putting your ORCID in the blog field of github as a URL
+                    // eg http://orcid.org/0000-0000-0000-0000
+                    String authorBlog = authorDetails.getBlog();
+                    if (authorBlog.startsWith("http://orcid.org/")) {
+                        author.setOrcid(new URI(authorBlog));
+                    }
+
                     authorList.add(author);
                     manifest.setAuthoredBy(authorList);
 
