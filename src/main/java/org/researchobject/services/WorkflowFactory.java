@@ -23,8 +23,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
+import org.apache.taverna.robundle.fs.BundlePath;
 import org.apache.taverna.robundle.manifest.Agent;
 import org.apache.taverna.robundle.manifest.Manifest;
+import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.researchobject.domain.Workflow;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,9 +113,6 @@ public class WorkflowFactory {
                     githubCreator.setUri(new URI(applicationURL));
                     manifest.setCreatedBy(githubCreator);
 
-                    // ID is the github URL
-                    manifest.setId(new URI(githubURL));
-
                     // Github author attribution
                     // TODO: way to add all the contributors somehow
                     // TODO: set the aggregates details according to the github information
@@ -149,6 +148,9 @@ public class WorkflowFactory {
                         Path newFilePort = bundleFiles.resolve(repoContent.getName());
                         Bundles.setStringValue(newFilePort, fileContent);
 
+                        // Get the aggregation in the manifest for this file
+                        PathMetadata fileManifest = manifest.getAggregation(bundleFiles.resolve(repoContent.getName()));
+
                         // Get the file extension
                         int eIndex = repoContent.getName().lastIndexOf('.') + 1;
                         if (eIndex > 0) {
@@ -156,6 +158,9 @@ public class WorkflowFactory {
 
                             // If this is a cwl file which needs to be parsed
                             if (extension.equals("cwl")) {
+                                // Set mediatype to something suited to YAML
+                                fileManifest.setMediatype("text/x-yaml");
+
                                 // Parse yaml to JsonNode
                                 Yaml reader = new Yaml();
                                 ObjectMapper mapper = new ObjectMapper();

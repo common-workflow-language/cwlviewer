@@ -110,7 +110,8 @@ public class GitHubUtil {
         }
 
         // Download the file and return the contents
-        URL downloadURL = new URL("https://raw.githubusercontent.com/" + owner + "/" + repoName + "/" + branch + "/" + path);
+        // rawgit.com used to download individual files from git with the correct media type
+        URL downloadURL = new URL("https://cdn.rawgit.com/" + owner + "/" + repoName + "/" + branch + "/" + path);
         InputStream download = downloadURL.openStream();
         try {
             return IOUtils.toString(download);
