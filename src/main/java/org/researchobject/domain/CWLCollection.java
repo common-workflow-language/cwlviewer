@@ -17,49 +17,114 @@
  * under the License.
  */
 
-package org.researchobject.services;
+package org.researchobject.domain;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import org.researchobject.domain.InputOutput;
-import org.researchobject.domain.Workflow;
+import org.eclipse.egit.github.core.RepositoryContents;
+import org.researchobject.services.GitHubUtil;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
  * for display and visualisation
  */
-public class CWLUtil {
+public class CWLCollection {
+
+    private GitHubUtil githubUtil;
+    private GithubDetails githubInfo;
+    private String githubBasePath;
 
     private List<JsonNode> cwlDocs = new ArrayList<>();
     private int mainWorkflowIndex = -1;
 
     /**
+     * Creates a new collection of CWL files from a Github repository
+     * @param githubInfo The information necessary to access the Github directory associated with the RO
+     * @throws IOException Any API errors which may have occurred
+     */
+    public CWLCollection(GitHubUtil githubUtil, GithubDetails githubInfo, String githubBasePath) throws IOException {
+        this.githubInfo = githubInfo;
+        this.githubBasePath = githubBasePath;
+        this.githubUtil = githubUtil;
+
+        // Add any CWL files from the Github repo to this collection
+        List<RepositoryContents> repoContents = githubUtil.getContents(githubInfo, githubBasePath);
+        addDocs(repoContents);
+    }
+
+    /**
+     *
+     * @param repoContents
+     */
+    private void addDocs(List<RepositoryContents> repoContents) throws IOException {
+        // Loop through repo contents and add them
+        for (RepositoryContents repoContent : repoContents) {
+
+            // Parse subdirectories if they exist
+            if (repoContent.getType().equals("dir")) {
+
+                // Get the contents of the subdirectory
+                List<RepositoryContents> subdirectory = githubUtil.getContents(githubInfo, repoContent.getPath());
+
+                // Add the files in the subdirectory to this new folder
+                addDocs(subdirectory);
+
+                // Otherwise this is a file so add to the bundle
+            } else if (repoContent.getType().equals("file")) {
+
+                // Get the file extension
+                int eIndex = repoContent.getName().lastIndexOf('.') + 1;
+                if (eIndex > 0) {
+                    String extension = repoContent.getName().substring(eIndex);
+
+                    // If this is a cwl file which needs to be parsed
+                    if (extension.equals("cwl")) {
+
+                        // Get the content of this file from Github
+                        String fileContent = githubUtil.downloadFile(githubInfo, repoContent.getPath());
+
+                        // Parse yaml to JsonNode
+                        Yaml reader = new Yaml();
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode cwlFile = mapper.valueToTree(reader.load(fileContent));
+
+                        // Add document to those being considered
+                        addDoc(cwlFile);
+                    }
+                }
+
+            }
+        }
+    }
+
+    /**
      * Adds a document to the group of those being parsed
      * @param newDoc The document to be added
      */
-    public void addDoc(JsonNode newDoc) {
-        if (newDoc != null) {
-            // Make sure that this document is only one object and not multiple under a $graph directive
-            if (newDoc.has("$graph")) {
-                // Add each of the sub documents
-                for (JsonNode jsonNode : newDoc.get("$graph")) {
-                    cwlDocs.add(jsonNode);
-                }
-            } else {
-                // Otherwise just add the document itself
-                cwlDocs.add(newDoc);
+    private void addDoc(JsonNode newDoc) {
+        // Make sure that this document is only one object and not multiple under a $graph directive
+        if (newDoc.has("$graph")) {
+            // Add each of the sub documents
+            for (JsonNode jsonNode : newDoc.get("$graph")) {
+                cwlDocs.add(jsonNode);
             }
+        } else {
+            // Otherwise just add the document itself
+            cwlDocs.add(newDoc);
         }
     }
 
     /**
      * Find the main workflow object in the group of files being considered
      */
-    public void findMainWorkflow() {
+    private void findMainWorkflow() {
         // Find the first workflow we come across
         // TODO: Consider relationship between run: parameters to better discover this
         for (int i=0; i < cwlDocs.size(); i++) {

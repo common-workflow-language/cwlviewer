@@ -25,8 +25,8 @@ import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.User;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.ContentsService;
-import org.eclipse.egit.github.core.service.DataService;
 import org.eclipse.egit.github.core.service.UserService;
+import org.researchobject.domain.GithubDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -83,15 +83,14 @@ public class GitHubUtil {
 
     /**
      * Get contents of a Github path from the API
-     * @param owner The owner of the Github repository
-     * @param repoName The Github repository
-     * @param branch The branch of the repository to view the file(s)
-     * @param path The path within the repository
+     * @param githubInfo The information to access the repository
+     * @param dirPath The path to a subfolder within the repository
      * @return A list of details for the file(s) or false if there is an API error
      * @throws IOException Any API errors which may have occured
      */
-    public List<RepositoryContents> getContents(String owner, String repoName, String branch, String path) throws IOException {
-        return contentsService.getContents(new RepositoryId(owner, repoName), path, branch);
+    public List<RepositoryContents> getContents(GithubDetails githubInfo, String dirPath) throws IOException {
+        return contentsService.getContents(new RepositoryId(githubInfo.getOwner(), githubInfo.getRepoName()),
+                dirPath, githubInfo.getBranch());
     }
 
     /**
@@ -106,24 +105,16 @@ public class GitHubUtil {
 
     /**
      * Download a single file from a Github repository
-     * @param owner The owner of the Github repository
-     * @param repoName The Github repository
-     * @param branch The branch of the repository to view the file(s)
-     * @param path The path within the repository
+     * @param githubInfo The information to access the repository
+     * @param filePath The path to the file within the repository
      * @return A string with the contents of the file
      * @throws IOException Any API errors which may have occured
      */
-    public String downloadFile(String owner, String repoName, String branch, String path) throws IOException {
-
-        // Default to the master branch
-        if (branch == null || branch.isEmpty()) {
-            // TODO: get default branch name for this rather than assuming master
-            branch = "master";
-        }
-
+    public String downloadFile(GithubDetails githubInfo, String filePath) throws IOException {
         // Download the file and return the contents
         // rawgit.com used to download individual files from git with the correct media type
-        URL downloadURL = new URL("https://cdn.rawgit.com/" + owner + "/" + repoName + "/" + branch + "/" + path);
+        URL downloadURL = new URL("https://cdn.rawgit.com/" + githubInfo.getOwner() + "/" + githubInfo.getRepoName()
+                + "/" + githubInfo.getBranch() + "/" + filePath);
         InputStream download = downloadURL.openStream();
         try {
             return IOUtils.toString(download);

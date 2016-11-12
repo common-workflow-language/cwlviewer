@@ -19,31 +19,16 @@
 
 package org.researchobject.services;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.taverna.robundle.Bundle;
-import org.apache.taverna.robundle.Bundles;
-import org.apache.taverna.robundle.fs.BundlePath;
-import org.apache.taverna.robundle.manifest.Agent;
-import org.apache.taverna.robundle.manifest.Manifest;
-import org.apache.taverna.robundle.manifest.PathMetadata;
-import org.eclipse.egit.github.core.RepositoryContents;
-import org.eclipse.egit.github.core.User;
+import org.researchobject.domain.CWLCollection;
+import org.researchobject.domain.GithubDetails;
+import org.researchobject.domain.WorkflowRO;
 import org.researchobject.domain.Workflow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 public class WorkflowFactory {
@@ -54,20 +39,14 @@ public class WorkflowFactory {
     private final GitHubUtil githubUtil;
     private final int singleFileSizeLimit;
     private final int totalFileSizeLimit;
-    private final String applicationName;
-    private final String applicationURL;
 
     @Autowired
     public WorkflowFactory(GitHubUtil githubUtil,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
-                           @Value("${totalFileSizeLimit}") int totalFileSizeLimit,
-                           @Value("${applicationName}") String applicationName,
-                           @Value("${applicationURL}") String applicationURL) {
+                           @Value("${totalFileSizeLimit}") int totalFileSizeLimit) {
         this.githubUtil = githubUtil;
         this.singleFileSizeLimit = singleFileSizeLimit;
         this.totalFileSizeLimit = totalFileSizeLimit;
-        this.applicationName = applicationName;
-        this.applicationURL = applicationURL;
     }
 
     /**
@@ -82,115 +61,22 @@ public class WorkflowFactory {
         // If the URL is valid and details could be extracted
         if (directoryDetails.size() > 0) {
 
-            // Store returned details
-            final String owner = directoryDetails.get(0);
-            final String repoName = directoryDetails.get(1);
-            final String branch = directoryDetails.get(2);
-            final String path = directoryDetails.get(3);
+            // Store details from URL
+            GithubDetails githubInfo = new GithubDetails(directoryDetails.get(0),
+                    directoryDetails.get(1), directoryDetails.get(2));
+            String githubBasePath = directoryDetails.get(3);
 
-            // Get contents of the repo
             try {
-                List<RepositoryContents> repoContents = githubUtil.getContents(owner, repoName, branch, path);
-
-                // Check total file size
-                int totalFileSize = 0;
-                for (RepositoryContents repoContent : repoContents) {
-                    totalFileSize += repoContent.getSize();
-                }
-                if (totalFileSize > totalFileSizeLimit) {
-                    throw new IOException("Files within the Github directory can not be above " + totalFileSizeLimit + "B in size");
-                }
-
                 // Set up CWL utility to collect the documents
-                CWLUtil cwlUtil = new CWLUtil();
+                CWLCollection cwlFiles = new CWLCollection(githubUtil, githubInfo, githubBasePath);
 
-                // Create a new RO bundle
-                Bundle bundle = Bundles.createBundle();
-                Manifest manifest = bundle.getManifest();
-
-                // Simplified attribution for RO bundle
-                try {
-
-                    // Attribution for this tool
-                    Agent cwlViewer = new Agent(applicationName);
-                    cwlViewer.setUri(new URI(applicationURL));
-                    manifest.setCreatedBy(cwlViewer);
-
-                    // Github author attribution
-                    // TODO: way to add all the contributors somehow
-                    // TODO: set the aggregates details according to the github information
-                    User authorDetails = githubUtil.getUser(owner);
-
-                    List<Agent> authorList = new ArrayList<>(1);
-                    Agent author = new Agent(authorDetails.getName());
-                    author.setUri(new URI(authorDetails.getHtmlUrl()));
-
-                    // This tool supports putting your ORCID in the blog field of github as a URL
-                    // eg http://orcid.org/0000-0000-0000-0000
-                    String authorBlog = authorDetails.getBlog();
-                    if (authorBlog.startsWith("http://orcid.org/")) {
-                        author.setOrcid(new URI(authorBlog));
-                    }
-
-                    authorList.add(author);
-                    manifest.setAuthoredBy(authorList);
-
-                } catch (URISyntaxException ex) {
-                    System.out.println("Incorrect URI Syntax");
-                }
-
-                // Make a directory in the RO bundle to store the files
-                Path bundleFiles = bundle.getRoot().resolve("workflow");
-                Files.createDirectory(bundleFiles);
-
-                // Loop through repo contents
-                for (RepositoryContents repoContent : repoContents) {
-
-                    // TODO: Go into subdirectories
-                    if (repoContent.getType().equals("file")) {
-
-                        // Check file size before downloading
-                        if (repoContent.getSize() > singleFileSizeLimit) {
-                            throw new IOException("Files within the Github directory can not be above " + singleFileSizeLimit + "B in size");
-                        }
-
-                        // Get the content of this file from Github
-                        String fileContent = githubUtil.downloadFile(owner, repoName, branch, repoContent.getPath());
-
-                        // Save file to research object bundle
-                        Path newFilePort = bundleFiles.resolve(repoContent.getName());
-                        Bundles.setStringValue(newFilePort, fileContent);
-
-                        // Get the aggregation in the manifest for this file
-                        PathMetadata fileManifest = manifest.getAggregation(bundleFiles.resolve(repoContent.getName()));
-
-                        // Get the file extension
-                        int eIndex = repoContent.getName().lastIndexOf('.') + 1;
-                        if (eIndex > 0) {
-                            String extension = repoContent.getName().substring(eIndex);
-
-                            // If this is a cwl file which needs to be parsed
-                            if (extension.equals("cwl")) {
-                                // Set mediatype to something suited to YAML
-                                fileManifest.setMediatype("text/x-yaml");
-
-                                // Parse yaml to JsonNode
-                                Yaml reader = new Yaml();
-                                ObjectMapper mapper = new ObjectMapper();
-                                JsonNode cwlFile = mapper.valueToTree(reader.load(fileContent));
-
-                                // Add document to those being considered
-                                cwlUtil.addDoc(cwlFile);
-                            }
-                        }
-                    }
-                }
+                // Create a new research object bundle from Github details
+                WorkflowRO ROBundle = new WorkflowRO(githubUtil, githubInfo, githubBasePath);
 
                 // Save the Research Object Bundle
-                Path zip = Files.createTempFile("bundle", ".zip");
-                Bundles.closeAndSaveBundle(bundle, zip);
+                ROBundle.saveToTempFile();
 
-                return cwlUtil.getWorkflow();
+                return cwlFiles.getWorkflow();
 
             } catch (IOException ex) {
                 System.out.println("Error: " + ex.getMessage());
@@ -201,4 +87,24 @@ public class WorkflowFactory {
 
         return null;
     }
+
+    /*
+        // Check total file size
+        int totalFileSize = 0;
+        for (RepositoryContents repoContent : repoContents) {
+            totalFileSize += repoContent.getSize();
+        }
+        if (totalFileSize > totalFileSizeLimit) {
+            throw new IOException("Files within the Github directory can not be above "
+                                  + totalFileSizeLimit + "B in size");
+        }
+    */
+
+
+    /*
+        // Check file size before downloading
+        if (file.getSize() > singleFileSizeLimit) {
+            throw new IOException("Files within the Github directory can not be above " + singleFileSizeLimit + "B in size");
+        }
+    */
 }

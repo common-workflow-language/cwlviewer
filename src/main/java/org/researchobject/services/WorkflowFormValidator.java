@@ -20,6 +20,7 @@
 package org.researchobject.services;
 
 import org.eclipse.egit.github.core.RepositoryContents;
+import org.researchobject.domain.GithubDetails;
 import org.researchobject.domain.WorkflowForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -72,14 +73,13 @@ public class WorkflowFormValidator implements Validator {
             if (directoryDetails.size() > 0) {
 
                 // Store returned details
-                final String owner = directoryDetails.get(0);
-                final String repoName = directoryDetails.get(1);
-                final String branch = directoryDetails.get(2);
-                final String path = directoryDetails.get(3);
+                final GithubDetails githubInfo = new GithubDetails(directoryDetails.get(0),
+                        directoryDetails.get(1), directoryDetails.get(2));
+                String githubBasePath = directoryDetails.get(3);
 
                 // Check the repository exists and get content to ensure that branch/path exist
                 try {
-                    List<RepositoryContents> repoContents = githubUtil.getContents(owner, repoName, branch, path);
+                    List<RepositoryContents> repoContents = githubUtil.getContents(githubInfo, githubBasePath);
 
                     // Check that there is at least 1 .cwl file
                     boolean foundCWL = false;
