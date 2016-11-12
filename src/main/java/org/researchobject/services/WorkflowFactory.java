@@ -76,6 +76,7 @@ public class WorkflowFactory {
                 // Save the Research Object Bundle
                 ROBundle.saveToTempFile();
 
+                // Return the model of the workflow
                 return cwlFiles.getWorkflow();
 
             } catch (IOException ex) {

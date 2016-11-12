@@ -60,8 +60,8 @@ public class CWLCollection {
     }
 
     /**
-     *
-     * @param repoContents
+     * Add the CWL documents from a Github repository
+     * @param repoContents The contents of the Github base directory
      */
     private void addDocs(List<RepositoryContents> repoContents) throws IOException {
         // Loop through repo contents and add them
