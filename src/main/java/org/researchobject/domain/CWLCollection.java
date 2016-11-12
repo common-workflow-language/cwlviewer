@@ -39,7 +39,6 @@ public class CWLCollection {
 
     private GitHubUtil githubUtil;
     private GithubDetails githubInfo;
-    private String githubBasePath;
 
     private List<JsonNode> cwlDocs = new ArrayList<>();
     private int mainWorkflowIndex = -1;
@@ -51,7 +50,6 @@ public class CWLCollection {
      */
     public CWLCollection(GitHubUtil githubUtil, GithubDetails githubInfo, String githubBasePath) throws IOException {
         this.githubInfo = githubInfo;
-        this.githubBasePath = githubBasePath;
         this.githubUtil = githubUtil;
 
         // Add any CWL files from the Github repo to this collection
