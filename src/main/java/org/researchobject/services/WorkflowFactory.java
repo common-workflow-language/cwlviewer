@@ -29,26 +29,22 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.List;
 
+import static org.apache.jena.sparql.vocabulary.DOAP.repository;
+
 @Service
 public class WorkflowFactory {
 
-    /**
-     * Github API service
-     */
     private final GitHubService githubService;
     private final ROBundleFactory ROBundleFactory;
-    private final int singleFileSizeLimit;
-    private final int totalFileSizeLimit;
+    private final WorkflowRepository workflowRepository;
 
     @Autowired
     public WorkflowFactory(GitHubService githubService,
                            ROBundleFactory ROBundleFactory,
-                           @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
-                           @Value("${totalFileSizeLimit}") int totalFileSizeLimit) {
+                           WorkflowRepository workflowRepository) {
         this.githubService = githubService;
         this.ROBundleFactory = ROBundleFactory;
-        this.singleFileSizeLimit = singleFileSizeLimit;
-        this.totalFileSizeLimit = totalFileSizeLimit;
+        this.workflowRepository = workflowRepository;
     }
 
     /**
@@ -73,10 +69,18 @@ public class WorkflowFactory {
                 CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo, githubBasePath);
 
                 // Create a new research object bundle from Github details
+                // This is Async so cannot just call constructor, needs intermediate as per Spring framework
                 ROBundleFactory.workflowROFromGithub(githubService, githubInfo, githubBasePath);
 
-                // Return the model of the workflow
-                return cwlFiles.getWorkflow();
+                // Get the workflow model, setting retrievedFrom details
+                Workflow workflowModel = cwlFiles.getWorkflow();
+                workflowModel.setRetrievedFrom(githubInfo);
+
+                // Save to the MongoDB database
+                workflowRepository.save(workflowModel);
+
+                // Return this model to be displayed
+                return workflowModel;
 
             } catch (IOException ex) {
                 System.out.println("Error: " + ex.getMessage());

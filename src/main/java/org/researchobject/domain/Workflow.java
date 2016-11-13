@@ -19,6 +19,9 @@
 
 package org.researchobject.domain;
 
+import org.springframework.data.annotation.Id;
+
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -26,6 +29,15 @@ import java.util.Map;
  */
 public class Workflow {
 
+    // ID for database
+    @Id
+    private String id;
+
+    // Metadata
+    private GithubDetails retrievedFrom;
+    private Path roBundle;
+
+    // Contents of the workflow
     private String label;
     private String doc;
     private Map<String, CWLElement> inputs;
@@ -36,6 +48,19 @@ public class Workflow {
         this.doc = doc;
         this.inputs = inputs;
         this.outputs = outputs;
+    }
+
+    @Override
+    public String toString() {
+        return "Workflow{" +
+                "id='" + id + '\'' +
+                ", retrievedFrom=" + retrievedFrom +
+                ", roBundle=" + roBundle +
+                ", label='" + label + '\'' +
+                ", doc='" + doc + '\'' +
+                ", inputs=" + inputs +
+                ", outputs=" + outputs +
+                '}';
     }
 
     public String getLabel() {
@@ -68,5 +93,21 @@ public class Workflow {
 
     public void setOutputs(Map<String, CWLElement> outputs) {
         this.outputs = outputs;
+    }
+
+    public Path getRoBundle() {
+        return roBundle;
+    }
+
+    public void setRoBundle(Path roBundle) {
+        this.roBundle = roBundle;
+    }
+
+    public GithubDetails getRetrievedFrom() {
+        return retrievedFrom;
+    }
+
+    public void setRetrievedFrom(GithubDetails retrievedFrom) {
+        this.retrievedFrom = retrievedFrom;
     }
 }

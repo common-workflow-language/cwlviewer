@@ -17,19 +17,14 @@
  * under the License.
  */
 
-package org.researchobject;
+package org.researchobject.services;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-import org.springframework.scheduling.annotation.EnableAsync;
+import org.researchobject.domain.Workflow;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-@SpringBootApplication
-@EnableMongoRepositories
-@EnableAsync
-public class CwlViewerApplication {
+/**
+ * Stores workflow objects in the database
+ */
+public interface WorkflowRepository extends MongoRepository<Workflow, String> {
 
-	public static void main(String[] args) {
-		SpringApplication.run(CwlViewerApplication.class, args);
-	}
 }
