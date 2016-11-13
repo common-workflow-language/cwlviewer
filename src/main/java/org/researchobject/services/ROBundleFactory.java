@@ -21,6 +21,7 @@ package org.researchobject.services;
 
 import org.researchobject.domain.GithubDetails;
 import org.researchobject.domain.ROBundle;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,11 @@ import java.io.IOException;
 @EnableAsync
 public class ROBundleFactory {
 
+    @Value("${applicationName}")
+    private String applicationName;
+    @Value("${applicationURL}")
+    private String applicationURL;
+
     /**
      * Creates a new Workflow Research Object Bundle from a Github URL
      * and saves it to a file
@@ -50,7 +56,8 @@ public class ROBundleFactory {
                               GithubDetails githubInfo,
                               String githubBasePath) throws IOException {
         // TODO: Add the bundle link to the page when it is finished being created
-        ROBundle bundle = new ROBundle(githubService, githubInfo, githubBasePath);
+        ROBundle bundle = new ROBundle(githubService, githubInfo, githubBasePath,
+                applicationName, applicationURL);
         bundle.saveToTempFile();
     }
 }

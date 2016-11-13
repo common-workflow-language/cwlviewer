@@ -50,7 +50,8 @@ public class ROBundle {
      * @param githubInfo The information necessary to access the Github directory associated with the RO
      * @throws IOException Any API errors which may have occurred
      */
-    public ROBundle(GitHubService githubService, GithubDetails githubInfo, String githubBasePath) throws IOException {
+    public ROBundle(GitHubService githubService, GithubDetails githubInfo, String githubBasePath,
+                    String appName, String appURL) throws IOException {
         // TODO: Add back file size checking on individual files as well as whole bundle
 
         // Create a new RO bundle
@@ -62,8 +63,8 @@ public class ROBundle {
 
         // Simplified attribution for RO bundle
         try {
-            Agent cwlViewer = new Agent("Test");
-            cwlViewer.setUri(new URI("http://test.com"));
+            Agent cwlViewer = new Agent(appName);
+            cwlViewer.setUri(new URI(appURL));
             manifest.setCreatedBy(cwlViewer);
 
             // Github author attribution
