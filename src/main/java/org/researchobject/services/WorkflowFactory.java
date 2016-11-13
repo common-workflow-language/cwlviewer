@@ -21,7 +21,6 @@ package org.researchobject.services;
 
 import org.researchobject.domain.CWLCollection;
 import org.researchobject.domain.GithubDetails;
-import org.researchobject.domain.WorkflowRO;
 import org.researchobject.domain.Workflow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,14 +36,17 @@ public class WorkflowFactory {
      * Github API service
      */
     private final GitHubUtil githubUtil;
+    private final WorkflowROFactory workflowROFactory;
     private final int singleFileSizeLimit;
     private final int totalFileSizeLimit;
 
     @Autowired
     public WorkflowFactory(GitHubUtil githubUtil,
+                           WorkflowROFactory workflowROFactory,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
                            @Value("${totalFileSizeLimit}") int totalFileSizeLimit) {
         this.githubUtil = githubUtil;
+        this.workflowROFactory = workflowROFactory;
         this.singleFileSizeLimit = singleFileSizeLimit;
         this.totalFileSizeLimit = totalFileSizeLimit;
     }
@@ -71,10 +73,7 @@ public class WorkflowFactory {
                 CWLCollection cwlFiles = new CWLCollection(githubUtil, githubInfo, githubBasePath);
 
                 // Create a new research object bundle from Github details
-                WorkflowRO ROBundle = new WorkflowRO(githubUtil, githubInfo, githubBasePath);
-
-                // Save the Research Object Bundle
-                ROBundle.saveToTempFile();
+                workflowROFactory.workflowROFromGithub(githubUtil, githubInfo, githubBasePath);
 
                 // Return the model of the workflow
                 return cwlFiles.getWorkflow();

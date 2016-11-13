@@ -17,17 +17,31 @@
  * under the License.
  */
 
-package org.researchobject;
+package org.researchobject.services;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.researchobject.domain.GithubDetails;
+import org.researchobject.domain.WorkflowRO;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.stereotype.Component;
 
-@SpringBootApplication
+import java.io.IOException;
+
+/**
+ * Class for the purpose of a Spring Framework Async method
+ * being in a different class to where it is called
+ *
+ * This allows the proxy to kick in and run it asynchronously
+ */
+@Component
 @EnableAsync
-public class CwlViewerApplication {
+public class WorkflowROFactory {
 
-	public static void main(String[] args) {
-		SpringApplication.run(CwlViewerApplication.class, args);
-	}
+    @Async
+    void workflowROFromGithub(GitHubUtil githubUtil,
+                              GithubDetails githubInfo,
+                              String githubBasePath) throws IOException {
+        WorkflowRO bundle = new WorkflowRO(githubUtil, githubInfo, githubBasePath);
+        bundle.saveToTempFile();
+    }
 }

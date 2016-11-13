@@ -44,7 +44,6 @@ public class WorkflowRO {
 
     private Bundle bundle;
     private GithubDetails githubInfo;
-    private String githubBasePath;
 
     /**
      * Creates a new research object bundle for a workflow from a Github repository
@@ -55,7 +54,6 @@ public class WorkflowRO {
         // Create a new RO bundle
         this.bundle = Bundles.createBundle();
         this.githubInfo = githubInfo;
-        this.githubBasePath = githubBasePath;
         this.githubUtil = githubUtil;
 
         Manifest manifest = bundle.getManifest();
