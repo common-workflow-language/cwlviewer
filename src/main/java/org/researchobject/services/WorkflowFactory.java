@@ -36,17 +36,17 @@ public class WorkflowFactory {
      * Github API service
      */
     private final GitHubService githubService;
-    private final WorkflowROFactory workflowROFactory;
+    private final ROBundleFactory ROBundleFactory;
     private final int singleFileSizeLimit;
     private final int totalFileSizeLimit;
 
     @Autowired
     public WorkflowFactory(GitHubService githubService,
-                           WorkflowROFactory workflowROFactory,
+                           ROBundleFactory ROBundleFactory,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
                            @Value("${totalFileSizeLimit}") int totalFileSizeLimit) {
         this.githubService = githubService;
-        this.workflowROFactory = workflowROFactory;
+        this.ROBundleFactory = ROBundleFactory;
         this.singleFileSizeLimit = singleFileSizeLimit;
         this.totalFileSizeLimit = totalFileSizeLimit;
     }
@@ -73,7 +73,7 @@ public class WorkflowFactory {
                 CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo, githubBasePath);
 
                 // Create a new research object bundle from Github details
-                workflowROFactory.workflowROFromGithub(githubService, githubInfo, githubBasePath);
+                ROBundleFactory.workflowROFromGithub(githubService, githubInfo, githubBasePath);
 
                 // Return the model of the workflow
                 return cwlFiles.getWorkflow();

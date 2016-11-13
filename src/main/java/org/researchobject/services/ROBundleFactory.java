@@ -20,7 +20,7 @@
 package org.researchobject.services;
 
 import org.researchobject.domain.GithubDetails;
-import org.researchobject.domain.WorkflowRO;
+import org.researchobject.domain.ROBundle;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
@@ -35,7 +35,7 @@ import java.io.IOException;
  */
 @Component
 @EnableAsync
-public class WorkflowROFactory {
+public class ROBundleFactory {
 
     /**
      * Creates a new Workflow Research Object Bundle from a Github URL
@@ -50,7 +50,7 @@ public class WorkflowROFactory {
                               GithubDetails githubInfo,
                               String githubBasePath) throws IOException {
         // TODO: Add the bundle link to the page when it is finished being created
-        WorkflowRO bundle = new WorkflowRO(githubService, githubInfo, githubBasePath);
+        ROBundle bundle = new ROBundle(githubService, githubInfo, githubBasePath);
         bundle.saveToTempFile();
     }
 }

@@ -38,7 +38,7 @@ import java.util.List;
 /**
  * Represents a Workflow Research Object Bundle
  */
-public class WorkflowRO {
+public class ROBundle {
 
     private GitHubService githubService;
 
@@ -50,7 +50,7 @@ public class WorkflowRO {
      * @param githubInfo The information necessary to access the Github directory associated with the RO
      * @throws IOException Any API errors which may have occurred
      */
-    public WorkflowRO(GitHubService githubService, GithubDetails githubInfo, String githubBasePath) throws IOException {
+    public ROBundle(GitHubService githubService, GithubDetails githubInfo, String githubBasePath) throws IOException {
         // TODO: Add back file size checking on individual files as well as whole bundle
 
         // Create a new RO bundle
