@@ -51,6 +51,8 @@ public class WorkflowRO {
      * @throws IOException Any API errors which may have occurred
      */
     public WorkflowRO(GitHubUtil githubUtil, GithubDetails githubInfo, String githubBasePath) throws IOException {
+        // TODO: Add back file size checking on individual files as well as whole bundle
+
         // Create a new RO bundle
         this.bundle = Bundles.createBundle();
         this.githubInfo = githubInfo;
