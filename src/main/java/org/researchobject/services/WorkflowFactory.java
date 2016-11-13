@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import static org.apache.jena.sparql.vocabulary.DOAP.repository;
@@ -72,8 +73,9 @@ public class WorkflowFactory {
                 // This is Async so cannot just call constructor, needs intermediate as per Spring framework
                 ROBundleFactory.workflowROFromGithub(githubService, githubInfo, githubBasePath);
 
-                // Get the workflow model, setting retrievedFrom details
+                // Get the workflow model
                 Workflow workflowModel = cwlFiles.getWorkflow();
+                workflowModel.setRetrievedOn(new Date());
                 workflowModel.setRetrievedFrom(githubInfo);
 
                 // Save to the MongoDB database

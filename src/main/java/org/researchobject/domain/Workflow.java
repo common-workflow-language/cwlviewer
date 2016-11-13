@@ -20,8 +20,10 @@
 package org.researchobject.domain;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -34,6 +36,8 @@ public class Workflow {
     private String id;
 
     // Metadata
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private Date retrievedOn;
     private GithubDetails retrievedFrom;
     private Path roBundle;
 
@@ -109,5 +113,13 @@ public class Workflow {
 
     public void setRetrievedFrom(GithubDetails retrievedFrom) {
         this.retrievedFrom = retrievedFrom;
+    }
+
+    public Date getRetrievedOn() {
+        return retrievedOn;
+    }
+
+    public void setRetrievedOn(Date retrievedOn) {
+        this.retrievedOn = retrievedOn;
     }
 }

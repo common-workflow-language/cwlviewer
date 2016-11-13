@@ -19,6 +19,7 @@
 
 package org.researchobject.services;
 
+import org.researchobject.domain.GithubDetails;
 import org.researchobject.domain.Workflow;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
@@ -26,5 +27,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
  * Stores workflow objects in the database
  */
 public interface WorkflowRepository extends MongoRepository<Workflow, String> {
+
+    // Finds a workflow model in the database based on where it was retrieved from
+    Workflow findByRetrievedFrom(GithubDetails retrievedFrom);
 
 }
