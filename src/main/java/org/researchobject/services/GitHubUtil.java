@@ -113,8 +113,9 @@ public class GitHubUtil {
     public String downloadFile(GithubDetails githubInfo, String filePath) throws IOException {
         // Download the file and return the contents
         // rawgit.com used to download individual files from git with the correct media type
-        URL downloadURL = new URL("https://cdn.rawgit.com/" + githubInfo.getOwner() + "/" + githubInfo.getRepoName()
-                + "/" + githubInfo.getBranch() + "/" + filePath);
+        String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
+                githubInfo.getRepoName(), githubInfo.getBranch(), filePath);
+        URL downloadURL = new URL(url);
         InputStream download = downloadURL.openStream();
         try {
             return IOUtils.toString(download);
