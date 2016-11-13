@@ -38,15 +38,15 @@
     <table>
         <tr>
             <th>ID</th>
+            <th>Type</th>
             <th>Label</th>
             <th>Doc</th>
-            <th>Type</th>
         </tr>
         <tr th:each="input : ${workflow.inputs}">
             <td th:text="${input.key}">ID</td>
+            <td th:text="${input.value.type}">Type</td>
             <td th:text="${input.value.label}">Label</td>
             <td th:text="${input.value.doc}">Description</td>
-            <td th:text="${input.value.type}">Type</td>
         </tr>
     </table>
     <h2>Outputs</h2>
