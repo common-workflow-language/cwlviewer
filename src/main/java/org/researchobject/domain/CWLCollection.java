@@ -150,7 +150,7 @@ public class CWLCollection {
      * @param cwlDoc The document to get inputs for
      * @return A map of input IDs and details related to them
      */
-    private Map<String, InputOutput> getInputs(JsonNode cwlDoc) {
+    private Map<String, CWLElement> getInputs(JsonNode cwlDoc) {
         if (cwlDoc != null) {
             if (cwlDoc.has("inputs")) {
                 return getInputsOutputs(cwlDoc.get("inputs"));
@@ -164,7 +164,7 @@ public class CWLCollection {
      * @param cwlDoc The document to get outputs for
      * @return A map of output IDs and details related to them
      */
-    private Map<String, InputOutput> getOutputs(JsonNode cwlDoc) {
+    private Map<String, CWLElement> getOutputs(JsonNode cwlDoc) {
         if (cwlDoc != null) {
             if (cwlDoc.has("outputs")) {
                 return getInputsOutputs(cwlDoc.get("outputs"));
@@ -178,8 +178,8 @@ public class CWLCollection {
      * @param inputsOutputs The inputs or outputs node
      * @return A map of input IDs and details related to them
      */
-    private Map<String, InputOutput> getInputsOutputs(JsonNode inputsOutputs) {
-        Map<String, InputOutput> returnMap = new HashMap<>();
+    private Map<String, CWLElement> getInputsOutputs(JsonNode inputsOutputs) {
+        Map<String, CWLElement> returnMap = new HashMap<>();
 
         if (inputsOutputs.getClass() == ArrayNode.class) {
             // Explicit ID and other fields within each input list
@@ -203,11 +203,11 @@ public class CWLCollection {
     /**
      * Gets the details of an input or output
      * @param inputOutput The node of the particular input or output
-     * @return An InputOutput object with the label, doc and type extracted
+     * @return An CWLElement object with the label, doc and type extracted
      */
-    private InputOutput getDetails(JsonNode inputOutput) {
+    private CWLElement getDetails(JsonNode inputOutput) {
         if (inputOutput != null) {
-            InputOutput details = new InputOutput();
+            CWLElement details = new CWLElement();
 
             // Shorthand notation "id: type" - no label/doc/other params
             if (inputOutput.getClass() == TextNode.class) {

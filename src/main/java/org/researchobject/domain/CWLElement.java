@@ -22,7 +22,7 @@ package org.researchobject.domain;
 /**
  * Represents the input or output of a workflow/tool
  */
-public class InputOutput {
+public class CWLElement {
 
     private String label;
     private String doc;

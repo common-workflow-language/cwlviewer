@@ -28,10 +28,10 @@ public class Workflow {
 
     private String label;
     private String doc;
-    private Map<String, InputOutput> inputs;
-    private Map<String, InputOutput> outputs;
+    private Map<String, CWLElement> inputs;
+    private Map<String, CWLElement> outputs;
 
-    public Workflow(String label, String doc, Map<String, InputOutput> inputs, Map<String, InputOutput> outputs) {
+    public Workflow(String label, String doc, Map<String, CWLElement> inputs, Map<String, CWLElement> outputs) {
         this.label = label;
         this.doc = doc;
         this.inputs = inputs;
@@ -54,19 +54,19 @@ public class Workflow {
         this.doc = doc;
     }
 
-    public Map<String, InputOutput> getInputs() {
+    public Map<String, CWLElement> getInputs() {
         return inputs;
     }
 
-    public void setInputs(Map<String, InputOutput> inputs) {
+    public void setInputs(Map<String, CWLElement> inputs) {
         this.inputs = inputs;
     }
 
-    public Map<String, InputOutput> getOutputs() {
+    public Map<String, CWLElement> getOutputs() {
         return outputs;
     }
 
-    public void setOutputs(Map<String, InputOutput> outputs) {
+    public void setOutputs(Map<String, CWLElement> outputs) {
         this.outputs = outputs;
     }
 }
