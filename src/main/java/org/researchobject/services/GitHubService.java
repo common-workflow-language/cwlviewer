@@ -70,27 +70,23 @@ public class GitHubService {
      * @param url The Github directory URL
      * @return A list with the groups of the regex match, [owner, repo, branch, path]
      */
-    public List<String> detailsFromDirURL(String url) {
-        List<String> matchGroups = new ArrayList<String>(4);
+    public GithubDetails detailsFromDirURL(String url) {
         Matcher m = githubDirPattern.matcher(url);
         if (m.find()) {
-            for (int i=1; i < 5; i++) {
-                matchGroups.add(m.group(i));
-            }
+            return new GithubDetails(m.group(1), m.group(2), m.group(3), m.group(4));
         }
-        return matchGroups;
+        return null;
     }
 
     /**
      * Get contents of a Github path from the API
      * @param githubInfo The information to access the repository
-     * @param dirPath The path to a subfolder within the repository
      * @return A list of details for the file(s) or false if there is an API error
      * @throws IOException Any API errors which may have occured
      */
-    public List<RepositoryContents> getContents(GithubDetails githubInfo, String dirPath) throws IOException {
+    public List<RepositoryContents> getContents(GithubDetails githubInfo) throws IOException {
         return contentsService.getContents(new RepositoryId(githubInfo.getOwner(), githubInfo.getRepoName()),
-                dirPath, githubInfo.getBranch());
+                githubInfo.getPath(), githubInfo.getBranch());
     }
 
     /**
@@ -106,15 +102,14 @@ public class GitHubService {
     /**
      * Download a single file from a Github repository
      * @param githubInfo The information to access the repository
-     * @param filePath The path to the file within the repository
      * @return A string with the contents of the file
      * @throws IOException Any API errors which may have occured
      */
-    public String downloadFile(GithubDetails githubInfo, String filePath) throws IOException {
+    public String downloadFile(GithubDetails githubInfo) throws IOException {
         // Download the file and return the contents
         // rawgit.com used to download individual files from git with the correct media type
         String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
-                githubInfo.getRepoName(), githubInfo.getBranch(), filePath);
+                githubInfo.getRepoName(), githubInfo.getBranch(), githubInfo.getPath());
         URL downloadURL = new URL(url);
         InputStream download = downloadURL.openStream();
         try {

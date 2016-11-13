@@ -50,7 +50,7 @@ public class ROBundle {
      * @param githubInfo The information necessary to access the Github directory associated with the RO
      * @throws IOException Any API errors which may have occurred
      */
-    public ROBundle(GitHubService githubService, GithubDetails githubInfo, String githubBasePath,
+    public ROBundle(GitHubService githubService, GithubDetails githubInfo,
                     String appName, String appURL) throws IOException {
         // TODO: Add back file size checking on individual files as well as whole bundle
 
@@ -95,7 +95,7 @@ public class ROBundle {
         Files.createDirectory(bundleFiles);
 
         // Add the files from the Github repo to this workflow
-        List<RepositoryContents> repoContents = githubService.getContents(githubInfo, githubBasePath);
+        List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
         addFiles(repoContents, bundleFiles);
     }
 
@@ -113,7 +113,9 @@ public class ROBundle {
             if (repoContent.getType().equals("dir")) {
 
                 // Get the contents of the subdirectory
-                List<RepositoryContents> subdirectory = githubService.getContents(githubInfo, repoContent.getPath());
+                GithubDetails githubSubdir = new GithubDetails(githubInfo.getOwner(),
+                        githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+                List<RepositoryContents> subdirectory = githubService.getContents(githubSubdir);
 
                 // Create a new folder in the RO for it
                 Path subdirPath = path.resolve(repoContent.getName());
@@ -126,7 +128,9 @@ public class ROBundle {
             } else if (repoContent.getType().equals("file")) {
 
                 // Get the content of this file from Github
-                String fileContent = githubService.downloadFile(githubInfo, repoContent.getPath());
+                GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
+                        githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+                String fileContent = githubService.downloadFile(githubFile);
 
                 // Save file to research object bundle
                 Path newFilePort = path.resolve(repoContent.getName());

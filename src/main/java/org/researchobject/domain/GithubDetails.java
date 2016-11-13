@@ -27,10 +27,12 @@ public class GithubDetails {
     private String owner;
     private String repoName;
     private String branch;
+    private String path;
 
-    public GithubDetails(String owner, String repoName, String branch) {
+    public GithubDetails(String owner, String repoName, String branch, String path) {
         this.owner = owner;
         this.repoName = repoName;
+        this.path = path;
 
         // Default to the master branch
         if (branch == null || branch.isEmpty()) {
@@ -63,5 +65,13 @@ public class GithubDetails {
 
     public void setBranch(String branch) {
         this.branch = branch;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 }

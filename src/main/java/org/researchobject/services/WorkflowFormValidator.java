@@ -67,19 +67,14 @@ public class WorkflowFormValidator implements Validator {
         // Only continue if not null and isn't just whitespace
         if (!e.hasErrors()) {
             WorkflowForm form = (WorkflowForm) obj;
-            List<String> directoryDetails = githubService.detailsFromDirURL(form.getGithubURL());
+            GithubDetails githubInfo = githubService.detailsFromDirURL(form.getGithubURL());
 
             // If the URL is valid and details could be extracted
-            if (directoryDetails.size() > 0) {
-
-                // Store returned details
-                final GithubDetails githubInfo = new GithubDetails(directoryDetails.get(0),
-                        directoryDetails.get(1), directoryDetails.get(2));
-                String githubBasePath = directoryDetails.get(3);
+            if (githubInfo != null) {
 
                 // Check the repository exists and get content to ensure that branch/path exist
                 try {
-                    List<RepositoryContents> repoContents = githubService.getContents(githubInfo, githubBasePath);
+                    List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
 
                     // Check that there is at least 1 .cwl file
                     boolean foundCWL = false;

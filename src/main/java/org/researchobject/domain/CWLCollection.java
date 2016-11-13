@@ -45,15 +45,16 @@ public class CWLCollection {
 
     /**
      * Creates a new collection of CWL files from a Github repository
+     * @param githubService Service to provide the Github API functionality
      * @param githubInfo The information necessary to access the Github directory associated with the RO
      * @throws IOException Any API errors which may have occurred
      */
-    public CWLCollection(GitHubService githubService, GithubDetails githubInfo, String githubBasePath) throws IOException {
+    public CWLCollection(GitHubService githubService, GithubDetails githubInfo) throws IOException {
         this.githubInfo = githubInfo;
         this.githubService = githubService;
 
         // Add any CWL files from the Github repo to this collection
-        List<RepositoryContents> repoContents = githubService.getContents(githubInfo, githubBasePath);
+        List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
         addDocs(repoContents);
     }
 
@@ -69,7 +70,9 @@ public class CWLCollection {
             if (repoContent.getType().equals("dir")) {
 
                 // Get the contents of the subdirectory
-                List<RepositoryContents> subdirectory = githubService.getContents(githubInfo, repoContent.getPath());
+                GithubDetails githubSubdir = new GithubDetails(githubInfo.getOwner(),
+                        githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+                List<RepositoryContents> subdirectory = githubService.getContents(githubSubdir);
 
                 // Add the files in the subdirectory to this new folder
                 addDocs(subdirectory);
@@ -86,7 +89,9 @@ public class CWLCollection {
                     if (extension.equals("cwl")) {
 
                         // Get the content of this file from Github
-                        String fileContent = githubService.downloadFile(githubInfo, repoContent.getPath());
+                        GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
+                                githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+                        String fileContent = githubService.downloadFile(githubFile);
 
                         // Parse yaml to JsonNode
                         Yaml reader = new Yaml();

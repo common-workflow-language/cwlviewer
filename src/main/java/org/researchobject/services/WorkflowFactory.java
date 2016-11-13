@@ -55,23 +55,18 @@ public class WorkflowFactory {
      */
     public Workflow workflowFromGithub(String githubURL) {
 
-        List<String> directoryDetails = githubService.detailsFromDirURL(githubURL);
+        GithubDetails githubInfo = githubService.detailsFromDirURL(githubURL);
 
         // If the URL is valid and details could be extracted
-        if (directoryDetails.size() > 0) {
-
-            // Store details from URL
-            GithubDetails githubInfo = new GithubDetails(directoryDetails.get(0),
-                    directoryDetails.get(1), directoryDetails.get(2));
-            String githubBasePath = directoryDetails.get(3);
+        if (githubInfo != null) {
 
             try {
                 // Set up CWL utility to collect the documents
-                CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo, githubBasePath);
+                CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo);
 
                 // Create a new research object bundle from Github details
                 // This is Async so cannot just call constructor, needs intermediate as per Spring framework
-                ROBundleFactory.workflowROFromGithub(githubService, githubInfo, githubBasePath);
+                ROBundleFactory.workflowROFromGithub(githubService, githubInfo);
 
                 // Get the workflow model
                 Workflow workflowModel = cwlFiles.getWorkflow();

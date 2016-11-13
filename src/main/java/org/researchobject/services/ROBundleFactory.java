@@ -48,15 +48,12 @@ public class ROBundleFactory {
      * and saves it to a file
      * @param githubService The service for Github API functionality
      * @param githubInfo Details of the Github repository
-     * @param githubBasePath The path within the repository where the workflow files are
      * @throws IOException Any API errors which may have occured
      */
     @Async
-    void workflowROFromGithub(GitHubService githubService,
-                              GithubDetails githubInfo,
-                              String githubBasePath) throws IOException {
+    void workflowROFromGithub(GitHubService githubService, GithubDetails githubInfo) throws IOException {
         // TODO: Add the bundle link to the page when it is finished being created
-        ROBundle bundle = new ROBundle(githubService, githubInfo, githubBasePath,
+        ROBundle bundle = new ROBundle(githubService, githubInfo,
                 applicationName, applicationURL);
         bundle.saveToTempFile();
     }
