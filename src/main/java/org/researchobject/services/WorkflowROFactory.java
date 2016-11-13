@@ -40,17 +40,17 @@ public class WorkflowROFactory {
     /**
      * Creates a new Workflow Research Object Bundle from a Github URL
      * and saves it to a file
-     * @param githubUtil The service for Github API functionality
+     * @param githubService The service for Github API functionality
      * @param githubInfo Details of the Github repository
      * @param githubBasePath The path within the repository where the workflow files are
      * @throws IOException Any API errors which may have occured
      */
     @Async
-    void workflowROFromGithub(GitHubUtil githubUtil,
+    void workflowROFromGithub(GitHubService githubService,
                               GithubDetails githubInfo,
                               String githubBasePath) throws IOException {
         // TODO: Add the bundle link to the page when it is finished being created
-        WorkflowRO bundle = new WorkflowRO(githubUtil, githubInfo, githubBasePath);
+        WorkflowRO bundle = new WorkflowRO(githubService, githubInfo, githubBasePath);
         bundle.saveToTempFile();
     }
 }

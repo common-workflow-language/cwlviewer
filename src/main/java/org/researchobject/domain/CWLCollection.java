@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.eclipse.egit.github.core.RepositoryContents;
-import org.researchobject.services.GitHubUtil;
+import org.researchobject.services.GitHubService;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -37,7 +37,7 @@ import java.util.*;
  */
 public class CWLCollection {
 
-    private GitHubUtil githubUtil;
+    private GitHubService githubService;
     private GithubDetails githubInfo;
 
     private List<JsonNode> cwlDocs = new ArrayList<>();
@@ -48,12 +48,12 @@ public class CWLCollection {
      * @param githubInfo The information necessary to access the Github directory associated with the RO
      * @throws IOException Any API errors which may have occurred
      */
-    public CWLCollection(GitHubUtil githubUtil, GithubDetails githubInfo, String githubBasePath) throws IOException {
+    public CWLCollection(GitHubService githubService, GithubDetails githubInfo, String githubBasePath) throws IOException {
         this.githubInfo = githubInfo;
-        this.githubUtil = githubUtil;
+        this.githubService = githubService;
 
         // Add any CWL files from the Github repo to this collection
-        List<RepositoryContents> repoContents = githubUtil.getContents(githubInfo, githubBasePath);
+        List<RepositoryContents> repoContents = githubService.getContents(githubInfo, githubBasePath);
         addDocs(repoContents);
     }
 
@@ -69,7 +69,7 @@ public class CWLCollection {
             if (repoContent.getType().equals("dir")) {
 
                 // Get the contents of the subdirectory
-                List<RepositoryContents> subdirectory = githubUtil.getContents(githubInfo, repoContent.getPath());
+                List<RepositoryContents> subdirectory = githubService.getContents(githubInfo, repoContent.getPath());
 
                 // Add the files in the subdirectory to this new folder
                 addDocs(subdirectory);
@@ -86,7 +86,7 @@ public class CWLCollection {
                     if (extension.equals("cwl")) {
 
                         // Get the content of this file from Github
-                        String fileContent = githubUtil.downloadFile(githubInfo, repoContent.getPath());
+                        String fileContent = githubService.downloadFile(githubInfo, repoContent.getPath());
 
                         // Parse yaml to JsonNode
                         Yaml reader = new Yaml();

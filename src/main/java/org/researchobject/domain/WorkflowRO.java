@@ -25,7 +25,7 @@ import org.apache.taverna.robundle.manifest.Agent;
 import org.apache.taverna.robundle.manifest.Manifest;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.eclipse.egit.github.core.User;
-import org.researchobject.services.GitHubUtil;
+import org.researchobject.services.GitHubService;
 
 import java.io.IOException;
 import java.net.URI;
@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class WorkflowRO {
 
-    private GitHubUtil githubUtil;
+    private GitHubService githubService;
 
     private Bundle bundle;
     private GithubDetails githubInfo;
@@ -50,13 +50,13 @@ public class WorkflowRO {
      * @param githubInfo The information necessary to access the Github directory associated with the RO
      * @throws IOException Any API errors which may have occurred
      */
-    public WorkflowRO(GitHubUtil githubUtil, GithubDetails githubInfo, String githubBasePath) throws IOException {
+    public WorkflowRO(GitHubService githubService, GithubDetails githubInfo, String githubBasePath) throws IOException {
         // TODO: Add back file size checking on individual files as well as whole bundle
 
         // Create a new RO bundle
         this.bundle = Bundles.createBundle();
         this.githubInfo = githubInfo;
-        this.githubUtil = githubUtil;
+        this.githubService = githubService;
 
         Manifest manifest = bundle.getManifest();
 
@@ -69,7 +69,7 @@ public class WorkflowRO {
             // Github author attribution
             // TODO: way to add all the contributors somehow
             // TODO: set the aggregates details according to the github information
-            User authorDetails = githubUtil.getUser(githubInfo.getOwner());
+            User authorDetails = githubService.getUser(githubInfo.getOwner());
 
             List<Agent> authorList = new ArrayList<>(1);
             Agent author = new Agent(authorDetails.getName());
@@ -94,7 +94,7 @@ public class WorkflowRO {
         Files.createDirectory(bundleFiles);
 
         // Add the files from the Github repo to this workflow
-        List<RepositoryContents> repoContents = githubUtil.getContents(githubInfo, githubBasePath);
+        List<RepositoryContents> repoContents = githubService.getContents(githubInfo, githubBasePath);
         addFiles(repoContents, bundleFiles);
     }
 
@@ -112,7 +112,7 @@ public class WorkflowRO {
             if (repoContent.getType().equals("dir")) {
 
                 // Get the contents of the subdirectory
-                List<RepositoryContents> subdirectory = githubUtil.getContents(githubInfo, repoContent.getPath());
+                List<RepositoryContents> subdirectory = githubService.getContents(githubInfo, repoContent.getPath());
 
                 // Create a new folder in the RO for it
                 Path subdirPath = path.resolve(repoContent.getName());
@@ -125,7 +125,7 @@ public class WorkflowRO {
             } else if (repoContent.getType().equals("file")) {
 
                 // Get the content of this file from Github
-                String fileContent = githubUtil.downloadFile(githubInfo, repoContent.getPath());
+                String fileContent = githubService.downloadFile(githubInfo, repoContent.getPath());
 
                 // Save file to research object bundle
                 Path newFilePort = path.resolve(repoContent.getName());

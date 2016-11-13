@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
  * Handles Github related functionality including API usage
  */
 @Service
-public class GitHubUtil {
+public class GitHubService {
 
     // Github API services
     private final ContentsService contentsService;
@@ -54,9 +54,9 @@ public class GitHubUtil {
     private final Pattern githubDirPattern = Pattern.compile(GITHUB_DIR_REGEX);
 
     @Autowired
-    public GitHubUtil(@Value("${githubAPI.authentication}") boolean authEnabled,
-                      @Value("${githubAPI.username}") String username,
-                      @Value("${githubAPI.password}") String password) {
+    public GitHubService(@Value("${githubAPI.authentication}") boolean authEnabled,
+                         @Value("${githubAPI.username}") String username,
+                         @Value("${githubAPI.password}") String password) {
         GitHubClient client = new GitHubClient();
         if (authEnabled) {
             client.setCredentials(username, password);

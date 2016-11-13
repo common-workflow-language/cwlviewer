@@ -35,17 +35,17 @@ public class WorkflowFactory {
     /**
      * Github API service
      */
-    private final GitHubUtil githubUtil;
+    private final GitHubService githubService;
     private final WorkflowROFactory workflowROFactory;
     private final int singleFileSizeLimit;
     private final int totalFileSizeLimit;
 
     @Autowired
-    public WorkflowFactory(GitHubUtil githubUtil,
+    public WorkflowFactory(GitHubService githubService,
                            WorkflowROFactory workflowROFactory,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
                            @Value("${totalFileSizeLimit}") int totalFileSizeLimit) {
-        this.githubUtil = githubUtil;
+        this.githubService = githubService;
         this.workflowROFactory = workflowROFactory;
         this.singleFileSizeLimit = singleFileSizeLimit;
         this.totalFileSizeLimit = totalFileSizeLimit;
@@ -58,7 +58,7 @@ public class WorkflowFactory {
      */
     public Workflow workflowFromGithub(String githubURL) {
 
-        List<String> directoryDetails = githubUtil.detailsFromDirURL(githubURL);
+        List<String> directoryDetails = githubService.detailsFromDirURL(githubURL);
 
         // If the URL is valid and details could be extracted
         if (directoryDetails.size() > 0) {
@@ -70,10 +70,10 @@ public class WorkflowFactory {
 
             try {
                 // Set up CWL utility to collect the documents
-                CWLCollection cwlFiles = new CWLCollection(githubUtil, githubInfo, githubBasePath);
+                CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo, githubBasePath);
 
                 // Create a new research object bundle from Github details
-                workflowROFactory.workflowROFromGithub(githubUtil, githubInfo, githubBasePath);
+                workflowROFactory.workflowROFromGithub(githubService, githubInfo, githubBasePath);
 
                 // Return the model of the workflow
                 return cwlFiles.getWorkflow();

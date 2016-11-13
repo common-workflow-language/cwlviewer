@@ -40,11 +40,11 @@ public class WorkflowFormValidator implements Validator {
     /**
      * Github API service
      */
-    private final GitHubUtil githubUtil;
+    private final GitHubService githubService;
 
     @Autowired
-    public WorkflowFormValidator(GitHubUtil githubUtil) {
-        this.githubUtil = githubUtil;
+    public WorkflowFormValidator(GitHubService githubService) {
+        this.githubService = githubService;
     }
 
     /**
@@ -67,7 +67,7 @@ public class WorkflowFormValidator implements Validator {
         // Only continue if not null and isn't just whitespace
         if (!e.hasErrors()) {
             WorkflowForm form = (WorkflowForm) obj;
-            List<String> directoryDetails = githubUtil.detailsFromDirURL(form.getGithubURL());
+            List<String> directoryDetails = githubService.detailsFromDirURL(form.getGithubURL());
 
             // If the URL is valid and details could be extracted
             if (directoryDetails.size() > 0) {
@@ -79,7 +79,7 @@ public class WorkflowFormValidator implements Validator {
 
                 // Check the repository exists and get content to ensure that branch/path exist
                 try {
-                    List<RepositoryContents> repoContents = githubUtil.getContents(githubInfo, githubBasePath);
+                    List<RepositoryContents> repoContents = githubService.getContents(githubInfo, githubBasePath);
 
                     // Check that there is at least 1 .cwl file
                     boolean foundCWL = false;
