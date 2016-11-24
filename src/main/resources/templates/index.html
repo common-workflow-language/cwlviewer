@@ -22,30 +22,43 @@
     <head>
         <meta charset="UTF-8" />
         <title>Common Workflow Language Viewer</title>
-        <link rel="stylesheet" type="text/css" href="/css/main.css" />
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:600" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-              rel="stylesheet" />
+        <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}" href="../static/css/main.css" />
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
     </head>
     <body>
-        <div id="header">
-            <h1>Common Workflow Language Viewer</h1>
+
+        <nav th:replace="fragments/header :: navbar"></nav>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12" role="main" id="main">
+                    <h1>Common Workflow Language Viewer</h1>
+                    <p>This tool visualises and lists the details of a workflow with its inputs, outputs and steps and
+                        packages the files into a downloadable
+                        <a href="https://researchobject.github.io/specifications/bundle/" rel="noopener" target="_blank">
+                            Research Object Bundle</a>
+                        (zip file with metadata in a manifest), allowing it to be easily viewed and shared.</p>
+                    <div class="alert alert-warning">
+                        <p><strong>Caution:</strong> This viewer is currently experimental and may not work for all valid workflows</p>
+                    </div>
+
+                    <h2>Workflow from Github URL</h2>
+                    <p>Provide a link to the directory of files making up your workflow here</p>
+                    <form id="add" action="#" th:action="@{/}" th:object="${workflowForm}" method="POST">
+                        <div class="alert alert-danger" th:if="${#fields.hasErrors('githubURL')}">
+                            <strong>Error:</strong> <span th:errors="*{githubURL}">Error message here</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Github URL" id="githubURL" name="githubURL" th:field="*{githubURL}" />
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary" type="submit">Parse Workflow</button>
+                            </span>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div id="container">
-            <h2 id="formTitle">Workflow from Github URL</h2>
-            <form id="add" action="#" th:action="@{/}" th:object="${workflowForm}" method="POST">
-                <p class="error" th:if="${#fields.hasErrors('githubURL')}">
-                    <i class="material-icons">error_outline</i>
-                    <strong>Error:</strong>
-                    <span th:errors="*{githubURL}">URL cannot be empty</span>
-                </p>
-                <label for="githubURL"><img id="githubLogo" src="/img/GitHub-Mark-32px.png" /></label>
-                <input type="text" id="githubURL" name="githubURL" th:field="*{githubURL}" />
-                <button type="submit">Parse Workflow</button>
-            </form>
-        </div>
-        <div id="footer">
-            Copyright here or links to <a href="http://commonwl.org">commonwl.org</a>, <a href="http://researchobject.org">researchobject.org</a> etc
-        </div>
+
+        <div th:replace="fragments/footer :: copy"></div>
     </body>
 </html>

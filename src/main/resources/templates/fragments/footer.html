@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="copy" id="footer">
+        <a href="https://github.com/common-workflow-language/cwlviewer" rel="noopener" target="_blank">CWL Viewer</a>
+        &copy; 2016 <a href="https://github.com/common-workflow-language/" rel="noopener" target="_blank">Common Workflow Project</a>
+        and <a href="https://github.com/orgs/common-workflow-language/people" rel="noopener" target="_blank">contributors</a>,
+        distributed under <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener" target="_blank">Apache license, version 2.0</a>
+        <br />
+        <span th:if="${workflow != null}">
+            <a th:href="@{'https://github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName}}" href="#" rel="noopener" target="_blank">Shown workflow</a> has separate copyright and license
+        </span>
+    </div>
+</body>
+</html>
