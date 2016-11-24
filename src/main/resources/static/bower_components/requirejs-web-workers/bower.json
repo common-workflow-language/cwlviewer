@@ -1,0 +1,9 @@
+{
+  "name": "requirejs-web-workers",
+  "version": "1.0.1",
+  "main": "src/worker.js",
+  "ignore": [
+    "node_modules",
+    "bower_components"
+  ]
+}

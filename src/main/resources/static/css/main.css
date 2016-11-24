@@ -38,6 +38,15 @@ body {
     padding-left: 45px;
 }
 
+#graph-menu {
+    margin-bottom: 5px;
+}
+
+#visualisation {
+    overflow: auto;
+    padding: 10px;
+}
+
 #footer {
     text-align: center;
     font-style: italic;

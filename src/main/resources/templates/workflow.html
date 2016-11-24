@@ -34,6 +34,20 @@
         <div class="col-md-12" role="main" id="main">
             <h2>Workflow: <span th:text="${workflow.label}">Workflow Name</span></h2>
             <p th:text="${workflow.doc}">Workflow Doc</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="graph-menu" class="pull-right">
+                <span>Graph: </span>
+                <button class="btn btn-outline-primary" type="button">View DOT</button>
+                <button class="btn btn-outline-primary" type="button">Download as Image</button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="visualisation" class="jumbotron"></div>
             <h2>Inputs</h2>
             <table class="table table-striped">
                 <thead>
@@ -71,5 +85,7 @@
 </div>
 
 <div th:replace="fragments/footer :: copy"></div>
+
+<script src="/bower_components/requirejs/require.js" data-main="/js/main.js"></script>
 </body>
 </html>
