@@ -1,0 +1,14 @@
+version: '2'
+services:
+  spring:
+    build: .
+    ports:
+     - "8080:8080"
+# TODO:
+#    volumes:
+#     - .:/code
+    depends_on:
+     - mongo
+
+  mongo:
+    image: mongo
