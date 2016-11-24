@@ -17,10 +17,10 @@
  * under the License.
  */
 
-package org.researchobject.services;
+package org.commonwl.viewer.services;
 
-import org.researchobject.domain.GithubDetails;
-import org.researchobject.domain.ROBundle;
+import org.commonwl.viewer.domain.GithubDetails;
+import org.commonwl.viewer.domain.ROBundle;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;

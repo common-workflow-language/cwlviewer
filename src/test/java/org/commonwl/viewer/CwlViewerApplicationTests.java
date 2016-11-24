@@ -17,19 +17,19 @@
  * under the License.
  */
 
-package org.researchobject;
+package org.commonwl.viewer;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-import org.springframework.scheduling.annotation.EnableAsync;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
-@SpringBootApplication
-@EnableMongoRepositories
-@EnableAsync
-public class CwlViewerApplication {
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class CwlViewerApplicationTests {
 
-	public static void main(String[] args) {
-		SpringApplication.run(CwlViewerApplication.class, args);
+	@Test
+	public void contextLoads() {
 	}
+
 }

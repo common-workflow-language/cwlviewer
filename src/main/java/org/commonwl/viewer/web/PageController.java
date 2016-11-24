@@ -17,9 +17,9 @@
  * under the License.
  */
 
-package org.researchobject.web;
+package org.commonwl.viewer.web;
 
-import org.researchobject.domain.WorkflowForm;
+import org.commonwl.viewer.domain.WorkflowForm;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.researchobject.domain;
+package org.commonwl.viewer.domain;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.format.annotation.DateTimeFormat;

@@ -17,11 +17,11 @@
  * under the License.
  */
 
-package org.researchobject.services;
+package org.commonwl.viewer.services;
 
+import org.commonwl.viewer.domain.GithubDetails;
 import org.eclipse.egit.github.core.RepositoryContents;
-import org.researchobject.domain.GithubDetails;
-import org.researchobject.domain.WorkflowForm;
+import org.commonwl.viewer.domain.WorkflowForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;

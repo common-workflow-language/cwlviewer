@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.researchobject.domain;
+package org.commonwl.viewer.domain;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.eclipse.egit.github.core.RepositoryContents;
-import org.researchobject.services.GitHubService;
+import org.commonwl.viewer.services.GitHubService;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;

@@ -17,15 +17,15 @@
  * under the License.
  */
 
-package org.researchobject.domain;
+package org.commonwl.viewer.domain;
 
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.Agent;
 import org.apache.taverna.robundle.manifest.Manifest;
+import org.commonwl.viewer.services.GitHubService;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.eclipse.egit.github.core.User;
-import org.researchobject.services.GitHubService;
 
 import java.io.IOException;
 import java.net.URI;
