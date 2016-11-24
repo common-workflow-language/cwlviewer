@@ -21,7 +21,14 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
     <div th:fragment="copy" id="footer">
-        &copy; Common Workflow Language - <a href="https://github.com/common-workflow-language/cwlviewer">Github URL</a>
+        <a href="https://github.com/common-workflow-language/cwlviewer">CWL Viewer</a>
+        &copy; 2016 <a href="https://github.com/common-workflow-language/">Common Workflow Project</a>
+        and <a href="https://github.com/orgs/common-workflow-language/people">contributors</a>,
+        distributed under <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache license, version 2.0</a>
+        <br />
+        <span th:if="${workflow != null}">
+            <a th:href="@{'https://github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName}}" href="#">Shown workflow</a> has separate copyright and license
+        </span>
     </div>
 </body>
 </html>
