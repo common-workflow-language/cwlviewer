@@ -20,8 +20,14 @@
 
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-    <div th:fragment="copy" id="footer">
-        &copy; Common Workflow Language - <a href="https://github.com/common-workflow-language/cwlviewer">Github URL</a>
+<nav th:fragment="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">
+                <img id="logo" src="http://www.commonwl.org/CWL-Logo-Header.png"></img>
+            </a>
+        </div>
     </div>
+</nav>
 </body>
 </html>

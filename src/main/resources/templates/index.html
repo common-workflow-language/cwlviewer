@@ -27,15 +27,7 @@
     </head>
     <body>
 
-        <nav class="navbar navbar-default navbar-fixed-top">
-            <div class="container">
-                <div class="navbar-header">
-                    <a class="navbar-brand" href="/">
-                        <img id="logo" src="http://www.commonwl.org/CWL-Logo-Header.png"></img>
-                    </a>
-                </div>
-            </div>
-        </nav>
+        <nav th:replace="fragments/header :: navbar">Navbar</nav>
 
         <div class="container">
             <div class="row">
@@ -65,6 +57,6 @@
             </div>
         </div>
 
-        <div th:include="fragments/footer :: copy" id="footer">Copyright text</div>
+        <div th:replace="fragments/footer :: copy">Copyright text</div>
     </body>
 </html>
