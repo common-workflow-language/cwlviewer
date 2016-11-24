@@ -47,6 +47,14 @@ body {
     padding: 10px;
 }
 
+#visualisation svg {
+    width: 100%;
+}
+
+#visualisation svg polygon {
+    stroke-width: 0;
+}
+
 #footer {
     text-align: center;
     font-style: italic;

@@ -30,7 +30,7 @@ requirejs.config({
 
 require(['renderer'],
     function (renderer) {
-        dotSource = 'digraph G { bgcolor="#eeeeee"; subgraph cluster_c0 {a0 -> a1 -> a2 -> a3;} subgraph cluster_c1 {b0 -> b1 -> b2 -> b3;} x -> a0; x -> b0; a1 -> b3; b1 -> a3; } ';
+        dotSource = 'digraph G { color="#eeeeee"; bgcolor="#eeeeee"; subgraph cluster_c0 {a0 -> a1 -> a2 -> a3;} subgraph cluster_c1 {b0 -> b1 -> b2 -> b3;} x -> a0; x -> b0; a1 -> b3; b1 -> a3; } ';
         zoomFunc = renderer.init({
             element: '#visualisation',
             extend: [0.1, 10],
