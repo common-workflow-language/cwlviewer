@@ -7,7 +7,7 @@ services:
 # TODO:
 #    volumes:
 #     - .:/code
-    depends_on:
+    links:
      - mongo
 
   mongo:

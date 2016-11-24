@@ -21,4 +21,4 @@ WORKDIR /tmp
 EXPOSE 8080
 
 # Expects mongodb on port 27017
-CMD ["/usr/bin/java", "-jar", "/usr/lib/cwlvisualizer.jar", "-Dspring.data.mongodb.host=mongo"]
+CMD ["/usr/bin/java", "-Dspring.data.mongodb.host=mongo", "-jar", "/usr/lib/cwlvisualizer.jar"]
