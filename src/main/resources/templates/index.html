@@ -23,8 +23,6 @@
         <meta charset="UTF-8" />
         <title>Common Workflow Language Viewer</title>
         <link rel="stylesheet" type="text/css" href="/css/main.css" />
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-              rel="stylesheet" />
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
     </head>
     <body>
@@ -32,7 +30,7 @@
         <nav class="navbar navbar-default navbar-fixed-top">
             <div class="container">
                 <div class="navbar-header">
-                    <a class="navbar-brand" href="index.html">
+                    <a class="navbar-brand" href="/">
                         <img id="logo" src="http://www.commonwl.org/CWL-Logo-Header.png"></img>
                     </a>
                 </div>
@@ -51,17 +49,15 @@
                     <p>This tool is currently experimental and may not work for all valid workflows.</p>
 
                     <h2>Workflow from Github URL</h2>
-                    <p>Provide a link to the directory of files making up your workflow here, eg https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR</p>
+                    <p>Provide a link to the directory of files making up your workflow here</p>
                     <form id="add" action="#" th:action="@{/}" th:object="${workflowForm}" method="POST">
-                        <p class="error" th:if="${#fields.hasErrors('githubURL')}">
-                            <i class="material-icons">error_outline</i>
-                            <strong>Error:</strong>
-                            <span th:errors="*{githubURL}">URL cannot be empty</span>
-                        </p>
+                        <div class="alert alert-danger" th:if="${#fields.hasErrors('githubURL')}">
+                            <strong>Error:</strong> <span th:errors="*{githubURL}">Error message here</span>
+                        </div>
                         <div class="input-group">
                             <input type="text" class="form-control" placeholder="Github URL" id="githubURL" name="githubURL" th:field="*{githubURL}" />
                             <span class="input-group-btn">
-                                <button class="btn btn-default" type="button">Parse Workflow</button>
+                                <button class="btn btn-default" type="submit">Parse Workflow</button>
                             </span>
                         </div>
                     </form>

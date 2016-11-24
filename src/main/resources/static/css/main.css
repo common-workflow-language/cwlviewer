@@ -38,31 +38,6 @@ body {
     padding-left: 45px;
 }
 
-table {
-    border-collapse: collapse;
-}
-
-table td, table th {
-    border: 1px solid #ddd;
-}
-
-.material-icons {
-    display: inline;
-    vertical-align: middle;
-    margin-right: 3px;
-}
-
-.error {
-    font-size: 14px;
-    margin: 7px 5px 0;
-    padding: 5px;
-    background-color: #ffc4c5;
-    border: 1px solid #ff0000;
-    border-radius: 3px;
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
-}
-
 #footer {
     text-align: center;
     font-style: italic;
