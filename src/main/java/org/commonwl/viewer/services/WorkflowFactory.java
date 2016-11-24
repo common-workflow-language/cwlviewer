@@ -66,15 +66,20 @@ public class WorkflowFactory {
 
                 // Get the workflow model
                 Workflow workflowModel = cwlFiles.getWorkflow();
-                workflowModel.setRetrievedOn(new Date());
-                workflowModel.setRetrievedFrom(githubInfo);
+                if (workflowModel != null) {
+                    // Set origin details
+                    workflowModel.setRetrievedOn(new Date());
+                    workflowModel.setRetrievedFrom(githubInfo);
 
-                // Save to the MongoDB database
-                workflowRepository.save(workflowModel);
+                    // Save to the MongoDB database
+                    workflowRepository.save(workflowModel);
 
-                // Return this model to be displayed
-                return workflowModel;
+                    // Return this model to be displayed
+                    return workflowModel;
 
+                } else {
+                    System.out.println("Error: no workflow could be found");
+                }
             } catch (IOException ex) {
                 System.out.println("Error: " + ex.getMessage());
             }

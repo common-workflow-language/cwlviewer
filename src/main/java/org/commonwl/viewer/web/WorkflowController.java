@@ -66,6 +66,12 @@ public class WorkflowController {
             // Create a workflow from the github URL
             Workflow newWorkflow = workflowFactory.workflowFromGithub(workflowForm.getGithubURL());
 
+            // Runtime error
+            if (newWorkflow == null) {
+                bindingResult.rejectValue("githubURL", "githubURL.parsingError");
+                return new ModelAndView("index");
+            }
+
             // Return new workflow along with the workflow view
             return new ModelAndView("workflow", "workflow", newWorkflow);
         }

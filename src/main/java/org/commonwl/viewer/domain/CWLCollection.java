@@ -144,6 +144,11 @@ public class CWLCollection {
     public Workflow getWorkflow() {
         if (mainWorkflowIndex < 0) {
             findMainWorkflow();
+
+            // If it is still less than 0 there is no workflow to be found
+            if (mainWorkflowIndex < 0) {
+                return null;
+            }
         }
         JsonNode mainWorkflow = cwlDocs.get(mainWorkflowIndex);
         return new Workflow(extractLabel(mainWorkflow), extractDoc(mainWorkflow),
