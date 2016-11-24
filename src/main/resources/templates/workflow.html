@@ -21,48 +21,55 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
-    <title>Common Workflow Language Viewer - Name Here</title>
-    <link rel="stylesheet" type="text/css" href="/css/main.css" />
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:600" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-          rel="stylesheet" />
+    <title>Common Workflow Language Viewer</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}" href="../static/css/main.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
 </head>
 <body>
-<div id="header">
-    <h1>Common Workflow Language Viewer</h1>
+
+<nav th:replace="fragments/header :: navbar"></nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12" role="main" id="main">
+            <h2>Workflow: <span th:text="${workflow.label}">Workflow Name</span></h2>
+            <p th:text="${workflow.doc}">Workflow Doc</p>
+            <h2>Inputs</h2>
+            <table class="table table-striped">
+                <thead>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Label</th>
+                    <th>Doc</th>
+                </thead>
+                <tbody>
+                    <tr th:each="input : ${workflow.inputs}">
+                        <td th:text="${input.key}">ID</td>
+                        <td th:text="${input.value.type}">Type</td>
+                        <td th:text="${input.value.label}">Label</td>
+                        <td th:text="${input.value.doc}">Description</td>
+                    </tr>
+                </tbody>
+            </table>
+            <h2>Outputs</h2>
+            <table class="table table-striped">
+                <thead>
+                    <th>ID</th>
+                    <th>Label</th>
+                    <th>Doc</th>
+                </thead>
+                <tbody>
+                    <tr th:each="output : ${workflow.outputs}">
+                        <td th:text="${output.key}">ID</td>
+                        <td th:text="${output.value.label}">Label</td>
+                        <td th:text="${output.value.doc}">Description</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-<div id="container">
-    <h2>Workflow: <span th:text="${workflow.label}">Workflow Name</span></h2>
-    <p th:text="${workflow.doc}">Workflow Doc</p>
-    <h2>Inputs</h2>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Type</th>
-            <th>Label</th>
-            <th>Doc</th>
-        </tr>
-        <tr th:each="input : ${workflow.inputs}">
-            <td th:text="${input.key}">ID</td>
-            <td th:text="${input.value.type}">Type</td>
-            <td th:text="${input.value.label}">Label</td>
-            <td th:text="${input.value.doc}">Description</td>
-        </tr>
-    </table>
-    <h2>Outputs</h2>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Label</th>
-            <th>Doc</th>
-        </tr>
-        <tr th:each="output : ${workflow.outputs}">
-            <td th:text="${output.key}">ID</td>
-            <td th:text="${output.value.label}">Label</td>
-            <td th:text="${output.value.doc}">Description</td>
-        </tr>
-    </table>
-</div>
-<div th:include="fragments/footer :: copy" id="footer">Copyright text</div>
+
+<div th:replace="fragments/footer :: copy"></div>
 </body>
 </html>
