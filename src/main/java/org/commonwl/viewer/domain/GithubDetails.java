@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.researchobject.domain;
+package org.commonwl.viewer.domain;
 
 /**
  * Represents all the parameters necessary to access a file/directory in Github

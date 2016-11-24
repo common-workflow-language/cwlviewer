@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package org.researchobject.web;
+package org.commonwl.viewer.web;
 
-import org.researchobject.domain.Workflow;
-import org.researchobject.domain.WorkflowForm;
-import org.researchobject.services.WorkflowFactory;
-import org.researchobject.services.WorkflowFormValidator;
+import org.commonwl.viewer.domain.Workflow;
+import org.commonwl.viewer.domain.WorkflowForm;
+import org.commonwl.viewer.services.WorkflowFactory;
+import org.commonwl.viewer.services.WorkflowFormValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;

@@ -17,20 +17,16 @@
  * under the License.
  */
 
-package org.researchobject.services;
+package org.commonwl.viewer.services;
 
-import org.researchobject.domain.CWLCollection;
-import org.researchobject.domain.GithubDetails;
-import org.researchobject.domain.Workflow;
+import org.commonwl.viewer.domain.CWLCollection;
+import org.commonwl.viewer.domain.GithubDetails;
+import org.commonwl.viewer.domain.Workflow;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.List;
-
-import static org.apache.jena.sparql.vocabulary.DOAP.repository;
 
 @Service
 public class WorkflowFactory {

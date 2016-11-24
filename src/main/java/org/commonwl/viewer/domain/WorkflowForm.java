@@ -17,18 +17,21 @@
  * under the License.
  */
 
-package org.researchobject.services;
-
-import org.researchobject.domain.GithubDetails;
-import org.researchobject.domain.Workflow;
-import org.springframework.data.mongodb.repository.MongoRepository;
+package org.commonwl.viewer.domain;
 
 /**
- * Stores workflow objects in the database
+ * Represents the submission form on the main page to create a new workflow
+ * Currently just contains a github URL
  */
-public interface WorkflowRepository extends MongoRepository<Workflow, String> {
+public class WorkflowForm {
 
-    // Finds a workflow model in the database based on where it was retrieved from
-    Workflow findByRetrievedFrom(GithubDetails retrievedFrom);
+    private String githubURL;
 
+    public String getGithubURL() {
+        return githubURL;
+    }
+
+    public void setGithubURL(String githubURL) {
+        this.githubURL = githubURL;
+    }
 }

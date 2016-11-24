@@ -17,39 +17,19 @@
  * under the License.
  */
 
-package org.researchobject.domain;
+package org.commonwl.viewer;
 
-/**
- * Represents the input or output of a workflow/tool
- */
-public class CWLElement {
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.scheduling.annotation.EnableAsync;
 
-    private String label;
-    private String doc;
-    private String type;
+@SpringBootApplication
+@EnableMongoRepositories
+@EnableAsync
+public class CwlViewerApplication {
 
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public String getDoc() {
-        return doc;
-    }
-
-    public void setDoc(String doc) {
-        this.doc = doc;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
+	public static void main(String[] args) {
+		SpringApplication.run(CwlViewerApplication.class, args);
+	}
 }

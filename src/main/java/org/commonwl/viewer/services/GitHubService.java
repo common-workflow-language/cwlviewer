@@ -17,16 +17,16 @@
  * under the License.
  */
 
-package org.researchobject.services;
+package org.commonwl.viewer.services;
 
 import org.apache.commons.io.IOUtils;
+import org.commonwl.viewer.domain.GithubDetails;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.User;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.ContentsService;
 import org.eclipse.egit.github.core.service.UserService;
-import org.researchobject.domain.GithubDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
