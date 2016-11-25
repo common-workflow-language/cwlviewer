@@ -46,6 +46,9 @@ require(['jquery', 'renderer'],
         // Update stage with new dot source
         renderer.render(dotGraph);
 
+        // Fade the loading and show graph
+        $("#loading").fadeOut();
+
         /**
          * Download the rendered graph as a png
          */

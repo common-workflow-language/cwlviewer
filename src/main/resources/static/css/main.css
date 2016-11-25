@@ -48,7 +48,6 @@ body {
 }
 
 #graph svg {
-    display: none;
     width: 100%;
 }
 
