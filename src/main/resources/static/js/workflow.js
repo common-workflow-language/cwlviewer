@@ -74,4 +74,18 @@ require(['jquery', 'bootstrap.modal', 'renderer'],
             // Stop default button action
             event.preventDefault();
         });
+
+        /**
+         * DOT graph modal textarea automatically focuses when opened
+         */
+        $('#dotGraph').on('shown.bs.modal', function () {
+            $('#dot').focus();
+        })
+
+        /**
+         * DOT graph textarea focus selects all
+         */
+        $("#dot").focus(function() {
+            $(this).select();
+        });
     });
