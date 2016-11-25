@@ -28,7 +28,14 @@ requirejs.config({
         'layout-worker': '/bower_components/graphviz-d3-renderer/dist/layout-worker',
         worker: '/bower_components/requirejs-web-workers/src/worker',
         renderer: '/bower_components/graphviz-d3-renderer/dist/renderer',
-        jquery: '/bower_components/jquery/dist/jquery.min'
+        jquery: '/bower_components/jquery/dist/jquery.min',
+        'bootstrap.modal': '/bower_components/bootstrap/js/modal'
+
+    },
+    shim: {
+        'bootstrap.modal': {
+            deps: ['jquery']
+        }
     }
 });
 
