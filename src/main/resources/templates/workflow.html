@@ -30,6 +30,35 @@
 
 <nav th:replace="fragments/header :: navbar"></nav>
 
+<!-- Modal for viewing DOT graph -->
+<div class="modal fade" id="dotGraph" tabindex="-1" role="dialog" aria-labelledby="dotGraphLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="dotGraphLabel">Workflow DOT Graph</h4>
+            </div>
+            <div class="modal-body">
+<textarea id="dot" class="form-control" rows="15">
+digraph G {
+    bgcolor="#eeeeee";
+    subgraph cluster_c0 {
+        a0 -> a1 -> a2 -> a3;
+    }
+    subgraph cluster_c1 {
+        b0 -> b1 -> b2 -> b3;
+    }
+    x -> a0;
+    x -> b0;
+    a1 -> b3;
+    b1 -> a3;
+}
+</textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container">
     <div class="row">
         <div class="col-md-12" role="main" id="main">
@@ -42,7 +71,7 @@
             <div id="graph-menu" class="pull-right">
                 <a id="download" href="" download="diagram.png"></a>
                 <strong>Graph: </strong>
-                <button id="view-dot" class="btn btn-primary" type="button">View DOT</button>
+                <button id="view-dot" class="btn btn-primary" type="button" data-toggle="modal" data-target="#dotGraph">View DOT</button>
                 <button id="download-graph" class="btn btn-primary" type="button">Download Image</button>
             </div>
         </div>

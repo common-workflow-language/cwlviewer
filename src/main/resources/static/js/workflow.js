@@ -42,10 +42,10 @@ requirejs.config({
 /**
  * Main rendering code for the graphs on a workflow page
  */
-require(['jquery', 'renderer'],
-    function ($, renderer) {
-        // Dot graph as a string
-        dotGraph = 'digraph G { color="#eeeeee"; bgcolor="#eeeeee"; subgraph cluster_c0 {a0 -> a1 -> a2 -> a3;} subgraph cluster_c1 {b0 -> b1 -> b2 -> b3;} x -> a0; x -> b0; a1 -> b3; b1 -> a3; } ';
+require(['jquery', 'bootstrap.modal', 'renderer'],
+    function ($, modal, renderer) {
+        // Load dot graph from the page
+        var dotGraph = $("#dot").val();
 
         // Initialise graph
         renderer.init("#graph");
