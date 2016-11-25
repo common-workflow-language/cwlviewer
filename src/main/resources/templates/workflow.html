@@ -21,6 +21,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Common Workflow Language Viewer</title>
     <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}" href="../static/css/main.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
@@ -39,15 +40,22 @@
     <div class="row">
         <div class="col-md-12">
             <div id="graph-menu" class="pull-right">
+                <a id="download" href="" download="diagram.png"></a>
                 <strong>Graph: </strong>
-                <button class="btn btn-primary" type="button">View DOT</button>
-                <button class="btn btn-primary" type="button">Download as Image</button>
+                <button id="view-dot" class="btn btn-primary" type="button">View DOT</button>
+                <button id="download-graph" class="btn btn-primary" type="button">Download Image</button>
             </div>
         </div>
     </div>
     <div class="row">
         <div class="col-md-12">
-            <div id="visualisation" class="jumbotron"></div>
+            <div id="visualisation" class="jumbotron">
+                <div id="loading">
+                    <img src="../static/img/loading.svg" th:src="@{/img/loading.svg}" />
+                    <span>Drawing Workflow...</span>
+                </div>
+                <div id="graph"></div>
+            </div>
             <h2>Inputs</h2>
             <table class="table table-striped">
                 <thead>
@@ -86,6 +94,6 @@
 
 <div th:replace="fragments/footer :: copy"></div>
 
-<script src="/bower_components/requirejs/require.js" data-main="/js/main.js"></script>
+<script src="/bower_components/requirejs/require.js" data-main="/js/workflow.js"></script>
 </body>
 </html>

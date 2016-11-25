@@ -47,17 +47,24 @@ body {
     padding: 10px;
 }
 
-#visualisation svg {
+#graph svg {
+    display: none;
     width: 100%;
 }
 
-#visualisation svg polygon {
+#graph svg polygon {
     stroke-width: 0;
+}
+
+#loading {
+    width: 150px;
+    margin: 0 auto;
 }
 
 #footer {
     text-align: center;
     font-style: italic;
+    margin-bottom: 30px;
     margin-top: 15px;
 }
 
