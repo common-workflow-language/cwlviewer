@@ -53,8 +53,10 @@ require(['jquery', 'bootstrap.modal', 'renderer'],
         // Update stage with new dot source
         renderer.render(dotGraph);
 
-        // Fade the loading and show graph
-        $("#loading").fadeOut();
+        // Fade the loading and show graph when graph is drawn
+        renderer.renderHandler(function() {
+            $("#loading").fadeOut();
+        });
 
         /**
          * Download the rendered graph as a png
