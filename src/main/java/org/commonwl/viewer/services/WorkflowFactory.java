@@ -22,6 +22,8 @@ package org.commonwl.viewer.services;
 import org.commonwl.viewer.domain.CWLCollection;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +32,8 @@ import java.util.Date;
 
 @Service
 public class WorkflowFactory {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final GitHubService githubService;
     private final ROBundleFactory ROBundleFactory;
@@ -60,10 +64,6 @@ public class WorkflowFactory {
                 // Set up CWL utility to collect the documents
                 CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo);
 
-                // Create a new research object bundle from Github details
-                // This is Async so cannot just call constructor, needs intermediate as per Spring framework
-                ROBundleFactory.workflowROFromGithub(githubService, githubInfo);
-
                 // Get the workflow model
                 Workflow workflowModel = cwlFiles.getWorkflow();
                 if (workflowModel != null) {
@@ -72,19 +72,25 @@ public class WorkflowFactory {
                     workflowModel.setRetrievedFrom(githubInfo);
 
                     // Save to the MongoDB database
+                    logger.info("Storing workflow in DB");
                     workflowRepository.save(workflowModel);
+
+                    // Create a new research object bundle from Github details
+                    // This is Async so cannot just call constructor, needs intermediate as per Spring framework
+                    ROBundleFactory.workflowROFromGithub(githubService, githubInfo);
 
                     // Return this model to be displayed
                     return workflowModel;
 
                 } else {
-                    System.out.println("Error: no workflow could be found");
+                    logger.error("No workflow could be found");
                 }
             } catch (IOException ex) {
-                System.out.println("Error: " + ex.getMessage());
+                logger.error(ex.getMessage());
             }
         } else {
-            System.out.println("Error should never happen, already passed validation");
+            // TODO: Refactor validator so this redundant step can be removed?
+            logger.error("Error should never happen, already passed URL validation");
         }
 
         return null;

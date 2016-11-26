@@ -22,6 +22,8 @@ package org.commonwl.viewer.services;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.commonwl.viewer.domain.WorkflowForm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
@@ -36,6 +38,8 @@ import java.util.List;
  */
 @Component
 public class WorkflowFormValidator implements Validator {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
      * Github API service
@@ -89,16 +93,21 @@ public class WorkflowFormValidator implements Validator {
                     }
                     if (!foundCWL) {
                         // The URL does not contain any .cwl files
+                        logger.error("No .cwl files found at Github URL");
                         e.rejectValue("githubURL", "githubURL.missingWorkflow");
                     }
                 } catch (IOException ex) {
                     // Given repository/branch/path does not exist or API error occured
+                    logger.error(ex.getMessage());
                     e.rejectValue("githubURL", "githubURL.apiError");
                 }
             } else {
                 // The Github URL is not valid
+                logger.error("The Github URL is not valid");
                 e.rejectValue("githubURL", "githubURL.invalid");
             }
+        } else {
+            logger.error("Github URL is empty");
         }
     }
 }

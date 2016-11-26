@@ -23,16 +23,22 @@ import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.WorkflowForm;
 import org.commonwl.viewer.services.WorkflowFactory;
 import org.commonwl.viewer.services.WorkflowFormValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @Controller
 public class WorkflowController {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final WorkflowFormValidator workflowFormValidator;
     private final WorkflowFactory workflowFactory;
@@ -56,6 +62,8 @@ public class WorkflowController {
      */
     @PostMapping("/")
     public ModelAndView newWorkflowFromGithubURL(@Valid WorkflowForm workflowForm, BindingResult bindingResult) {
+        logger.info("Processing new workflow from Github: \"" + workflowForm.getGithubURL() + "\"");
+
         // Run validator which checks the github URL is valid
         workflowFormValidator.validate(workflowForm, bindingResult);
 
