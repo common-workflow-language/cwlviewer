@@ -66,7 +66,7 @@ require(['jquery', 'bootstrap.modal', 'renderer'],
             // Once it is loaded
             img.onload = function () {
                 // Set hidden download link href to contents and click it
-                var downloadLink = $("#download");
+                var downloadLink = $("#download-link-graph");
                 downloadLink.attr("href", img.src);
                 downloadLink[0].click();
             };
@@ -87,5 +87,22 @@ require(['jquery', 'bootstrap.modal', 'renderer'],
          */
         $("#dot").focus(function() {
             $(this).select();
+        });
+
+        /**
+         * Downloading of the DOT graph as a .gv file
+         */
+        $('#download-gv').click(function (event) {
+            // Generate download link src
+            var dotGraph = $("#dot").val();
+            var src = "data:text/plain;charset=utf-8," + encodeURIComponent(dotGraph);
+
+            // Set hidden download link href to contents and click it
+            var downloadLink = $("#download-link-gv");
+            downloadLink.attr("href", src);
+            downloadLink[0].click();
+
+            // Stop default button action
+            event.preventDefault();
         });
     });

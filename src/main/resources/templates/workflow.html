@@ -39,6 +39,8 @@
                 <h4 class="modal-title" id="dotGraphLabel">Workflow DOT Graph</h4>
             </div>
             <div class="modal-body">
+                <a id="download-link-gv" href="" download="workflow.gv"></a>
+                <button id="download-gv" class="btn btn-primary" type="button">Download as .gv File</button>
 <textarea id="dot" class="form-control" rows="15">
 digraph G {
     bgcolor="#eeeeee";
@@ -69,7 +71,7 @@ digraph G {
     <div class="row">
         <div class="col-md-12">
             <div id="graph-menu" class="pull-right">
-                <a id="download" href="" download="diagram.png"></a>
+                <a id="download-link-graph" href="" download="workflow.png"></a>
                 <strong>Graph: </strong>
                 <button id="view-dot" class="btn btn-primary" type="button" data-toggle="modal" data-target="#dotGraph">View DOT</button>
                 <button id="download-graph" class="btn btn-primary" type="button">Download Image</button>
