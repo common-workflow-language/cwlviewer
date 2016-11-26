@@ -26,6 +26,8 @@ import org.apache.taverna.robundle.manifest.Manifest;
 import org.commonwl.viewer.services.GitHubService;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.eclipse.egit.github.core.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -39,6 +41,8 @@ import java.util.List;
  * Represents a Workflow Research Object Bundle
  */
 public class ROBundle {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private GitHubService githubService;
 
@@ -87,7 +91,7 @@ public class ROBundle {
             manifest.setAuthoredBy(authorList);
 
         } catch (URISyntaxException ex) {
-            System.out.println("Incorrect URI Syntax");
+            logger.error(ex.getMessage());
         }
 
         // Make a directory in the RO bundle to store the files
