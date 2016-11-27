@@ -19,16 +19,25 @@
   -->
 
 <html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" href="../../static/css/main.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
+</head>
 <body>
-    <div th:fragment="copy" id="footer">
-        <a href="https://github.com/common-workflow-language/cwlviewer" rel="noopener" target="_blank">CWL Viewer</a>
-        &copy; 2016 <a href="https://github.com/common-workflow-language/" rel="noopener" target="_blank">Common Workflow Project</a>
-        and <a href="https://github.com/orgs/common-workflow-language/people" rel="noopener" target="_blank">contributors</a>,
-        distributed under <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener" target="_blank">Apache license, version 2.0</a>
-        <br />
-        <span th:if="${workflow != null}">
-            <a th:href="@{'https://github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName}}" href="#" rel="noopener" target="_blank">Shown workflow</a> has separate copyright and license
-        </span>
+    <div th:fragment="copy" id="footer" class="container">
+        <div class="row">
+            <hr />
+            <div class="col-lg-12 muted text-center">
+                <a href="https://github.com/common-workflow-language/cwlviewer" rel="noopener" target="_blank">CWL Viewer</a>
+                &copy; 2016 <a href="https://github.com/common-workflow-language/" rel="noopener" target="_blank">Common Workflow Project</a>
+                and <a href="https://github.com/orgs/common-workflow-language/people" rel="noopener" target="_blank">contributors</a>,
+                distributed under <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener" target="_blank">Apache license, version 2.0</a>
+                <br />
+                <span th:if="${workflow != null}">
+                    <a th:href="@{'https://github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName}}" href="#" rel="noopener" target="_blank">Shown workflow</a> has separate copyright and license
+                </span>
+            </div>
+        </div>
     </div>
 </body>
 </html>
