@@ -48,7 +48,10 @@ require(['jquery', 'bootstrap.modal', 'renderer'],
         var dotGraph = $("#dot").val();
 
         // Initialise graph
-        renderer.init("#graph");
+        renderer.init({
+            element: "#graph",
+            zoom: true
+        });
 
         // Update stage with new dot source
         renderer.render(dotGraph);
