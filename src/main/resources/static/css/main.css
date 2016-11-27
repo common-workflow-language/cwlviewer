@@ -39,15 +39,6 @@ body {
 }
 
 #footer {
-    text-align: center;
-    font-style: italic;
     margin-top: 15px;
-}
-
-#footer a {
-    color: #939393;
-}
-
-#footer a:hover {
-    color: #494949;
+    margin-bottom: 15px;
 }
