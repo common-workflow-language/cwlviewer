@@ -55,6 +55,10 @@ body {
     stroke-width: 0;
 }
 
+#graph .subgraph path {
+    stroke-dasharray: 1, 5;
+}
+
 #loading {
     width: 150px;
     margin: 0 auto;
