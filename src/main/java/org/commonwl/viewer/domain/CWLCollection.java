@@ -132,7 +132,8 @@ public class CWLCollection {
         // TODO: Consider relationship between run: parameters to better discover this
         for (int i=0; i < cwlDocs.size(); i++) {
             if (cwlDocs.get(i).get("class").asText().equals("Workflow")) {
-                mainWorkflowIndex = i;
+                mainWorkflowIndex = 0;
+                return;
             }
         }
     }
