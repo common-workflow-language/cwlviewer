@@ -143,12 +143,14 @@ digraph G {
             <table class="table table-striped">
                 <thead>
                     <th>ID</th>
+                    <th>Type</th>
                     <th>Label</th>
                     <th>Doc</th>
                 </thead>
                 <tbody>
                     <tr th:each="output : ${workflow.outputs}">
                         <td th:text="${output.key}">ID</td>
+                        <td th:text="${output.value.type}">Type</td>
                         <td th:text="${output.value.label}">Label</td>
                         <td th:text="${output.value.doc}">Description</td>
                     </tr>
