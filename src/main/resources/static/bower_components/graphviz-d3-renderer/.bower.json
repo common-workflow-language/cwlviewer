@@ -1,0 +1,58 @@
+{
+  "name": "graphviz-d3-renderer",
+  "version": "0.9.20",
+  "dependencies": {
+    "requirejs": "2.1.15",
+    "d3": "3.5.3",
+    "requirejs-web-workers": "~1.0.1",
+    "viz.js": "~1.4.1"
+  },
+  "devDependencies": {
+    "rfactory": "1.1.0",
+    "requirejs-text": "2.0.13",
+    "js-imagediff": "HumbleSoftware/js-imagediff#b7398e1",
+    "resemblejs": "^2.2.0"
+  },
+  "exportsOverride": {
+    "requirejs": {
+      "": "require.js"
+    },
+    "requirejs-text": {
+      "": "text.js"
+    },
+    "requirejs-web-workers": {
+      "": "src/*"
+    },
+    "js-imagediff": {
+      "": "js/imagediff.js"
+    }
+  },
+  "authors": [
+    "Marcin Stefaniuk <marcin@stefaniuk.info>"
+  ],
+  "license": "GPL",
+  "private": false,
+  "main": [
+    "dist/renderer.js",
+    "dist/layout-worker.js",
+    "dist/ace-mode.js",
+    "dist/dot-checker.js"
+  ],
+  "ignore": [
+    "**/.*",
+    "spec",
+    "src",
+    "Gruntfile.js",
+    "karma.conf.js"
+  ],
+  "homepage": "https://github.com/mstefaniuk/graph-viz-d3-js",
+  "_release": "0.9.20",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.9.20",
+    "commit": "077cadb3005a37e6c69a9873520dd3f8cde72206"
+  },
+  "_source": "https://github.com/mstefaniuk/graph-viz-d3-js.git",
+  "_target": "^0.9.18",
+  "_originalSource": "graphviz-d3-renderer"
+}

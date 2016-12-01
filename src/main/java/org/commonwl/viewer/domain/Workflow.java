@@ -19,9 +19,14 @@
 
 package org.commonwl.viewer.domain;
 
+import org.commonwl.viewer.services.DotWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
@@ -30,6 +35,8 @@ import java.util.Map;
  * Representation of a workflow
  */
 public class Workflow {
+
+    static private final Logger logger = LoggerFactory.getLogger(Workflow.class);
 
     // ID for database
     @Id
@@ -47,11 +54,24 @@ public class Workflow {
     private Map<String, CWLElement> inputs;
     private Map<String, CWLElement> outputs;
 
+    // DOT graph of the contents
+    private String dotGraph = "test";
+
     public Workflow(String label, String doc, Map<String, CWLElement> inputs, Map<String, CWLElement> outputs) {
         this.label = label;
         this.doc = doc;
         this.inputs = inputs;
         this.outputs = outputs;
+
+        // Create a DOT graph for this workflow and store it
+        StringWriter graphWriter = new StringWriter();
+        DotWriter dotWriter = new DotWriter(graphWriter);
+        try {
+            dotWriter.writeGraph(this);
+            this.dotGraph = graphWriter.toString();
+        } catch (IOException ex) {
+            logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
+        }
     }
 
     @Override
@@ -121,5 +141,13 @@ public class Workflow {
 
     public void setRetrievedOn(Date retrievedOn) {
         this.retrievedOn = retrievedOn;
+    }
+
+    public String getDotGraph() {
+        return dotGraph;
+    }
+
+    public void setDotGraph(String dotGraph) {
+        this.dotGraph = dotGraph;
     }
 }

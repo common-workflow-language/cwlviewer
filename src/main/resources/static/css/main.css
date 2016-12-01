@@ -38,7 +38,38 @@ body {
     padding-left: 45px;
 }
 
+#graph-menu {
+    margin-bottom: 5px;
+}
+
+#visualisation {
+    overflow: auto;
+    padding: 0;
+}
+
+#graph svg {
+    width: 100%;
+}
+
+#graph svg polygon {
+    stroke-width: 0;
+}
+
+#graph .subgraph path {
+    stroke-dasharray: 1, 5;
+}
+
+#loading {
+    width: 150px;
+    margin: 0 auto;
+}
+
+#download-gv {
+    margin-bottom: 5px;
+}
+
 #footer {
-    margin-top: 15px;
-    margin-bottom: 15px;
+    text-align: center;
+    font-style: italic;
+    margin-bottom: 30px;
 }
