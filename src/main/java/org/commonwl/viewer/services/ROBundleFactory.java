@@ -21,6 +21,8 @@ package org.commonwl.viewer.services;
 
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.ROBundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -38,6 +40,8 @@ import java.io.IOException;
 @EnableAsync
 public class ROBundleFactory {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Value("${applicationName}")
     private String applicationName;
     @Value("${applicationURL}")
@@ -53,8 +57,10 @@ public class ROBundleFactory {
     @Async
     void workflowROFromGithub(GitHubService githubService, GithubDetails githubInfo) throws IOException {
         // TODO: Add the bundle link to the page when it is finished being created
+        logger.info("Creating Research Object Bundle");
         ROBundle bundle = new ROBundle(githubService, githubInfo,
                 applicationName, applicationURL);
         bundle.saveToTempFile();
+        logger.info("Successfully saved Research Object Bundle");
     }
 }

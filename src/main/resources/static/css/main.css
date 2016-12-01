@@ -72,13 +72,4 @@ body {
     text-align: center;
     font-style: italic;
     margin-bottom: 30px;
-    margin-top: 15px;
-}
-
-#footer a {
-    color: #939393;
-}
-
-#footer a:hover {
-    color: #494949;
 }
