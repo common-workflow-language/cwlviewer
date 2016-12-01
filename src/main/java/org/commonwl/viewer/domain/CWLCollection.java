@@ -320,6 +320,12 @@ public class CWLCollection {
 
                 // Set the type to the constructed string
                 return typeDetails.toString();
+
+            } else if (typeNode.getClass() == ObjectNode.class) {
+                // Type: array and items:
+                if (typeNode.has("items")) {
+                    return typeNode.get("items").asText() + "[]";
+                }
             }
         }
         return null;
