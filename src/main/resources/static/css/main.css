@@ -38,6 +38,10 @@ body {
     padding-left: 45px;
 }
 
+#githubLogo {
+    margin-right: 5px;
+}
+
 #graph-menu {
     margin-bottom: 5px;
 }
