@@ -1,7 +1,8 @@
 version: '2'
 services:
   spring:
-    build: .
+    image: commonworkflowlanguage/cwlviewer
+    #build: .
     ports:
      - "8080:8080"
 # TODO:
