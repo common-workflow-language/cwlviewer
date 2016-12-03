@@ -108,7 +108,7 @@ public class WorkflowController {
             }
 
             // Redirect to the workflow
-            return new ModelAndView("redirect:/workflow/" + workflowID);
+            return new ModelAndView("redirect:/workflows/" + workflowID);
         }
     }
 
@@ -117,7 +117,7 @@ public class WorkflowController {
      * @param workflowID The ID of the workflow to be retrieved
      * @return The workflow view with the workflow as a model
      */
-    @RequestMapping(value="/workflow/{workflowID}")
+    @RequestMapping(value="/workflows/{workflowID}")
     public ModelAndView getWorkflow(@PathVariable String workflowID){
 
         // Get workflow from database
