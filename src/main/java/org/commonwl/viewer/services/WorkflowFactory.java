@@ -50,55 +50,34 @@ public class WorkflowFactory {
 
     /**
      * Builds a new workflow from cwl files fetched from Github
-     * @param githubURL Github directory URL to get the files from
+     * @param githubInfo Github information for the workflow
      * @return The constructed model for the Workflow
      */
-    public Workflow workflowFromGithub(String githubURL) {
+    public Workflow workflowFromGithub(GithubDetails githubInfo) {
 
-        GithubDetails githubInfo = githubService.detailsFromDirURL(githubURL);
+        try {
+            // Set up CWL utility to collect the documents
+            CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo);
 
-        // If the URL is valid and details could be extracted
-        if (githubInfo != null) {
+            // Get the workflow model
+            Workflow workflowModel = cwlFiles.getWorkflow();
+            if (workflowModel != null) {
+                // Set origin details
+                workflowModel.setRetrievedOn(new Date());
+                workflowModel.setRetrievedFrom(githubInfo);
 
-            // Check that we don't already have a workflow in the database
-            Workflow existingWorkflow = workflowRepository.findByRetrievedFrom(githubInfo);
-            if (existingWorkflow != null) {
-                // Return it rather than making a new one if so
-                logger.info("Retrieving existing workflow from DB");
-                return existingWorkflow;
+                // Create a new research object bundle from Github details
+                // This is Async so cannot just call constructor, needs intermediate as per Spring framework
+                ROBundleFactory.workflowROFromGithub(githubService, githubInfo);
+
+                // Return this model to be displayed
+                return workflowModel;
+
             } else {
-                try {
-                    // Set up CWL utility to collect the documents
-                    CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo);
-
-                    // Get the workflow model
-                    Workflow workflowModel = cwlFiles.getWorkflow();
-                    if (workflowModel != null) {
-                        // Set origin details
-                        workflowModel.setRetrievedOn(new Date());
-                        workflowModel.setRetrievedFrom(githubInfo);
-
-                        // Save to the MongoDB database
-                        logger.info("Adding new workflow to DB");
-                        workflowRepository.save(workflowModel);
-
-                        // Create a new research object bundle from Github details
-                        // This is Async so cannot just call constructor, needs intermediate as per Spring framework
-                        ROBundleFactory.workflowROFromGithub(githubService, githubInfo);
-
-                        // Return this model to be displayed
-                        return workflowModel;
-
-                    } else {
-                        logger.error("No workflow could be found");
-                    }
-                } catch (IOException ex) {
-                    logger.error(ex.getMessage());
-                }
+                logger.error("No workflow could be found");
             }
-        } else {
-            // TODO: Refactor validator so this redundant step can be removed?
-            logger.error("Error should never happen, already passed URL validation");
+        } catch (IOException ex) {
+            logger.error(ex.getMessage());
         }
 
         return null;

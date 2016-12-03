@@ -37,7 +37,7 @@ import java.util.List;
  * Runs validation on the workflow form from the main page
  */
 @Component
-public class WorkflowFormValidator implements Validator {
+public class WorkflowFormValidator {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -52,25 +52,15 @@ public class WorkflowFormValidator implements Validator {
     }
 
     /**
-     * Types of class the this validator supports, WorkflowForm
-     * @param theClass The class which is being validated
-     * @return Whether the class can be validated using this validator
-     */
-    public boolean supports(Class theClass) {
-        return WorkflowForm.class.equals(theClass);
-    }
-
-    /**
      * Validates a WorkflowForm to ensure the URL is not empty and directory contains cwl files
-     * @param obj The given WorkFlowForm
+     * @param form The given WorkflowForm
      * @param e Any errors from validation
      */
-    public void validate(Object obj, Errors e) {
+    public GithubDetails validateAndParse(WorkflowForm form, Errors e) {
         ValidationUtils.rejectIfEmptyOrWhitespace(e, "githubURL", "githubURL.emptyOrWhitespace");
 
         // Only continue if not null and isn't just whitespace
         if (!e.hasErrors()) {
-            WorkflowForm form = (WorkflowForm) obj;
             GithubDetails githubInfo = githubService.detailsFromDirURL(form.getGithubURL());
 
             // If the URL is valid and details could be extracted
@@ -91,7 +81,10 @@ public class WorkflowFormValidator implements Validator {
                             }
                         }
                     }
-                    if (!foundCWL) {
+                    if (foundCWL) {
+                        // Return the Github information
+                        return githubInfo;
+                    } else {
                         // The URL does not contain any .cwl files
                         logger.error("No .cwl files found at Github URL");
                         e.rejectValue("githubURL", "githubURL.missingWorkflow");
@@ -109,5 +102,8 @@ public class WorkflowFormValidator implements Validator {
         } else {
             logger.error("Github URL is empty");
         }
+
+        // Errors will stop this being used anyway
+        return null;
     }
 }

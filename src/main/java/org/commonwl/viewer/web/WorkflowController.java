@@ -19,17 +19,21 @@
 
 package org.commonwl.viewer.web;
 
+import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.WorkflowForm;
 import org.commonwl.viewer.services.WorkflowFactory;
 import org.commonwl.viewer.services.WorkflowFormValidator;
+import org.commonwl.viewer.services.WorkflowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.validation.Valid;
@@ -42,6 +46,7 @@ public class WorkflowController {
 
     private final WorkflowFormValidator workflowFormValidator;
     private final WorkflowFactory workflowFactory;
+    private final WorkflowRepository workflowRepository;
 
     /**
      * Autowired constructor to initialise objects used by the controller
@@ -49,9 +54,12 @@ public class WorkflowController {
      * @param workflowFactory Builds new Workflow objects
      */
     @Autowired
-    public WorkflowController(WorkflowFormValidator workflowFormValidator, WorkflowFactory workflowFactory) {
+    public WorkflowController(WorkflowFormValidator workflowFormValidator,
+                              WorkflowFactory workflowFactory,
+                              WorkflowRepository workflowRepository) {
         this.workflowFormValidator = workflowFormValidator;
         this.workflowFactory = workflowFactory;
+        this.workflowRepository = workflowRepository;
     }
 
     /**
@@ -62,26 +70,62 @@ public class WorkflowController {
      */
     @PostMapping("/")
     public ModelAndView newWorkflowFromGithubURL(@Valid WorkflowForm workflowForm, BindingResult bindingResult) {
-        logger.info("Processing new workflow from Github: \"" + workflowForm.getGithubURL() + "\"");
+        logger.info("Retrieving workflow from Github: \"" + workflowForm.getGithubURL() + "\"");
 
         // Run validator which checks the github URL is valid
-        workflowFormValidator.validate(workflowForm, bindingResult);
+        GithubDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, bindingResult);
 
         if (bindingResult.hasErrors()) {
             // Go back to index if there are validation errors
             return new ModelAndView("index");
         } else {
-            // Create a workflow from the github URL
-            Workflow newWorkflow = workflowFactory.workflowFromGithub(workflowForm.getGithubURL());
+            // The ID of the workflow to be redirected to
+            String workflowID;
 
-            // Runtime error
-            if (newWorkflow == null) {
-                bindingResult.rejectValue("githubURL", "githubURL.parsingError");
-                return new ModelAndView("index");
+            // Check database for existing workflow
+            Workflow existingWorkflow = workflowRepository.findByRetrievedFrom(githubInfo);
+            if (existingWorkflow != null) {
+                logger.info("Fetching existing workflow from DB");
+
+                // Get the ID from the existing workflow
+                workflowID = existingWorkflow.getID();
+            } else {
+                // New workflow from Github URL
+                Workflow newWorkflow = workflowFactory.workflowFromGithub(githubInfo);
+
+                // Runtime error
+                if (newWorkflow == null) {
+                    bindingResult.rejectValue("githubURL", "githubURL.parsingError");
+                    return new ModelAndView("index");
+                }
+
+                // Save to the MongoDB database
+                logger.info("Adding new workflow to DB");
+                workflowRepository.save(newWorkflow);
+
+                // Get the ID from the new workflow
+                workflowID = newWorkflow.getID();
             }
 
-            // Return new workflow along with the workflow view
-            return new ModelAndView("workflow", "workflow", newWorkflow);
+            // Redirect to the workflow
+            return new ModelAndView("redirect:/workflow/" + workflowID);
         }
+    }
+
+    /**
+     * Display a page for a particular workflow
+     * @param workflowID The ID of the workflow to be retrieved
+     * @return The workflow view with the workflow as a model
+     */
+    @RequestMapping(value="/workflow/{workflowID}")
+    public ModelAndView getWorkflow(@PathVariable String workflowID){
+
+        // Get workflow from database
+        // TODO: Check exists / redirect to error page if not
+        Workflow workflowModel = workflowRepository.findOne(workflowID);
+
+        // Display this model along with the view
+        return new ModelAndView("workflow", "workflow", workflowModel);
+
     }
 }
