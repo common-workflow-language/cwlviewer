@@ -147,8 +147,8 @@ public class WorkflowController {
         // Get workflow from database
         Workflow workflowModel = workflowRepository.findOne(workflowID);
 
-        // 404 error if workflow does not exist
-        if (workflowModel == null) {
+        // 404 error if workflow does not exist or the bundle doesn't yet
+        if (workflowModel == null || workflowModel.getRoBundle() == null) {
             throw new WorkflowNotFoundException();
         }
 
@@ -157,7 +157,7 @@ public class WorkflowController {
 
         // Serve the file from the local filesystem
         File bundleDownload = new File(workflowModel.getRoBundle());
-        logger.info("Serving download for " + bundleDownload.toString());
+        logger.info("Serving download for workflow " + workflowID + " [" + bundleDownload.toString() + "]");
         return new FileSystemResource(bundleDownload);
     }
 }
