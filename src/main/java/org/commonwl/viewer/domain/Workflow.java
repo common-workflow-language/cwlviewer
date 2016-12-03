@@ -31,6 +31,8 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
 
+import static java.util.Calendar.DATE;
+
 /**
  * Representation of a workflow
  */
@@ -43,7 +45,7 @@ public class Workflow {
     private String id;
 
     // Metadata
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    @DateTimeFormat(pattern="MMM d yyyy 'at' hh:mm")
     private Date retrievedOn;
     private GithubDetails retrievedFrom;
     private Path roBundle;
@@ -55,7 +57,7 @@ public class Workflow {
     private Map<String, CWLElement> outputs;
 
     // DOT graph of the contents
-    private String dotGraph = "test";
+    private String dotGraph;
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs, Map<String, CWLElement> outputs) {
         this.label = label;
