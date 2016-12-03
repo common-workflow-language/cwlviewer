@@ -30,14 +30,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @Controller
 public class WorkflowController {
@@ -121,8 +119,12 @@ public class WorkflowController {
     public ModelAndView getWorkflow(@PathVariable String workflowID){
 
         // Get workflow from database
-        // TODO: Check exists / redirect to error page if not
         Workflow workflowModel = workflowRepository.findOne(workflowID);
+
+        // 404 error if workflow does not exist
+        if (workflowModel == null) {
+            throw new WorkflowNotFoundException();
+        }
 
         // Display this model along with the view
         return new ModelAndView("workflow", "workflow", workflowModel);

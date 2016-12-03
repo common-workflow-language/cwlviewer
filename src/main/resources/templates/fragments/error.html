@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<html xmlns:th="http://www.thymeleaf.org"
+      th:fragment="errorpage">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Common Workflow Language Viewer</title>
+        <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}" href="../static/css/main.css" />
+        <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
+    </head>
+    <body>
+
+        <nav th:replace="/fragments/header :: navbar"></nav>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12" role="main" id="main">
+                    <h1>Whoops - Something Went Wrong!</h1>
+                    <div class="alert alert-danger" th:include="this :: errormsg">
+                        <strong>Error:</strong> <span>Error message here</span>
+                    </div>
+                    <p>
+                        If this error was unexpected, you can help us by
+                        <a href="https://github.com/common-workflow-language/cwlviewer/issues" rel="noopener" target="_blank">creating a Github issue</a>
+                        and/or <a href="https://gitter.im/common-workflow-language/common-workflow-language" rel="noopener" target="_blank">discussing it on Gitter</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div th:replace="/fragments/footer :: copy"></div>
+    </body>
+</html>
