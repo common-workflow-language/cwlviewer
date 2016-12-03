@@ -60,33 +60,41 @@ public class WorkflowFactory {
         // If the URL is valid and details could be extracted
         if (githubInfo != null) {
 
-            try {
-                // Set up CWL utility to collect the documents
-                CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo);
+            // Check that we don't already have a workflow in the database
+            Workflow existingWorkflow = workflowRepository.findByRetrievedFrom(githubInfo);
+            if (existingWorkflow != null) {
+                // Return it rather than making a new one if so
+                logger.info("Retrieving existing workflow from DB");
+                return existingWorkflow;
+            } else {
+                try {
+                    // Set up CWL utility to collect the documents
+                    CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo);
 
-                // Get the workflow model
-                Workflow workflowModel = cwlFiles.getWorkflow();
-                if (workflowModel != null) {
-                    // Set origin details
-                    workflowModel.setRetrievedOn(new Date());
-                    workflowModel.setRetrievedFrom(githubInfo);
+                    // Get the workflow model
+                    Workflow workflowModel = cwlFiles.getWorkflow();
+                    if (workflowModel != null) {
+                        // Set origin details
+                        workflowModel.setRetrievedOn(new Date());
+                        workflowModel.setRetrievedFrom(githubInfo);
 
-                    // Save to the MongoDB database
-                    logger.info("Storing workflow in DB");
-                    workflowRepository.save(workflowModel);
+                        // Save to the MongoDB database
+                        logger.info("Adding new workflow to DB");
+                        workflowRepository.save(workflowModel);
 
-                    // Create a new research object bundle from Github details
-                    // This is Async so cannot just call constructor, needs intermediate as per Spring framework
-                    ROBundleFactory.workflowROFromGithub(githubService, githubInfo);
+                        // Create a new research object bundle from Github details
+                        // This is Async so cannot just call constructor, needs intermediate as per Spring framework
+                        ROBundleFactory.workflowROFromGithub(githubService, githubInfo);
 
-                    // Return this model to be displayed
-                    return workflowModel;
+                        // Return this model to be displayed
+                        return workflowModel;
 
-                } else {
-                    logger.error("No workflow could be found");
+                    } else {
+                        logger.error("No workflow could be found");
+                    }
+                } catch (IOException ex) {
+                    logger.error(ex.getMessage());
                 }
-            } catch (IOException ex) {
-                logger.error(ex.getMessage());
             }
         } else {
             // TODO: Refactor validator so this redundant step can be removed?

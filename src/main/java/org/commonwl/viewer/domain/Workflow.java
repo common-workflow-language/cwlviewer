@@ -42,12 +42,11 @@ public class Workflow {
 
     // ID for database
     @Id
-    private String id;
+    private GithubDetails retrievedFrom;
 
     // Metadata
     @DateTimeFormat(pattern="MMM d yyyy 'at' hh:mm")
     private Date retrievedOn;
-    private GithubDetails retrievedFrom;
     private Path roBundle;
 
     // Contents of the workflow
@@ -79,13 +78,14 @@ public class Workflow {
     @Override
     public String toString() {
         return "Workflow{" +
-                "id='" + id + '\'' +
-                ", retrievedFrom=" + retrievedFrom +
+                "retrievedFrom=" + retrievedFrom +
+                ", retrievedOn=" + retrievedOn +
                 ", roBundle=" + roBundle +
                 ", label='" + label + '\'' +
                 ", doc='" + doc + '\'' +
                 ", inputs=" + inputs +
                 ", outputs=" + outputs +
+                ", dotGraph='" + dotGraph + '\'' +
                 '}';
     }
 

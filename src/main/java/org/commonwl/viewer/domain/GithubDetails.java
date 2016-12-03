@@ -19,10 +19,12 @@
 
 package org.commonwl.viewer.domain;
 
+import java.io.Serializable;
+
 /**
  * Represents all the parameters necessary to access a file/directory in Github
  */
-public class GithubDetails {
+public class GithubDetails implements Serializable {
 
     private String owner;
     private String repoName;
