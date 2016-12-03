@@ -23,6 +23,8 @@ import org.commonwl.viewer.services.DotWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.IOException;
@@ -31,11 +33,10 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
 
-import static java.util.Calendar.DATE;
-
 /**
  * Representation of a workflow
  */
+@Document
 public class Workflow {
 
     static private final Logger logger = LoggerFactory.getLogger(Workflow.class);
@@ -45,10 +46,14 @@ public class Workflow {
     private String id;
 
     // Metadata
+    @Indexed(unique = true)
+    private GithubDetails retrievedFrom;
     @DateTimeFormat(pattern="MMM d yyyy 'at' hh:mm")
     private Date retrievedOn;
-    private GithubDetails retrievedFrom;
-    private Path roBundle;
+
+    // A String which represents the path to a RO bundle
+    // Path types cannot be stored using Spring Data, unfortunately
+    private String roBundle;
 
     // Contents of the workflow
     private String label;
@@ -110,11 +115,11 @@ public class Workflow {
         this.outputs = outputs;
     }
 
-    public Path getRoBundle() {
+    public String getRoBundle() {
         return roBundle;
     }
 
-    public void setRoBundle(Path roBundle) {
+    public void setRoBundle(String roBundle) {
         this.roBundle = roBundle;
     }
 

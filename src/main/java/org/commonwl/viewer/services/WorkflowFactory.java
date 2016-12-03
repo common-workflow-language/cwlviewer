@@ -76,7 +76,7 @@ public class WorkflowFactory {
             } else {
                 logger.error("No workflow could be found");
             }
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             logger.error(ex.getMessage());
         }
 
