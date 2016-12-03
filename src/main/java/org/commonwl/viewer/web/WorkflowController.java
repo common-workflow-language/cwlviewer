@@ -28,14 +28,16 @@ import org.commonwl.viewer.services.WorkflowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.File;
+import java.io.IOException;
 
 @Controller
 public class WorkflowController {
@@ -129,5 +131,33 @@ public class WorkflowController {
         // Display this model along with the view
         return new ModelAndView("workflow", "workflow", workflowModel);
 
+    }
+
+    /**
+     * Download the Research Object Bundle for a particular workflow
+     * @param workflowID The ID of the workflow to download
+     */
+    @RequestMapping(value = "/workflows/{workflowID}/download",
+                    method = RequestMethod.GET,
+                    produces = "application/vnd.wf4ever.robundle+zip")
+    @ResponseBody
+    public FileSystemResource getFile(@PathVariable("workflowID") String workflowID,
+                                      HttpServletResponse response) {
+
+        // Get workflow from database
+        Workflow workflowModel = workflowRepository.findOne(workflowID);
+
+        // 404 error if workflow does not exist
+        if (workflowModel == null) {
+            throw new WorkflowNotFoundException();
+        }
+
+        // Set a sensible default file name for the browser
+        response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
+
+        // Serve the file from the local filesystem
+        File bundleDownload = new File(workflowModel.getRoBundle());
+        logger.info("Serving download for " + bundleDownload.toString());
+        return new FileSystemResource(bundleDownload);
     }
 }
