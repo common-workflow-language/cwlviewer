@@ -45,7 +45,7 @@ public class Workflow {
     private String id;
 
     // Metadata
-    @DateTimeFormat(pattern="MM/d/yyyy 'at' hh:mm")
+    @DateTimeFormat(pattern="MMM d yyyy 'at' hh:mm")
     private Date retrievedOn;
     private GithubDetails retrievedFrom;
     private Path roBundle;
