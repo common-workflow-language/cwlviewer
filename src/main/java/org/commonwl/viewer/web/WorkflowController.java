@@ -141,8 +141,8 @@ public class WorkflowController {
                     method = RequestMethod.GET,
                     produces = "application/vnd.wf4ever.robundle+zip")
     @ResponseBody
-    public FileSystemResource getFile(@PathVariable("workflowID") String workflowID,
-                                      HttpServletResponse response) {
+    public FileSystemResource downloadROBundle(@PathVariable("workflowID") String workflowID,
+                                               HttpServletResponse response) {
 
         // Get workflow from database
         Workflow workflowModel = workflowRepository.findOne(workflowID);

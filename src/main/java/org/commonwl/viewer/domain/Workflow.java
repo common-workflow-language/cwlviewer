@@ -43,7 +43,7 @@ public class Workflow {
 
     // ID for database
     @Id
-    private String id;
+    public String id;
 
     // Metadata
     @Indexed(unique = true)
@@ -82,6 +82,10 @@ public class Workflow {
     }
 
     public String getID() { return id; }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getLabel() {
         return label;
