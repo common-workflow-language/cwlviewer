@@ -19,21 +19,25 @@
 
 package org.commonwl.viewer.web;
 
+import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.WorkflowForm;
 import org.commonwl.viewer.services.WorkflowFactory;
 import org.commonwl.viewer.services.WorkflowFormValidator;
+import org.commonwl.viewer.services.WorkflowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
 
 @Controller
 public class WorkflowController {
@@ -42,6 +46,7 @@ public class WorkflowController {
 
     private final WorkflowFormValidator workflowFormValidator;
     private final WorkflowFactory workflowFactory;
+    private final WorkflowRepository workflowRepository;
 
     /**
      * Autowired constructor to initialise objects used by the controller
@@ -49,9 +54,12 @@ public class WorkflowController {
      * @param workflowFactory Builds new Workflow objects
      */
     @Autowired
-    public WorkflowController(WorkflowFormValidator workflowFormValidator, WorkflowFactory workflowFactory) {
+    public WorkflowController(WorkflowFormValidator workflowFormValidator,
+                              WorkflowFactory workflowFactory,
+                              WorkflowRepository workflowRepository) {
         this.workflowFormValidator = workflowFormValidator;
         this.workflowFactory = workflowFactory;
+        this.workflowRepository = workflowRepository;
     }
 
     /**
@@ -62,26 +70,94 @@ public class WorkflowController {
      */
     @PostMapping("/")
     public ModelAndView newWorkflowFromGithubURL(@Valid WorkflowForm workflowForm, BindingResult bindingResult) {
-        logger.info("Processing new workflow from Github: \"" + workflowForm.getGithubURL() + "\"");
+        logger.info("Retrieving workflow from Github: \"" + workflowForm.getGithubURL() + "\"");
 
         // Run validator which checks the github URL is valid
-        workflowFormValidator.validate(workflowForm, bindingResult);
+        GithubDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, bindingResult);
 
         if (bindingResult.hasErrors()) {
             // Go back to index if there are validation errors
             return new ModelAndView("index");
         } else {
-            // Create a workflow from the github URL
-            Workflow newWorkflow = workflowFactory.workflowFromGithub(workflowForm.getGithubURL());
+            // The ID of the workflow to be redirected to
+            String workflowID;
 
-            // Runtime error
-            if (newWorkflow == null) {
-                bindingResult.rejectValue("githubURL", "githubURL.parsingError");
-                return new ModelAndView("index");
+            // Check database for existing workflow
+            Workflow existingWorkflow = workflowRepository.findByRetrievedFrom(githubInfo);
+            if (existingWorkflow != null) {
+                logger.info("Fetching existing workflow from DB");
+
+                // Get the ID from the existing workflow
+                workflowID = existingWorkflow.getID();
+            } else {
+                // New workflow from Github URL
+                Workflow newWorkflow = workflowFactory.workflowFromGithub(githubInfo);
+
+                // Runtime error
+                if (newWorkflow == null) {
+                    bindingResult.rejectValue("githubURL", "githubURL.parsingError");
+                    return new ModelAndView("index");
+                }
+
+                // Save to the MongoDB database
+                logger.info("Adding new workflow to DB");
+                workflowRepository.save(newWorkflow);
+
+                // Get the ID from the new workflow
+                workflowID = newWorkflow.getID();
             }
 
-            // Return new workflow along with the workflow view
-            return new ModelAndView("workflow", "workflow", newWorkflow);
+            // Redirect to the workflow
+            return new ModelAndView("redirect:/workflows/" + workflowID);
         }
+    }
+
+    /**
+     * Display a page for a particular workflow
+     * @param workflowID The ID of the workflow to be retrieved
+     * @return The workflow view with the workflow as a model
+     */
+    @RequestMapping(value="/workflows/{workflowID}")
+    public ModelAndView getWorkflow(@PathVariable String workflowID){
+
+        // Get workflow from database
+        Workflow workflowModel = workflowRepository.findOne(workflowID);
+
+        // 404 error if workflow does not exist
+        if (workflowModel == null) {
+            throw new WorkflowNotFoundException();
+        }
+
+        // Display this model along with the view
+        return new ModelAndView("workflow", "workflow", workflowModel);
+
+    }
+
+    /**
+     * Download the Research Object Bundle for a particular workflow
+     * @param workflowID The ID of the workflow to download
+     */
+    @RequestMapping(value = "/workflows/{workflowID}/download",
+                    method = RequestMethod.GET,
+                    produces = "application/vnd.wf4ever.robundle+zip")
+    @ResponseBody
+    public FileSystemResource downloadROBundle(@PathVariable("workflowID") String workflowID,
+                                               HttpServletResponse response) {
+
+        // Get workflow from database
+        Workflow workflowModel = workflowRepository.findOne(workflowID);
+
+        // 404 error if workflow does not exist or the bundle doesn't yet
+        if (workflowModel == null || workflowModel.getRoBundle() == null) {
+            throw new WorkflowNotFoundException();
+        }
+
+        // Set a sensible default file name for the browser
+        response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
+
+        // Serve the file from the local filesystem
+        File bundleDownload = new File(workflowModel.getRoBundle());
+        logger.info("Serving download for workflow " + workflowID + " [" + bundleDownload.toString() + "]");
+        return new FileSystemResource(bundleDownload);
     }
 }
