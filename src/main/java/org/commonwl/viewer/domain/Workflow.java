@@ -48,7 +48,7 @@ public class Workflow {
     // Metadata
     @Indexed(unique = true)
     private GithubDetails retrievedFrom;
-    @DateTimeFormat(pattern="yyyy-MM-dd HH:mm z")
+    @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss z")
     private Date retrievedOn;
 
     // A String which represents the path to a RO bundle
