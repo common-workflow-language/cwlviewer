@@ -19,6 +19,7 @@
 
 package org.commonwl.viewer.web;
 
+import org.apache.commons.lang.StringUtils;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.WorkflowForm;
@@ -32,8 +33,10 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
@@ -118,10 +121,44 @@ public class WorkflowController {
      * @return The workflow view with the workflow as a model
      */
     @RequestMapping(value="/workflows/{workflowID}")
-    public ModelAndView getWorkflow(@PathVariable String workflowID){
+    public ModelAndView getWorkflowByID(@PathVariable String workflowID){
 
         // Get workflow from database
         Workflow workflowModel = workflowRepository.findOne(workflowID);
+
+        // 404 error if workflow does not exist
+        if (workflowModel == null) {
+            throw new WorkflowNotFoundException();
+        }
+
+        // Display this model along with the view
+        return new ModelAndView("workflow", "workflow", workflowModel);
+
+    }
+
+    /**
+     * Display a page for a particular workflow from Github details
+     * @param owner The owner of the Github repository
+     * @param repoName The name of the repository
+     * @param branch The branch of repository
+     * @return The workflow view with the workflow as a model
+     */
+    @RequestMapping(value="/workflows/github.com/{owner}/{repoName}/tree/{branch}/**")
+    public ModelAndView getWorkflowByGithubDetails(@PathVariable("owner") String owner,
+                                                   @PathVariable("repoName") String repoName,
+                                                   @PathVariable("branch") String branch,
+                                                   HttpServletRequest request) {
+
+        // The wildcard end of the URL is the path
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        int pathStartIndex = StringUtils.ordinalIndexOf(path, "/", 7) + 1;
+        path = path.substring(pathStartIndex);
+
+        // Construct a GithubDetails object to search for in the database
+        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
+
+        // Get workflow from database
+        Workflow workflowModel = workflowRepository.findByRetrievedFrom(githubDetails);
 
         // 404 error if workflow does not exist
         if (workflowModel == null) {
