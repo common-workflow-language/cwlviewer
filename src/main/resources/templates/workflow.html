@@ -98,14 +98,14 @@ digraph G {
 
 <div class="container">
     <div class="row">
-        <div class="col-md-12" role="main" id="main">
+        <div class="col-md-12" role="main" id="main" th:with="workflowURL=@{'github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch} + '/' + ${workflow.retrievedFrom.path}}">
             <h2>Workflow: <span th:text="${workflow.label}">Workflow Name</span></h2>
             <p>
-                <a th:href="@{'https://github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch} + '/' + ${workflow.retrievedFrom.path}}" href="#" rel="noopener" target="_blank">
+                <a th:href="@{'https://' + ${workflowURL}}" href="#" rel="noopener" target="_blank">
                     <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
                 </a>
                 <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
-                <span th:if="${workflow.roBundle == null}"> - Generating download link&hellip; [<a th:href="@{'/workflows/' + ${workflow.id}}" href="#">Refresh</a>]</span>
+                <span th:if="${workflow.roBundle == null}"> - Generating download link&hellip; [<a th:href="@{'/workflows/' + ${workflowURL}}" href="#">Refresh</a>]</span>
                 <span th:if="${workflow.roBundle != null}">
                     - <a th:href="@{'/workflows/' + ${workflow.id} + '/download'}" href="#" download="bundle.zip">Download as Research Object Bundle</a>
                     <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>

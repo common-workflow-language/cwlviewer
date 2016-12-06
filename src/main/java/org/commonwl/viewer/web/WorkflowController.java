@@ -82,36 +82,30 @@ public class WorkflowController {
             // Go back to index if there are validation errors
             return new ModelAndView("index");
         } else {
-            // The ID of the workflow to be redirected to
-            String workflowID;
-
             // Check database for existing workflow
-            Workflow existingWorkflow = workflowRepository.findByRetrievedFrom(githubInfo);
-            if (existingWorkflow != null) {
+            Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
+            if (workflow != null) {
                 logger.info("Fetching existing workflow from DB");
-
-                // Get the ID from the existing workflow
-                workflowID = existingWorkflow.getID();
             } else {
                 // New workflow from Github URL
-                Workflow newWorkflow = workflowFactory.workflowFromGithub(githubInfo);
+                workflow = workflowFactory.workflowFromGithub(githubInfo);
 
                 // Runtime error
-                if (newWorkflow == null) {
+                if (workflow == null) {
                     bindingResult.rejectValue("githubURL", "githubURL.parsingError");
                     return new ModelAndView("index");
                 }
 
                 // Save to the MongoDB database
                 logger.info("Adding new workflow to DB");
-                workflowRepository.save(newWorkflow);
-
-                // Get the ID from the new workflow
-                workflowID = newWorkflow.getID();
+                workflowRepository.save(workflow);
             }
 
             // Redirect to the workflow
-            return new ModelAndView("redirect:/workflows/" + workflowID);
+            GithubDetails githubDetails = workflow.getRetrievedFrom();
+            return new ModelAndView("redirect:/workflows/github.com/" + githubDetails.getOwner()
+                    + "/" + githubDetails.getRepoName() + "/tree/" + githubDetails.getBranch()
+                    + "/" + githubDetails.getPath());
         }
     }
 
