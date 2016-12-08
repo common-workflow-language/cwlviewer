@@ -2,7 +2,7 @@
 
 This is a work-in-progress [Spring Boot](http://projects.spring.io/spring-boot/) MVC application which fetches [Common Workflow Language](http://www.commonwl.org/) files from a Github repository and creates a page for it detailing the main workflow and its inputs, outputs and steps.
 
-[![Build Status](https://travis-ci.org/common-workflow-language/cwlviewer.svg?branch=master)](https://travis-ci.org/common-workflow-language/cwlviewer) [![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/common-workflow-language/common-workflow-language?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/common-workflow-language/cwlviewer.svg?branch=master)](https://travis-ci.org/common-workflow-language/cwlviewer) [![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/common-workflow-language/common-workflow-language?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![](https://images.microbadger.com/badges/image/commonworkflowlanguage/cwlviewer.svg)](https://microbadger.com/images/commonworkflowlanguage/cwlviewer "Get your own image badge on microbadger.com") [![Docker image commonworkflowlanguage/cwlviewer](https://images.microbadger.com/badges/version/commonworkflowlanguage/cwlviewer.svg)](https://hub.docker.com/r/commonworkflowlanguage/cwlviewer/ "Get your own version badge on microbadger.com")
 
 
 
@@ -36,12 +36,17 @@ If you change the source code, re-build with `docker-compose build`.
 
 See the [docker-compose.yml](docker-compose.yml) file for details.
 
-If you don't want to use Docker Compose, you can do the equivalent manually with `docker`:
+If you don't want to use Docker Compose, you can do the equivalent manually with `docker`
+and the [commonworkflowlanguage/cwlviewer](https://hub.docker.com/r/commonworkflowlanguage/cwlviewer/builds/) docker image.
 
-    docker build -t cwlviewer .
     docker run --name cwlviewer-mongo -p 27017:27017 -d mongo
-    docker run --name cwlviewer -p 8080:8080 --link cwlviewer-mongo:mongo -d cwlviewer
+    docker run --name cwlviewer -p 8080:8080 --link cwlviewer-mongo:mongo -d commonworkflowlanguage/cwlviewer
     docker logs -f cwlviewer
+
+If you have modified the source code, then you may want to build the docker image locally first:
+
+    docker build -t commonworkflowlanguage/cwlviewer .
+
 
 ## Requirement: MongoDB
 
