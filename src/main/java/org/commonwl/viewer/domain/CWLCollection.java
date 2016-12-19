@@ -173,23 +173,28 @@ public class CWLCollection {
      * @param cwlDoc The document to get steps for
      * @return A map of step IDs and details related to them
      */
-    private Map<String, CWLElement> getSteps(JsonNode cwlDoc) {
+    private Map<String, CWLStep> getSteps(JsonNode cwlDoc) {
         if (cwlDoc != null && cwlDoc.has("steps")) {
-            Map<String, CWLElement> returnMap = new HashMap<>();
+            Map<String, CWLStep> returnMap = new HashMap<>();
 
             JsonNode steps = cwlDoc.get("steps");
             if (steps.getClass() == ArrayNode.class) {
                 // Explicit ID and other fields within each input list
                 for (JsonNode step : steps) {
                     String id = step.get("id").asText();
-                    returnMap.put(id, getDetails(step));
+                    CWLStep stepObject = new CWLStep(extractID(step), extractDoc(step),
+                            extractTypes(step), getInputs(step), getOutputs(step));
+                    returnMap.put(id, stepObject);
                 }
             } else if (steps.getClass() == ObjectNode.class) {
                 // ID is the key of each object
                 Iterator<Map.Entry<String, JsonNode>> iterator = steps.fields();
                 while (iterator.hasNext()) {
                     Map.Entry<String, JsonNode> stepNode = iterator.next();
-                    returnMap.put(stepNode.getKey(), getDetails(stepNode.getValue()));
+                    JsonNode stepJson = stepNode.getValue();
+                    CWLStep stepObject = new CWLStep(extractID(stepJson), extractDoc(stepJson),
+                            extractTypes(stepJson), getInputs(stepJson), getOutputs(stepJson));
+                    returnMap.put(stepNode.getKey(), stepObject);
                 }
             }
 
@@ -263,9 +268,8 @@ public class CWLCollection {
             } else {
                 details.setLabel(extractLabel(inputOutput));
                 details.setDoc(extractDoc(inputOutput));
-
-                // OutputSource is only for outputs of the overall workflow
                 details.setSourceID(extractOutputSource(inputOutput));
+                details.setDefaultVal(extractDefault(inputOutput));
 
                 // Type is only for inputs
                 if (inputOutput.has("type")) {
@@ -298,6 +302,18 @@ public class CWLCollection {
     private String extractLabel(JsonNode node) {
         if (node != null && node.has("label")) {
             return node.get("label").asText();
+        }
+        return null;
+    }
+
+    /**
+     * Extract the default value from a node
+     * @param node The node to have the label extracted from
+     * @return The string for the default value of the node
+     */
+    private String extractDefault(JsonNode node) {
+        if (node != null && node.has("default")) {
+            return node.get("default").asText();
         }
         return null;
     }

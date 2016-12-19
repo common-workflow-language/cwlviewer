@@ -20,6 +20,7 @@
 package org.commonwl.viewer.services;
 
 import org.commonwl.viewer.domain.CWLElement;
+import org.commonwl.viewer.domain.CWLStep;
 import org.commonwl.viewer.domain.Workflow;
 
 import java.io.IOException;
@@ -152,14 +153,30 @@ public class DotWriter {
      */
     private void writeSteps(Workflow workflow) throws IOException {
         // Write each of the steps as a node
-        for (Map.Entry<String, CWLElement> step : workflow.getSteps().entrySet()) {
+        for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
             writeLine("  \"" + step.getKey() + "\"");
         }
 
         // Write the links between nodes
         // Write links between outputs and penultimate steps
         for (Map.Entry<String, CWLElement> output : workflow.getOutputs().entrySet()) {
-            writeLine("  \"" + output.getValue().getSourceID() + "\" -> \"" + output.getKey() + "\"");
+            writeLine("  \"" + output.getValue().getSourceID() + "\" -> \"" + output.getKey() + "\";");
+        }
+
+        // Write links between the remaining steps
+        int defaultCount = 0;
+        for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
+            for (Map.Entry<String, CWLElement> input : step.getValue().getInputs().entrySet()) {
+                String sourceID = input.getValue().getSourceID();
+                String defaultVal = input.getValue().getDefaultVal();
+                if (sourceID != null) {
+                    writeLine("  \"" + sourceID + "\" -> \"" + step.getKey() + "\";");
+                } else if (defaultVal != null) {
+                    defaultCount++;
+                    writeLine("  \"default" + defaultCount + "\" [label=\"" + defaultVal + "\", fillcolor=\"#D5AEFC\"]");
+                    writeLine("  \"default" + defaultCount + "\" -> \"" + step.getKey() + "\";");
+                }
+            }
         }
     }
 

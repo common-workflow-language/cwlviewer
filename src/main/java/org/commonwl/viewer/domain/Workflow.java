@@ -60,13 +60,13 @@ public class Workflow {
     private String doc;
     private Map<String, CWLElement> inputs;
     private Map<String, CWLElement> outputs;
-    private Map<String, CWLElement> steps;
+    private Map<String, CWLStep> steps;
 
     // DOT graph of the contents
     private String dotGraph;
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
-                    Map<String, CWLElement> outputs, Map<String, CWLElement> steps) {
+                    Map<String, CWLElement> outputs, Map<String, CWLStep> steps) {
         this.label = label;
         this.doc = doc;
         this.inputs = inputs;
@@ -122,11 +122,11 @@ public class Workflow {
         this.outputs = outputs;
     }
 
-    public Map<String, CWLElement> getSteps() {
+    public Map<String, CWLStep> getSteps() {
         return steps;
     }
 
-    public void setSteps(Map<String, CWLElement> steps) {
+    public void setSteps(Map<String, CWLStep> steps) {
         this.steps = steps;
     }
 

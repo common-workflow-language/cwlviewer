@@ -19,16 +19,27 @@
 
 package org.commonwl.viewer.domain;
 
+import java.util.Map;
+
 /**
- * Represents the input/output/step of a workflow/tool
+ * Represents a step of a workflow
  */
-public class CWLElement {
+public class CWLStep {
 
     private String label;
     private String doc;
     private String type;
-    private String sourceID;
-    private String defaultVal;
+    private Map<String, CWLElement> inputs;
+    private Map<String, CWLElement> outputs;
+
+    public CWLStep(String label, String doc, String type,
+                   Map<String, CWLElement> inputs, Map<String, CWLElement> outputs) {
+        this.label = label;
+        this.doc = doc;
+        this.type = type;
+        this.inputs = inputs;
+        this.outputs = outputs;
+    }
 
     public String getLabel() {
         return label;
@@ -54,19 +65,20 @@ public class CWLElement {
         this.type = type;
     }
 
-    public String getSourceID() {
-        return sourceID;
+    public Map<String, CWLElement> getInputs() {
+        return inputs;
     }
 
-    public void setSourceID(String sourceID) {
-        this.sourceID = sourceID;
+    public void setInputs(Map<String, CWLElement> inputs) {
+        this.inputs = inputs;
     }
 
-    public String getDefaultVal() {
-        return defaultVal;
+    public Map<String, CWLElement> getOutputs() {
+        return outputs;
     }
 
-    public void setDefaultVal(String defaultVal) {
-        this.defaultVal = defaultVal;
+    public void setOutputs(Map<String, CWLElement> outputs) {
+        this.outputs = outputs;
     }
+
 }
