@@ -93,6 +93,9 @@ public class DotWriter {
         // Write outputs as a subgraph
         writeOutputs(workflow);
 
+        // Write steps as nodes
+        writeSteps(workflow);
+
         // End graph
         writeLine("}");
     }
@@ -140,6 +143,18 @@ public class DotWriter {
 
         // End subgraph
         writeLine("  }");
+    }
+
+    /**
+     * Writes a set of steps from a workflow to the Writer
+     * @param workflow The workflow to get the steps from
+     * @throws IOException Any errors in writing which may have occurred
+     */
+    private void writeSteps(Workflow workflow) throws IOException {
+        // Write each of the steps as a node
+        for (Map.Entry<String, CWLElement> step : workflow.getSteps().entrySet()) {
+            writeLine(step.getKey());
+        }
     }
 
     /**
