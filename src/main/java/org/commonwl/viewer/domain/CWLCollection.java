@@ -231,7 +231,7 @@ public class CWLCollection {
         Map<String, CWLElement> returnMap = new HashMap<>();
 
         if (inputsOutputs.getClass() == ArrayNode.class) {
-            // Explicit ID and other fields within each input list
+            // Explicit ID and other fields within each ilist
             for (JsonNode inputOutput : inputsOutputs) {
                 String id = inputOutput.get("id").asText();
                 returnMap.put(id, getDetails(inputOutput));
@@ -261,13 +261,11 @@ public class CWLCollection {
             if (inputOutput.getClass() == TextNode.class) {
                 details.setType(inputOutput.asText());
             } else {
-                if (extractLabel(inputOutput) != null) {
-                    details.setLabel(extractLabel(inputOutput));
-                }
+                details.setLabel(extractLabel(inputOutput));
+                details.setDoc(extractDoc(inputOutput));
 
-                if (extractDoc(inputOutput) != null) {
-                    details.setDoc(extractDoc(inputOutput));
-                }
+                // OutputSource is only for outputs of the overall workflow
+                details.setSourceID(extractOutputSource(inputOutput));
 
                 // Type is only for inputs
                 if (inputOutput.has("type")) {
@@ -300,6 +298,39 @@ public class CWLCollection {
     private String extractLabel(JsonNode node) {
         if (node != null && node.has("label")) {
             return node.get("label").asText();
+        }
+        return null;
+    }
+
+    /**
+     * Extract the outputSource from a node
+     * @param node The node to have the label extracted from
+     * @return The string for the outputSource of the node
+     */
+    private String extractOutputSource(JsonNode node) {
+        if (node != null) {
+            String source = null;
+            if (node.has("outputSource")) {
+                source = node.get("outputSource").asText();
+            } else if (node.has("source")) {
+                source = node.get("source").asText();
+            }
+
+            // Get step ID from a SALAD ID
+            if (source != null) {
+                // Strip leading # if it exists
+                if (source.charAt(0) == '#') {
+                    source = source.substring(1);
+                }
+
+                // Get segment before / (step ID)
+                int slashSplit = source.indexOf("/");
+                if (slashSplit != -1) {
+                    source = source.substring(0, slashSplit);
+                }
+            }
+
+            return source;
         }
         return null;
     }

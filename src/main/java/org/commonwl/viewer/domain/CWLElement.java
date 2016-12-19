@@ -20,13 +20,14 @@
 package org.commonwl.viewer.domain;
 
 /**
- * Represents the input or output of a workflow/tool
+ * Represents the input/output/step of a workflow/tool
  */
 public class CWLElement {
 
     private String label;
     private String doc;
     private String type;
+    private String sourceID;
 
     public String getLabel() {
         return label;
@@ -50,6 +51,14 @@ public class CWLElement {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getSourceID() {
+        return sourceID;
+    }
+
+    public void setSourceID(String sourceID) {
+        this.sourceID = sourceID;
     }
 
 }

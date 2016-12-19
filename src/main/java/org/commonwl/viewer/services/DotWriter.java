@@ -153,7 +153,13 @@ public class DotWriter {
     private void writeSteps(Workflow workflow) throws IOException {
         // Write each of the steps as a node
         for (Map.Entry<String, CWLElement> step : workflow.getSteps().entrySet()) {
-            writeLine(step.getKey());
+            writeLine("  \"" + step.getKey() + "\"");
+        }
+
+        // Write the links between nodes
+        // Write links between outputs and penultimate steps
+        for (Map.Entry<String, CWLElement> output : workflow.getOutputs().entrySet()) {
+            writeLine("  \"" + output.getValue().getSourceID() + "\" -> \"" + output.getKey() + "\"");
         }
     }
 
