@@ -166,15 +166,19 @@ public class DotWriter {
         // Write links between the remaining steps
         int defaultCount = 0;
         for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
-            for (Map.Entry<String, CWLElement> input : step.getValue().getInputs().entrySet()) {
-                String sourceID = input.getValue().getSourceID();
-                String defaultVal = input.getValue().getDefaultVal();
-                if (sourceID != null) {
-                    writeLine("  \"" + sourceID + "\" -> \"" + step.getKey() + "\";");
-                } else if (defaultVal != null) {
-                    defaultCount++;
-                    writeLine("  \"default" + defaultCount + "\" [label=\"" + defaultVal + "\", fillcolor=\"#D5AEFC\"]");
-                    writeLine("  \"default" + defaultCount + "\" -> \"" + step.getKey() + "\";");
+            if (step.getValue().getInputs() != null) {
+                for (Map.Entry<String, CWLElement> input : step.getValue().getInputs().entrySet()) {
+                    String sourceID = input.getValue().getSourceID();
+                    String defaultVal = input.getValue().getDefaultVal();
+                    if (sourceID != null) {
+                        // Regular link from source step to destination step
+                        writeLine("  \"" + sourceID + "\" -> \"" + step.getKey() + "\";");
+                    } else if (defaultVal != null) {
+                        // New node for a default value to be used as the source
+                        defaultCount++;
+                        writeLine("  \"default" + defaultCount + "\" [label=\"" + defaultVal + "\", fillcolor=\"#D5AEFC\"]");
+                        writeLine("  \"default" + defaultCount + "\" -> \"" + step.getKey() + "\";");
+                    }
                 }
             }
         }

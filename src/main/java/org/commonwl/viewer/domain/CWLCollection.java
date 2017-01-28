@@ -181,10 +181,9 @@ public class CWLCollection {
             if (steps.getClass() == ArrayNode.class) {
                 // Explicit ID and other fields within each input list
                 for (JsonNode step : steps) {
-                    String id = step.get("id").asText();
-                    CWLStep stepObject = new CWLStep(extractID(step), extractDoc(step),
+                    CWLStep stepObject = new CWLStep(extractLabel(step), extractDoc(step),
                             extractTypes(step), getInputs(step), getOutputs(step));
-                    returnMap.put(id, stepObject);
+                    returnMap.put(extractID(step), stepObject);
                 }
             } else if (steps.getClass() == ObjectNode.class) {
                 // ID is the key of each object
@@ -192,7 +191,7 @@ public class CWLCollection {
                 while (iterator.hasNext()) {
                     Map.Entry<String, JsonNode> stepNode = iterator.next();
                     JsonNode stepJson = stepNode.getValue();
-                    CWLStep stepObject = new CWLStep(extractID(stepJson), extractDoc(stepJson),
+                    CWLStep stepObject = new CWLStep(extractLabel(stepJson), extractDoc(stepJson),
                             extractTypes(stepJson), getInputs(stepJson), getOutputs(stepJson));
                     returnMap.put(stepNode.getKey(), stepObject);
                 }
