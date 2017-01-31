@@ -111,3 +111,35 @@ require(['jquery', 'bootstrap.modal', 'renderer'],
             event.preventDefault();
         });
     });
+
+/**
+ * Code for including the link to the Research Object Bundle download
+ * without refresh once generated
+ */
+require(['jquery'],
+    function ($) {
+        // AJAX function to add download link to page if generated
+        function getDownloadLink() {
+            $.ajax({
+                type: 'HEAD',
+                url: $('#download').attr('href'),
+                dataType: "json",
+                success: function (data) {
+                    $("#generating").addClass("hide");
+                    $("#generated").removeClass("hide");
+                },
+                error: function () {
+                    // Retry in 5 seconds if still not generated
+                    setTimeout(function () {
+                        getDownloadLink();
+                    }, 5000)
+                }
+            });
+        }
+
+        // If ajaxRequired exists on the page the RO bundle link is not generated
+        // at time of page load
+        if ($("#ajaxRequired").length) {
+            getDownloadLink();
+        }
+    });

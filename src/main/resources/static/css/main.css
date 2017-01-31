@@ -21,6 +21,10 @@ body {
     padding-top: 61px;
 }
 
+.hide {
+    display: none;
+}
+
 :target {
     padding-top: 61px;
     margin-top: -61px;
