@@ -168,6 +168,21 @@ digraph G {
                     </tr>
                 </tbody>
             </table>
+            <h2>Steps</h2>
+            <table class="table table-striped">
+                <thead>
+                <th>ID</th>
+                <th>Label</th>
+                <th>Doc</th>
+                </thead>
+                <tbody>
+                <tr th:each="step : ${workflow.steps}">
+                    <td th:text="${step.key}">ID</td>
+                    <td th:text="${step.value.label}">Label</td>
+                    <td th:text="${step.value.doc}">Description</td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

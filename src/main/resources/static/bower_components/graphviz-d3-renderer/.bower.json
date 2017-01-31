@@ -1,6 +1,6 @@
 {
   "name": "graphviz-d3-renderer",
-  "version": "0.9.20",
+  "version": "0.9.21",
   "dependencies": {
     "requirejs": "2.1.15",
     "d3": "3.5.3",
@@ -46,11 +46,11 @@
     "karma.conf.js"
   ],
   "homepage": "https://github.com/mstefaniuk/graph-viz-d3-js",
-  "_release": "0.9.20",
+  "_release": "0.9.21",
   "_resolution": {
     "type": "version",
-    "tag": "0.9.20",
-    "commit": "077cadb3005a37e6c69a9873520dd3f8cde72206"
+    "tag": "0.9.21",
+    "commit": "9cba7e58b832f59e51271f8f98367ab676ef206f"
   },
   "_source": "https://github.com/mstefaniuk/graph-viz-d3-js.git",
   "_target": "^0.9.18",

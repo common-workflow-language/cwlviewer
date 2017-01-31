@@ -20,6 +20,7 @@
 package org.commonwl.viewer.services;
 
 import org.commonwl.viewer.domain.CWLElement;
+import org.commonwl.viewer.domain.CWLStep;
 import org.commonwl.viewer.domain.Workflow;
 
 import java.io.IOException;
@@ -93,6 +94,9 @@ public class DotWriter {
         // Write outputs as a subgraph
         writeOutputs(workflow);
 
+        // Write steps as nodes
+        writeSteps(workflow);
+
         // End graph
         writeLine("}");
     }
@@ -140,6 +144,50 @@ public class DotWriter {
 
         // End subgraph
         writeLine("  }");
+    }
+
+    /**
+     * Writes a set of steps from a workflow to the Writer
+     * @param workflow The workflow to get the steps from
+     * @throws IOException Any errors in writing which may have occurred
+     */
+    private void writeSteps(Workflow workflow) throws IOException {
+        // Write each of the steps as a node
+        for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
+            writeLine("  \"" + step.getKey() + "\"");
+        }
+
+        // Write the links between nodes
+        // Write links between outputs and penultimate steps
+        for (Map.Entry<String, CWLElement> output : workflow.getOutputs().entrySet()) {
+            for (String sourceID : output.getValue().getSourceIDs()) {
+                writeLine("  \"" + sourceID + "\" -> \"" + output.getKey() + "\";");
+            }
+        }
+
+        // Write links between the remaining steps
+        int defaultCount = 0;
+        for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
+            if (step.getValue().getInputs() != null) {
+                for (Map.Entry<String, CWLElement> input : step.getValue().getInputs().entrySet()) {
+                    List<String> sourceIDs = input.getValue().getSourceIDs();
+
+                    // Draw the default value on the graph if there are no step inputs (it is a constant)
+                    String defaultVal = input.getValue().getDefaultVal();
+                    if (sourceIDs.isEmpty() && defaultVal != null) {
+                        // New node for a default value to be used as the source
+                        defaultCount++;
+                        writeLine("  \"default" + defaultCount + "\" [label=\"" + defaultVal + "\", fillcolor=\"#D5AEFC\"]");
+                        writeLine("  \"default" + defaultCount + "\" -> \"" + step.getKey() + "\";");
+                    }
+
+                    // Otherwise write regular links from source step to destination step
+                    for (String sourceID : sourceIDs) {
+                        writeLine("  \"" + sourceID + "\" -> \"" + step.getKey() + "\";");
+                    }
+                }
+            }
+        }
     }
 
     /**
