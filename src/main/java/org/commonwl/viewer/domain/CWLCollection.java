@@ -46,6 +46,33 @@ public class CWLCollection {
     // The main workflow
     private String mainWorkflowKey;
 
+    // Extension of CWL files
+    private final String CWL_EXTENSION = "cwl";
+
+    // Github API specific strings
+    private final String DIR = "dir";
+    private final String FILE = "file";
+
+    // CWL specific strings
+    private final String DOC_GRAPH = "$graph";
+    private final String CLASS = "class";
+    private final String WORKFLOW = "Workflow";
+    private final String STEPS = "steps";
+    private final String INPUTS = "inputs";
+    private final String IN = "in";
+    private final String OUTPUTS = "outputs";
+    private final String OUT = "out";
+    private final String ID = "id";
+    private final String TYPE = "type";
+    private final String LABEL = "label";
+    private final String DEFAULT = "default";
+    private final String OUTPUT_SOURCE = "outputSource";
+    private final String SOURCE = "source";
+    private final String DOC = "doc";
+    private final String DESCRIPTION = "description";
+    private final String ARRAY = "array";
+    private final String ARRAY_ITEMS = "items";
+
     /**
      * Creates a new collection of CWL files from a Github repository
      * @param githubService Service to provide the Github API functionality
@@ -70,7 +97,7 @@ public class CWLCollection {
         for (RepositoryContents repoContent : repoContents) {
 
             // Parse subdirectories if they exist
-            if (repoContent.getType().equals("dir")) {
+            if (repoContent.getType().equals(DIR)) {
 
                 // Get the contents of the subdirectory
                 GithubDetails githubSubdir = new GithubDetails(githubInfo.getOwner(),
@@ -81,7 +108,7 @@ public class CWLCollection {
                 addDocs(subdirectory);
 
                 // Otherwise this is a file so add to the bundle
-            } else if (repoContent.getType().equals("file")) {
+            } else if (repoContent.getType().equals(FILE)) {
 
                 // Get the file extension
                 int eIndex = repoContent.getName().lastIndexOf('.') + 1;
@@ -89,7 +116,7 @@ public class CWLCollection {
                     String extension = repoContent.getName().substring(eIndex);
 
                     // If this is a cwl file which needs to be parsed
-                    if (extension.equals("cwl")) {
+                    if (extension.equals(CWL_EXTENSION)) {
 
                         // Get the content of this file from Github
                         GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
@@ -117,9 +144,9 @@ public class CWLCollection {
      */
     private void addDoc(JsonNode newDoc, String fileName) {
         // Make sure that this document is only one object and not multiple under a $graph directive
-        if (newDoc.has("$graph")) {
+        if (newDoc.has(DOC_GRAPH)) {
             // Add each of the sub documents
-            for (JsonNode jsonNode : newDoc.get("$graph")) {
+            for (JsonNode jsonNode : newDoc.get(DOC_GRAPH)) {
                 cwlDocs.put(extractID(jsonNode), jsonNode);
             }
         } else {
@@ -135,7 +162,7 @@ public class CWLCollection {
         // Find the first workflow we come across
         // TODO: Consider relationship between run: parameters to better discover this
         for (Map.Entry<String, JsonNode> doc : cwlDocs.entrySet()) {
-            if (doc.getValue().get("class").asText().equals("Workflow")) {
+            if (doc.getValue().get(CLASS).asText().equals(WORKFLOW)) {
                 mainWorkflowKey = doc.getKey();
                 return;
             }
@@ -174,10 +201,10 @@ public class CWLCollection {
      * @return A map of step IDs and details related to them
      */
     private Map<String, CWLStep> getSteps(JsonNode cwlDoc) {
-        if (cwlDoc != null && cwlDoc.has("steps")) {
+        if (cwlDoc != null && cwlDoc.has(STEPS)) {
             Map<String, CWLStep> returnMap = new HashMap<>();
 
-            JsonNode steps = cwlDoc.get("steps");
+            JsonNode steps = cwlDoc.get(STEPS);
             if (steps.getClass() == ArrayNode.class) {
                 // Explicit ID and other fields within each input list
                 for (JsonNode step : steps) {
@@ -208,8 +235,14 @@ public class CWLCollection {
      * @return A map of input IDs and details related to them
      */
     private Map<String, CWLElement> getInputs(JsonNode cwlDoc) {
-        if (cwlDoc != null && cwlDoc.has("inputs")) {
-            return getInputsOutputs(cwlDoc.get("inputs"));
+        if (cwlDoc != null) {
+            if (cwlDoc.has(INPUTS)) {
+                // For workflow
+                return getInputsOutputs(cwlDoc.get(INPUTS));
+            } else if (cwlDoc.has(IN)) {
+                // For steps
+                return getInputsOutputs(cwlDoc.get(IN));
+            }
         }
         return null;
     }
@@ -220,8 +253,14 @@ public class CWLCollection {
      * @return A map of output IDs and details related to them
      */
     private Map<String, CWLElement> getOutputs(JsonNode cwlDoc) {
-        if (cwlDoc != null && cwlDoc.has("outputs")) {
-            return getInputsOutputs(cwlDoc.get("outputs"));
+        if (cwlDoc != null) {
+            if (cwlDoc.has(OUTPUTS)) {
+                // For workflow
+                return getInputsOutputs(cwlDoc.get(OUTPUTS));
+            } else if (cwlDoc.has(OUT)) {
+                // For steps
+                return getInputsOutputs(cwlDoc.get(OUT));
+            }
         }
         return null;
     }
@@ -235,9 +274,9 @@ public class CWLCollection {
         Map<String, CWLElement> returnMap = new HashMap<>();
 
         if (inputsOutputs.getClass() == ArrayNode.class) {
-            // Explicit ID and other fields within each ilist
+            // Explicit ID and other fields within each list
             for (JsonNode inputOutput : inputsOutputs) {
-                String id = inputOutput.get("id").asText();
+                String id = inputOutput.get(ID).asText();
                 returnMap.put(id, getDetails(inputOutput));
             }
         } else if (inputsOutputs.getClass() == ObjectNode.class) {
@@ -271,8 +310,8 @@ public class CWLCollection {
                 details.setDefaultVal(extractDefault(inputOutput));
 
                 // Type is only for inputs
-                if (inputOutput.has("type")) {
-                    details.setType(extractTypes(inputOutput.get("type")));
+                if (inputOutput.has(TYPE)) {
+                    details.setType(extractTypes(inputOutput.get(TYPE)));
                 }
             }
 
@@ -287,8 +326,12 @@ public class CWLCollection {
      * @return The string for the id of the node
      */
     private String extractID(JsonNode node) {
-        if (node != null && node.has("id")) {
-            return node.get("id").asText();
+        if (node != null && node.has(ID)) {
+            String id = node.get(ID).asText();
+            if (id.startsWith("#")) {
+                return id.substring(1);
+            }
+            return id;
         }
         return null;
     }
@@ -299,8 +342,8 @@ public class CWLCollection {
      * @return The string for the label of the node
      */
     private String extractLabel(JsonNode node) {
-        if (node != null && node.has("label")) {
-            return node.get("label").asText();
+        if (node != null && node.has(LABEL)) {
+            return node.get(LABEL).asText();
         }
         return null;
     }
@@ -311,8 +354,8 @@ public class CWLCollection {
      * @return The string for the default value of the node
      */
     private String extractDefault(JsonNode node) {
-        if (node != null && node.has("default")) {
-            return node.get("default").asText();
+        if (node != null && node.has(DEFAULT)) {
+            return node.get(DEFAULT).asText();
         }
         return null;
     }
@@ -328,10 +371,10 @@ public class CWLCollection {
             JsonNode sourceNode = null;
 
             // outputSource and source treated the same
-            if (node.has("outputSource")) {
-                sourceNode = node.get("outputSource");
-            } else if (node.has("source")) {
-                sourceNode = node.get("source");
+            if (node.has(OUTPUT_SOURCE)) {
+                sourceNode = node.get(OUTPUT_SOURCE);
+            } else if (node.has(SOURCE)) {
+                sourceNode = node.get(SOURCE);
             }
 
             if (sourceNode != null) {
@@ -353,7 +396,7 @@ public class CWLCollection {
     }
 
     /**
-     * Gets just the step ID from source of format 'stepID/outputID'
+     * Gets just the step ID from source of format 'stepID</ or .>outputID'
      * @param source The source
      * @return The step ID
      */
@@ -364,14 +407,15 @@ public class CWLCollection {
                 source = source.substring(1);
             }
 
-            // Get segment before / (step ID)
+            // Draft 3/V1 notation is 'stepID/outputID'
             int slashSplit = source.indexOf("/");
             if (slashSplit != -1) {
                 source = source.substring(0, slashSplit);
             } else {
+                // Draft 2 notation was 'stepID.outputID'
                 int dotSplit = source.indexOf(".");
                 if (dotSplit != -1) {
-                    source = "#" + source.substring(0, dotSplit);
+                    source = source.substring(0, dotSplit);
                 }
             }
         }
@@ -385,11 +429,11 @@ public class CWLCollection {
      */
     private String extractDoc(JsonNode node) {
         if (node != null) {
-            if (node.has("doc")) {
-                return node.get("doc").asText();
-            } else if (node.has("description")) {
+            if (node.has(DOC)) {
+                return node.get(DOC).asText();
+            } else if (node.has(DESCRIPTION)) {
                 // This is to support older standards of cwl which use description instead of doc
-                return node.get("description").asText();
+                return node.get(DESCRIPTION).asText();
             }
         }
         return null;
@@ -422,11 +466,11 @@ public class CWLCollection {
                         }
                     } else if (typeNode.getClass() == ArrayNode.class) {
                         // This is a verbose type with sub-fields broken down into type: and other params
-                        if (type.get("type").asText().equals("array")) {
-                            typeDetails.append(type.get("items").asText());
+                        if (type.get(TYPE).asText().equals(ARRAY)) {
+                            typeDetails.append(type.get(ARRAY_ITEMS).asText());
                             typeDetails.append("[], ");
                         } else {
-                            typeDetails.append(type.get("type").asText());
+                            typeDetails.append(type.get(TYPE).asText());
                         }
                     }
                 }
@@ -444,8 +488,8 @@ public class CWLCollection {
 
             } else if (typeNode.getClass() == ObjectNode.class) {
                 // Type: array and items:
-                if (typeNode.has("items")) {
-                    return typeNode.get("items").asText() + "[]";
+                if (typeNode.has(ARRAY_ITEMS)) {
+                    return typeNode.get(ARRAY_ITEMS).asText() + "[]";
                 }
             }
         }
