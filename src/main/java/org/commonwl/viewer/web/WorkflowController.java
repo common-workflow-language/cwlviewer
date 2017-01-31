@@ -154,9 +154,10 @@ public class WorkflowController {
         // Get workflow from database
         Workflow workflowModel = workflowRepository.findByRetrievedFrom(githubDetails);
 
-        // 404 error if workflow does not exist
+        // Redirect to index with form autofilled if workflow does not already exist
         if (workflowModel == null) {
-            throw new WorkflowNotFoundException();
+            return new ModelAndView("redirect:/?url=https://github.com/" +
+                    owner + "/" + repoName + "/tree/" + branch + "/" + path);
         }
 
         // Display this model along with the view
