@@ -171,14 +171,12 @@ digraph G {
             <table class="table table-striped">
                 <thead>
                 <th>ID</th>
-                <th>Type</th>
                 <th>Label</th>
                 <th>Doc</th>
                 </thead>
                 <tbody>
                 <tr th:each="step : ${workflow.steps}">
                     <td th:text="${step.key}">ID</td>
-                    <td th:text="${step.value.type}">Type</td>
                     <td th:text="${step.value.label}">Label</td>
                     <td th:text="${step.value.doc}">Description</td>
                 </tr>
