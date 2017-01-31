@@ -267,7 +267,7 @@ public class CWLCollection {
             } else {
                 details.setLabel(extractLabel(inputOutput));
                 details.setDoc(extractDoc(inputOutput));
-                details.addSourceID(extractOutputSource(inputOutput));
+                extractOutputSource(inputOutput).forEach(details::addSourceID);
                 details.setDefaultVal(extractDefault(inputOutput));
 
                 // Type is only for inputs
@@ -318,36 +318,64 @@ public class CWLCollection {
     }
 
     /**
-     * Extract the outputSource from a node
-     * @param node The node to have the label extracted from
-     * @return The string for the outputSource of the node
+     * Extract the source or outputSource from a node
+     * @param node The node to have the sources extracted from
+     * @return A list of strings for the sources
      */
-    private String extractOutputSource(JsonNode node) {
+    private List<String> extractOutputSource(JsonNode node) {
         if (node != null) {
-            String source = null;
+            List<String> sources = new ArrayList<String>();
+            JsonNode sourceNode = null;
+
+            // outputSource and source treated the same
             if (node.has("outputSource")) {
-                source = node.get("outputSource").asText();
+                sourceNode = node.get("outputSource");
             } else if (node.has("source")) {
-                source = node.get("source").asText();
+                sourceNode = node.get("source");
             }
 
-            // Get step ID from a SALAD ID
-            if (source != null) {
-                // Strip leading # if it exists
-                if (source.charAt(0) == '#') {
-                    source = source.substring(1);
+            if (sourceNode != null) {
+                // Single source
+                if (sourceNode.getClass() == TextNode.class) {
+                    sources.add(stepIDFromSource(sourceNode.asText()));
                 }
-
-                // Get segment before / (step ID)
-                int slashSplit = source.indexOf("/");
-                if (slashSplit != -1) {
-                    source = source.substring(0, slashSplit);
+                // Can be an array of multiple sources
+                if (sourceNode.getClass() == ArrayNode.class) {
+                    for (JsonNode source : sourceNode) {
+                        sources.add(stepIDFromSource(source.asText()));
+                    }
                 }
             }
 
-            return source;
+            return sources;
         }
         return null;
+    }
+
+    /**
+     * Gets just the step ID from source of format 'stepID/outputID'
+     * @param source The source
+     * @return The step ID
+     */
+    private String stepIDFromSource(String source) {
+        if (source != null) {
+            // Strip leading # if it exists
+            if (source.charAt(0) == '#') {
+                source = source.substring(1);
+            }
+
+            // Get segment before / (step ID)
+            int slashSplit = source.indexOf("/");
+            if (slashSplit != -1) {
+                source = source.substring(0, slashSplit);
+            } else {
+                int dotSplit = source.indexOf(".");
+                if (dotSplit != -1) {
+                    source = "#" + source.substring(0, dotSplit);
+                }
+            }
+        }
+        return source;
     }
 
     /**
