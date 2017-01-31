@@ -160,7 +160,9 @@ public class DotWriter {
         // Write the links between nodes
         // Write links between outputs and penultimate steps
         for (Map.Entry<String, CWLElement> output : workflow.getOutputs().entrySet()) {
-            writeLine("  \"" + output.getValue().getSourceID() + "\" -> \"" + output.getKey() + "\";");
+            for (String sourceID : output.getValue().getSourceIDs()) {
+                writeLine("  \"" + sourceID + "\" -> \"" + output.getKey() + "\";");
+            }
         }
 
         // Write links between the remaining steps
@@ -168,16 +170,20 @@ public class DotWriter {
         for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
             if (step.getValue().getInputs() != null) {
                 for (Map.Entry<String, CWLElement> input : step.getValue().getInputs().entrySet()) {
-                    String sourceID = input.getValue().getSourceID();
+                    List<String> sourceIDs = input.getValue().getSourceIDs();
+
+                    // Draw the default value on the graph if there are no step inputs (it is a constant)
                     String defaultVal = input.getValue().getDefaultVal();
-                    if (sourceID != null) {
-                        // Regular link from source step to destination step
-                        writeLine("  \"" + sourceID + "\" -> \"" + step.getKey() + "\";");
-                    } else if (defaultVal != null) {
+                    if (sourceIDs.isEmpty() && defaultVal != null) {
                         // New node for a default value to be used as the source
                         defaultCount++;
                         writeLine("  \"default" + defaultCount + "\" [label=\"" + defaultVal + "\", fillcolor=\"#D5AEFC\"]");
                         writeLine("  \"default" + defaultCount + "\" -> \"" + step.getKey() + "\";");
+                    }
+
+                    // Otherwise write regular links from source step to destination step
+                    for (String sourceID : sourceIDs) {
+                        writeLine("  \"" + sourceID + "\" -> \"" + step.getKey() + "\";");
                     }
                 }
             }

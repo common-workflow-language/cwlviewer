@@ -19,16 +19,23 @@
 
 package org.commonwl.viewer.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * Represents the input/output/step of a workflow/tool
+ * Represents the input/output of a workflow/tool
  */
 public class CWLElement {
 
     private String label;
     private String doc;
     private String type;
-    private String sourceID;
+    private List<String> sourceID;
     private String defaultVal;
+
+    public CWLElement() {
+        this.sourceID = new ArrayList<String>();
+    }
 
     public String getLabel() {
         return label;
@@ -54,12 +61,14 @@ public class CWLElement {
         this.type = type;
     }
 
-    public String getSourceID() {
+    public List<String> getSourceIDs() {
         return sourceID;
     }
 
-    public void setSourceID(String sourceID) {
-        this.sourceID = sourceID;
+    public void addSourceID(String sourceID) {
+        if (sourceID != null) {
+            this.sourceID.add(sourceID);
+        }
     }
 
     public String getDefaultVal() {

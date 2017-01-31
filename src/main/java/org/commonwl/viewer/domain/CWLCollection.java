@@ -267,7 +267,7 @@ public class CWLCollection {
             } else {
                 details.setLabel(extractLabel(inputOutput));
                 details.setDoc(extractDoc(inputOutput));
-                details.setSourceID(extractOutputSource(inputOutput));
+                details.addSourceID(extractOutputSource(inputOutput));
                 details.setDefaultVal(extractDefault(inputOutput));
 
                 // Type is only for inputs
