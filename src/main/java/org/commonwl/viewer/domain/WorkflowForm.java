@@ -25,6 +25,12 @@ package org.commonwl.viewer.domain;
  */
 public class WorkflowForm {
 
+    public WorkflowForm() {}
+
+    public WorkflowForm(String githubURL) {
+        this.githubURL = githubURL;
+    }
+
     private String githubURL;
 
     public String getGithubURL() {
