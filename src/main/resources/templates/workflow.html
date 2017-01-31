@@ -105,9 +105,10 @@ digraph G {
                     <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
                 </a>
                 <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
-                <span th:if="${workflow.roBundle == null}"> - Generating download link&hellip; [<a th:href="@{'/workflows/' + ${workflowURL}}" href="#">Refresh</a>]</span>
-                <span th:if="${workflow.roBundle != null}">
-                    - <a th:href="@{'/workflows/' + ${workflow.id} + '/download'}" href="#" download="bundle.zip">Download as Research Object Bundle</a>
+                <span th:if="${workflow.roBundle == null}" id="ajaxRequired"></span>
+                <span th:class="${workflow.roBundle != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="/img/loading.svg" width="20" height="20" /></span>
+                <span th:class="${workflow.roBundle == null} ? hide : ''" id="generated">
+                    - <a th:href="@{'/workflows/' + ${workflow.id} + '/download'}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
                     <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>
                 </span>
             </p>
@@ -173,6 +174,6 @@ digraph G {
 
 <div th:replace="fragments/footer :: copy"></div>
 
-<script src="/bower_components/requirejs/require.js" data-main="/js/workflow.js"></script>
+<script src="/bower_components/requirejs/require.js" data-main="/js/main.js"></script>
 </body>
 </html>
