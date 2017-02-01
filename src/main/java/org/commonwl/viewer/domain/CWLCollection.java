@@ -236,7 +236,6 @@ public class CWLCollection {
      */
     private Map<String, CWLElement> getInputs(JsonNode cwlDoc) {
         if (cwlDoc != null) {
-            Map<String, CWLElement> inputsOutputs = null;
             if (cwlDoc.has(INPUTS)) {
                 // For workflow/draft steps
                 return getInputsOutputs(cwlDoc.get(INPUTS));
@@ -281,9 +280,9 @@ public class CWLCollection {
             Iterator<Map.Entry<String, JsonNode>> iterator = inOut.fields();
             while (iterator.hasNext()) {
                 Map.Entry<String, JsonNode> inOutNode = iterator.next();
-                CWLElement input = new CWLElement();
-                input.addSourceID(stepIDFromSource(inOutNode.getValue().asText()));
-                returnMap.put(inOutNode.getKey(), input);
+                CWLElement inputOutput = new CWLElement();
+                inputOutput.addSourceID(stepIDFromSource(inOutNode.getValue().asText()));
+                returnMap.put(inOutNode.getKey(), inputOutput);
             }
         }
 
