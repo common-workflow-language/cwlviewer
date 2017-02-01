@@ -236,12 +236,13 @@ public class CWLCollection {
      */
     private Map<String, CWLElement> getInputs(JsonNode cwlDoc) {
         if (cwlDoc != null) {
+            Map<String, CWLElement> inputsOutputs = null;
             if (cwlDoc.has(INPUTS)) {
-                // For workflow
+                // For workflow/draft steps
                 return getInputsOutputs(cwlDoc.get(INPUTS));
             } else if (cwlDoc.has(IN)) {
-                // For steps
-                return getInputsOutputs(cwlDoc.get(IN));
+                // For V1.0 steps
+                return getStepInputsOutputs(cwlDoc.get(IN));
             }
         }
         return null;
@@ -255,14 +256,38 @@ public class CWLCollection {
     private Map<String, CWLElement> getOutputs(JsonNode cwlDoc) {
         if (cwlDoc != null) {
             if (cwlDoc.has(OUTPUTS)) {
-                // For workflow
+                // For workflow/draft steps
                 return getInputsOutputs(cwlDoc.get(OUTPUTS));
             } else if (cwlDoc.has(OUT)) {
-                // For steps
-                return getInputsOutputs(cwlDoc.get(OUT));
+                // For V1.0 steps
+                return getStepInputsOutputs(cwlDoc.get(OUT));
             }
         }
         return null;
+    }
+
+    /**
+     * Get inputs or outputs from an in or out node
+     * @param inOut The in or out node
+     * @return A map of input IDs and details related to them
+     */
+    private Map<String, CWLElement> getStepInputsOutputs(JsonNode inOut) {
+        Map<String, CWLElement> returnMap = new HashMap<>();
+
+        if (inOut.getClass() == ArrayNode.class) {
+            // array<WorkflowStepInput>
+        } else if (inOut.getClass() == ObjectNode.class) {
+            // map<WorkflowStepInput.id, WorkflowStepInput.source>
+            Iterator<Map.Entry<String, JsonNode>> iterator = inOut.fields();
+            while (iterator.hasNext()) {
+                Map.Entry<String, JsonNode> inOutNode = iterator.next();
+                CWLElement input = new CWLElement();
+                input.addSourceID(stepIDFromSource(inOutNode.getValue().asText()));
+                returnMap.put(inOutNode.getKey(), input);
+            }
+        }
+
+        return returnMap;
     }
 
     /**
