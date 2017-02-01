@@ -29,8 +29,8 @@ requirejs.config({
         worker: '/bower_components/requirejs-web-workers/src/worker',
         renderer: '/bower_components/graphviz-d3-renderer/dist/renderer',
         jquery: '/bower_components/jquery/dist/jquery.min',
-        'bootstrap.modal': '/bower_components/bootstrap/js/modal'
-
+        'bootstrap.modal': '/bower_components/bootstrap/js/modal',
+        'svg-pan-zoom': '/bower_components/svg-pan-zoom/dist/svg-pan-zoom.min'
     },
     shim: {
         'bootstrap.modal': {
@@ -42,16 +42,13 @@ requirejs.config({
 /**
  * Main rendering code for the graphs on a workflow page
  */
-require(['jquery', 'bootstrap.modal', 'renderer'],
-    function ($, modal, renderer) {
+require(['jquery', 'bootstrap.modal', 'renderer', 'svg-pan-zoom'],
+    function ($, modal, renderer, svgPanZoom) {
         // Load dot graph from the page
         var dotGraph = $("#dot").val();
 
         // Initialise graph
-        renderer.init({
-            element: "#graph",
-            zoom: true
-        });
+        renderer.init("#graph");
 
         // Update stage with new dot source
         renderer.render(dotGraph);
@@ -59,6 +56,14 @@ require(['jquery', 'bootstrap.modal', 'renderer'],
         // Fade the loading and show graph when graph is drawn
         renderer.renderHandler(function() {
             $("#loading").fadeOut();
+
+            // Enable svg-pan-zoom on the graph after load transition
+            setTimeout(function() {
+                svgPanZoom('svg', {
+                    zoomEnabled: true,
+                    controlIconsEnabled: true
+                });
+            }, 1000);
         });
 
         /**

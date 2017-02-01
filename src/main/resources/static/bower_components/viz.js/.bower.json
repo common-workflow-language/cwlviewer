@@ -1,6 +1,6 @@
 {
   "name": "viz.js",
-  "version": "1.4.1",
+  "version": "1.5.1",
   "homepage": "https://github.com/mdaines/viz.js",
   "authors": [
     "Michael Daines <mdaines@fastmail.com>"
@@ -20,13 +20,13 @@
     "node"
   ],
   "license": "MIT",
-  "_release": "1.4.1",
+  "_release": "1.5.1",
   "_resolution": {
     "type": "version",
-    "tag": "v1.4.1",
-    "commit": "f54e878f53538866b5d48963cb3c2f32212369ed"
+    "tag": "v1.5.1",
+    "commit": "099e30beb185f759a54ae5cd10632b8257529067"
   },
   "_source": "https://github.com/mdaines/viz-releases.git",
-  "_target": "~1.4.1",
+  "_target": "~1.5.1",
   "_originalSource": "viz.js"
 }
