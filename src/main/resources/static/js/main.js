@@ -21,16 +21,16 @@
  * RequireJS configuration with all possible dependencies
  */
 requirejs.config({
-    baseUrl: '/js',
+    baseUrl: '/bower_components',
     paths: {
-        d3: '/bower_components/d3/d3',
-        'dot-checker': '/bower_components/graphviz-d3-renderer/dist/dot-checker',
-        'layout-worker': '/bower_components/graphviz-d3-renderer/dist/layout-worker',
-        worker: '/bower_components/requirejs-web-workers/src/worker',
-        renderer: '/bower_components/graphviz-d3-renderer/dist/renderer',
-        jquery: '/bower_components/jquery/dist/jquery.min',
-        'bootstrap.modal': '/bower_components/bootstrap/js/modal',
-        'svg-pan-zoom': '/bower_components/svg-pan-zoom/dist/svg-pan-zoom.min'
+        d3: 'd3/d3',
+        'dot-checker': 'graphviz-d3-renderer/dist/dot-checker',
+        'layout-worker': 'graphviz-d3-renderer/dist/layout-worker',
+        worker: 'requirejs-web-workers/src/worker',
+        renderer: 'graphviz-d3-renderer/dist/renderer',
+        jquery: 'jquery/dist/jquery.min',
+        'bootstrap.modal': 'bootstrap/js/modal',
+        'svg-pan-zoom': 'svg-pan-zoom/dist/svg-pan-zoom.min'
     },
     shim: {
         'bootstrap.modal': {
