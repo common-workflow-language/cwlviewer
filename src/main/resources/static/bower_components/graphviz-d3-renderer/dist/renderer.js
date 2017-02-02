@@ -57,17 +57,17 @@ define('styliseur',["d3"], function(d3) {
   var styliseur = function () {
     this.each(function (d) {
       var self = d3.select(this);
-      var colorInsteadOfStroke = this instanceof SVGTextElement || false;
+      var fillInsteadOfStroke = this instanceof SVGTextElement || false;
       d && d.style && d.style.forEach(function (e) {
         switch (e.key) {
           case "stroke":
           case "fill":
-            var attribute = e.key==="stroke" && colorInsteadOfStroke ? "color" : e.key;
+            var attribute = e.key==="stroke" && fillInsteadOfStroke ? "fill" : e.key;
             var transparent = e.value.indexOf("#")===0 &&  e.value.length === 9;
             var color = transparent ? e.value.substr(0,7) : e.value;
             var opacity = transparent ? parseInt(e.value.substr(7,2),16)/255 : 1;
             self.attr(attribute, color);
-            opacity && self.attr(attribute + "-opacity", opacity);
+            opacity < 1 && self.attr(attribute + "-opacity", opacity);
             break;
           case "font-size":
           case "font-family":
@@ -313,7 +313,13 @@ define('stage',["d3", "palette", "transitions/default"], function (d3, palette, 
           return d.id;
         });
 
-        transitions.nodes(entering.filter(".node"), function () {
+        entering
+          .filter(function(d) { return d.url; })
+          .append("a")
+          .attr("xlink:href", function(d) {return d.url;})
+          .attr("xlink:title", function(d) {return d.tooltip;});
+
+        transitions.nodes(entering.filter(".node:empty,.node a"), function () {
           this.style("opacity", 1.0);
         });
         transitions.relations(entering.filter(".relation"), function () {
@@ -327,7 +333,15 @@ define('stage',["d3", "palette", "transitions/default"], function (d3, palette, 
           return order[a.class] - order[b.class];
         });
 
-        var shapes = groups.selectAll("path").data(function (d) {
+        var leaves = main
+          .selectAll("*")
+          .filter(function(d) {
+            return this instanceof SVGAElement ||
+              (this instanceof SVGGElement && !this.querySelector("a"));
+          });
+        var shapes = leaves
+          .selectAll("path")
+          .data(function (d) {
             return d.shapes;
           }, function (d, i) {
             return [d.shape, i].join('-');
@@ -342,9 +356,11 @@ define('stage',["d3", "palette", "transitions/default"], function (d3, palette, 
             });
         });
 
-        var labels = groups.selectAll("text").data(function (d) {
-          return d.labels;
-        });
+        var labels = leaves
+          .selectAll("text")
+          .data(function (d) {
+            return d.labels;
+          });
         labels.enter().append("text");
         transitions.labels(labels, labelAttributer);
       },
@@ -354,8 +370,6 @@ define('stage',["d3", "palette", "transitions/default"], function (d3, palette, 
         var scaleFactor = 1;
 
         var svgImage = new Image();
-        svgImage.src = "data:image/svg+xml;utf8," + svgXml;
-
         var pngImage = new Image();
 
         svgImage.onload = function () {
@@ -364,13 +378,16 @@ define('stage',["d3", "palette", "transitions/default"], function (d3, palette, 
           canvas.height = svgImage.height * scaleFactor;
 
           var context = canvas.getContext("2d");
-          context.drawImage(svgImage, 0, 0, canvas.width, canvas.height);
+          context
+            .drawImage(
+              svgImage, 0, 0, canvas.width, canvas.height);
 
           pngImage.src = canvas.toDataURL("image/png");
           pngImage.width = svgImage.width;
           pngImage.height = svgImage.height;
         };
 
+        svgImage.src = "data:image/svg+xml;base64," + btoa(svgXml);
         return pngImage;
       }
     };

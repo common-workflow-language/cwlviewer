@@ -72,6 +72,7 @@ public class CWLCollection {
     private final String DESCRIPTION = "description";
     private final String ARRAY = "array";
     private final String ARRAY_ITEMS = "items";
+    private final String LOCATION = "location";
 
     /**
      * Creates a new collection of CWL files from a Github repository
@@ -237,11 +238,11 @@ public class CWLCollection {
     private Map<String, CWLElement> getInputs(JsonNode cwlDoc) {
         if (cwlDoc != null) {
             if (cwlDoc.has(INPUTS)) {
-                // For workflow
+                // For workflow/draft steps
                 return getInputsOutputs(cwlDoc.get(INPUTS));
             } else if (cwlDoc.has(IN)) {
-                // For steps
-                return getInputsOutputs(cwlDoc.get(IN));
+                // For V1.0 steps
+                return getStepInputsOutputs(cwlDoc.get(IN));
             }
         }
         return null;
@@ -255,14 +256,47 @@ public class CWLCollection {
     private Map<String, CWLElement> getOutputs(JsonNode cwlDoc) {
         if (cwlDoc != null) {
             if (cwlDoc.has(OUTPUTS)) {
-                // For workflow
+                // For workflow/draft steps
                 return getInputsOutputs(cwlDoc.get(OUTPUTS));
             } else if (cwlDoc.has(OUT)) {
-                // For steps
-                return getInputsOutputs(cwlDoc.get(OUT));
+                // For V1.0 steps
+                return getStepInputsOutputs(cwlDoc.get(OUT));
             }
         }
         return null;
+    }
+
+    /**
+     * Get inputs or outputs from an in or out node
+     * @param inOut The in or out node
+     * @return A map of input IDs and details related to them
+     */
+    private Map<String, CWLElement> getStepInputsOutputs(JsonNode inOut) {
+        Map<String, CWLElement> returnMap = new HashMap<>();
+
+        if (inOut.getClass() == ArrayNode.class) {
+            // array<WorkflowStepInput>
+            int test = 1;
+        } else if (inOut.getClass() == ObjectNode.class) {
+            // map<WorkflowStepInput.id, WorkflowStepInput.source>
+            Iterator<Map.Entry<String, JsonNode>> iterator = inOut.fields();
+            while (iterator.hasNext()) {
+                Map.Entry<String, JsonNode> inOutNode = iterator.next();
+                CWLElement inputOutput = new CWLElement();
+                if (inOutNode.getValue().getClass() == ObjectNode.class) {
+                    inputOutput.setDefaultVal(extractDefault(inOutNode.getValue()));
+                } else if (inOutNode.getValue().getClass() == ArrayNode.class) {
+                    for (JsonNode key : inOutNode.getValue()) {
+                        inputOutput.addSourceID(stepIDFromSource(key.asText()));
+                    }
+                } else {
+                    inputOutput.addSourceID(stepIDFromSource(inOutNode.getValue().asText()));
+                }
+                returnMap.put(inOutNode.getKey(), inputOutput);
+            }
+        }
+
+        return returnMap;
     }
 
     /**
@@ -355,7 +389,11 @@ public class CWLCollection {
      */
     private String extractDefault(JsonNode node) {
         if (node != null && node.has(DEFAULT)) {
-            return node.get(DEFAULT).asText();
+            if (node.get(DEFAULT).has(LOCATION)) {
+                return node.get(DEFAULT).get(LOCATION).asText();
+            } else {
+                return node.get(DEFAULT).asText();
+            }
         }
         return null;
     }
@@ -401,7 +439,7 @@ public class CWLCollection {
      * @return The step ID
      */
     private String stepIDFromSource(String source) {
-        if (source != null) {
+        if (source != null && source.length() > 0) {
             // Strip leading # if it exists
             if (source.charAt(0) == '#') {
                 source = source.substring(1);
