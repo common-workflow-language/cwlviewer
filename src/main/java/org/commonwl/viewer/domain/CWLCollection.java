@@ -392,7 +392,7 @@ public class CWLCollection {
             if (node.get(DEFAULT).has(LOCATION)) {
                 return node.get(DEFAULT).get(LOCATION).asText();
             } else {
-                return node.get(DEFAULT).asText();
+                return "\\\"" + node.get(DEFAULT).asText() + "\\\"";
             }
         }
         return null;
