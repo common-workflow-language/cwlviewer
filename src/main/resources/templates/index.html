@@ -49,6 +49,13 @@
                         <div class="alert alert-danger" th:if="${#fields.hasErrors('githubURL')}">
                             <strong>Error:</strong> <span th:errors="*{githubURL}">Error message here</span>
                         </div>
+                        <div class="alert alert-grey">
+                            <strong>Don't know what to view?</strong> Try these from <i>common-workflow-language/workflows</i>:
+                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/compile">compile</a>,
+                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/make-to-cwl">make-to-cwl</a>,
+                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR">lobSTR</a>,
+                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/scidap">scidap</a>
+                        </div>
                         <div class="input-group">
                             <input type="text" class="form-control" placeholder="Github URL" id="githubURL" name="githubURL" th:field="*{githubURL}" th:value="${formURL}" />
                             <span class="input-group-btn">
@@ -61,5 +68,7 @@
         </div>
 
         <div th:replace="fragments/footer :: copy"></div>
+
+        <script src="/bower_components/requirejs/require.js" data-main="/js/main.js"></script>
     </body>
 </html>
