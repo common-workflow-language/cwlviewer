@@ -276,7 +276,20 @@ public class CWLCollection {
 
         if (inOut.getClass() == ArrayNode.class) {
             // array<WorkflowStepInput>
-            int test = 1;
+            for (JsonNode inOutNode : inOut) {
+                if (inOutNode.getClass() == ObjectNode.class) {
+                    CWLElement inputOutput = new CWLElement();
+                    List<String> sources = extractSource(inOutNode);
+                    if (sources.size() > 0) {
+                        for (String source : sources) {
+                            inputOutput.addSourceID(source);
+                        }
+                    } else {
+                        inputOutput.setDefaultVal(extractDefault(inOutNode));
+                    }
+                    returnMap.put(extractID(inOutNode), inputOutput);
+                }
+            }
         } else if (inOut.getClass() == ObjectNode.class) {
             // map<WorkflowStepInput.id, WorkflowStepInput.source>
             Iterator<Map.Entry<String, JsonNode>> iterator = inOut.fields();
@@ -340,7 +353,7 @@ public class CWLCollection {
             } else {
                 details.setLabel(extractLabel(inputOutput));
                 details.setDoc(extractDoc(inputOutput));
-                extractOutputSource(inputOutput).forEach(details::addSourceID);
+                extractSource(inputOutput).forEach(details::addSourceID);
                 details.setDefaultVal(extractDefault(inputOutput));
 
                 // Type is only for inputs
@@ -403,7 +416,7 @@ public class CWLCollection {
      * @param node The node to have the sources extracted from
      * @return A list of strings for the sources
      */
-    private List<String> extractOutputSource(JsonNode node) {
+    private List<String> extractSource(JsonNode node) {
         if (node != null) {
             List<String> sources = new ArrayList<String>();
             JsonNode sourceNode = null;
