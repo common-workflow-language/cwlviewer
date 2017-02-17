@@ -21,8 +21,6 @@ package org.commonwl.viewer.web;
 
 import com.github.jabbalaci.graphviz.GraphViz;
 import org.apache.commons.lang.StringUtils;
-import org.apache.tomcat.util.http.fileupload.IOUtils;
-import org.apache.tomcat.util.http.parser.MediaType;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.WorkflowForm;
@@ -37,17 +35,14 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.ServletContextAware;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 
 @Controller
 public class WorkflowController {
@@ -209,8 +204,7 @@ public class WorkflowController {
                     produces = "image/svg+xml")
     @ResponseBody
     public FileSystemResource getGraphAsSvg(@Value("${graphvizStorage}") String graphvizStorage,
-                                            @PathVariable("workflowID") String workflowID,
-                                            HttpServletResponse response) throws IOException {
+                                            @PathVariable("workflowID") String workflowID) throws IOException {
 
         // Get workflow from database
         Workflow workflowModel = workflowRepository.findOne(workflowID);
@@ -240,8 +234,7 @@ public class WorkflowController {
             produces = "image/png")
     @ResponseBody
     public FileSystemResource getGraphAsPng(@Value("${graphvizStorage}") String graphvizStorage,
-                                            @PathVariable("workflowID") String workflowID,
-                                            HttpServletResponse response) throws IOException {
+                                            @PathVariable("workflowID") String workflowID) throws IOException {
 
         // Get workflow from database
         Workflow workflowModel = workflowRepository.findOne(workflowID);
