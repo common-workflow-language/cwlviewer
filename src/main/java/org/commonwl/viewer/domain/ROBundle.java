@@ -84,7 +84,7 @@ public class ROBundle {
             // This tool supports putting your ORCID in the blog field of github as a URL
             // eg http://orcid.org/0000-0000-0000-0000
             String authorBlog = authorDetails.getBlog();
-            if (authorBlog.startsWith("http://orcid.org/")) {
+            if (authorBlog != null && authorBlog.startsWith("http://orcid.org/")) {
                 author.setOrcid(new URI(authorBlog));
             }
 
