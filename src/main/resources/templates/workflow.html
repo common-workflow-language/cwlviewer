@@ -128,12 +128,9 @@ digraph G {
     <div class="row">
         <div class="col-md-12">
             <div id="visualisation" class="jumbotron">
-                <div id="loading">
-                    <object id="graph" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
-                        <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="workflow graph" />
-                    </object>
-                </div>
-                <div id="graph"></div>
+                <object id="graph" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
+                    <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="workflow graph" />
+                </object>
             </div>
             <h2>Inputs</h2>
             <table class="table table-striped table-hover">

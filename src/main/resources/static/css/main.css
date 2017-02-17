@@ -60,21 +60,14 @@ body {
 }
 
 #visualisation {
-    overflow: auto;
+    overflow: hidden;
     padding: 0;
+    height: 500px;
 }
 
-#graph svg {
+#graph {
     width: 100%;
-}
-
-#graph svg polygon {
-    stroke-width: 0;
-}
-
-#loading {
-    width: 150px;
-    margin: 0 auto;
+    height: 100%;
 }
 
 #download-gv {
