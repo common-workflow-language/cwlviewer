@@ -218,6 +218,9 @@ public class WorkflowController {
         File out = new File(graphvizStorage + "/" + workflowID + ".svg");
         if (!out.exists()) {
             GraphViz gv = new GraphViz();
+            gv.decreaseDpi();
+            gv.decreaseDpi();
+            gv.decreaseDpi();
             gv.writeGraphToFile(gv.getGraph(workflowModel.getDotGraph(), "svg", "dot"), out.getAbsolutePath());
         }
 
