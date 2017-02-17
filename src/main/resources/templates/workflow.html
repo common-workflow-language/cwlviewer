@@ -121,7 +121,7 @@ digraph G {
                 <a id="download-link-graph" href="" download="workflow.png"></a>
                 <strong>Graph: </strong>
                 <button id="view-dot" class="btn btn-primary" type="button" data-toggle="modal" data-target="#dotGraph">View DOT</button>
-                <button id="download-graph" class="btn btn-primary" type="button">Download Image</button>
+                <a id="download-graph" class="btn btn-primary" type="button" th:href="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" download="graph.svg">Download Image</a>
             </div>
         </div>
     </div>
@@ -129,8 +129,9 @@ digraph G {
         <div class="col-md-12">
             <div id="visualisation" class="jumbotron">
                 <div id="loading">
-                    <img src="../static/img/loading.svg" th:src="@{/img/loading.svg}" />
-                    <span>Drawing Workflow...</span>
+                    <object id="graph" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
+                        <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="workflow graph" />
+                    </object>
                 </div>
                 <div id="graph"></div>
             </div>

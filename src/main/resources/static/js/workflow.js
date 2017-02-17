@@ -40,7 +40,7 @@ requirejs.config({
 require(['jquery', 'bootstrap.modal', 'svg-pan-zoom'],
     function ($, modal, svgPanZoom) {
         // Enable svg-pan-zoom on the graph
-        svgPanZoom('svg', {
+        svgPanZoom('#graph', {
             zoomEnabled: true,
             controlIconsEnabled: true
         });
