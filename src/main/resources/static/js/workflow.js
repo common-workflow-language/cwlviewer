@@ -23,11 +23,6 @@
 requirejs.config({
     baseUrl: '/bower_components',
     paths: {
-        d3: 'd3/d3',
-        'dot-checker': 'graphviz-d3-renderer/dist/dot-checker',
-        'layout-worker': 'graphviz-d3-renderer/dist/layout-worker',
-        worker: 'requirejs-web-workers/src/worker',
-        renderer: 'graphviz-d3-renderer/dist/renderer',
         jquery: 'jquery/dist/jquery.min',
         'bootstrap.modal': 'bootstrap/js/modal',
         'svg-pan-zoom': 'svg-pan-zoom/dist/svg-pan-zoom.min'
@@ -40,51 +35,22 @@ requirejs.config({
 });
 
 /**
- * Main rendering code for the graphs on a workflow page
+ * Make the graph pannable and zoomable
  */
-require(['jquery', 'bootstrap.modal', 'renderer', 'svg-pan-zoom'],
-    function ($, modal, renderer, svgPanZoom) {
-        // Load dot graph from the page
-        var dotGraph = $("#dot").val();
-
-        // Initialise graph
-        renderer.init("#graph");
-
-        // Update stage with new dot source
-        renderer.render(dotGraph);
-
-        // Fade the loading and show graph when graph is drawn
-        renderer.renderHandler(function() {
-            $("#loading").fadeOut();
-
-            // Enable svg-pan-zoom on the graph after load transition
-            setTimeout(function() {
-                svgPanZoom('svg', {
-                    zoomEnabled: true,
-                    controlIconsEnabled: true
-                });
-            }, 1000);
+require(['jquery', 'bootstrap.modal', 'svg-pan-zoom'],
+    function ($, modal, svgPanZoom) {
+        // Enable svg-pan-zoom on the graph
+        svgPanZoom('svg', {
+            zoomEnabled: true,
+            controlIconsEnabled: true
         });
+    });
 
-        /**
-         * Download the rendered graph as a png
-         */
-        $('#download-graph').click(function (event) {
-            // Get the image data
-            var img = renderer.stage.getImage(false);
-
-            // Once it is loaded
-            img.onload = function () {
-                // Set hidden download link href to contents and click it
-                var downloadLink = $("#download-link-graph");
-                downloadLink.attr("href", img.src);
-                downloadLink[0].click();
-            };
-
-            // Stop default button action
-            event.preventDefault();
-        });
-
+/**
+ * Handle the dot graph modal and related features
+ */
+require(['jquery', 'bootstrap.modal'],
+    function ($, modal) {
         /**
          * DOT graph modal textarea automatically focuses when opened
          */
