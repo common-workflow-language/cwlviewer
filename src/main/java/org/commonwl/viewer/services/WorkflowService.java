@@ -105,6 +105,8 @@ public class WorkflowService {
             logger.debug("Failed to delete Research Object Bundle");
         }
 
+        // TODO: Delete cached graphviz images when serverside graphviz is merged
+
         // Remove the workflow from the database
         workflowRepository.delete(workflow);
     }
