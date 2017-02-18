@@ -29,7 +29,6 @@ import org.eclipse.egit.github.core.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -49,13 +48,14 @@ public class ROBundle {
 
     private Bundle bundle;
     private GithubDetails githubInfo;
+    private String commitSha;
 
     /**
      * Creates a new research object bundle for a workflow from a Github repository
      * @param githubInfo The information necessary to access the Github directory associated with the RO
      * @throws IOException Any API errors which may have occurred
      */
-    public ROBundle(GitHubService githubService, GithubDetails githubInfo,
+    public ROBundle(GitHubService githubService, GithubDetails githubInfo, String commitSha,
                     String appName, String appURL) throws IOException {
         // TODO: Add back file size checking on individual files as well as whole bundle
 
@@ -63,6 +63,7 @@ public class ROBundle {
         this.bundle = Bundles.createBundle();
         this.githubInfo = githubInfo;
         this.githubService = githubService;
+        this.commitSha = commitSha;
 
         Manifest manifest = bundle.getManifest();
 
@@ -135,7 +136,7 @@ public class ROBundle {
                 // Get the content of this file from Github
                 GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
                         githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
-                String fileContent = githubService.downloadFile(githubFile);
+                String fileContent = githubService.downloadFile(githubFile, commitSha);
 
                 // Save file to research object bundle
                 Path newFilePort = path.resolve(repoContent.getName());

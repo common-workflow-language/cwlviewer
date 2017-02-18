@@ -23,7 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.WorkflowForm;
-import org.commonwl.viewer.services.WorkflowFactory;
+import org.commonwl.viewer.services.WorkflowService;
 import org.commonwl.viewer.services.WorkflowFormValidator;
 import org.commonwl.viewer.services.WorkflowRepository;
 import org.slf4j.Logger;
@@ -47,20 +47,20 @@ public class WorkflowController {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final WorkflowFormValidator workflowFormValidator;
-    private final WorkflowFactory workflowFactory;
+    private final WorkflowService workflowService;
     private final WorkflowRepository workflowRepository;
 
     /**
      * Autowired constructor to initialise objects used by the controller
      * @param workflowFormValidator Validator to validate the workflow form
-     * @param workflowFactory Builds new Workflow objects
+     * @param workflowService Builds new Workflow objects
      */
     @Autowired
     public WorkflowController(WorkflowFormValidator workflowFormValidator,
-                              WorkflowFactory workflowFactory,
+                              WorkflowService workflowService,
                               WorkflowRepository workflowRepository) {
         this.workflowFormValidator = workflowFormValidator;
-        this.workflowFactory = workflowFactory;
+        this.workflowService = workflowService;
         this.workflowRepository = workflowRepository;
     }
 
@@ -83,21 +83,23 @@ public class WorkflowController {
         } else {
             // Check database for existing workflow
             Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
-            if (workflow != null) {
-                logger.info("Fetching existing workflow from DB");
-            } else {
-                // New workflow from Github URL
-                workflow = workflowFactory.workflowFromGithub(githubInfo);
 
-                // Runtime error
+            // Create a new workflow if we do not have one already or cache has expired
+            if (workflow == null) {
+                // New workflow from Github URL
+                workflow = workflowService.newWorkflowFromGithub(githubInfo);
+
+                // Runtime error if workflow could not be generated
                 if (workflow == null) {
                     bindingResult.rejectValue("githubURL", "githubURL.parsingError");
                     return new ModelAndView("index");
                 }
 
                 // Save to the MongoDB database
-                logger.info("Adding new workflow to DB");
+                logger.debug("Adding new workflow to DB");
                 workflowRepository.save(workflow);
+            } else {
+                logger.debug("Fetching existing workflow from DB");
             }
 
             // Redirect to the workflow
@@ -152,6 +154,15 @@ public class WorkflowController {
 
         // Get workflow from database
         Workflow workflowModel = workflowRepository.findByRetrievedFrom(githubDetails);
+
+        // Delete the existing workflow if the cache has expired
+        if (workflowModel != null) {
+            boolean cacheExpired = workflowService.cacheExpired(workflowModel);
+            if (cacheExpired) {
+                workflowService.removeWorkflow(workflowModel);
+                workflowModel = null;
+            }
+        }
 
         // Redirect to index with form autofilled if workflow does not already exist
         if (workflowModel == null) {

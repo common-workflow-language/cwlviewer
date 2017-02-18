@@ -28,6 +28,7 @@ public class GithubDetails implements Serializable {
 
     private String owner;
     private String repoName;
+    private String sha;
     private String branch;
     private String path;
 

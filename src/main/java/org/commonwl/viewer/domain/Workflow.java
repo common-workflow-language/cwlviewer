@@ -29,7 +29,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
 
@@ -70,14 +69,12 @@ public class Workflow {
     private String dotGraph;
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
-                    Map<String, CWLElement> outputs, Map<String, CWLStep> steps,
-                    String lastCommit) {
+                    Map<String, CWLElement> outputs, Map<String, CWLStep> steps) {
         this.label = label;
         this.doc = doc;
         this.inputs = inputs;
         this.outputs = outputs;
         this.steps = steps;
-        this.lastCommit = lastCommit;
 
         // Create a DOT graph for this workflow and store it
         StringWriter graphWriter = new StringWriter();

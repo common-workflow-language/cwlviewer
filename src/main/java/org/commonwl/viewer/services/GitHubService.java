@@ -21,10 +21,9 @@ package org.commonwl.viewer.services;
 
 import org.apache.commons.io.IOUtils;
 import org.commonwl.viewer.domain.GithubDetails;
-import org.eclipse.egit.github.core.RepositoryContents;
-import org.eclipse.egit.github.core.RepositoryId;
-import org.eclipse.egit.github.core.User;
+import org.eclipse.egit.github.core.*;
 import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.ContentsService;
 import org.eclipse.egit.github.core.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +46,7 @@ public class GitHubService {
     // Github API services
     private final ContentsService contentsService;
     private final UserService userService;
+    private final CommitService commitService;
 
     // URL validation for directory links
     private final String GITHUB_DIR_REGEX = "^https:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree\\/([^/]+)\\/(.*))?$";
@@ -62,6 +62,7 @@ public class GitHubService {
         }
         this.contentsService = new ContentsService(client);
         this.userService = new UserService(client);
+        this.commitService = new CommitService(client);
     }
 
     /**
@@ -81,7 +82,7 @@ public class GitHubService {
      * Get contents of a Github path from the API
      * @param githubInfo The information to access the repository
      * @return A list of details for the file(s) or false if there is an API error
-     * @throws IOException Any API errors which may have occured
+     * @throws IOException Any API errors which may have occurred
      */
     public List<RepositoryContents> getContents(GithubDetails githubInfo) throws IOException {
         return contentsService.getContents(new RepositoryId(githubInfo.getOwner(), githubInfo.getRepoName()),
@@ -92,7 +93,7 @@ public class GitHubService {
      * Get the details of a user from the Github API
      * @param username The username of the user we want to get data about
      * @return A user object containing the API information
-     * @throws IOException Any API errors which may have occured
+     * @throws IOException Any API errors which may have occurred
      */
     public User getUser(String username) throws IOException {
         return userService.getUser(username);
@@ -101,14 +102,15 @@ public class GitHubService {
     /**
      * Download a single file from a Github repository
      * @param githubInfo The information to access the repository
+     * @param sha The commit ID to download a specific version of a file
      * @return A string with the contents of the file
-     * @throws IOException Any API errors which may have occured
+     * @throws IOException Any API errors which may have occurred
      */
-    public String downloadFile(GithubDetails githubInfo) throws IOException {
+    public String downloadFile(GithubDetails githubInfo, String sha) throws IOException {
         // Download the file and return the contents
         // rawgit.com used to download individual files from git with the correct media type
         String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
-                githubInfo.getRepoName(), githubInfo.getBranch(), githubInfo.getPath());
+                githubInfo.getRepoName(), sha, githubInfo.getPath());
         URL downloadURL = new URL(url);
         InputStream download = downloadURL.openStream();
         try {
@@ -116,6 +118,18 @@ public class GitHubService {
         } finally {
             IOUtils.closeQuietly(download);
         }
+    }
 
+    /**
+     * Gets the latest commit sha hash from a particular branch
+     * If hash is given as a branch, this will return the same hash if valid
+     * @param githubInfo The information to access the repository
+     * @return A sha hash for the latest commit
+     * @throws IOException Any API errors which may have occurred
+     */
+    public String getCommitSha(GithubDetails githubInfo) throws IOException {
+        RepositoryId repo = new RepositoryId(githubInfo.getOwner(), githubInfo.getRepoName());
+        RepositoryCommit currentCommit = commitService.getCommit(repo, githubInfo.getBranch());
+        return currentCommit.getSha();
     }
 }
