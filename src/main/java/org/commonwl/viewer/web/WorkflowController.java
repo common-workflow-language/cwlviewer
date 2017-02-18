@@ -159,8 +159,20 @@ public class WorkflowController {
         if (workflowModel != null) {
             boolean cacheExpired = workflowService.cacheExpired(workflowModel);
             if (cacheExpired) {
-                workflowService.removeWorkflow(workflowModel);
-                workflowModel = null;
+                // Update by trying to add a new workflow
+                Workflow newWorkflow = workflowService.newWorkflowFromGithub(workflowModel.getRetrievedFrom());
+
+                // Only replace workflow if it could be successfully parsed
+                if (newWorkflow == null) {
+                    logger.error("Could not parse updated workflow " + workflowModel.id);
+                } else {
+                    // Delete the existing workflow
+                    workflowService.removeWorkflow(workflowModel);
+
+                    // Save new workflow
+                    workflowRepository.save(newWorkflow);
+                    workflowModel = newWorkflow;
+                }
             }
         }
 

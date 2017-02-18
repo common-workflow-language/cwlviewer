@@ -131,14 +131,14 @@ public class WorkflowService {
                 logger.debug("Current: " + workflow.getLastCommit() + ", HEAD: " + currentHead);
 
                 // Reset date in database if there are still no changes
-                boolean changes = workflow.getLastCommit().equals(currentHead);
-                if (changes) {
+                boolean expired = !workflow.getLastCommit().equals(currentHead);
+                if (!expired) {
                     workflow.setRetrievedOn(new Date());
                     workflowRepository.save(workflow);
                 }
 
                 // Return whether the cache has expired
-                return !changes;
+                return expired;
             } else {
                 // Cache expiry time has not elapsed yet
                 return false;

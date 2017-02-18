@@ -98,7 +98,7 @@ digraph G {
 
 <div class="container">
     <div class="row">
-        <div class="col-md-12" role="main" id="main" th:with="workflowURL=@{'github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.lastCommit} + '/' + ${workflow.retrievedFrom.path}}">
+        <div class="col-md-12" role="main" id="main" th:with="workflowURL=@{'github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.lastCommit} + '/' + ${workflow.retrievedFrom.path}}">
             <h2>Workflow: <span th:text="${workflow.label}">Workflow Name</span></h2>
             <p>
                 <a th:href="@{'https://' + ${workflowURL}}" href="#" rel="noopener" target="_blank">
