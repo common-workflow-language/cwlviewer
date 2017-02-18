@@ -84,7 +84,7 @@ public class WorkflowController {
             // Check database for existing workflow
             Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
 
-            // Create a new workflow if we do not have one already or cache has expired
+            // Create a new workflow if we do not have one already
             if (workflow == null) {
                 // New workflow from Github URL
                 workflow = workflowService.newWorkflowFromGithub(githubInfo);
