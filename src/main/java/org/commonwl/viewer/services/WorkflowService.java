@@ -119,7 +119,7 @@ public class WorkflowService {
             // Calculate expiration
             Calendar expireCal = Calendar.getInstance();
             expireCal.setTime(workflow.getRetrievedOn());
-            expireCal.add(Calendar.DATE, -cacheDays);
+            expireCal.add(Calendar.DATE, cacheDays);
             Date expirationDate = expireCal.getTime();
 
             // Check cached retrievedOn date
