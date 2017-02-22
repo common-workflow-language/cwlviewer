@@ -1,6 +1,8 @@
 FROM maven:3.3-jdk-8-alpine
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
+RUN apk add --update graphviz && rm -rf /var/cache/apk/*
+
 RUN mkdir /usr/share/maven/ref/repository
 
 RUN mkdir -p /usr/src/app
