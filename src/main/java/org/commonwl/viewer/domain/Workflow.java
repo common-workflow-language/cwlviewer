@@ -29,7 +29,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
 
@@ -50,6 +49,10 @@ public class Workflow {
     private GithubDetails retrievedFrom;
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss z")
     private Date retrievedOn;
+
+    // The last commit from the branch at the time of fetching
+    // Used for caching purposes
+    private String lastCommit;
 
     // A String which represents the path to a RO bundle
     // Path types cannot be stored using Spring Data, unfortunately
@@ -160,5 +163,13 @@ public class Workflow {
 
     public void setDotGraph(String dotGraph) {
         this.dotGraph = dotGraph;
+    }
+
+    public String getLastCommit() {
+        return lastCommit;
+    }
+
+    public void setLastCommit(String lastCommit) {
+        this.lastCommit = lastCommit;
     }
 }
