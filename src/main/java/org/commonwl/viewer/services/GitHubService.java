@@ -22,6 +22,9 @@ package org.commonwl.viewer.services;
 import org.apache.commons.io.IOUtils;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.eclipse.egit.github.core.*;
+import org.eclipse.egit.github.core.RepositoryContents;
+import org.eclipse.egit.github.core.RepositoryId;
+import org.eclipse.egit.github.core.User;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.ContentsService;
@@ -53,12 +56,15 @@ public class GitHubService {
     private final Pattern githubDirPattern = Pattern.compile(GITHUB_DIR_REGEX);
 
     @Autowired
-    public GitHubService(@Value("${githubAPI.authentication}") boolean authEnabled,
+    public GitHubService(@Value("${githubAPI.authentication}") String authSetting,
+                         @Value("${githubAPI.oauthToken}") String token,
                          @Value("${githubAPI.username}") String username,
                          @Value("${githubAPI.password}") String password) {
         GitHubClient client = new GitHubClient();
-        if (authEnabled) {
+        if (authSetting.equals("basic")) {
             client.setCredentials(username, password);
+        } else if (authSetting.equals("oauth")) {
+            client.setOAuth2Token(token);
         }
         this.contentsService = new ContentsService(client);
         this.userService = new UserService(client);
