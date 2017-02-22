@@ -19,4 +19,4 @@ nbproject/private/
 build/
 nbbuild/
 nbdist/
-.nb-gradle/
+.nb-gradle/docker-compose.override.yml
