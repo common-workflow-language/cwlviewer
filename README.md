@@ -32,7 +32,16 @@ To stop and remove:
 
     docker-compose down
 
-If you change the source code, re-build with `docker-compose build`.
+If you change the source code, then use this `docker-compose.override.yml` and 
+re-build with `docker-compose build`:
+
+```yaml
+version: '2'
+services:
+  spring:
+    build: .
+```
+
 
 See the [docker-compose.yml](docker-compose.yml) file for details.
 
@@ -53,15 +62,36 @@ If you have modified the source code, then you may want to build the docker imag
 You will need to have [MongoDB](https://www.mongodb.com/) running,
 by default on `localhost:27017`.
 
-(You can override this by supplying system properties like
-`-Dspring.data.mongodb.host=mongo` or `-Dspring.data.mongodb.port=1337`)
+If you are running from the command line, you can override this by supplying
+system properties like `-Dspring.data.mongodb.host=mongo.example.org` and
+`-Dspring.data.mongodb.port=1337`
 
 If you have Docker, but are not using the Docker Compose method above,
 you may start MongoDB with [Docker](https://www.docker.com/) using:
 
     docker run --name cwlviewer-mongo -p 27017:27017 -d mongo
 
-Note that this exposes mongodb to the world on port `27017`.
+**WARNING**: The above expose mongodb to the world on port `27017`.
+
+## GitHub OAuth2 tokens
+
+If you run cwlviewer in production, you are likely to hit the GitHub API's rate limit of 500.
+
+You can override this if you obtain an [OAuth token](https://developer.github.com/v3/oauth_authorizations/), 
+which you can configure cwlviewer to use by creating/modifying `docker-compose.override.yml`:
+
+```yaml
+version: '2'
+services:
+  spring:
+    environment:
+            githubAPI.authentication: oauth
+            githubAPI.oauthToken: abcdefghhijklmnopqrstuvwxyz
+```
+
+The properties can alternatively be provided as system properties on the
+command line, e.g. `-DgithubAPI.authentication=oauth`
+`-DgithubAPI.oauthToken=abcdefghhijklmnopqrstuvwxyz`
 
 
 ## Building and Running
