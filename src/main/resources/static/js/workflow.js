@@ -148,3 +148,38 @@ require(['jquery'],
             getDownloadLink();
         }
     });
+
+/**
+ * Highlighting step in graph when table row is
+ * hovered over or vice-versa
+ */
+require(['jquery'],
+    function ($) {
+
+        /**
+         * Gets the corresponding graph box for a table row
+         * @param trElement The table row element
+         * @return The graph box element(s)
+         */
+        function getGraphBox(trElement) {
+            // Title of the CWL element
+            var elementTitle = $(trElement).find("td:first").html();
+
+            // Find corresponding graph box and return
+            return $("title").filter(function() {
+                return $(this).text() == elementTitle;
+            }).siblings("path");
+        }
+
+        // When a table row is selected
+        $( "tr" ).hover(function() {
+            // Highlight, keeping previous in an attribute
+            var graphBox = getGraphBox(this);
+            graphBox.attr("data-prevfill", graphBox.css("fill"));
+            graphBox.css("fill", "rgba(0, 255, 0, 0.11)");
+        }, function() {
+            // Unhighlight
+            var graphBox = getGraphBox(this);
+            graphBox.css("fill", graphBox.attr("data-prevfill"));
+        });
+    });
