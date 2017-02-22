@@ -19,6 +19,7 @@
 
 package org.commonwl.viewer.web;
 
+import com.github.jabbalaci.graphviz.GraphViz;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
@@ -29,6 +30,7 @@ import org.commonwl.viewer.services.WorkflowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -40,6 +42,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
+import java.io.IOException;
 
 @Controller
 public class WorkflowController {
@@ -213,5 +216,68 @@ public class WorkflowController {
         File bundleDownload = new File(workflowModel.getRoBundle());
         logger.info("Serving download for workflow " + workflowID + " [" + bundleDownload.toString() + "]");
         return new FileSystemResource(bundleDownload);
+    }
+
+    /**
+     * Download a generated DOT graph for a workflow as an svg
+     * @param workflowID The ID of the workflow to download the graph for
+     */
+    @RequestMapping(value = "/workflows/{workflowID}/graph/svg",
+                    method = RequestMethod.GET,
+                    produces = "image/svg+xml")
+    @ResponseBody
+    public FileSystemResource getGraphAsSvg(@Value("${graphvizStorage}") String graphvizStorage,
+                                            @PathVariable("workflowID") String workflowID) throws IOException {
+
+        // Get workflow from database
+        Workflow workflowModel = workflowRepository.findOne(workflowID);
+
+        // 404 error if workflow does not exist
+        if (workflowModel == null) {
+            throw new WorkflowNotFoundException();
+        }
+
+        // Generate graphviz image if it does not already exist
+        File out = new File(graphvizStorage + "/" + workflowID + ".svg");
+        if (!out.exists()) {
+            GraphViz gv = new GraphViz();
+            gv.decreaseDpi();
+            gv.decreaseDpi();
+            gv.decreaseDpi();
+            gv.writeGraphToFile(gv.getGraph(workflowModel.getDotGraph(), "svg", "dot"), out.getAbsolutePath());
+        }
+
+        // Output the graph image
+        return new FileSystemResource(out);
+    }
+
+    /**
+     * Download a generated DOT graph for a workflow as a png
+     * @param workflowID The ID of the workflow to download the graph for
+     */
+    @RequestMapping(value = "/workflows/{workflowID}/graph/png",
+            method = RequestMethod.GET,
+            produces = "image/png")
+    @ResponseBody
+    public FileSystemResource getGraphAsPng(@Value("${graphvizStorage}") String graphvizStorage,
+                                            @PathVariable("workflowID") String workflowID) throws IOException {
+
+        // Get workflow from database
+        Workflow workflowModel = workflowRepository.findOne(workflowID);
+
+        // 404 error if workflow does not exist
+        if (workflowModel == null) {
+            throw new WorkflowNotFoundException();
+        }
+
+        // Generate graphviz image if it does not already exist
+        File out = new File(graphvizStorage + "/" + workflowID + ".png");
+        if (!out.exists()) {
+            GraphViz gv = new GraphViz();
+            gv.writeGraphToFile(gv.getGraph(workflowModel.getDotGraph(), "png", "dot"), out.getAbsolutePath());
+        }
+
+        // Output the graph image
+        return new FileSystemResource(out);
     }
 }

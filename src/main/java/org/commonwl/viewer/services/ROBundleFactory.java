@@ -53,11 +53,11 @@ public class ROBundleFactory {
     @Autowired
     public ROBundleFactory(@Value("${applicationName}") String applicationName,
                            @Value("${applicationURL}") String applicationURL,
-                           @Value("${storageLocation}") Path storageLocation,
+                           @Value("${graphvizStorage}") Path graphvizStorage,
                            WorkflowRepository workflowRepository) {
         this.applicationName = applicationName;
         this.applicationURL = applicationURL;
-        this.storageLocation = storageLocation;
+        this.storageLocation = graphvizStorage;
         this.workflowRepository = workflowRepository;
     }
 
