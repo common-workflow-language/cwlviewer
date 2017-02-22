@@ -1,7 +1,7 @@
 FROM maven:3.3-jdk-8-alpine
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
-RUN apk add --update graphviz && rm -rf /var/cache/apk/*
+RUN apk add --update graphviz ttf-freefont && rm -rf /var/cache/apk/*
 
 RUN mkdir /usr/share/maven/ref/repository
 
@@ -24,4 +24,6 @@ WORKDIR /tmp
 EXPOSE 8080
 
 # Expects mongodb on port 27017
-CMD ["/usr/bin/java", "-Dspring.data.mongodb.host=mongo", "-jar", "/usr/lib/cwlvisualizer.jar"]
+ENV SPRING_DATA_MONGODB_HOST=mongo
+ENV SPRING_DATA_MONGODB_PORT=27017
+CMD ["/usr/bin/java", "-jar", "/usr/lib/cwlvisualizer.jar"]
