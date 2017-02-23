@@ -21,10 +21,6 @@ body {
     padding-top: 61px;
 }
 
-.table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
-    background-color: rgba(0, 255, 0, 0.11);
-}
-
 .hide {
     display: none;
 }
@@ -72,6 +68,18 @@ body {
     stroke-width: 0;
 }
 
+#graph svg text {
+    cursor: default;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#graph svg text::selection {
+    background: none;
+}
+
 #loading {
     width: 150px;
     margin: 0 auto;
@@ -79,6 +87,22 @@ body {
 
 #download-gv {
     margin-bottom: 5px;
+}
+
+tr.selected, .table-hover tbody tr.selected:hover td, .table-hover tbody tr.selected:hover th {
+    background-color: #adffaf !important;
+}
+
+tr.hover, .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+    background-color: #c9ffcb !important;
+}
+
+path.selected, path.hover.selected {
+    fill: #adffaf;
+}
+
+path.hover {
+    fill: #c9ffcb;
 }
 
 #footer {

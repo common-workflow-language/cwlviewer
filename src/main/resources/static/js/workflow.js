@@ -61,7 +61,8 @@ require(['jquery', 'bootstrap.modal', 'renderer', 'svg-pan-zoom'],
             setTimeout(function() {
                 svgPanZoom('svg', {
                     zoomEnabled: true,
-                    controlIconsEnabled: true
+                    controlIconsEnabled: true,
+                    preventMouseEventsDefault: false
                 });
             }, 1000);
         });
@@ -171,15 +172,49 @@ require(['jquery'],
             }).siblings("path");
         }
 
-        // When a table row is selected
-        $( "tr" ).hover(function() {
-            // Highlight, keeping previous in an attribute
-            var graphBox = getGraphBox(this);
-            graphBox.attr("data-prevfill", graphBox.css("fill"));
-            graphBox.css("fill", "rgba(0, 255, 0, 0.11)");
+        // When a table row is hovered over, highlight
+        var tableBodyRow = $("tr").not('thead tr');
+        tableBodyRow.hover(function() {
+            getGraphBox(this).addClass("hover");
         }, function() {
-            // Unhighlight
-            var graphBox = getGraphBox(this);
-            graphBox.css("fill", graphBox.attr("data-prevfill"));
+            getGraphBox(this).removeClass("hover");
         });
+
+        // When a table row is selected
+        tableBodyRow.click(function() {
+            getGraphBox(this).toggleClass("selected");
+            $(this).toggleClass("selected");
+        });
+
+        /**
+         * Gets the corresponding table row for a graph box
+         * @param trElement The graph box element
+         * @return The table row(s)
+         */
+        function getTableRow(gbElement) {
+            // Title of the CWL element
+            var elementTitle = $(gbElement).find("title").html();
+
+            // Find corresponding table row and return
+            return $("tr").filter(function() {
+                return $(this).find("td:first").html() == elementTitle;
+            });
+        }
+
+        // When a graph box is hovered over or clicked, highlight
+        $(document).on({
+            click: function() {
+                getTableRow(this).toggleClass("selected");
+                $(this).find("path").toggleClass("selected");
+            },
+            mouseenter: function() {
+                getTableRow(this).addClass("hover");
+                $(this).find("path").addClass("hover");
+            },
+            mouseleave: function() {
+                getTableRow(this).removeClass("hover");
+                $(this).find("path").removeClass("hover");
+            }
+        }, ".node");
+
     });
