@@ -56,16 +56,20 @@ body {
 }
 
 #visualisation {
-    overflow: auto;
+    overflow: hidden;
     padding: 0;
+    height: 500px;
 }
 
-#graph svg {
+@media (max-width: 767px) {
+    #visualisation {
+        height: 300px;
+    }
+}
+
+#graph {
     width: 100%;
-}
-
-#graph svg polygon {
-    stroke-width: 0;
+    height: 100%;
 }
 
 #graph svg text {
@@ -78,11 +82,6 @@ body {
 
 #graph svg text::selection {
     background: none;
-}
-
-#loading {
-    width: 150px;
-    margin: 0 auto;
 }
 
 #download-gv {

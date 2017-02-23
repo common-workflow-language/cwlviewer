@@ -23,14 +23,10 @@
 requirejs.config({
     baseUrl: '/bower_components',
     paths: {
-        d3: 'd3/d3',
-        'dot-checker': 'graphviz-d3-renderer/dist/dot-checker',
-        'layout-worker': 'graphviz-d3-renderer/dist/layout-worker',
-        worker: 'requirejs-web-workers/src/worker',
-        renderer: 'graphviz-d3-renderer/dist/renderer',
         jquery: 'jquery/dist/jquery.min',
         'bootstrap.modal': 'bootstrap/js/modal',
-        'svg-pan-zoom': 'svg-pan-zoom/dist/svg-pan-zoom.min'
+        'svg-pan-zoom': 'svg-pan-zoom/dist/svg-pan-zoom.min',
+        'hammerjs': 'hammerjs/hammer.min'
     },
     shim: {
         'bootstrap.modal': {
@@ -40,58 +36,91 @@ requirejs.config({
 });
 
 /**
- * Main rendering code for the graphs on a workflow page
+ * Make the graph pannable and zoomable
  */
-require(['jquery', 'bootstrap.modal', 'renderer', 'svg-pan-zoom'],
-    function ($, modal, renderer, svgPanZoom) {
-        // Load dot graph from the page
-        var dotGraph = $("#dot").val();
+require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs'],
+    function ($, modal, svgPanZoom, hammerjs) {
 
-        // Initialise graph
-        renderer.init("#graph");
+        // Custom hammer event handler to add mobile support
+        // Based on example in svg-pan-zoom/demo/mobile.html
+        var eventHandler = {
+            haltEventListeners: ['touchstart', 'touchend', 'touchmove', 'touchleave', 'touchcancel'],
+            init: function(options) {
 
-        // Update stage with new dot source
-        renderer.render(dotGraph);
+                var instance = options.instance;
+                var initialScale = 1;
+                var pannedX = 0;
+                var pannedY = 0;
 
-        // Fade the loading and show graph when graph is drawn
-        renderer.renderHandler(function() {
-            $("#loading").fadeOut();
-
-            // Enable svg-pan-zoom on the graph after load transition
-            setTimeout(function() {
-                svgPanZoom('svg', {
-                    zoomEnabled: true,
-                    controlIconsEnabled: true,
-                    preventMouseEventsDefault: false
+                // Init Hammer
+                // Listen only for pointer and touch events
+                this.hammer = Hammer(options.svgElement, {
+                    inputClass: Hammer.SUPPORT_POINTER_EVENTS ? Hammer.PointerEventInput : Hammer.TouchInput
                 });
-            }, 1000);
+
+                // Enable pinch
+                this.hammer.get('pinch').set({
+                    enable: true
+                });
+
+                // Handle double tap
+                this.hammer.on('doubletap', function(ev){
+                    instance.zoomIn()
+                });
+
+                // Handle pan
+                this.hammer.on('panstart panmove', function(ev){
+                    // On pan start reset panned variables
+                    if (ev.type === 'panstart') {
+                        pannedX = 0;
+                        pannedY = 0;
+                    }
+                    // Pan only the difference
+                    instance.panBy({x: ev.deltaX - pannedX, y: ev.deltaY - pannedY});
+                    pannedX = ev.deltaX;
+                    pannedY = ev.deltaY;
+                });
+
+                // Handle pinch
+                this.hammer.on('pinchstart pinchmove', function(ev){
+                    // On pinch start remember initial zoom
+                    if (ev.type === 'pinchstart') {
+                        initialScale = instance.getZoom()
+                        instance.zoom(initialScale * ev.scale)
+                    }
+                    instance.zoom(initialScale * ev.scale)
+                });
+
+                // Prevent moving the page on some devices when panning over SVG
+                options.svgElement.addEventListener('touchmove', function(e){
+                    e.preventDefault();
+                });
+
+            }, destroy: function(){
+                this.hammer.destroy()
+            }
+        };
+
+        // Enable svg-pan-zoom on the graph
+        svgPanZoom('#graph', {
+            zoomEnabled: true,
+            controlIconsEnabled: true,
+            customEventsHandler: eventHandler,
+            preventMouseEventsDefault: false
         });
+    });
 
-        /**
-         * Download the rendered graph as a png
-         */
-        $('#download-graph').click(function (event) {
-            // Get the image data
-            var img = renderer.stage.getImage(false);
-
-            // Once it is loaded
-            img.onload = function () {
-                // Set hidden download link href to contents and click it
-                var downloadLink = $("#download-link-graph");
-                downloadLink.attr("href", img.src);
-                downloadLink[0].click();
-            };
-
-            // Stop default button action
-            event.preventDefault();
-        });
-
+/**
+ * Handle the dot graph modal and related features
+ */
+require(['jquery', 'bootstrap.modal'],
+    function ($, modal) {
         /**
          * DOT graph modal textarea automatically focuses when opened
          */
         $('#dotGraph').on('shown.bs.modal', function () {
             $('#dot').focus();
-        })
+        });
 
         /**
          * DOT graph textarea focus selects all

@@ -39,6 +39,7 @@ public class CWLCollection {
 
     private GitHubService githubService;
     private GithubDetails githubInfo;
+    private String commitSha;
 
     // Maps of ID to associated JSON
     private Map<String, JsonNode> cwlDocs = new HashMap<>();
@@ -78,11 +79,14 @@ public class CWLCollection {
      * Creates a new collection of CWL files from a Github repository
      * @param githubService Service to provide the Github API functionality
      * @param githubInfo The information necessary to access the Github directory associated with the RO
+     * @param commitSha The sha hash of the latest commit used for caching
      * @throws IOException Any API errors which may have occurred
      */
-    public CWLCollection(GitHubService githubService, GithubDetails githubInfo) throws IOException {
+    public CWLCollection(GitHubService githubService, GithubDetails githubInfo,
+                         String commitSha) throws IOException {
         this.githubInfo = githubInfo;
         this.githubService = githubService;
+        this.commitSha = commitSha;
 
         // Add any CWL files from the Github repo to this collection
         List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
@@ -122,7 +126,7 @@ public class CWLCollection {
                         // Get the content of this file from Github
                         GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
                                 githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
-                        String fileContent = githubService.downloadFile(githubFile);
+                        String fileContent = githubService.downloadFile(githubFile, commitSha);
 
                         // Parse yaml to JsonNode
                         Yaml reader = new Yaml();

@@ -53,11 +53,11 @@ public class ROBundleFactory {
     @Autowired
     public ROBundleFactory(@Value("${applicationName}") String applicationName,
                            @Value("${applicationURL}") String applicationURL,
-                           @Value("${storageLocation}") Path storageLocation,
+                           @Value("${graphvizStorage}") Path graphvizStorage,
                            WorkflowRepository workflowRepository) {
         this.applicationName = applicationName;
         this.applicationURL = applicationURL;
-        this.storageLocation = storageLocation;
+        this.storageLocation = graphvizStorage;
         this.workflowRepository = workflowRepository;
     }
 
@@ -69,12 +69,12 @@ public class ROBundleFactory {
      * @throws IOException Any API errors which may have occurred
      */
     @Async
-    void workflowROFromGithub(GitHubService githubService, GithubDetails githubInfo)
+    void workflowROFromGithub(GitHubService githubService, GithubDetails githubInfo, String commitSha)
             throws IOException, InterruptedException {
         logger.info("Creating Research Object Bundle");
 
         // Create a new Research Object Bundle with Github contents
-        ROBundle bundle = new ROBundle(githubService, githubInfo,
+        ROBundle bundle = new ROBundle(githubService, githubInfo, commitSha,
                 applicationName, applicationURL);
 
         // Save the bundle to the storage location in properties

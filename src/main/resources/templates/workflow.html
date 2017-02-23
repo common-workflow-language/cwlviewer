@@ -98,7 +98,7 @@ digraph G {
 
 <div class="container">
     <div class="row">
-        <div class="col-md-12" role="main" id="main" th:with="workflowURL=@{'github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch} + '/' + ${workflow.retrievedFrom.path}}">
+        <div class="col-md-12" role="main" id="main" th:with="workflowURL=@{'github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.lastCommit} + '/' + ${workflow.retrievedFrom.path}}">
             <h2>Workflow: <span th:text="${workflow.label}">Workflow Name</span></h2>
             <p>
                 <a th:href="@{'https://' + ${workflowURL}}" href="#" rel="noopener" target="_blank">
@@ -121,18 +121,16 @@ digraph G {
                 <a id="download-link-graph" href="" download="workflow.png"></a>
                 <strong>Graph: </strong>
                 <button id="view-dot" class="btn btn-primary" type="button" data-toggle="modal" data-target="#dotGraph">View DOT</button>
-                <button id="download-graph" class="btn btn-primary" type="button">Download Image</button>
+                <a id="download-graph" class="btn btn-primary" type="button" th:href="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" download="graph.svg">Download Image</a>
             </div>
         </div>
     </div>
     <div class="row">
         <div class="col-md-12">
             <div id="visualisation" class="jumbotron">
-                <div id="loading">
-                    <img src="../static/img/loading.svg" th:src="@{/img/loading.svg}" />
-                    <span>Drawing Workflow...</span>
-                </div>
-                <div id="graph"></div>
+                <object id="graph" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
+                    <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="workflow graph" />
+                </object>
             </div>
             <h2>Inputs</h2>
             <table class="table table-striped table-hover">
