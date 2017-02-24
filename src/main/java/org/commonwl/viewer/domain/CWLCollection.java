@@ -24,12 +24,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import org.commonwl.viewer.services.DockerService;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.commonwl.viewer.services.GitHubService;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
@@ -74,6 +77,14 @@ public class CWLCollection {
     private final String ARRAY = "array";
     private final String ARRAY_ITEMS = "items";
     private final String LOCATION = "location";
+    private final String REQUIREMENTS = "requirements";
+    private final String HINTS = "hints";
+    private final String DOCKER_REQUIREMENT = "DockerRequirement";
+    private final String DOCKER_PULL = "dockerPull";
+
+    // URL validation for docker pull id
+    private final String DOCKERHUB_ID_REGEX = "^([0-9a-z]{4,30})(?:\\/([a-zA-Z0-9_-]+))?(?:\\:[a-zA-Z0-9_-]+)?$";
+    private final Pattern dockerhubPattern = Pattern.compile(DOCKERHUB_ID_REGEX);
 
     /**
      * Creates a new collection of CWL files from a Github repository
@@ -197,7 +208,7 @@ public class CWLCollection {
         }
 
         return new Workflow(label, extractDoc(mainWorkflow), getInputs(mainWorkflow),
-                            getOutputs(mainWorkflow), getSteps(mainWorkflow));
+                            getOutputs(mainWorkflow), getSteps(mainWorkflow), getDockerLink(mainWorkflow));
     }
 
     /**
@@ -367,6 +378,69 @@ public class CWLCollection {
             }
 
             return details;
+        }
+        return null;
+    }
+
+    /**
+     * Get the docker link from a workflow node
+     * @param node The overall workflow node
+     * @return A string with a dockerhub or image link
+     */
+    private String getDockerLink(JsonNode node) {
+        if (node != null) {
+            if (node.has(REQUIREMENTS)) {
+                String dockerLink = extractDockerLink(node.get(REQUIREMENTS));
+                if (dockerLink != null) {
+                    return extractDockerLink(node.get(REQUIREMENTS));
+                }
+            }
+            if (node.has(HINTS)) {
+                String dockerLink = extractDockerLink(node.get(HINTS));
+                if (dockerLink != null) {
+                    return extractDockerLink(node.get(HINTS));
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the docker link from a workflow hints or requriements node
+     * @param hintReq A hints or requirements node
+     * @return A string with a dockerhub or image link
+     */
+    private String extractDockerLink(JsonNode hintReq) {
+        // ArrayNode syntax using yaml lists
+        if (hintReq.getClass() == ArrayNode.class) {
+            for (JsonNode requirement : hintReq) {
+                if (requirement.has(CLASS)
+                        && requirement.get(CLASS).asText().equals(DOCKER_REQUIREMENT)) {
+                    if (requirement.has(DOCKER_PULL)) {
+                        // Format dockerPull string as a dockerhub URL
+                        return DockerService.getDockerHubURL(requirement.get(DOCKER_PULL).asText());
+                    } else {
+                        // Indicate that the docker requirement exists, but we cannot
+                        // provide a link to dockerhub as docker pull is not used
+                        return "true";
+                    }
+                }
+            }
+            // v1.0 object syntax with requirement class as key
+        } else if (hintReq.getClass() == ObjectNode.class) {
+            // Look for DockerRequirement
+            if (hintReq.has(DOCKER_REQUIREMENT)) {
+                JsonNode dockerReq = hintReq.get(DOCKER_REQUIREMENT);
+                if (dockerReq.has(DOCKER_PULL)) {
+                    // Format dockerPull string as a dockerhub URL
+                    String dockerPull = dockerReq.get(DOCKER_PULL).asText();
+                    return DockerService.getDockerHubURL(dockerPull);
+                } else {
+                    // Indicate that the docker requirement exists, but we cannot
+                    // provide a link to dockerhub as docker pull is not used
+                    return "true";
+                }
+            }
         }
         return null;
     }
