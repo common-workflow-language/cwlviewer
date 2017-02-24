@@ -133,54 +133,69 @@ digraph G {
                 </object>
             </div>
             <h2>Inputs</h2>
-            <table class="table table-striped table-hover">
-                <thead>
-                    <th>ID</th>
-                    <th>Type</th>
-                    <th>Label</th>
-                    <th>Doc</th>
-                </thead>
-                <tbody>
-                    <tr th:each="input : ${workflow.inputs}">
-                        <td th:text="${input.key}">ID</td>
-                        <td th:text="${input.value.type}">Type</td>
-                        <td th:text="${input.value.label}">Label</td>
-                        <td th:text="${input.value.doc}">Description</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div th:if="${workflow.inputs.isEmpty()}" class="alert alert-info">
+                <p>There are no inputs in this workflow</p>
+            </div>
+            <div th:unless="${workflow.inputs.isEmpty()}">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Label</th>
+                        <th>Doc</th>
+                    </thead>
+                    <tbody>
+                        <tr th:each="input : ${workflow.inputs}">
+                            <td th:text="${input.key}">ID</td>
+                            <td th:text="${input.value.type}">Type</td>
+                            <td th:text="${input.value.label}">Label</td>
+                            <td th:text="${input.value.doc}">Description</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <h2>Outputs</h2>
-            <table class="table table-striped table-hover">
-                <thead>
+            <div th:if="${workflow.outputs.isEmpty()}" class="alert alert-info">
+                <p>There are no outputs in this workflow</p>
+            </div>
+            <div th:unless="${workflow.outputs.isEmpty()}">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Label</th>
+                        <th>Doc</th>
+                    </thead>
+                    <tbody>
+                        <tr th:each="output : ${workflow.outputs}">
+                            <td th:text="${output.key}">ID</td>
+                            <td th:text="${output.value.type}">Type</td>
+                            <td th:text="${output.value.label}">Label</td>
+                            <td th:text="${output.value.doc}">Description</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h2>Steps</h2>
+            <div th:if="${workflow.steps.isEmpty()}" class="alert alert-info">
+                <p>There are no steps in this workflow</p>
+            </div>
+            <div th:unless="${workflow.steps.isEmpty()}">
+                <table class="table table-striped table-hover">
+                    <thead>
                     <th>ID</th>
-                    <th>Type</th>
                     <th>Label</th>
                     <th>Doc</th>
-                </thead>
-                <tbody>
-                    <tr th:each="output : ${workflow.outputs}">
-                        <td th:text="${output.key}">ID</td>
-                        <td th:text="${output.value.type}">Type</td>
-                        <td th:text="${output.value.label}">Label</td>
-                        <td th:text="${output.value.doc}">Description</td>
+                    </thead>
+                    <tbody>
+                    <tr th:each="step : ${workflow.steps}">
+                        <td th:text="${step.key}">ID</td>
+                        <td th:text="${step.value.label}">Label</td>
+                        <td th:text="${step.value.doc}">Description</td>
                     </tr>
-                </tbody>
-            </table>
-            <h2>Steps</h2>
-            <table class="table table-striped table-hover">
-                <thead>
-                <th>ID</th>
-                <th>Label</th>
-                <th>Doc</th>
-                </thead>
-                <tbody>
-                <tr th:each="step : ${workflow.steps}">
-                    <td th:text="${step.key}">ID</td>
-                    <td th:text="${step.value.label}">Label</td>
-                    <td th:text="${step.value.doc}">Description</td>
-                </tr>
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
