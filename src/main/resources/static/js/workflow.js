@@ -102,10 +102,35 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs'],
         };
 
         // Enable svg-pan-zoom on the graph
-        svgPanZoom('#graph', {
+        var graph = svgPanZoom('#graph', {
             zoomEnabled: true,
             controlIconsEnabled: true,
             customEventsHandler: eventHandler
+        });
+
+        // Resizing window also resizes the graph
+        $(window).resize(function(){
+            graph.resize();
+            graph.fit();
+            graph.center();
+        });
+
+        // Enable svg-pan-zoom on fullscreen modal when opened
+        $('#fullScreenGraphModal').on('shown.bs.modal', function (e) {
+            setTimeout(function() {
+                var fullGraph = svgPanZoom('#graphFullscreen', {
+                    zoomEnabled: true,
+                    controlIconsEnabled: true,
+                    customEventsHandler: eventHandler
+                });
+
+                // Resizing window also resizes the graph
+                $(window).resize(function(){
+                    fullGraph.resize();
+                    fullGraph.fit();
+                    fullGraph.center();
+                });
+            }, 400);
         });
     });
 
