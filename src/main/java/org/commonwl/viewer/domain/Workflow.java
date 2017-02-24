@@ -65,16 +65,20 @@ public class Workflow {
     private Map<String, CWLElement> outputs;
     private Map<String, CWLStep> steps;
 
+    // Currently only DockerRequirement is parsed for this
+    private String dockerLink;
+
     // DOT graph of the contents
     private String dotGraph;
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
-                    Map<String, CWLElement> outputs, Map<String, CWLStep> steps) {
+                    Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink) {
         this.label = label;
         this.doc = doc;
         this.inputs = inputs;
         this.outputs = outputs;
         this.steps = steps;
+        this.dockerLink = dockerLink;
 
         // Create a DOT graph for this workflow and store it
         StringWriter graphWriter = new StringWriter();
@@ -171,5 +175,13 @@ public class Workflow {
 
     public void setLastCommit(String lastCommit) {
         this.lastCommit = lastCommit;
+    }
+
+    public String getDockerLink() {
+        return dockerLink;
+    }
+
+    public void setDockerLink(String dockerLink) {
+        this.dockerLink = dockerLink;
     }
 }

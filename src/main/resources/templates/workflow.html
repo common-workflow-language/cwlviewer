@@ -151,6 +151,13 @@ digraph G {
                     <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="workflow graph" />
                 </object>
             </div>
+            <div th:if="${workflow.dockerLink != null}">
+                <h2 style="float:left;">Requires: </h2>
+                <a th:unless="${workflow.dockerLink == 'true'}" th:href="${workflow.dockerLink}">
+                    <img id="dockerLogo" src="/img/Docker-logo.png" alt="docker logo" />
+                </a>
+                <img th:if="${workflow.dockerLink == 'true'}" id="dockerLogo" src="/img/Docker-logo.png" alt="docker logo" />
+            </div>
             <h2>Inputs</h2>
             <div th:if="${workflow.inputs.isEmpty()}" class="alert alert-info">
                 <p>There are no inputs in this workflow</p>

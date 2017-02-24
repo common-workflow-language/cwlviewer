@@ -55,6 +55,11 @@ body {
     margin-right: 5px;
 }
 
+#dockerLogo {
+    height: 75px;
+    margin-left: 10px;
+}
+
 #fullscreen-open, #fullscreen-close {
     cursor: pointer;
     font-size: 25px;
