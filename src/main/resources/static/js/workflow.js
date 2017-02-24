@@ -24,14 +24,16 @@ requirejs.config({
     baseUrl: '/bower_components',
     paths: {
         jquery: 'jquery/dist/jquery.min',
+        'jquery.svg': 'jquery-svg/jquery.svg.min',
+        'jquery.svgdom': 'jquery-svg/jquery.svgdom.min',
         'bootstrap.modal': 'bootstrap/js/modal',
         'svg-pan-zoom': 'svg-pan-zoom/dist/svg-pan-zoom.min',
         'hammerjs': 'hammerjs/hammer.min'
     },
     shim: {
-        'bootstrap.modal': {
-            deps: ['jquery']
-        }
+        'jquery.svg': ['jquery'],
+        'jquery.svgdom': ['jquery'],
+        'bootstrap.modal': ['jquery']
     }
 });
 
@@ -40,9 +42,10 @@ requirejs.config({
  */
 require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs'],
     function ($, modal, svgPanZoom, hammerjs) {
-
-        // Custom hammer event handler to add mobile support
-        // Based on example in svg-pan-zoom/demo/mobile.html
+        /**
+         * Custom hammer event handler to add mobile support
+         * Based on example in svg-pan-zoom/demo/mobile.html
+         */
         var eventHandler = {
             haltEventListeners: ['touchstart', 'touchend', 'touchmove', 'touchleave', 'touchcancel'],
             init: function(options) {
@@ -61,11 +64,6 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs'],
                 // Enable pinch
                 this.hammer.get('pinch').set({
                     enable: true
-                });
-
-                // Handle double tap
-                this.hammer.on('doubletap', function(ev){
-                    instance.zoomIn()
                 });
 
                 // Handle pan
@@ -101,7 +99,12 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs'],
             }
         };
 
-        // Enable svg-pan-zoom on the graph
+        // Loading from external URL needs to be done to enable events
+        $(selector).svg({loadURL: 'lion.svg'});
+
+        /**
+         * Enable svg-pan-zoom on the graph
+         */
         svgPanZoom('#graph', {
             zoomEnabled: true,
             controlIconsEnabled: true,
@@ -153,7 +156,9 @@ require(['jquery', 'bootstrap.modal'],
  */
 require(['jquery'],
     function ($) {
-        // AJAX function to add download link to page if generated
+        /**
+         * AJAX function to add download link to page if generated
+         */
         function getDownloadLink() {
             $.ajax({
                 type: 'HEAD',
@@ -172,8 +177,10 @@ require(['jquery'],
             });
         }
 
-        // If ajaxRequired exists on the page the RO bundle link is not generated
-        // at time of page load
+        /**
+         * If ajaxRequired exists on the page the RO bundle link is not generated
+         * at time of page load
+         */
         if ($("#ajaxRequired").length) {
             getDownloadLink();
         }
@@ -183,9 +190,8 @@ require(['jquery'],
  * Highlighting step in graph when table row is
  * hovered over or vice-versa
  */
-require(['jquery'],
+require(['jquery', 'jquery.svg', 'jquery.svgdom'],
     function ($) {
-
         /**
          * Gets the corresponding graph box for a table row
          * @param trElement The table row element
@@ -198,21 +204,23 @@ require(['jquery'],
             // Find corresponding graph box and return
             return $("title").filter(function() {
                 return $(this).text() == elementTitle;
-            }).siblings("path");
+            }).siblings("polygon");
         }
 
-        // When a table row is hovered over, highlight
-        var tableBodyRow = $("tr").not('thead tr');
-        tableBodyRow.hover(function() {
-            getGraphBox(this).addClass("hover");
-        }, function() {
-            getGraphBox(this).removeClass("hover");
-        });
-
-        // When a table row is selected
-        tableBodyRow.click(function() {
-            getGraphBox(this).toggleClass("selected");
-            $(this).toggleClass("selected");
+        /**
+         * When a table row is hovered over/clicked, highlight
+         */
+        $("tr").not('thead tr').on({
+            click: function() {
+                getGraphBox(this).toggleClass("selected");
+                $(this).toggleClass("selected");
+            },
+            mouseenter: function() {
+                getGraphBox(this).addClass("hover");
+            },
+            mouseleave: function() {
+                getGraphBox(this).removeClass("hover");
+            }
         });
 
         /**
@@ -230,20 +238,25 @@ require(['jquery'],
             });
         }
 
-        // When a graph box is hovered over or clicked, highlight
-        $(document).on({
+        /**
+         * When a graph box is hovered over/clicked, highlight
+         */
+        var svg = $('#graph').svg('get');
+        $($(".node"), svg.root()).on({
             click: function() {
+                alert("click");
                 getTableRow(this).toggleClass("selected");
-                $(this).find("path").toggleClass("selected");
+                $(this).find("polygon").toggleClass("selected");
             },
             mouseenter: function() {
+                alert("mouseenter");
                 getTableRow(this).addClass("hover");
-                $(this).find("path").addClass("hover");
+                $(this).find("polygon").addClass("hover");
             },
             mouseleave: function() {
+                alert("mouseleave");
                 getTableRow(this).removeClass("hover");
-                $(this).find("path").removeClass("hover");
+                $(this).find("polygon").removeClass("hover");
             }
-        }, ".node");
-
+        });
     });
