@@ -96,6 +96,24 @@ digraph G {
     </div>
 </div>
 
+<!-- Modal for viewing the graph in full screen -->
+<div class="modal fade" id="fullScreenGraphModal" tabindex="-1" role="dialog" aria-labelledby="fullScreenGraphLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="fullScreenGraphLabel">Workflow Graph</h4>
+            </div>
+            <div class="modal-body">
+                <span id="fullscreen-close" data-dismiss="modal" class="close glyphicon glyphicon-resize-full"></span>
+                <object id="graphFullscreen" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
+                    <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="workflow graph" />
+                </object>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container">
     <div class="row">
         <div class="col-md-12" role="main" id="main" th:with="workflowURL=@{'github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.lastCommit} + '/' + ${workflow.retrievedFrom.path}}">
@@ -128,6 +146,7 @@ digraph G {
     <div class="row">
         <div class="col-md-12">
             <div id="visualisation" class="jumbotron">
+                <span id="fullscreen-open" data-toggle="modal" data-target="#fullScreenGraphModal" class="glyphicon glyphicon-resize-full"></span>
                 <object id="graph" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
                     <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="workflow graph" />
                 </object>
