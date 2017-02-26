@@ -21,6 +21,7 @@ package org.commonwl.viewer.web;
 
 import com.github.jabbalaci.graphviz.GraphViz;
 import org.apache.commons.lang.StringUtils;
+import org.apache.jena.ext.com.google.common.collect.Lists;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.WorkflowForm;
@@ -32,7 +33,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.HandlerMapping;
@@ -65,6 +72,19 @@ public class WorkflowController {
         this.workflowFormValidator = workflowFormValidator;
         this.workflowService = workflowService;
         this.workflowRepository = workflowRepository;
+    }
+
+    /**
+     * List all the workflows in the database, paginated
+     * @param model The model for the page
+     * @param pageable Pagination for the list of workflows
+     * @return The workflows view
+     */
+    @RequestMapping(value="/workflows")
+    public String listWorkflows(Model model, Pageable pageable) {
+        model.addAttribute("workflows", workflowRepository.findAllByOrderByRetrievedOnDesc(pageable));
+        model.addAttribute("pages", pageable);
+        return "workflows";
     }
 
     /**
@@ -111,27 +131,6 @@ public class WorkflowController {
                     + "/" + githubDetails.getRepoName() + "/tree/" + githubDetails.getBranch()
                     + "/" + githubDetails.getPath());
         }
-    }
-
-    /**
-     * Display a page for a particular workflow
-     * @param workflowID The ID of the workflow to be retrieved
-     * @return The workflow view with the workflow as a model
-     */
-    @RequestMapping(value="/workflows/{workflowID}")
-    public ModelAndView getWorkflowByID(@PathVariable String workflowID){
-
-        // Get workflow from database
-        Workflow workflowModel = workflowRepository.findOne(workflowID);
-
-        // 404 error if workflow does not exist
-        if (workflowModel == null) {
-            throw new WorkflowNotFoundException();
-        }
-
-        // Display this model along with the view
-        return new ModelAndView("workflow", "workflow", workflowModel);
-
     }
 
     /**

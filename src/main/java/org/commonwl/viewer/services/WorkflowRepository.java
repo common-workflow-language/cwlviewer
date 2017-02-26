@@ -21,14 +21,19 @@ package org.commonwl.viewer.services;
 
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
  * Stores workflow objects in the database
  */
-public interface WorkflowRepository extends MongoRepository<Workflow, String> {
+public interface WorkflowRepository extends PagingAndSortingRepository<Workflow, String> {
 
     // Finds a workflow model in the database based on where it was retrieved from
     Workflow findByRetrievedFrom(GithubDetails retrievedFrom);
+
+    // Get the first 10 workflows
+    Page<Workflow> findAllByOrderByRetrievedOnDesc(Pageable pageable);
 
 }

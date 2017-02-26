@@ -153,7 +153,7 @@ digraph G {
             </div>
             <div th:if="${workflow.dockerLink != null}">
                 <h2 style="float:left;">Requires: </h2>
-                <a th:unless="${workflow.dockerLink == 'true'}" th:href="${workflow.dockerLink}">
+                <a th:unless="${workflow.dockerLink == 'true'}" th:href="${workflow.dockerLink}" rel="noopener" target="_blank">
                     <img id="dockerLogo" src="/img/Docker-logo.png" alt="docker logo" />
                 </a>
                 <img th:if="${workflow.dockerLink == 'true'}" id="dockerLogo" src="/img/Docker-logo.png" alt="docker logo" />
