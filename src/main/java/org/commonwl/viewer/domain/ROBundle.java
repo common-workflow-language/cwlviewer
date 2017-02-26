@@ -19,15 +19,20 @@
 
 package org.commonwl.viewer.domain;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.Agent;
 import org.apache.taverna.robundle.manifest.Manifest;
+import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.commonwl.viewer.services.GitHubService;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.eclipse.egit.github.core.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.net.URI;
@@ -36,6 +41,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Represents a Workflow Research Object Bundle
@@ -69,6 +76,7 @@ public class ROBundle {
 
         // Simplified attribution for RO bundle
         try {
+            // Tool attribution in createdBy
             Agent cwlViewer = new Agent(appName);
             cwlViewer.setUri(new URI(appURL));
             manifest.setCreatedBy(cwlViewer);
@@ -92,8 +100,14 @@ public class ROBundle {
             authorList.add(author);
             manifest.setAuthoredBy(authorList);
 
+            // Retrieval Info
+            manifest.setRetrievedBy(cwlViewer);
+            manifest.setRetrievedOn(manifest.getCreatedOn());
+            manifest.setRetrievedFrom(new URI("https://github.com/" + githubInfo.getOwner() + "/"
+                    + githubInfo.getRepoName() + "/tree/" + commitSha + "/" + githubInfo.getPath()));
+
         } catch (URISyntaxException ex) {
-            logger.error(ex.getMessage());
+            logger.error("Error creating URI for RO Bundle", ex);
         }
 
         // Make a directory in the RO bundle to store the files
@@ -102,7 +116,7 @@ public class ROBundle {
 
         // Add the files from the Github repo to this workflow
         List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
-        addFiles(repoContents, bundleFiles);
+        addFiles(repoContents, bundleFiles, manifest);
     }
 
     /**
@@ -110,7 +124,8 @@ public class ROBundle {
      * @param repoContents The contents of the Github repository
      * @param path The path in the Research Object to add the files
      */
-    private void addFiles(List<RepositoryContents> repoContents, Path path) throws IOException {
+    private void addFiles(List<RepositoryContents> repoContents, Path path,
+                          Manifest manifest) throws IOException {
 
         // Loop through repo contents and add them
         for (RepositoryContents repoContent : repoContents) {
@@ -128,7 +143,7 @@ public class ROBundle {
                 Files.createDirectory(subdirPath);
 
                 // Add the files in the subdirectory to this new folder
-                addFiles(subdirectory, subdirPath);
+                addFiles(subdirectory, subdirPath, manifest);
 
             // Otherwise this is a file so add to the bundle
             } else if (repoContent.getType().equals("file")) {
@@ -141,6 +156,23 @@ public class ROBundle {
                 // Save file to research object bundle
                 Path newFilePort = path.resolve(repoContent.getName());
                 Bundles.setStringValue(newFilePort, fileContent);
+
+                // Manifest aggregation
+                PathMetadata aggregation = manifest.getAggregation(newFilePort);
+
+                try {
+                    // Special handling for cwl files
+                    if (FilenameUtils.getExtension(repoContent.getName()).equals("cwl")) {
+                        // Correct mime type (no official standard for yaml)
+                        aggregation.setMediatype("text/x-yaml");
+                    }
+
+                    // Set retrievedFrom information for this file in the manifest
+                    aggregation.setRetrievedFrom(new URI("https://github.com/" + githubFile.getOwner() + "/" +
+                            githubFile.getRepoName() + "/blob/" + commitSha + "/" + githubFile.getPath()));
+                } catch (URISyntaxException ex) {
+                    logger.error("Error creating URI for RO Bundle", ex);
+                }
 
             }
         }
