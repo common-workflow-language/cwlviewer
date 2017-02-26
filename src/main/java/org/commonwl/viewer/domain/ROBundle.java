@@ -57,6 +57,10 @@ public class ROBundle {
     private GithubDetails githubInfo;
     private String commitSha;
 
+    // Pattern for extracting version from a cwl file
+    private final String CWL_VERSION_REGEX = "cwlVersion:\\s*\"?(?:cwl:)?([^\\s\"]+)\"?";
+    private final Pattern cwlVersionPattern = Pattern.compile(CWL_VERSION_REGEX);
+
     /**
      * Creates a new research object bundle for a workflow from a Github repository
      * @param githubInfo The information necessary to access the Github directory associated with the RO
@@ -145,7 +149,7 @@ public class ROBundle {
                 // Add the files in the subdirectory to this new folder
                 addFiles(subdirectory, subdirPath, manifest);
 
-            // Otherwise this is a file so add to the bundle
+                // Otherwise this is a file so add to the bundle
             } else if (repoContent.getType().equals("file")) {
 
                 // Get the content of this file from Github
@@ -165,6 +169,13 @@ public class ROBundle {
                     if (FilenameUtils.getExtension(repoContent.getName()).equals("cwl")) {
                         // Correct mime type (no official standard for yaml)
                         aggregation.setMediatype("text/x-yaml");
+
+                        // Add conformsTo for version extracted from regex
+                        // Lower overhead vs parsing entire file
+                        Matcher m = cwlVersionPattern.matcher(fileContent);
+                        if (m.find()) {
+                            aggregation.setConformsTo(new URI("https://w3id.org/cwl/" + m.group(1)));
+                        }
                     }
 
                     // Set retrievedFrom information for this file in the manifest
