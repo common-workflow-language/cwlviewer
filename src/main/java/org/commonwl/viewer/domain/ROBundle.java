@@ -19,13 +19,14 @@
 
 package org.commonwl.viewer.domain;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.Agent;
 import org.apache.taverna.robundle.manifest.Manifest;
+import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.commonwl.viewer.services.GitHubService;
 import org.eclipse.egit.github.core.RepositoryContents;
-import org.eclipse.egit.github.core.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,11 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Represents a Workflow Research Object Bundle
@@ -49,6 +54,11 @@ public class ROBundle {
     private Bundle bundle;
     private GithubDetails githubInfo;
     private String commitSha;
+    private Set<HashableAgent> authors = new HashSet<HashableAgent>();
+
+    // Pattern for extracting version from a cwl file
+    private final String CWL_VERSION_REGEX = "cwlVersion:\\s*\"?(?:cwl:)?([^\\s\"]+)\"?";
+    private final Pattern cwlVersionPattern = Pattern.compile(CWL_VERSION_REGEX);
 
     /**
      * Creates a new research object bundle for a workflow from a Github repository
@@ -69,31 +79,19 @@ public class ROBundle {
 
         // Simplified attribution for RO bundle
         try {
+            // Tool attribution in createdBy
             Agent cwlViewer = new Agent(appName);
             cwlViewer.setUri(new URI(appURL));
             manifest.setCreatedBy(cwlViewer);
 
-            // Github author attribution
-            // TODO: way to add all the contributors somehow
-            // TODO: set the aggregates details according to the github information
-            User authorDetails = githubService.getUser(githubInfo.getOwner());
-
-            List<Agent> authorList = new ArrayList<>(1);
-            Agent author = new Agent(authorDetails.getName());
-            author.setUri(new URI(authorDetails.getHtmlUrl()));
-
-            // This tool supports putting your ORCID in the blog field of github as a URL
-            // eg http://orcid.org/0000-0000-0000-0000
-            String authorBlog = authorDetails.getBlog();
-            if (authorBlog != null && authorBlog.startsWith("http://orcid.org/")) {
-                author.setOrcid(new URI(authorBlog));
-            }
-
-            authorList.add(author);
-            manifest.setAuthoredBy(authorList);
+            // Retrieval Info
+            manifest.setRetrievedBy(cwlViewer);
+            manifest.setRetrievedOn(manifest.getCreatedOn());
+            manifest.setRetrievedFrom(new URI("https://github.com/" + githubInfo.getOwner() + "/"
+                    + githubInfo.getRepoName() + "/tree/" + commitSha + "/" + githubInfo.getPath()));
 
         } catch (URISyntaxException ex) {
-            logger.error(ex.getMessage());
+            logger.error("Error creating URI for RO Bundle", ex);
         }
 
         // Make a directory in the RO bundle to store the files
@@ -103,6 +101,9 @@ public class ROBundle {
         // Add the files from the Github repo to this workflow
         List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
         addFiles(repoContents, bundleFiles);
+
+        // Add combined authors
+        manifest.setAuthoredBy(new ArrayList<Agent>(authors));
     }
 
     /**
@@ -130,7 +131,7 @@ public class ROBundle {
                 // Add the files in the subdirectory to this new folder
                 addFiles(subdirectory, subdirPath);
 
-            // Otherwise this is a file so add to the bundle
+                // Otherwise this is a file so add to the bundle
             } else if (repoContent.getType().equals("file")) {
 
                 // Get the content of this file from Github
@@ -141,6 +142,35 @@ public class ROBundle {
                 // Save file to research object bundle
                 Path newFilePort = path.resolve(repoContent.getName());
                 Bundles.setStringValue(newFilePort, fileContent);
+
+                // Manifest aggregation
+                PathMetadata aggregation = bundle.getManifest().getAggregation(newFilePort);
+
+                try {
+                    // Special handling for cwl files
+                    if (FilenameUtils.getExtension(repoContent.getName()).equals("cwl")) {
+                        // Correct mime type (no official standard for yaml)
+                        aggregation.setMediatype("text/x-yaml");
+
+                        // Add conformsTo for version extracted from regex
+                        // Lower overhead vs parsing entire file
+                        Matcher m = cwlVersionPattern.matcher(fileContent);
+                        if (m.find()) {
+                            aggregation.setConformsTo(new URI("https://w3id.org/cwl/" + m.group(1)));
+                        }
+                    }
+
+                    // Add authors from github commits to the file
+                    Set<HashableAgent> fileAuthors = githubService.getContributors(githubFile, commitSha);
+                    authors.addAll(fileAuthors);
+                    aggregation.setAuthoredBy(new ArrayList<Agent>(fileAuthors));
+
+                    // Set retrievedFrom information for this file in the manifest
+                    aggregation.setRetrievedFrom(new URI("https://github.com/" + githubFile.getOwner() + "/" +
+                            githubFile.getRepoName() + "/blob/" + commitSha + "/" + githubFile.getPath()));
+                } catch (URISyntaxException ex) {
+                    logger.error("Error creating URI for RO Bundle", ex);
+                }
 
             }
         }
