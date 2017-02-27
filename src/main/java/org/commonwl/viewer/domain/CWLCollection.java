@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import org.apache.commons.io.FilenameUtils;
 import org.commonwl.viewer.services.DockerService;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.commonwl.viewer.services.GitHubService;
@@ -31,8 +32,6 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
@@ -45,7 +44,7 @@ public class CWLCollection {
     private String commitSha;
 
     // Maps of ID to associated JSON
-    private Map<String, JsonNode> cwlDocs = new HashMap<>();
+    private Map<String, JsonNode> workflows = new HashMap<>();
 
     // The main workflow
     private String mainWorkflowKey;
@@ -77,14 +76,11 @@ public class CWLCollection {
     private final String ARRAY = "array";
     private final String ARRAY_ITEMS = "items";
     private final String LOCATION = "location";
+    private final String RUN = "run";
     private final String REQUIREMENTS = "requirements";
     private final String HINTS = "hints";
     private final String DOCKER_REQUIREMENT = "DockerRequirement";
     private final String DOCKER_PULL = "dockerPull";
-
-    // URL validation for docker pull id
-    private final String DOCKERHUB_ID_REGEX = "^([0-9a-z]{4,30})(?:\\/([a-zA-Z0-9_-]+))?(?:\\:[a-zA-Z0-9_-]+)?$";
-    private final Pattern dockerhubPattern = Pattern.compile(DOCKERHUB_ID_REGEX);
 
     /**
      * Creates a new collection of CWL files from a Github repository
@@ -163,26 +159,78 @@ public class CWLCollection {
         if (newDoc.has(DOC_GRAPH)) {
             // Add each of the sub documents
             for (JsonNode jsonNode : newDoc.get(DOC_GRAPH)) {
-                cwlDocs.put(extractID(jsonNode), jsonNode);
+                if (isWorkflow(jsonNode)) {
+                    workflows.put(extractID(jsonNode), jsonNode);
+                }
             }
         } else {
             // Otherwise just add the document itself with ID of document name
-            cwlDocs.put(fileName, newDoc);
+            if (isWorkflow(newDoc)) {
+                workflows.put(fileName, newDoc);
+            }
         }
     }
 
     /**
      * Find the main workflow object in the group of files being considered
+     * by finding the minimal inDegree in a graph of run: parameters within steps
+     * @return The file name/key of the workflow
      */
-    private void findMainWorkflow() {
-        // Find the first workflow we come across
-        // TODO: Consider relationship between run: parameters to better discover this
-        for (Map.Entry<String, JsonNode> doc : cwlDocs.entrySet()) {
-            if (doc.getValue().get(CLASS).asText().equals(WORKFLOW)) {
-                mainWorkflowKey = doc.getKey();
-                return;
+    private String findMainWorkflow() {
+        // TODO: make this path dependant so it doesn't get messed up by duplicate filenames or graphs
+        // Currently this strategy fails gracefully and returns the first workflow in the case of a graph
+
+        // Store the in degree of each workflow
+        Map<String, Integer> inDegrees = new HashMap<String, Integer>();
+        for (String key : workflows.keySet()) {
+            inDegrees.put(key, 0);
+        }
+
+        // Loop through documents and calculate in degrees
+        for (Map.Entry<String, JsonNode> doc : workflows.entrySet()) {
+            JsonNode content = doc.getValue();
+            if (content.get(CLASS).asText().equals(WORKFLOW)) {
+                // Parse workflow steps and see whether other workflows are run
+                JsonNode steps = content.get(STEPS);
+                if (steps.getClass() == ArrayNode.class) {
+                    // Explicit ID and other fields within each input list
+                    for (JsonNode step : steps) {
+                        String run = FilenameUtils.getName(extractRun(step));
+                        if (run != null && inDegrees.containsKey(run)) {
+                            inDegrees.put(run, inDegrees.get(run) + 1);
+                        }
+                    }
+                } else if (steps.getClass() == ObjectNode.class) {
+                    // ID is the key of each object
+                    Iterator<Map.Entry<String, JsonNode>> iterator = steps.fields();
+                    while (iterator.hasNext()) {
+                        Map.Entry<String, JsonNode> stepNode = iterator.next();
+                        JsonNode stepJson = stepNode.getValue();
+                        String run = FilenameUtils.getName(extractRun(stepJson));
+                        if (run != null && inDegrees.containsKey(run)) {
+                            inDegrees.put(run, inDegrees.get(run) + 1);
+                        }
+                    }
+                }
             }
         }
+
+        // Find a workflow with minimum inDegree and return
+        int minVal = Integer.MAX_VALUE;
+        String minKey = null;
+        for (Map.Entry<String, Integer> inDegree : inDegrees.entrySet()) {
+            if (inDegree.getValue() < minVal) {
+                minKey = inDegree.getKey();
+                minVal = inDegree.getValue();
+            }
+
+            // Early escape if minVal is already minimal
+            if (minVal == 0) {
+                return minKey;
+            }
+        }
+
+        return minKey;
     }
 
     /**
@@ -192,14 +240,14 @@ public class CWLCollection {
     public Workflow getWorkflow() {
         // Get the main workflow
         if (mainWorkflowKey == null) {
-            findMainWorkflow();
+            mainWorkflowKey = findMainWorkflow();
 
-            // If it is still less than 0 there is no workflow to be found
+            // If it is still null there is no workflow to be found
             if (mainWorkflowKey == null) {
                 return null;
             }
         }
-        JsonNode mainWorkflow = cwlDocs.get(mainWorkflowKey);
+        JsonNode mainWorkflow = workflows.get(mainWorkflowKey);
 
         // Use ID/filename for label if there is no defined one
         String label = extractLabel(mainWorkflow);
@@ -623,5 +671,29 @@ public class CWLCollection {
             }
         }
         return null;
+    }
+
+    /**
+     * Extract the run parameter from a node representing a step
+     * @param stepNode The root node of a step
+     * @return A string with the run parameter if it exists
+     */
+    private String extractRun(JsonNode stepNode) {
+        if (stepNode != null) {
+            if (stepNode.has(RUN)) {
+                return stepNode.get(RUN).asText();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Identify a JsonNode as a workflow
+     * @param rootNode The root node
+     * @return Whether or not the node is a workflow
+     */
+    private boolean isWorkflow(JsonNode rootNode) {
+        return (rootNode.has(CLASS)
+                && rootNode.get(CLASS).asText().equals(WORKFLOW));
     }
 }
