@@ -41,16 +41,19 @@ public class WorkflowService {
     private final WorkflowRepository workflowRepository;
     private final ROBundleFactory ROBundleFactory;
     private final int cacheDays;
+    private final String graphvizStorage;
 
     @Autowired
     public WorkflowService(GitHubService githubService,
                            WorkflowRepository workflowRepository,
                            ROBundleFactory ROBundleFactory,
-                           @Value("${cacheDays}") int cacheDays) {
+                           @Value("${cacheDays}") int cacheDays,
+                           @Value("${graphvizStorage}") String graphvizStorage) {
         this.githubService = githubService;
         this.workflowRepository = workflowRepository;
         this.ROBundleFactory = ROBundleFactory;
         this.cacheDays = cacheDays;
+        this.graphvizStorage = graphvizStorage;
     }
 
     /**
@@ -105,7 +108,11 @@ public class WorkflowService {
             logger.debug("Failed to delete Research Object Bundle");
         }
 
-        // TODO: Delete cached graphviz images when serverside graphviz is merged
+        // Delete cached graphviz images if they exist
+        File graphvizSvg = new File(graphvizStorage + "/" + workflow.getID() + ".svg");
+        graphvizSvg.delete();
+        File graphvizPng = new File(graphvizStorage + "/" + workflow.getID() + ".png");
+        graphvizPng.delete();
 
         // Remove the workflow from the database
         workflowRepository.delete(workflow);
