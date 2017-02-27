@@ -54,6 +54,7 @@ public class ROBundle {
     private Bundle bundle;
     private GithubDetails githubInfo;
     private String commitSha;
+    private Agent thisApp;
     private Set<HashableAgent> authors = new HashSet<HashableAgent>();
 
     // Pattern for extracting version from a cwl file
@@ -80,12 +81,13 @@ public class ROBundle {
         // Simplified attribution for RO bundle
         try {
             // Tool attribution in createdBy
-            Agent cwlViewer = new Agent(appName);
-            cwlViewer.setUri(new URI(appURL));
-            manifest.setCreatedBy(cwlViewer);
+            thisApp = new Agent(appName);
+            thisApp.setUri(new URI(appURL));
+            manifest.setCreatedBy(thisApp);
 
             // Retrieval Info
-            manifest.setRetrievedBy(cwlViewer);
+            // TODO: Make this importedBy/On/From
+            manifest.setRetrievedBy(thisApp);
             manifest.setRetrievedOn(manifest.getCreatedOn());
             manifest.setRetrievedFrom(new URI("https://github.com/" + githubInfo.getOwner() + "/"
                     + githubInfo.getRepoName() + "/tree/" + commitSha + "/" + githubInfo.getPath()));
@@ -165,9 +167,12 @@ public class ROBundle {
                     authors.addAll(fileAuthors);
                     aggregation.setAuthoredBy(new ArrayList<Agent>(fileAuthors));
 
-                    // Set retrievedFrom information for this file in the manifest
-                    aggregation.setRetrievedFrom(new URI("https://github.com/" + githubFile.getOwner() + "/" +
-                            githubFile.getRepoName() + "/blob/" + commitSha + "/" + githubFile.getPath()));
+                    // Set retrieved information for this file in the manifest
+                    aggregation.setRetrievedFrom(new URI("https://raw.githubusercontent.com/" + githubFile.getOwner() + "/" +
+                            githubFile.getRepoName() + "/" + commitSha + "/" + githubFile.getPath()));
+                    aggregation.setRetrievedBy(thisApp);
+                    aggregation.setRetrievedOn(aggregation.getCreatedOn());
+
                 } catch (URISyntaxException ex) {
                     logger.error("Error creating URI for RO Bundle", ex);
                 }
