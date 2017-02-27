@@ -18,7 +18,7 @@
   ~ under the License.
   -->
 
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <link rel="stylesheet" type="text/css" href="../../static/css/main.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
@@ -27,10 +27,8 @@
     <nav th:fragment="workflowControl" class="text-center">
         <ul class="pagination">
             <li th:class="${pages.getPageNumber() == 0}? 'disabled' : ''">
-                <span th:if="${pages.getPageNumber() == 0}? 'disabled' : ''" aria-hidden="true">First</span>
-                <a th:unless="${pages.getPageNumber() == 0}? 'disabled' : ''" aria-label="Previous">
-                    <span aria-hidden="true">First</span>
-                </a>
+                <span th:if="${pages.getPageNumber() == 0}" aria-hidden="true">First</span>
+                <a th:unless="${pages.getPageNumber() == 0}" th:href="@{'?page=0&amp;size=' + ${pages.getPageSize()}}">First</a>
             </li>
             <li th:class="${workflows.hasPrevious()} ? '' : 'disabled'">
                 <span th:unless="${workflows.hasPrevious()}">&laquo;</span>
@@ -57,9 +55,9 @@
             <li th:if="${pages.getPageNumber() + 3 &lt; workflows.getTotalPages()}">
                 <a href="#" th:text="${pages.getPageNumber() + 4}" th:href="@{'?page=' + ${pages.getPageNumber() + 3} + '&amp;size=' + ${pages.getPageSize()}}">7</a>
             </li>
-            <li th:class="${workflows.hasNext()}? '' : 'disabled'">
-                <span th:if="${workflows.hasNext()}">&raquo;</span>
-                <a th:unless="${workflows.hasNext()}" th:href="@{'?page=' + ${pages.getPageNumber() + 1} + '&amp;size=' + ${pages.getPageSize()}}" title="Go to next page">&raquo;</a>
+            <li th:class="${workflows.hasNext()} ? '' : 'disabled'">
+                <span th:unless="${workflows.hasNext()}">&raquo;</span>
+                <a th:if="${workflows.hasNext()}" th:href="@{'?page=' + ${pages.getPageNumber() + 1} + '&amp;size=' + ${pages.getPageSize()}}" title="Go to next page">&raquo;</a>
             </li>
             <li th:class="${workflows.getTotalPages() == pages.getPageNumber() + 1} ? 'disabled' : ''">
                 <span th:if="${workflows.getTotalPages() == pages.getPageNumber() + 1}">Last</span>
