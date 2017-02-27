@@ -21,7 +21,6 @@ package org.commonwl.viewer.web;
 
 import com.github.jabbalaci.graphviz.GraphViz;
 import org.apache.commons.lang.StringUtils;
-import org.apache.jena.ext.com.google.common.collect.Lists;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.WorkflowForm;
@@ -33,13 +32,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.HandlerMapping;
@@ -81,7 +77,7 @@ public class WorkflowController {
      * @return The workflows view
      */
     @RequestMapping(value="/workflows")
-    public String listWorkflows(Model model, Pageable pageable) {
+    public String listWorkflows(Model model, @PageableDefault(size = 10) Pageable pageable) {
         model.addAttribute("workflows", workflowRepository.findAllByOrderByRetrievedOnDesc(pageable));
         model.addAttribute("pages", pageable);
         return "workflows";
