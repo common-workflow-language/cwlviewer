@@ -22,6 +22,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@commonwl" />
+    <meta name="twitter:title" th:content="${'CWL Workflow: ' + workflow.label}" />
+    <meta name="twitter:description" th:if="${workflow.doc != null}" th:content="${workflow.doc}" />
+    <meta name="twitter:image" th:content="${appURL + '/workflows/' + workflow.id + '/graph/png'}" />
     <title>Common Workflow Language Viewer</title>
     <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}" href="../static/css/main.css" />
     <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
