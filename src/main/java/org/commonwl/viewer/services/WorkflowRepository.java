@@ -33,7 +33,6 @@ public interface WorkflowRepository extends PagingAndSortingRepository<Workflow,
     // Finds a workflow model in the database based on where it was retrieved from
     Workflow findByRetrievedFrom(GithubDetails retrievedFrom);
 
-    // Get the first 10 workflows
     Page<Workflow> findAllByOrderByRetrievedOnDesc(Pageable pageable);
 
 }

@@ -137,7 +137,8 @@ public class WorkflowController {
      * @return The workflow view with the workflow as a model
      */
     @RequestMapping(value="/workflows/github.com/{owner}/{repoName}/tree/{branch}/**")
-    public ModelAndView getWorkflowByGithubDetails(@PathVariable("owner") String owner,
+    public ModelAndView getWorkflowByGithubDetails(@Value("${applicationURL}") String applicationURL,
+                                                   @PathVariable("owner") String owner,
                                                    @PathVariable("repoName") String repoName,
                                                    @PathVariable("branch") String branch,
                                                    HttpServletRequest request) {
@@ -181,7 +182,7 @@ public class WorkflowController {
         }
 
         // Display this model along with the view
-        return new ModelAndView("workflow", "workflow", workflowModel);
+        return new ModelAndView("workflow", "workflow", workflowModel).addObject("appURL", applicationURL);
 
     }
 
@@ -239,7 +240,8 @@ public class WorkflowController {
             gv.decreaseDpi();
             gv.decreaseDpi();
             gv.decreaseDpi();
-            gv.writeGraphToFile(gv.getGraph(workflowModel.getDotGraph(), "svg", "dot"), out.getAbsolutePath());
+            gv.writeGraphToFile(gv.getGraph(workflowModel.getDotGraph()
+                    .replace("bgcolor = \"#eeeeee\"", "bgcolor = \"transparent\""), "svg", "dot"), out.getAbsolutePath());
         }
 
         // Output the graph image
