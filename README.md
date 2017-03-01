@@ -73,12 +73,11 @@ you may start MongoDB with [Docker](https://www.docker.com/) using:
 
 **WARNING**: The above expose mongodb to the world on port `27017`.
 
-## GitHub OAuth2 tokens
+## Configuration
 
-If you run cwlviewer in production, you are likely to hit the GitHub API's rate limit of 500.
+There are a variety of configuration options detailed in the [application configuration file](https://github.com/common-workflow-language/cwlviewer/blob/master/src/main/resources/application.properties) which can be adjusted.
 
-You can override this if you obtain an [OAuth token](https://developer.github.com/v3/oauth_authorizations/), 
-which you can configure cwlviewer to use by creating/modifying `docker-compose.override.yml`:
+When deploying with docker, these can be overriden externally by creating/modifying `docker-compose.override.yml` as follows:
 
 ```yaml
 version: '2'
@@ -91,8 +90,13 @@ services:
 
 The properties can alternatively be provided as system properties on the
 command line, e.g. `-DgithubAPI.authentication=oauth`
-`-DgithubAPI.oauthToken=abcdefghhijklmnopqrstuvwxyz`
+`-DgithubAPI.oauthToken=abcdefghhijklmnopqrstuvwxyz` or via a [variety of other methods supported by Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html)
 
+### Github API
+
+If you run cwlviewer in production, you are likely to hit the GitHub API's rate limit of 60 requests/hr. This can be increased to 5000 requests/hr by using authentication (either basic or OAuth) by setting the `githubAPI.authentication` and either `githubAPI.oauthToken` or both `githubAPI.username` and `githubAPI.password` in the [application configuration file](https://github.com/common-workflow-language/cwlviewer/blob/master/src/main/resources/application.properties) depending on the method.
+
+OAuth tokens can be obtained using the [Github authorizations API](https://developer.github.com/v3/oauth_authorizations/).
 
 ## Building and Running
 
