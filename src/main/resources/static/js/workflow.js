@@ -40,7 +40,7 @@ requirejs.config({
 /**
  * Make the graph pannable and zoomable
  */
-require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs'],
+require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
     function ($, modal, svgPanZoom, hammerjs) {
         /**
          * Custom hammer event handler to add mobile support
@@ -100,57 +100,62 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs'],
         };
 
         // Loading from external URL needs to be done to enable events
-        $(selector).svg({loadURL: 'lion.svg'});
+        $("#graph").svg({
+            loadURL: $("#graph").attr("data-svgurl"),
+            onLoad: enablePanZoom
+        });
 
         /**
          * Enable svg-pan-zoom on the graph
          */
-        var graph = svgPanZoom('#graph', {
-            zoomEnabled: true,
-            controlIconsEnabled: true,
-            customEventsHandler: eventHandler,
-            preventMouseEventsDefault: false
-        });
+        function enablePanZoom() {
+            var graph = svgPanZoom('#graph svg', {
+                zoomEnabled: true,
+                controlIconsEnabled: true,
+                customEventsHandler: eventHandler,
+                preventMouseEventsDefault: false
+            });
 
-        // Resizing window also resizes the graph
-        $(window).resize(function(){
-            graph.resize();
-            graph.fit();
-            graph.center();
-        });
+            // Resizing window also resizes the graph
+            $(window).resize(function(){
+                graph.resize();
+                graph.fit();
+                graph.center();
+            });
 
-        // Enable svg-pan-zoom on fullscreen modal when opened
-        $('#fullScreenGraphModal').on('shown.bs.modal', function (e) {
-            // Timeout allows for modal to show
-            setTimeout(function() {
-                var fullGraph = svgPanZoom('#graphFullscreen', {
-                    zoomEnabled: true,
-                    controlIconsEnabled: true,
-                    customEventsHandler: eventHandler
-                });
+            // Enable svg-pan-zoom on fullscreen modal when opened
+            $('#fullScreenGraphModal').on('shown.bs.modal', function (e) {
+                // Timeout allows for modal to show
+                setTimeout(function() {
+                    var fullGraph = svgPanZoom('#graphFullscreen', {
+                        zoomEnabled: true,
+                        controlIconsEnabled: true,
+                        customEventsHandler: eventHandler
+                    });
 
-                // Set to same zoom/pan as other graph
-                fullGraph.zoom(graph.getZoom());
-                fullGraph.pan(graph.getPan());
+                    // Set to same zoom/pan as other graph
+                    fullGraph.zoom(graph.getZoom());
+                    fullGraph.pan(graph.getPan());
 
-                // Link the two graphs panning and zooming
-                fullGraph.setOnZoom(function(level){
-                    graph.zoom(level);
-                    graph.pan(fullGraph.getPan());
-                });
+                    // Link the two graphs panning and zooming
+                    fullGraph.setOnZoom(function(level){
+                        graph.zoom(level);
+                        graph.pan(fullGraph.getPan());
+                    });
 
-                fullGraph.setOnPan(function(point){
-                    graph.pan(point);
-                });
+                    fullGraph.setOnPan(function(point){
+                        graph.pan(point);
+                    });
 
-                // Resizing window also resizes the graph
-                $(window).resize(function(){
-                    fullGraph.resize();
-                    fullGraph.fit();
-                    fullGraph.center();
-                });
-            }, 100);
-        });
+                    // Resizing window also resizes the graph
+                    $(window).resize(function(){
+                        fullGraph.resize();
+                        fullGraph.fit();
+                        fullGraph.center();
+                    });
+                }, 100);
+            });
+        };
     });
 
 /**
@@ -251,6 +256,7 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
          */
         $("tr").not('thead tr').on({
             click: function() {
+                $("polygon.selected, tr.selected").removeClass("selected");
                 getGraphBox(this).toggleClass("selected");
                 $(this).toggleClass("selected");
             },
@@ -280,22 +286,19 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
         /**
          * When a graph box is hovered over/clicked, highlight
          */
-        var svg = $('#graph').svg('get');
-        $($(".node"), svg.root()).on({
+        $(document).on({
             click: function() {
-                alert("click");
+                $("polygon.selected, tr.selected").removeClass("selected");
                 getTableRow(this).toggleClass("selected");
                 $(this).find("polygon").toggleClass("selected");
             },
             mouseenter: function() {
-                alert("mouseenter");
                 getTableRow(this).addClass("hover");
                 $(this).find("polygon").addClass("hover");
             },
             mouseleave: function() {
-                alert("mouseleave");
                 getTableRow(this).removeClass("hover");
                 $(this).find("polygon").removeClass("hover");
             }
-        });
+        }, ".node");
     });

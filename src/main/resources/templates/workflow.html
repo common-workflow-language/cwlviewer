@@ -152,9 +152,7 @@ digraph G {
         <div class="col-md-12">
             <div id="visualisation" class="jumbotron">
                 <span id="fullscreen-open" data-toggle="modal" data-target="#fullScreenGraphModal" class="glyphicon glyphicon-resize-full"></span>
-                <object id="graph" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
-                    <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="workflow graph" />
-                </object>
+                <div id="graph" data-th-attr="data-svgurl=@{'/workflows/' + ${workflow.id} + '/graph/svg'}"></div>
             </div>
             <div th:if="${workflow.dockerLink != null}">
                 <h2 style="float:left;">Requires: </h2>
