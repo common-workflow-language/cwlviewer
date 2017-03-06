@@ -19,6 +19,7 @@
 
 package org.commonwl.viewer.domain;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
@@ -30,7 +31,6 @@ import org.eclipse.egit.github.core.RepositoryContents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -56,6 +56,7 @@ public class ROBundle {
     private GithubDetails githubInfo;
     private String commitSha;
     private Agent thisApp;
+    private int singleFileSizeLimit;
     private Set<HashableAgent> authors = new HashSet<HashableAgent>();
 
     // Pattern for extracting version from a cwl file
@@ -68,8 +69,9 @@ public class ROBundle {
      * @throws IOException Any API errors which may have occurred
      */
     public ROBundle(GitHubService githubService, GithubDetails githubInfo, String commitSha,
-                    String appName, String appURL) throws IOException {
-        // TODO: Add back file size checking on individual files as well as whole bundle
+                    String appName, String appURL, int singleFileSizeLimit) throws IOException {
+        // File size limits
+        this.singleFileSizeLimit = singleFileSizeLimit;
 
         // Create a new RO bundle
         this.bundle = Bundles.createBundle();
@@ -137,29 +139,48 @@ public class ROBundle {
                 // Otherwise this is a file so add to the bundle
             } else if (repoContent.getType().equals("file")) {
 
-                // Get the content of this file from Github
-                GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
-                        githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
-                String fileContent = githubService.downloadFile(githubFile, commitSha);
-
-                // Save file to research object bundle
-                Path newFilePort = path.resolve(repoContent.getName());
-                Bundles.setStringValue(newFilePort, fileContent);
-
-                // Manifest aggregation
-                PathMetadata aggregation = bundle.getManifest().getAggregation(newFilePort);
-
                 try {
+                    // Where to store the new file in bundle
+                    Path bundleFilePath = path.resolve(repoContent.getName());
+
+                    // Raw URI of the bundle
+                    GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
+                            githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+                    URI rawURI = new URI("https://raw.githubusercontent.com/" + githubFile.getOwner() + "/" +
+                            githubFile.getRepoName() + "/" + commitSha + "/" + githubFile.getPath());
+
+                    // Variable to store file contents
+                    String fileContent = null;
+
+                    // Download or externally link if oversized
+                    if (repoContent.getSize() <= singleFileSizeLimit) {
+                        // Get the content of this file from Github
+                        fileContent = githubService.downloadFile(githubFile, commitSha);
+
+                        // Save file to research object bundle
+                        Bundles.setStringValue(bundleFilePath, fileContent);
+                    } else {
+                        logger.info("File " + repoContent.getName() + " is too large to download -" +
+                                FileUtils.byteCountToDisplaySize(repoContent.getSize()) + "/" +
+                                FileUtils.byteCountToDisplaySize(singleFileSizeLimit) +
+                                " + linking externally to RO bundle");
+                        bundleFilePath = Bundles.setReference(bundleFilePath, rawURI);
+                    }
+
+                    // Manifest aggregation
+                    PathMetadata aggregation = bundle.getManifest().getAggregation(bundleFilePath);
+
                     // Special handling for cwl files
                     if (FilenameUtils.getExtension(repoContent.getName()).equals("cwl")) {
                         // Correct mime type (no official standard for yaml)
                         aggregation.setMediatype("text/x-yaml");
 
                         // Add conformsTo for version extracted from regex
-                        // Lower overhead vs parsing entire file
-                        Matcher m = cwlVersionPattern.matcher(fileContent);
-                        if (m.find()) {
-                            aggregation.setConformsTo(new URI("https://w3id.org/cwl/" + m.group(1)));
+                        if (fileContent != null) {
+                            Matcher m = cwlVersionPattern.matcher(fileContent);
+                            if (m.find()) {
+                                aggregation.setConformsTo(new URI("https://w3id.org/cwl/" + m.group(1)));
+                            }
                         }
                     }
 
@@ -169,15 +190,13 @@ public class ROBundle {
                     aggregation.setAuthoredBy(new ArrayList<Agent>(fileAuthors));
 
                     // Set retrieved information for this file in the manifest
-                    aggregation.setRetrievedFrom(new URI("https://raw.githubusercontent.com/" + githubFile.getOwner() + "/" +
-                            githubFile.getRepoName() + "/" + commitSha + "/" + githubFile.getPath()));
+                    aggregation.setRetrievedFrom(rawURI);
                     aggregation.setRetrievedBy(thisApp);
                     aggregation.setRetrievedOn(aggregation.getCreatedOn());
 
                 } catch (URISyntaxException ex) {
                     logger.error("Error creating URI for RO Bundle", ex);
                 }
-
             }
         }
     }

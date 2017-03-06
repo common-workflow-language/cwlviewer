@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -43,18 +42,21 @@ public class WorkflowService {
     private final ROBundleFactory ROBundleFactory;
     private final int cacheDays;
     private final String graphvizStorage;
+    private final int singleFileSizeLimit;
 
     @Autowired
     public WorkflowService(GitHubService githubService,
                            WorkflowRepository workflowRepository,
                            ROBundleFactory ROBundleFactory,
                            @Value("${cacheDays}") int cacheDays,
-                           @Value("${graphvizStorage}") String graphvizStorage) {
+                           @Value("${graphvizStorage}") String graphvizStorage,
+                           @Value("${singleFileSizeLimit}") int singleFileSizeLimit) {
         this.githubService = githubService;
         this.workflowRepository = workflowRepository;
         this.ROBundleFactory = ROBundleFactory;
         this.cacheDays = cacheDays;
         this.graphvizStorage = graphvizStorage;
+        this.singleFileSizeLimit = singleFileSizeLimit;
     }
 
     /**
@@ -69,7 +71,7 @@ public class WorkflowService {
             String latestCommit = githubService.getCommitSha(githubInfo);
 
             // Set up CWL utility to collect the documents
-            CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo, latestCommit);
+            CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo, latestCommit, singleFileSizeLimit);
 
             // Get the workflow model
             Workflow workflowModel = cwlFiles.getWorkflow();
@@ -170,24 +172,4 @@ public class WorkflowService {
             return false;
         }
     }
-
-    /*
-        // Check total file size
-        int totalFileSize = 0;
-        for (RepositoryContents repoContent : repoContents) {
-            totalFileSize += repoContent.getSize();
-        }
-        if (totalFileSize > totalFileSizeLimit) {
-            throw new IOException("Files within the Github directory can not be above "
-                                  + totalFileSizeLimit + "B in size");
-        }
-    */
-
-
-    /*
-        // Check file size before downloading
-        if (file.getSize() > singleFileSizeLimit) {
-            throw new IOException("Files within the Github directory can not be above " + singleFileSizeLimit + "B in size");
-        }
-    */
 }
