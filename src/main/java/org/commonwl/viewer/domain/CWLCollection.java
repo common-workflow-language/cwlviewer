@@ -24,10 +24,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.commonwl.viewer.services.DockerService;
-import org.eclipse.egit.github.core.RepositoryContents;
 import org.commonwl.viewer.services.GitHubService;
+import org.eclipse.egit.github.core.RepositoryContents;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -42,6 +43,10 @@ public class CWLCollection {
     private GitHubService githubService;
     private GithubDetails githubInfo;
     private String commitSha;
+
+    private int totalFileSize;
+    private int totalFileSizeLimit;
+    private int singleFileSizeLimit;
 
     // Maps of ID to associated JSON
     private Map<String, JsonNode> workflows = new HashMap<>();
@@ -90,10 +95,13 @@ public class CWLCollection {
      * @throws IOException Any API errors which may have occurred
      */
     public CWLCollection(GitHubService githubService, GithubDetails githubInfo,
-                         String commitSha) throws IOException {
+                         String commitSha, int singleFileSizeLimit, int totalFileSizeLimit) throws IOException {
         this.githubInfo = githubInfo;
         this.githubService = githubService;
         this.commitSha = commitSha;
+        this.singleFileSizeLimit = singleFileSizeLimit;
+        this.totalFileSizeLimit = totalFileSizeLimit;
+        this.totalFileSize = 0;
 
         // Add any CWL files from the Github repo to this collection
         List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
@@ -119,32 +127,46 @@ public class CWLCollection {
                 // Add the files in the subdirectory to this new folder
                 addDocs(subdirectory);
 
-                // Otherwise this is a file so add to the bundle
             } else if (repoContent.getType().equals(FILE)) {
 
-                // Get the file extension
-                int eIndex = repoContent.getName().lastIndexOf('.') + 1;
-                if (eIndex > 0) {
-                    String extension = repoContent.getName().substring(eIndex);
-
-                    // If this is a cwl file which needs to be parsed
-                    if (extension.equals(CWL_EXTENSION)) {
-
-                        // Get the content of this file from Github
-                        GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
-                                githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
-                        String fileContent = githubService.downloadFile(githubFile, commitSha);
-
-                        // Parse yaml to JsonNode
-                        Yaml reader = new Yaml();
-                        ObjectMapper mapper = new ObjectMapper();
-                        JsonNode cwlFile = mapper.valueToTree(reader.load(fileContent));
-
-                        // Add document to those being considered
-                        addDoc(cwlFile, repoContent.getName());
-                    }
+                // Keep track of total file size for limit - only track files which
+                // will be added to the RO bundle due to being small enough
+                if (repoContent.getSize() <= singleFileSizeLimit) {
+                    totalFileSize += repoContent.getSize();
                 }
 
+                if (totalFileSize <= totalFileSizeLimit) {
+                    // Get the file extension
+                    int eIndex = repoContent.getName().lastIndexOf('.') + 1;
+                    if (eIndex > 0) {
+                        String extension = repoContent.getName().substring(eIndex);
+
+                        // If this is a cwl file which needs to be parsed
+                        if (extension.equals(CWL_EXTENSION)) {
+                            if (repoContent.getSize() <= singleFileSizeLimit) {
+                                // Get the content of this file from Github
+                                GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
+                                        githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+                                String fileContent = githubService.downloadFile(githubFile, commitSha);
+
+                                // Parse yaml to JsonNode
+                                Yaml reader = new Yaml();
+                                ObjectMapper mapper = new ObjectMapper();
+                                JsonNode cwlFile = mapper.valueToTree(reader.load(fileContent));
+
+                                // Add document to those being considered
+                                addDoc(cwlFile, repoContent.getName());
+                            } else {
+                                throw new IOException("File '" + repoContent.getName() +  "' is over singleFileSizeLimit - " +
+                                        FileUtils.byteCountToDisplaySize(repoContent.getSize()) + "/" +
+                                        FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
+                            }
+                        }
+                    }
+                } else {
+                    throw new IOException("Contents of the repository are over totalFileSizeLimit of " +
+                            FileUtils.byteCountToDisplaySize(totalFileSizeLimit));
+                }
             }
         }
     }
