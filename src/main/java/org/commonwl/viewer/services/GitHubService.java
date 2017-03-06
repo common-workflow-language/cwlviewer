@@ -26,7 +26,6 @@ import org.eclipse.egit.github.core.*;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.ContentsService;
-import org.eclipse.egit.github.core.service.RepositoryService;
 import org.eclipse.egit.github.core.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,7 +52,6 @@ public class GitHubService {
     private final ContentsService contentsService;
     private final UserService userService;
     private final CommitService commitService;
-    private final RepositoryService repoService;
 
     // URL validation for directory links
     private final String GITHUB_DIR_REGEX = "^https:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree\\/([^/]+)\\/(.*))?$";
@@ -73,7 +71,6 @@ public class GitHubService {
         this.contentsService = new ContentsService(client);
         this.userService = new UserService(client);
         this.commitService = new CommitService(client);
-        this.repoService = new RepositoryService(client);
     }
 
     /**
