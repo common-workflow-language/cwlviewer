@@ -50,7 +50,6 @@ import java.util.regex.Pattern;
 public class ROBundle {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private boolean test = true;
     private GitHubService githubService;
 
     private Bundle bundle;
@@ -152,8 +151,7 @@ public class ROBundle {
                     PathMetadata aggregation;
 
                     // Download or externally link if oversized
-                    if (test || repoContent.getSize() > singleFileSizeLimit) {
-                        test = false;
+                    if (repoContent.getSize() <= singleFileSizeLimit) {
                         // Get the content of this file from Github
                         fileContent = githubService.downloadFile(githubFile, commitSha);
 
