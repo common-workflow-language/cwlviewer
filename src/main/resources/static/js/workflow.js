@@ -255,8 +255,10 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
          * When a table row is hovered over/clicked, highlight
          */
         $("tr").not('thead tr').on({
-            click: function() {
-                $("polygon.selected, tr.selected").removeClass("selected");
+            click: function(event) {
+                if (!event.ctrlKey) {
+                    $("polygon.selected, tr.selected").not($(this)).removeClass("selected");
+                }
                 getGraphBox(this).toggleClass("selected");
                 $(this).toggleClass("selected");
             },
@@ -280,17 +282,20 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
             // Find corresponding table row and return
             return $("tr").filter(function() {
                 return $(this).find("td:first").html() == elementTitle;
-            });
+            }).add();
         }
 
         /**
          * When a graph box is hovered over/clicked, highlight
          */
         $(document).on({
-            click: function() {
-                $("polygon.selected, tr.selected").removeClass("selected");
+            click: function(event) {
+                var thisPolygon = $(this).find("polygon");
+                if (!event.ctrlKey) {
+                    $("polygon.selected, tr.selected").not(thisPolygon).removeClass("selected");
+                }
                 getTableRow(this).toggleClass("selected");
-                $(this).find("polygon").toggleClass("selected");
+                thisPolygon.toggleClass("selected");
             },
             mouseenter: function() {
                 getTableRow(this).addClass("hover");
