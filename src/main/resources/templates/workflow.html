@@ -22,6 +22,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@commonwl" />
+    <meta name="twitter:title" th:content="${'CWL Workflow: ' + workflow.label}" />
+    <meta name="twitter:description" th:if="${workflow.doc != null}" th:content="${workflow.doc}" />
+    <meta name="twitter:image" th:content="${appURL + '/workflows/' + workflow.id + '/graph/png'}" />
     <title>Common Workflow Language Viewer</title>
     <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}" href="../static/css/main.css" />
@@ -96,6 +101,24 @@ digraph G {
     </div>
 </div>
 
+<!-- Modal for viewing the graph in full screen -->
+<div class="modal fade" id="fullScreenGraphModal" tabindex="-1" role="dialog" aria-labelledby="fullScreenGraphLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="fullScreenGraphLabel">Workflow Graph</h4>
+            </div>
+            <div class="modal-body">
+                <span id="fullscreen-close" data-dismiss="modal" class="close glyphicon glyphicon-resize-full"></span>
+                <object id="graphFullscreen" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
+                    <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="workflow graph" />
+                </object>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container">
     <div class="row">
         <div class="col-md-12" role="main" id="main" th:with="workflowURL=@{'github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.lastCommit} + '/' + ${workflow.retrievedFrom.path}}">
@@ -128,59 +151,82 @@ digraph G {
     <div class="row">
         <div class="col-md-12">
             <div id="visualisation" class="jumbotron">
+                <span id="fullscreen-open" data-toggle="modal" data-target="#fullScreenGraphModal" class="glyphicon glyphicon-resize-full"></span>
                 <object id="graph" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
                     <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="workflow graph" />
                 </object>
             </div>
+            <div th:if="${workflow.dockerLink != null}">
+                <h2 style="float:left;">Requires: </h2>
+                <a th:unless="${workflow.dockerLink == 'true'}" th:href="${workflow.dockerLink}" rel="noopener" target="_blank">
+                    <img id="dockerLogo" src="/img/Docker-logo.png" alt="docker logo" />
+                </a>
+                <img th:if="${workflow.dockerLink == 'true'}" id="dockerLogo" src="/img/Docker-logo.png" alt="docker logo" />
+            </div>
             <h2>Inputs</h2>
-            <table class="table table-striped table-hover">
-                <thead>
-                    <th>ID</th>
-                    <th>Type</th>
-                    <th>Label</th>
-                    <th>Doc</th>
-                </thead>
-                <tbody>
-                    <tr th:each="input : ${workflow.inputs}">
-                        <td th:text="${input.key}">ID</td>
-                        <td th:text="${input.value.type}">Type</td>
-                        <td th:text="${input.value.label}">Label</td>
-                        <td th:text="${input.value.doc}">Description</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div th:if="${workflow.inputs.isEmpty()}" class="alert alert-info">
+                <p>There are no inputs in this workflow</p>
+            </div>
+            <div th:unless="${workflow.inputs.isEmpty()}">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Label</th>
+                        <th>Doc</th>
+                    </thead>
+                    <tbody>
+                        <tr th:each="input : ${workflow.inputs}">
+                            <td th:text="${input.key}">ID</td>
+                            <td th:text="${input.value.type}">Type</td>
+                            <td th:text="${input.value.label}">Label</td>
+                            <td th:text="${input.value.doc}">Description</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <h2>Outputs</h2>
-            <table class="table table-striped table-hover">
-                <thead>
+            <div th:if="${workflow.outputs.isEmpty()}" class="alert alert-info">
+                <p>There are no outputs in this workflow</p>
+            </div>
+            <div th:unless="${workflow.outputs.isEmpty()}">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Label</th>
+                        <th>Doc</th>
+                    </thead>
+                    <tbody>
+                        <tr th:each="output : ${workflow.outputs}">
+                            <td th:text="${output.key}">ID</td>
+                            <td th:text="${output.value.type}">Type</td>
+                            <td th:text="${output.value.label}">Label</td>
+                            <td th:text="${output.value.doc}">Description</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h2>Steps</h2>
+            <div th:if="${workflow.steps.isEmpty()}" class="alert alert-info">
+                <p>There are no steps in this workflow</p>
+            </div>
+            <div th:unless="${workflow.steps.isEmpty()}">
+                <table class="table table-striped table-hover">
+                    <thead>
                     <th>ID</th>
-                    <th>Type</th>
                     <th>Label</th>
                     <th>Doc</th>
-                </thead>
-                <tbody>
-                    <tr th:each="output : ${workflow.outputs}">
-                        <td th:text="${output.key}">ID</td>
-                        <td th:text="${output.value.type}">Type</td>
-                        <td th:text="${output.value.label}">Label</td>
-                        <td th:text="${output.value.doc}">Description</td>
+                    </thead>
+                    <tbody>
+                    <tr th:each="step : ${workflow.steps}">
+                        <td th:text="${step.key}">ID</td>
+                        <td th:text="${step.value.label}">Label</td>
+                        <td th:text="${step.value.doc}">Description</td>
                     </tr>
-                </tbody>
-            </table>
-            <h2>Steps</h2>
-            <table class="table table-striped table-hover">
-                <thead>
-                <th>ID</th>
-                <th>Label</th>
-                <th>Doc</th>
-                </thead>
-                <tbody>
-                <tr th:each="step : ${workflow.steps}">
-                    <td th:text="${step.key}">ID</td>
-                    <td th:text="${step.value.label}">Label</td>
-                    <td th:text="${step.value.doc}">Description</td>
-                </tr>
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

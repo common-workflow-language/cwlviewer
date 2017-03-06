@@ -51,8 +51,60 @@ body {
     margin-right: 5px;
 }
 
+#dockerLogo {
+    height: 75px;
+    margin-left: 10px;
+}
+
+#fullscreen-open, #fullscreen-close {
+    cursor: pointer;
+    font-size: 25px;
+    position: absolute;
+    top: 10px;
+    right: 25px;
+    opacity: 0.333;
+}
+
+#fullscreen-close {
+    top: 25px;
+}
+
+#fullscreen-open:hover, #fullscreen-close:hover {
+    opacity: 1;
+}
+
+#fullScreenGraphModal .modal-dialog {
+    width: 98%;
+    height: 92%;
+    padding: 0;
+}
+
+#fullScreenGraphModal .modal-body {
+    width: 100%;
+    height: 100%;
+}
+
+#fullScreenGraphModal .modal-content {
+    height: 99%;
+}
+
+#graphFullscreen {
+    background-color: #eeeeee;
+    width: 100%;
+    height: 90%;
+}
+
 #graph-menu {
     margin-bottom: 5px;
+}
+
+.icon-view {
+    font-size: 20px;
+}
+
+.workflow-thumb {
+    width:100%;
+    max-height:300px;
 }
 
 #visualisation {

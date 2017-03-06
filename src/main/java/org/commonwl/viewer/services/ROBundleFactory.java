@@ -47,6 +47,7 @@ public class ROBundleFactory {
 
     private final String applicationName;
     private final String applicationURL;
+    private final int singleFileSizeLimit;
     private final Path storageLocation;
     private final WorkflowRepository workflowRepository;
 
@@ -54,11 +55,13 @@ public class ROBundleFactory {
     public ROBundleFactory(@Value("${applicationName}") String applicationName,
                            @Value("${applicationURL}") String applicationURL,
                            @Value("${graphvizStorage}") Path graphvizStorage,
+                           @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
                            WorkflowRepository workflowRepository) {
         this.applicationName = applicationName;
         this.applicationURL = applicationURL;
         this.storageLocation = graphvizStorage;
         this.workflowRepository = workflowRepository;
+        this.singleFileSizeLimit = singleFileSizeLimit;
     }
 
     /**
@@ -75,7 +78,7 @@ public class ROBundleFactory {
 
         // Create a new Research Object Bundle with Github contents
         ROBundle bundle = new ROBundle(githubService, githubInfo, commitSha,
-                applicationName, applicationURL);
+                applicationName, applicationURL, singleFileSizeLimit);
 
         // Save the bundle to the storage location in properties
         Path bundleLocation = bundle.saveToFile(storageLocation);

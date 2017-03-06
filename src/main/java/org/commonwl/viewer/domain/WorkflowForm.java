@@ -25,19 +25,32 @@ package org.commonwl.viewer.domain;
  */
 public class WorkflowForm {
 
+    private String githubURL;
+
     public WorkflowForm() {}
 
     public WorkflowForm(String githubURL) {
-        this.githubURL = githubURL;
+        if (githubURL != null) {
+            this.githubURL = trimTrailingSlashes(githubURL);
+        }
     }
-
-    private String githubURL;
 
     public String getGithubURL() {
         return githubURL;
     }
 
     public void setGithubURL(String githubURL) {
-        this.githubURL = githubURL;
+        if (githubURL != null) {
+            this.githubURL = trimTrailingSlashes(githubURL);
+        }
+    }
+
+    /**
+     * Cuts any trailing slashes off a string
+     * @param url The string to cut the slashes off
+     * @return The same string without trailing slashes
+     */
+    private String trimTrailingSlashes(String url) {
+        return url.replaceAll("\\/+$", "");
     }
 }

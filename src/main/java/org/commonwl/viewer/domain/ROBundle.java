@@ -19,13 +19,15 @@
 
 package org.commonwl.viewer.domain;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.Agent;
 import org.apache.taverna.robundle.manifest.Manifest;
+import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.commonwl.viewer.services.GitHubService;
 import org.eclipse.egit.github.core.RepositoryContents;
-import org.eclipse.egit.github.core.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +37,11 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Represents a Workflow Research Object Bundle
@@ -49,6 +55,13 @@ public class ROBundle {
     private Bundle bundle;
     private GithubDetails githubInfo;
     private String commitSha;
+    private Agent thisApp;
+    private int singleFileSizeLimit;
+    private Set<HashableAgent> authors = new HashSet<HashableAgent>();
+
+    // Pattern for extracting version from a cwl file
+    private final String CWL_VERSION_REGEX = "cwlVersion:\\s*\"?(?:cwl:)?([^\\s\"]+)\"?";
+    private final Pattern cwlVersionPattern = Pattern.compile(CWL_VERSION_REGEX);
 
     /**
      * Creates a new research object bundle for a workflow from a Github repository
@@ -56,8 +69,9 @@ public class ROBundle {
      * @throws IOException Any API errors which may have occurred
      */
     public ROBundle(GitHubService githubService, GithubDetails githubInfo, String commitSha,
-                    String appName, String appURL) throws IOException {
-        // TODO: Add back file size checking on individual files as well as whole bundle
+                    String appName, String appURL, int singleFileSizeLimit) throws IOException {
+        // File size limits
+        this.singleFileSizeLimit = singleFileSizeLimit;
 
         // Create a new RO bundle
         this.bundle = Bundles.createBundle();
@@ -69,31 +83,20 @@ public class ROBundle {
 
         // Simplified attribution for RO bundle
         try {
-            Agent cwlViewer = new Agent(appName);
-            cwlViewer.setUri(new URI(appURL));
-            manifest.setCreatedBy(cwlViewer);
+            // Tool attribution in createdBy
+            thisApp = new Agent(appName);
+            thisApp.setUri(new URI(appURL));
+            manifest.setCreatedBy(thisApp);
 
-            // Github author attribution
-            // TODO: way to add all the contributors somehow
-            // TODO: set the aggregates details according to the github information
-            User authorDetails = githubService.getUser(githubInfo.getOwner());
-
-            List<Agent> authorList = new ArrayList<>(1);
-            Agent author = new Agent(authorDetails.getName());
-            author.setUri(new URI(authorDetails.getHtmlUrl()));
-
-            // This tool supports putting your ORCID in the blog field of github as a URL
-            // eg http://orcid.org/0000-0000-0000-0000
-            String authorBlog = authorDetails.getBlog();
-            if (authorBlog != null && authorBlog.startsWith("http://orcid.org/")) {
-                author.setOrcid(new URI(authorBlog));
-            }
-
-            authorList.add(author);
-            manifest.setAuthoredBy(authorList);
+            // Retrieval Info
+            // TODO: Make this importedBy/On/From
+            manifest.setRetrievedBy(thisApp);
+            manifest.setRetrievedOn(manifest.getCreatedOn());
+            manifest.setRetrievedFrom(new URI("https://github.com/" + githubInfo.getOwner() + "/"
+                    + githubInfo.getRepoName() + "/tree/" + commitSha + "/" + githubInfo.getPath()));
 
         } catch (URISyntaxException ex) {
-            logger.error(ex.getMessage());
+            logger.error("Error creating URI for RO Bundle", ex);
         }
 
         // Make a directory in the RO bundle to store the files
@@ -103,6 +106,9 @@ public class ROBundle {
         // Add the files from the Github repo to this workflow
         List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
         addFiles(repoContents, bundleFiles);
+
+        // Add combined authors
+        manifest.setAuthoredBy(new ArrayList<Agent>(authors));
     }
 
     /**
@@ -130,18 +136,67 @@ public class ROBundle {
                 // Add the files in the subdirectory to this new folder
                 addFiles(subdirectory, subdirPath);
 
-            // Otherwise this is a file so add to the bundle
+                // Otherwise this is a file so add to the bundle
             } else if (repoContent.getType().equals("file")) {
 
-                // Get the content of this file from Github
-                GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
-                        githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
-                String fileContent = githubService.downloadFile(githubFile, commitSha);
+                try {
+                    // Where to store the new file in bundle
+                    Path bundleFilePath = path.resolve(repoContent.getName());
 
-                // Save file to research object bundle
-                Path newFilePort = path.resolve(repoContent.getName());
-                Bundles.setStringValue(newFilePort, fileContent);
+                    // Raw URI of the bundle
+                    GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
+                            githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+                    URI rawURI = new URI("https://raw.githubusercontent.com/" + githubFile.getOwner() + "/" +
+                            githubFile.getRepoName() + "/" + commitSha + "/" + githubFile.getPath());
 
+                    // Variable to store file contents
+                    String fileContent = null;
+
+                    // Download or externally link if oversized
+                    if (repoContent.getSize() <= singleFileSizeLimit) {
+                        // Get the content of this file from Github
+                        fileContent = githubService.downloadFile(githubFile, commitSha);
+
+                        // Save file to research object bundle
+                        Bundles.setStringValue(bundleFilePath, fileContent);
+                    } else {
+                        logger.info("File " + repoContent.getName() + " is too large to download -" +
+                                FileUtils.byteCountToDisplaySize(repoContent.getSize()) + "/" +
+                                FileUtils.byteCountToDisplaySize(singleFileSizeLimit) +
+                                " + linking externally to RO bundle");
+                        bundleFilePath = Bundles.setReference(bundleFilePath, rawURI);
+                    }
+
+                    // Manifest aggregation
+                    PathMetadata aggregation = bundle.getManifest().getAggregation(bundleFilePath);
+
+                    // Special handling for cwl files
+                    if (FilenameUtils.getExtension(repoContent.getName()).equals("cwl")) {
+                        // Correct mime type (no official standard for yaml)
+                        aggregation.setMediatype("text/x-yaml");
+
+                        // Add conformsTo for version extracted from regex
+                        if (fileContent != null) {
+                            Matcher m = cwlVersionPattern.matcher(fileContent);
+                            if (m.find()) {
+                                aggregation.setConformsTo(new URI("https://w3id.org/cwl/" + m.group(1)));
+                            }
+                        }
+                    }
+
+                    // Add authors from github commits to the file
+                    Set<HashableAgent> fileAuthors = githubService.getContributors(githubFile, commitSha);
+                    authors.addAll(fileAuthors);
+                    aggregation.setAuthoredBy(new ArrayList<Agent>(fileAuthors));
+
+                    // Set retrieved information for this file in the manifest
+                    aggregation.setRetrievedFrom(rawURI);
+                    aggregation.setRetrievedBy(thisApp);
+                    aggregation.setRetrievedOn(aggregation.getCreatedOn());
+
+                } catch (URISyntaxException ex) {
+                    logger.error("Error creating URI for RO Bundle", ex);
+                }
             }
         }
     }
@@ -153,8 +208,8 @@ public class ROBundle {
      * @throws IOException Any errors in saving
      */
     public Path saveToFile(Path directory) throws IOException {
-        // Save the Research Object Bundle
-        Path bundleLocation = Files.createTempFile(directory, "bundle", ".zip");
+        String fileName = "bundle-" + java.util.UUID.randomUUID() + ".zip";
+        Path bundleLocation = Files.createFile(directory.resolve(fileName));
         Bundles.closeAndSaveBundle(bundle, bundleLocation);
         return bundleLocation;
     }

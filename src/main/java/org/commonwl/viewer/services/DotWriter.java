@@ -57,7 +57,7 @@ public class DotWriter {
 
         // Overall graph style
         writeLine("  graph [");
-        writeLine("    bgcolor = \"#EEEEEE\"");
+        writeLine("    bgcolor = \"#eeeeee\"");
         writeLine("    color = \"black\"");
         writeLine("    fontsize = \"10\"");
         writeLine("    labeljust = \"left\"");

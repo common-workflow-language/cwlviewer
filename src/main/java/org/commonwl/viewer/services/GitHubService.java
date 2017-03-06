@@ -21,6 +21,7 @@ package org.commonwl.viewer.services;
 
 import org.apache.commons.io.IOUtils;
 import org.commonwl.viewer.domain.GithubDetails;
+import org.commonwl.viewer.domain.HashableAgent;
 import org.eclipse.egit.github.core.*;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
@@ -32,8 +33,12 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,16 +54,19 @@ public class GitHubService {
     private final CommitService commitService;
 
     // URL validation for directory links
-    private final String GITHUB_DIR_REGEX = "^https:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree\\/([^/]+)\\/(.*))?$";
+    private final String GITHUB_DIR_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)\\/(.*))?$";
     private final Pattern githubDirPattern = Pattern.compile(GITHUB_DIR_REGEX);
 
     @Autowired
-    public GitHubService(@Value("${githubAPI.authentication}") boolean authEnabled,
+    public GitHubService(@Value("${githubAPI.authentication}") String authSetting,
+                         @Value("${githubAPI.oauthToken}") String token,
                          @Value("${githubAPI.username}") String username,
                          @Value("${githubAPI.password}") String password) {
         GitHubClient client = new GitHubClient();
-        if (authEnabled) {
+        if (authSetting.equals("basic")) {
             client.setCredentials(username, password);
+        } else if (authSetting.equals("oauth")) {
+            client.setOAuth2Token(token);
         }
         this.contentsService = new ContentsService(client);
         this.userService = new UserService(client);
@@ -131,5 +139,38 @@ public class GitHubService {
         RepositoryId repo = new RepositoryId(githubInfo.getOwner(), githubInfo.getRepoName());
         RepositoryCommit currentCommit = commitService.getCommit(repo, githubInfo.getBranch());
         return currentCommit.getSha();
+    }
+
+    /**
+     *
+     * Get the contributors to a specific file by their commits
+     * @param githubInfo The information to access the repository
+     * @return A list of unique contributors
+     * @throws IOException Any API errors which may have occurred
+     * @throws URISyntaxException Any error in the author's URI (should never occur)
+     */
+    public Set<HashableAgent> getContributors(GithubDetails githubInfo, String sha)
+            throws IOException, URISyntaxException {
+        RepositoryId repo = new RepositoryId(githubInfo.getOwner(), githubInfo.getRepoName());
+        Set<HashableAgent> authors = new HashSet<HashableAgent>();
+
+        for (RepositoryCommit commit : commitService.getCommits(repo, sha, githubInfo.getPath())) {
+            User author = commit.getAuthor();
+            CommitUser commitAuthor = commit.getCommit().getAuthor();
+
+            // If there is author information for this commit in some form
+            if (author != null || commitAuthor != null) {
+                // Create a new agent and add as much detail as possible
+                HashableAgent newAgent = new HashableAgent();
+                if (author != null) {
+                    newAgent.setUri(new URI(author.getHtmlUrl()));
+                }
+                if (commitAuthor != null) {
+                    newAgent.setName(commitAuthor.getName());
+                }
+                authors.add(newAgent);
+            }
+        }
+        return authors;
     }
 }

@@ -1,7 +1,22 @@
 FROM maven:3.3-jdk-8-alpine
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
-RUN apk add --update graphviz && rm -rf /var/cache/apk/*
+# Build-time metadata as defined at http://label-schema.org
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+LABEL org.label-schema.build-date=$BUILD_DATE \
+  org.label-schema.name="CWL Viewer" \
+  org.label-schema.description="Viewer of Common Workflow Language" \
+  org.label-schema.url="https://view.commonwl.org/" \
+  org.label-schema.vcs-ref=$VCS_REF \
+  org.label-schema.vcs-url="https://github.com/common-workflow-language/cwlviewer" \
+  org.label-schema.vendor="Common Workflow Language project" \
+  org.label-schema.version=$VERSION \
+  org.label-schema.schema-version="1.0"
+
+
+RUN apk add --update graphviz ttf-freefont && rm -rf /var/cache/apk/*
 
 RUN mkdir /usr/share/maven/ref/repository
 
@@ -24,4 +39,6 @@ WORKDIR /tmp
 EXPOSE 8080
 
 # Expects mongodb on port 27017
-CMD ["/usr/bin/java", "-Dspring.data.mongodb.host=mongo", "-jar", "/usr/lib/cwlvisualizer.jar"]
+ENV SPRING_DATA_MONGODB_HOST=mongo
+ENV SPRING_DATA_MONGODB_PORT=27017
+CMD ["/usr/bin/java", "-jar", "/usr/lib/cwlvisualizer.jar"]

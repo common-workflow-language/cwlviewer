@@ -32,7 +32,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.HandlerMapping;
@@ -65,6 +68,19 @@ public class WorkflowController {
         this.workflowFormValidator = workflowFormValidator;
         this.workflowService = workflowService;
         this.workflowRepository = workflowRepository;
+    }
+
+    /**
+     * List all the workflows in the database, paginated
+     * @param model The model for the page
+     * @param pageable Pagination for the list of workflows
+     * @return The workflows view
+     */
+    @RequestMapping(value="/workflows")
+    public String listWorkflows(Model model, @PageableDefault(size = 10) Pageable pageable) {
+        model.addAttribute("workflows", workflowRepository.findAllByOrderByRetrievedOnDesc(pageable));
+        model.addAttribute("pages", pageable);
+        return "workflows";
     }
 
     /**
@@ -114,27 +130,6 @@ public class WorkflowController {
     }
 
     /**
-     * Display a page for a particular workflow
-     * @param workflowID The ID of the workflow to be retrieved
-     * @return The workflow view with the workflow as a model
-     */
-    @RequestMapping(value="/workflows/{workflowID}")
-    public ModelAndView getWorkflowByID(@PathVariable String workflowID){
-
-        // Get workflow from database
-        Workflow workflowModel = workflowRepository.findOne(workflowID);
-
-        // 404 error if workflow does not exist
-        if (workflowModel == null) {
-            throw new WorkflowNotFoundException();
-        }
-
-        // Display this model along with the view
-        return new ModelAndView("workflow", "workflow", workflowModel);
-
-    }
-
-    /**
      * Display a page for a particular workflow from Github details
      * @param owner The owner of the Github repository
      * @param repoName The name of the repository
@@ -142,7 +137,8 @@ public class WorkflowController {
      * @return The workflow view with the workflow as a model
      */
     @RequestMapping(value="/workflows/github.com/{owner}/{repoName}/tree/{branch}/**")
-    public ModelAndView getWorkflowByGithubDetails(@PathVariable("owner") String owner,
+    public ModelAndView getWorkflowByGithubDetails(@Value("${applicationURL}") String applicationURL,
+                                                   @PathVariable("owner") String owner,
                                                    @PathVariable("repoName") String repoName,
                                                    @PathVariable("branch") String branch,
                                                    HttpServletRequest request) {
@@ -186,7 +182,7 @@ public class WorkflowController {
         }
 
         // Display this model along with the view
-        return new ModelAndView("workflow", "workflow", workflowModel);
+        return new ModelAndView("workflow", "workflow", workflowModel).addObject("appURL", applicationURL);
 
     }
 
@@ -209,12 +205,18 @@ public class WorkflowController {
             throw new WorkflowNotFoundException();
         }
 
-        // Set a sensible default file name for the browser
-        response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
-
-        // Serve the file from the local filesystem
+        // 404 error with retry if the file on disk does not exist
         File bundleDownload = new File(workflowModel.getRoBundle());
+        if (!bundleDownload.exists()) {
+            // Clear current RO bundle link and create a new one (async)
+            workflowModel.setRoBundle(null);
+            workflowRepository.save(workflowModel);
+            workflowService.generateROBundle(workflowModel);
+            throw new WorkflowNotFoundException();
+        }
+
         logger.info("Serving download for workflow " + workflowID + " [" + bundleDownload.toString() + "]");
+        response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
         return new FileSystemResource(bundleDownload);
     }
 
@@ -244,7 +246,8 @@ public class WorkflowController {
             gv.decreaseDpi();
             gv.decreaseDpi();
             gv.decreaseDpi();
-            gv.writeGraphToFile(gv.getGraph(workflowModel.getDotGraph(), "svg", "dot"), out.getAbsolutePath());
+            gv.writeGraphToFile(gv.getGraph(workflowModel.getDotGraph()
+                    .replace("bgcolor = \"#eeeeee\"", "bgcolor = \"transparent\""), "svg", "dot"), out.getAbsolutePath());
         }
 
         // Output the graph image

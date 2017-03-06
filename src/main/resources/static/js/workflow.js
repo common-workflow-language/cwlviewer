@@ -105,11 +105,51 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs'],
         /**
          * Enable svg-pan-zoom on the graph
          */
-        svgPanZoom('#graph', {
+        var graph = svgPanZoom('#graph', {
             zoomEnabled: true,
             controlIconsEnabled: true,
             customEventsHandler: eventHandler,
             preventMouseEventsDefault: false
+        });
+
+        // Resizing window also resizes the graph
+        $(window).resize(function(){
+            graph.resize();
+            graph.fit();
+            graph.center();
+        });
+
+        // Enable svg-pan-zoom on fullscreen modal when opened
+        $('#fullScreenGraphModal').on('shown.bs.modal', function (e) {
+            // Timeout allows for modal to show
+            setTimeout(function() {
+                var fullGraph = svgPanZoom('#graphFullscreen', {
+                    zoomEnabled: true,
+                    controlIconsEnabled: true,
+                    customEventsHandler: eventHandler
+                });
+
+                // Set to same zoom/pan as other graph
+                fullGraph.zoom(graph.getZoom());
+                fullGraph.pan(graph.getPan());
+
+                // Link the two graphs panning and zooming
+                fullGraph.setOnZoom(function(level){
+                    graph.zoom(level);
+                    graph.pan(fullGraph.getPan());
+                });
+
+                fullGraph.setOnPan(function(point){
+                    graph.pan(point);
+                });
+
+                // Resizing window also resizes the graph
+                $(window).resize(function(){
+                    fullGraph.resize();
+                    fullGraph.fit();
+                    fullGraph.center();
+                });
+            }, 100);
         });
     });
 
@@ -164,11 +204,16 @@ require(['jquery'],
                 type: 'HEAD',
                 url: $('#download').attr('href'),
                 dataType: "json",
-                success: function (data) {
+                success: function () {
+                    // Hide generating, show link
                     $("#generating").addClass("hide");
                     $("#generated").removeClass("hide");
                 },
                 error: function () {
+                    // Show generating, hide link
+                    $("#generated").addClass("hide");
+                    $("#generating").removeClass("hide");
+
                     // Retry in 5 seconds if still not generated
                     setTimeout(function () {
                         getDownloadLink();
@@ -177,13 +222,7 @@ require(['jquery'],
             });
         }
 
-        /**
-         * If ajaxRequired exists on the page the RO bundle link is not generated
-         * at time of page load
-         */
-        if ($("#ajaxRequired").length) {
-            getDownloadLink();
-        }
+        getDownloadLink();
     });
 
 /**

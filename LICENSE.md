@@ -212,3 +212,11 @@ been federally registered with the United States Copyright Office.
 All rights reserved.
 
 Use rules apply: https://github.com/logos
+
+---------------------------------------------------------
+
+./src/main/resources/static/img/Docker-logo.png
+
+Copyright 2013-2015 Docker, Inc. All rights reserved.
+
+Use rules apply: https://www.docker.com/brand-guidelines

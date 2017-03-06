@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" href="../../static/css/main.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
+</head>
+<body>
+    <nav th:fragment="workflowControl" class="text-center">
+        <ul class="pagination">
+            <li th:class="${pages.getPageNumber() == 0}? 'disabled' : ''">
+                <span th:if="${pages.getPageNumber() == 0}" aria-hidden="true">First</span>
+                <a th:unless="${pages.getPageNumber() == 0}" th:href="@{'?page=0&amp;size=' + ${pages.getPageSize()}}">First</a>
+            </li>
+            <li th:class="${workflows.hasPrevious()} ? '' : 'disabled'">
+                <span th:unless="${workflows.hasPrevious()}">&laquo;</span>
+                <a href="#" th:if="${workflows.hasPrevious()}" th:href="@{'?page=' + ${pages.getPageNumber() - 1} + '&amp;size=' + ${pages.getPageSize()}}">&laquo;</a>
+            </li>
+            <li th:if="${pages.getPageNumber() - 2 &gt; 0}">
+                <a href="#" th:text="${pages.getPageNumber() - 2}" th:href="@{'?page=' + ${pages.getPageNumber() - 3} + '&amp;size=' + ${pages.getPageSize()}}">1</a>
+            </li>
+            <li th:if="${pages.getPageNumber() - 1 &gt; 0}">
+                <a href="#" th:text="${pages.getPageNumber() - 1}" th:href="@{'?page=' + ${pages.getPageNumber() - 2} + '&amp;size=' + ${pages.getPageSize()}}">2</a>
+            </li>
+            <li th:if="${workflows.hasPrevious()}">
+                <a href="#" th:text="${pages.getPageNumber()}" th:href="@{'?page=' + ${pages.getPageNumber() - 1} + '&amp;size=' + ${pages.getPageSize()}}">3</a>
+            </li>
+            <li th:class="active">
+                <span th:text="${pages.getPageNumber() + 1}">4</span>
+            </li>
+            <li th:if="${workflows.hasNext()}">
+                <a href="#" th:text="${pages.getPageNumber() + 2}" th:href="@{'?page=' + ${pages.getPageNumber() + 1} + '&amp;size=' + ${pages.getPageSize()}}">5</a>
+            </li>
+            <li th:if="${pages.getPageNumber() + 2 &lt; workflows.getTotalPages()}">
+                <a href="#" th:text="${pages.getPageNumber() + 3}" th:href="@{'?page=' + ${pages.getPageNumber() + 2} + '&amp;size=' + ${pages.getPageSize()}}">6</a>
+            </li>
+            <li th:if="${pages.getPageNumber() + 3 &lt; workflows.getTotalPages()}">
+                <a href="#" th:text="${pages.getPageNumber() + 4}" th:href="@{'?page=' + ${pages.getPageNumber() + 3} + '&amp;size=' + ${pages.getPageSize()}}">7</a>
+            </li>
+            <li th:class="${workflows.hasNext()} ? '' : 'disabled'">
+                <span th:unless="${workflows.hasNext()}">&raquo;</span>
+                <a th:if="${workflows.hasNext()}" th:href="@{'?page=' + ${pages.getPageNumber() + 1} + '&amp;size=' + ${pages.getPageSize()}}" title="Go to next page">&raquo;</a>
+            </li>
+            <li th:class="${workflows.getTotalPages() == pages.getPageNumber() + 1} ? 'disabled' : ''">
+                <span th:if="${workflows.getTotalPages() == pages.getPageNumber() + 1}">Last</span>
+                <a th:unless="${workflows.getTotalPages() == pages.getPageNumber() + 1}" th:href="@{'?page=' + ${workflows.getTotalPages() - 1} + '&amp;size=' + ${pages.getPageSize()}}">Last</a>
+            </li>
+        </ul>
+    </nav>
+</body>
+</html>

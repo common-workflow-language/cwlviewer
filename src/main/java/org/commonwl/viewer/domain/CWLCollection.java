@@ -24,8 +24,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import org.eclipse.egit.github.core.RepositoryContents;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.commonwl.viewer.services.DockerService;
 import org.commonwl.viewer.services.GitHubService;
+import org.eclipse.egit.github.core.RepositoryContents;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -41,8 +44,12 @@ public class CWLCollection {
     private GithubDetails githubInfo;
     private String commitSha;
 
+    private int totalFileSize;
+    private int totalFileSizeLimit;
+    private int singleFileSizeLimit;
+
     // Maps of ID to associated JSON
-    private Map<String, JsonNode> cwlDocs = new HashMap<>();
+    private Map<String, JsonNode> workflows = new HashMap<>();
 
     // The main workflow
     private String mainWorkflowKey;
@@ -74,6 +81,11 @@ public class CWLCollection {
     private final String ARRAY = "array";
     private final String ARRAY_ITEMS = "items";
     private final String LOCATION = "location";
+    private final String RUN = "run";
+    private final String REQUIREMENTS = "requirements";
+    private final String HINTS = "hints";
+    private final String DOCKER_REQUIREMENT = "DockerRequirement";
+    private final String DOCKER_PULL = "dockerPull";
 
     /**
      * Creates a new collection of CWL files from a Github repository
@@ -83,10 +95,13 @@ public class CWLCollection {
      * @throws IOException Any API errors which may have occurred
      */
     public CWLCollection(GitHubService githubService, GithubDetails githubInfo,
-                         String commitSha) throws IOException {
+                         String commitSha, int singleFileSizeLimit, int totalFileSizeLimit) throws IOException {
         this.githubInfo = githubInfo;
         this.githubService = githubService;
         this.commitSha = commitSha;
+        this.singleFileSizeLimit = singleFileSizeLimit;
+        this.totalFileSizeLimit = totalFileSizeLimit;
+        this.totalFileSize = 0;
 
         // Add any CWL files from the Github repo to this collection
         List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
@@ -112,32 +127,46 @@ public class CWLCollection {
                 // Add the files in the subdirectory to this new folder
                 addDocs(subdirectory);
 
-                // Otherwise this is a file so add to the bundle
             } else if (repoContent.getType().equals(FILE)) {
 
-                // Get the file extension
-                int eIndex = repoContent.getName().lastIndexOf('.') + 1;
-                if (eIndex > 0) {
-                    String extension = repoContent.getName().substring(eIndex);
-
-                    // If this is a cwl file which needs to be parsed
-                    if (extension.equals(CWL_EXTENSION)) {
-
-                        // Get the content of this file from Github
-                        GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
-                                githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
-                        String fileContent = githubService.downloadFile(githubFile, commitSha);
-
-                        // Parse yaml to JsonNode
-                        Yaml reader = new Yaml();
-                        ObjectMapper mapper = new ObjectMapper();
-                        JsonNode cwlFile = mapper.valueToTree(reader.load(fileContent));
-
-                        // Add document to those being considered
-                        addDoc(cwlFile, repoContent.getName());
-                    }
+                // Keep track of total file size for limit - only track files which
+                // will be added to the RO bundle due to being small enough
+                if (repoContent.getSize() <= singleFileSizeLimit) {
+                    totalFileSize += repoContent.getSize();
                 }
 
+                if (totalFileSize <= totalFileSizeLimit) {
+                    // Get the file extension
+                    int eIndex = repoContent.getName().lastIndexOf('.') + 1;
+                    if (eIndex > 0) {
+                        String extension = repoContent.getName().substring(eIndex);
+
+                        // If this is a cwl file which needs to be parsed
+                        if (extension.equals(CWL_EXTENSION)) {
+                            if (repoContent.getSize() <= singleFileSizeLimit) {
+                                // Get the content of this file from Github
+                                GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
+                                        githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+                                String fileContent = githubService.downloadFile(githubFile, commitSha);
+
+                                // Parse yaml to JsonNode
+                                Yaml reader = new Yaml();
+                                ObjectMapper mapper = new ObjectMapper();
+                                JsonNode cwlFile = mapper.valueToTree(reader.load(fileContent));
+
+                                // Add document to those being considered
+                                addDoc(cwlFile, repoContent.getName());
+                            } else {
+                                throw new IOException("File '" + repoContent.getName() +  "' is over singleFileSizeLimit - " +
+                                        FileUtils.byteCountToDisplaySize(repoContent.getSize()) + "/" +
+                                        FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
+                            }
+                        }
+                    }
+                } else {
+                    throw new IOException("Contents of the repository are over totalFileSizeLimit of " +
+                            FileUtils.byteCountToDisplaySize(totalFileSizeLimit));
+                }
             }
         }
     }
@@ -152,26 +181,78 @@ public class CWLCollection {
         if (newDoc.has(DOC_GRAPH)) {
             // Add each of the sub documents
             for (JsonNode jsonNode : newDoc.get(DOC_GRAPH)) {
-                cwlDocs.put(extractID(jsonNode), jsonNode);
+                if (isWorkflow(jsonNode)) {
+                    workflows.put(extractID(jsonNode), jsonNode);
+                }
             }
         } else {
             // Otherwise just add the document itself with ID of document name
-            cwlDocs.put(fileName, newDoc);
+            if (isWorkflow(newDoc)) {
+                workflows.put(fileName, newDoc);
+            }
         }
     }
 
     /**
      * Find the main workflow object in the group of files being considered
+     * by finding the minimal inDegree in a graph of run: parameters within steps
+     * @return The file name/key of the workflow
      */
-    private void findMainWorkflow() {
-        // Find the first workflow we come across
-        // TODO: Consider relationship between run: parameters to better discover this
-        for (Map.Entry<String, JsonNode> doc : cwlDocs.entrySet()) {
-            if (doc.getValue().get(CLASS).asText().equals(WORKFLOW)) {
-                mainWorkflowKey = doc.getKey();
-                return;
+    private String findMainWorkflow() {
+        // TODO: make this path dependant so it doesn't get messed up by duplicate filenames or graphs
+        // Currently this strategy fails gracefully and returns the first workflow in the case of a graph
+
+        // Store the in degree of each workflow
+        Map<String, Integer> inDegrees = new HashMap<String, Integer>();
+        for (String key : workflows.keySet()) {
+            inDegrees.put(key, 0);
+        }
+
+        // Loop through documents and calculate in degrees
+        for (Map.Entry<String, JsonNode> doc : workflows.entrySet()) {
+            JsonNode content = doc.getValue();
+            if (content.get(CLASS).asText().equals(WORKFLOW)) {
+                // Parse workflow steps and see whether other workflows are run
+                JsonNode steps = content.get(STEPS);
+                if (steps.getClass() == ArrayNode.class) {
+                    // Explicit ID and other fields within each input list
+                    for (JsonNode step : steps) {
+                        String run = FilenameUtils.getName(extractRun(step));
+                        if (run != null && inDegrees.containsKey(run)) {
+                            inDegrees.put(run, inDegrees.get(run) + 1);
+                        }
+                    }
+                } else if (steps.getClass() == ObjectNode.class) {
+                    // ID is the key of each object
+                    Iterator<Map.Entry<String, JsonNode>> iterator = steps.fields();
+                    while (iterator.hasNext()) {
+                        Map.Entry<String, JsonNode> stepNode = iterator.next();
+                        JsonNode stepJson = stepNode.getValue();
+                        String run = FilenameUtils.getName(extractRun(stepJson));
+                        if (run != null && inDegrees.containsKey(run)) {
+                            inDegrees.put(run, inDegrees.get(run) + 1);
+                        }
+                    }
+                }
             }
         }
+
+        // Find a workflow with minimum inDegree and return
+        int minVal = Integer.MAX_VALUE;
+        String minKey = null;
+        for (Map.Entry<String, Integer> inDegree : inDegrees.entrySet()) {
+            if (inDegree.getValue() < minVal) {
+                minKey = inDegree.getKey();
+                minVal = inDegree.getValue();
+            }
+
+            // Early escape if minVal is already minimal
+            if (minVal == 0) {
+                return minKey;
+            }
+        }
+
+        return minKey;
     }
 
     /**
@@ -181,14 +262,14 @@ public class CWLCollection {
     public Workflow getWorkflow() {
         // Get the main workflow
         if (mainWorkflowKey == null) {
-            findMainWorkflow();
+            mainWorkflowKey = findMainWorkflow();
 
-            // If it is still less than 0 there is no workflow to be found
+            // If it is still null there is no workflow to be found
             if (mainWorkflowKey == null) {
                 return null;
             }
         }
-        JsonNode mainWorkflow = cwlDocs.get(mainWorkflowKey);
+        JsonNode mainWorkflow = workflows.get(mainWorkflowKey);
 
         // Use ID/filename for label if there is no defined one
         String label = extractLabel(mainWorkflow);
@@ -197,7 +278,7 @@ public class CWLCollection {
         }
 
         return new Workflow(label, extractDoc(mainWorkflow), getInputs(mainWorkflow),
-                            getOutputs(mainWorkflow), getSteps(mainWorkflow));
+                            getOutputs(mainWorkflow), getSteps(mainWorkflow), getDockerLink(mainWorkflow));
     }
 
     /**
@@ -367,6 +448,69 @@ public class CWLCollection {
             }
 
             return details;
+        }
+        return null;
+    }
+
+    /**
+     * Get the docker link from a workflow node
+     * @param node The overall workflow node
+     * @return A string with a dockerhub or image link
+     */
+    private String getDockerLink(JsonNode node) {
+        if (node != null) {
+            if (node.has(REQUIREMENTS)) {
+                String dockerLink = extractDockerLink(node.get(REQUIREMENTS));
+                if (dockerLink != null) {
+                    return extractDockerLink(node.get(REQUIREMENTS));
+                }
+            }
+            if (node.has(HINTS)) {
+                String dockerLink = extractDockerLink(node.get(HINTS));
+                if (dockerLink != null) {
+                    return extractDockerLink(node.get(HINTS));
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the docker link from a workflow hints or requriements node
+     * @param hintReq A hints or requirements node
+     * @return A string with a dockerhub or image link
+     */
+    private String extractDockerLink(JsonNode hintReq) {
+        // ArrayNode syntax using yaml lists
+        if (hintReq.getClass() == ArrayNode.class) {
+            for (JsonNode requirement : hintReq) {
+                if (requirement.has(CLASS)
+                        && requirement.get(CLASS).asText().equals(DOCKER_REQUIREMENT)) {
+                    if (requirement.has(DOCKER_PULL)) {
+                        // Format dockerPull string as a dockerhub URL
+                        return DockerService.getDockerHubURL(requirement.get(DOCKER_PULL).asText());
+                    } else {
+                        // Indicate that the docker requirement exists, but we cannot
+                        // provide a link to dockerhub as docker pull is not used
+                        return "true";
+                    }
+                }
+            }
+            // v1.0 object syntax with requirement class as key
+        } else if (hintReq.getClass() == ObjectNode.class) {
+            // Look for DockerRequirement
+            if (hintReq.has(DOCKER_REQUIREMENT)) {
+                JsonNode dockerReq = hintReq.get(DOCKER_REQUIREMENT);
+                if (dockerReq.has(DOCKER_PULL)) {
+                    // Format dockerPull string as a dockerhub URL
+                    String dockerPull = dockerReq.get(DOCKER_PULL).asText();
+                    return DockerService.getDockerHubURL(dockerPull);
+                } else {
+                    // Indicate that the docker requirement exists, but we cannot
+                    // provide a link to dockerhub as docker pull is not used
+                    return "true";
+                }
+            }
         }
         return null;
     }
@@ -549,5 +693,29 @@ public class CWLCollection {
             }
         }
         return null;
+    }
+
+    /**
+     * Extract the run parameter from a node representing a step
+     * @param stepNode The root node of a step
+     * @return A string with the run parameter if it exists
+     */
+    private String extractRun(JsonNode stepNode) {
+        if (stepNode != null) {
+            if (stepNode.has(RUN)) {
+                return stepNode.get(RUN).asText();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Identify a JsonNode as a workflow
+     * @param rootNode The root node
+     * @return Whether or not the node is a workflow
+     */
+    private boolean isWorkflow(JsonNode rootNode) {
+        return (rootNode.has(CLASS)
+                && rootNode.get(CLASS).asText().equals(WORKFLOW));
     }
 }
