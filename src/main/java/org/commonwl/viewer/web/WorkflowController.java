@@ -205,12 +205,18 @@ public class WorkflowController {
             throw new WorkflowNotFoundException();
         }
 
-        // Set a sensible default file name for the browser
-        response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
-
-        // Serve the file from the local filesystem
+        // 404 error with retry if the file on disk does not exist
         File bundleDownload = new File(workflowModel.getRoBundle());
+        if (!bundleDownload.exists()) {
+            // Clear current RO bundle link and create a new one (async)
+            workflowModel.setRoBundle(null);
+            workflowRepository.save(workflowModel);
+            workflowService.generateROBundle(workflowModel);
+            throw new WorkflowNotFoundException();
+        }
+
         logger.info("Serving download for workflow " + workflowID + " [" + bundleDownload.toString() + "]");
+        response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
         return new FileSystemResource(bundleDownload);
     }
 

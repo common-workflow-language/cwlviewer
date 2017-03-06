@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -78,9 +79,9 @@ public class WorkflowService {
                 workflowModel.setRetrievedFrom(githubInfo);
                 workflowModel.setLastCommit(latestCommit);
 
-                // Create a new research object bundle from Github details
+                // Create a new research object bundle for the workflow
                 // This is Async so cannot just call constructor, needs intermediate as per Spring framework
-                ROBundleFactory.workflowROFromGithub(githubService, githubInfo, latestCommit);
+                generateROBundle(workflowModel);
 
                 // Return this model to be displayed
                 return workflowModel;
@@ -89,10 +90,22 @@ public class WorkflowService {
                 logger.error("No workflow could be found");
             }
         } catch (Exception ex) {
-            logger.error("Error creating workflow: " + ex.getMessage());
+            logger.error("Error creating workflow", ex);
         }
 
         return null;
+    }
+
+    /**
+     * Generates the RO bundle for a Workflow and adds it to the model
+     * @param workflow The workflow model to create a Research Object for
+     */
+    public void generateROBundle(Workflow workflow) {
+        try {
+            ROBundleFactory.workflowROFromGithub(githubService, workflow.getRetrievedFrom(), workflow.getLastCommit());
+        } catch (Exception ex) {
+            logger.error("Error creating RO Bundle", ex);
+        }
     }
 
     /**

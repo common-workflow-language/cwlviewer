@@ -198,11 +198,16 @@ require(['jquery'],
                 type: 'HEAD',
                 url: $('#download').attr('href'),
                 dataType: "json",
-                success: function (data) {
+                success: function () {
+                    // Hide generating, show link
                     $("#generating").addClass("hide");
                     $("#generated").removeClass("hide");
                 },
                 error: function () {
+                    // Show generating, hide link
+                    $("#generated").addClass("hide");
+                    $("#generating").removeClass("hide");
+
                     // Retry in 5 seconds if still not generated
                     setTimeout(function () {
                         getDownloadLink();
@@ -211,9 +216,5 @@ require(['jquery'],
             });
         }
 
-        // If ajaxRequired exists on the page the RO bundle link is not generated
-        // at time of page load
-        if ($("#ajaxRequired").length) {
-            getDownloadLink();
-        }
+        getDownloadLink();
     });
