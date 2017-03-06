@@ -27,13 +27,15 @@ requirejs.config({
         'jquery.svg': 'jquery-svg/jquery.svg.min',
         'jquery.svgdom': 'jquery-svg/jquery.svgdom.min',
         'bootstrap.modal': 'bootstrap/js/modal',
+        'bootstrap.tooltip': 'bootstrap/js/tooltip',
         'svg-pan-zoom': 'svg-pan-zoom/dist/svg-pan-zoom.min',
         'hammerjs': 'hammerjs/hammer.min'
     },
     shim: {
         'jquery.svg': ['jquery'],
         'jquery.svgdom': ['jquery'],
-        'bootstrap.modal': ['jquery']
+        'bootstrap.modal': ['jquery'],
+        'bootstrap.tooltip': ['jquery']
     }
 });
 
@@ -104,6 +106,10 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
             loadURL: $("#graph").attr("data-svgurl"),
             onLoad: enablePanZoom
         });
+        $("#graphFullscreen").svg({
+            loadURL: $("#graph").attr("data-svgurl"),
+            onLoad: enablePanZoom
+        });
 
         /**
          * Enable svg-pan-zoom on the graph
@@ -127,7 +133,7 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
             $('#fullScreenGraphModal').on('shown.bs.modal', function (e) {
                 // Timeout allows for modal to show
                 setTimeout(function() {
-                    var fullGraph = svgPanZoom('#graphFullscreen', {
+                    var fullGraph = svgPanZoom('#graphFullscreen svg', {
                         zoomEnabled: true,
                         controlIconsEnabled: true,
                         customEventsHandler: eventHandler
@@ -306,4 +312,10 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
                 $(this).find("polygon").removeClass("hover");
             }
         }, ".node");
+    });
+
+require(['jquery', 'bootstrap.tooltip'],
+    function ($) {
+        // Alterative notation as only a single data-toggle attribute is allowed
+        $('[data-tooltip="true"]').tooltip();
     });

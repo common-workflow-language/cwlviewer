@@ -110,10 +110,8 @@ digraph G {
                 <h4 class="modal-title" id="fullScreenGraphLabel">Workflow Graph</h4>
             </div>
             <div class="modal-body">
-                <span id="fullscreen-close" data-dismiss="modal" class="close glyphicon glyphicon-resize-full"></span>
-                <object id="graphFullscreen" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
-                    <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="workflow graph" />
-                </object>
+                <span id="fullscreen-close" data-dismiss="modal" class="close glyphicon glyphicon-resize-small graphControl" data-tooltip="true" title="Close"></span>
+                <div id="graphFullscreen"></div>
             </div>
         </div>
     </div>
@@ -129,7 +127,7 @@ digraph G {
                 </a>
                 <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
                 <span th:if="${workflow.roBundle == null}" id="ajaxRequired"></span>
-                <span th:class="${workflow.roBundle != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="/img/loading.svg" width="20" height="20" /></span>
+                <span th:class="${workflow.roBundle != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
                 <span th:class="${workflow.roBundle == null} ? hide : ''" id="generated">
                     - <a th:href="@{'/workflows/' + ${workflow.id} + '/download'}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
                     <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>
@@ -151,15 +149,17 @@ digraph G {
     <div class="row">
         <div class="col-md-12">
             <div id="visualisation" class="jumbotron">
-                <span id="fullscreen-open" data-toggle="modal" data-target="#fullScreenGraphModal" class="glyphicon glyphicon-resize-full"></span>
+                <span id="fullscreen-open" data-toggle="modal" data-target="#fullScreenGraphModal" data-tooltip="true" class="glyphicon glyphicon-resize-full graphControl" title="Expand"></span>
+                <img id="selectChildren" class="graphControl" th:src="@{/img/children-logo.svg}" src="../static/img/children-logo.svg" alt="children" data-tooltip="true" title="Select All Children" />
+                <img id="selectParents" class="graphControl" th:src="@{/img/parents-logo.svg}" src="../static/img/parents-logo.svg" alt="parents" data-tooltip="true" title="Select All Parents" />
                 <div id="graph" data-th-attr="data-svgurl=@{'/workflows/' + ${workflow.id} + '/graph/svg'}"></div>
             </div>
             <div th:if="${workflow.dockerLink != null}">
                 <h2 style="float:left;">Requires: </h2>
                 <a th:unless="${workflow.dockerLink == 'true'}" th:href="${workflow.dockerLink}" rel="noopener" target="_blank">
-                    <img id="dockerLogo" src="/img/Docker-logo.png" alt="docker logo" />
+                    <img id="dockerLogo" th:src="@{/img/Docker-logo.png}" src="../static/img/Docker-logo.png" alt="docker logo" />
                 </a>
-                <img th:if="${workflow.dockerLink == 'true'}" id="dockerLogo" src="/img/Docker-logo.png" alt="docker logo" />
+                <img th:if="${workflow.dockerLink == 'true'}" id="dockerLogo" th:src="@{/img/Docker-logo.png}" src="../static/img/Docker-logo.png" alt="docker logo" />
             </div>
             <h2>Inputs</h2>
             <div th:if="${workflow.inputs.isEmpty()}" class="alert alert-info">
