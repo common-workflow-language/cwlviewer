@@ -43,6 +43,7 @@ public class WorkflowService {
     private final int cacheDays;
     private final String graphvizStorage;
     private final int singleFileSizeLimit;
+    private final int totalFileSizeLimit;
 
     @Autowired
     public WorkflowService(GitHubService githubService,
@@ -50,13 +51,15 @@ public class WorkflowService {
                            ROBundleFactory ROBundleFactory,
                            @Value("${cacheDays}") int cacheDays,
                            @Value("${graphvizStorage}") String graphvizStorage,
-                           @Value("${singleFileSizeLimit}") int singleFileSizeLimit) {
+                           @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
+                           @Value("${totalFileSizeLimit}") int totalFileSizeLimit) {
         this.githubService = githubService;
         this.workflowRepository = workflowRepository;
         this.ROBundleFactory = ROBundleFactory;
         this.cacheDays = cacheDays;
         this.graphvizStorage = graphvizStorage;
         this.singleFileSizeLimit = singleFileSizeLimit;
+        this.totalFileSizeLimit = totalFileSizeLimit;
     }
 
     /**
@@ -71,7 +74,8 @@ public class WorkflowService {
             String latestCommit = githubService.getCommitSha(githubInfo);
 
             // Set up CWL utility to collect the documents
-            CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo, latestCommit, singleFileSizeLimit);
+            CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo, latestCommit,
+                    singleFileSizeLimit, totalFileSizeLimit);
 
             // Get the workflow model
             Workflow workflowModel = cwlFiles.getWorkflow();
