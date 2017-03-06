@@ -30,6 +30,7 @@ import org.eclipse.egit.github.core.RepositoryContents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -188,8 +189,8 @@ public class ROBundle {
      * @throws IOException Any errors in saving
      */
     public Path saveToFile(Path directory) throws IOException {
-        // Save the Research Object Bundle
-        Path bundleLocation = Files.createTempFile(directory, "bundle", ".zip");
+        String fileName = "bundle-" + java.util.UUID.randomUUID() + ".zip";
+        Path bundleLocation = Files.createFile(directory.resolve(fileName));
         Bundles.closeAndSaveBundle(bundle, bundleLocation);
         return bundleLocation;
     }
