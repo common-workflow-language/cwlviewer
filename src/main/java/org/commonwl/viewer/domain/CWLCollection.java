@@ -128,8 +128,13 @@ public class CWLCollection {
                 addDocs(subdirectory);
 
             } else if (repoContent.getType().equals(FILE)) {
-                // Keep track of total file size for limit
-                totalFileSize += repoContent.getSize();
+
+                // Keep track of total file size for limit - only track files which
+                // will be added to the RO bundle due to being small enough
+                if (repoContent.getSize() <= singleFileSizeLimit) {
+                    totalFileSize += repoContent.getSize();
+                }
+
                 if (totalFileSize <= totalFileSizeLimit) {
                     // Get the file extension
                     int eIndex = repoContent.getName().lastIndexOf('.') + 1;
