@@ -24,9 +24,9 @@ import org.apache.commons.lang.StringUtils;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.WorkflowForm;
-import org.commonwl.viewer.services.WorkflowService;
 import org.commonwl.viewer.services.WorkflowFormValidator;
 import org.commonwl.viewer.services.WorkflowRepository;
+import org.commonwl.viewer.services.WorkflowService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -123,9 +123,13 @@ public class WorkflowController {
 
             // Redirect to the workflow
             GithubDetails githubDetails = workflow.getRetrievedFrom();
+            String path = githubDetails.getPath();
+            if (path == null) {
+                path = "";
+            }
             return new ModelAndView("redirect:/workflows/github.com/" + githubDetails.getOwner()
                     + "/" + githubDetails.getRepoName() + "/tree/" + githubDetails.getBranch()
-                    + "/" + githubDetails.getPath());
+                    + "/" + path);
         }
     }
 
@@ -145,8 +149,12 @@ public class WorkflowController {
 
         // The wildcard end of the URL is the path
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        int pathStartIndex = StringUtils.ordinalIndexOf(path, "/", 7) + 1;
-        path = path.substring(pathStartIndex);
+        int pathStartIndex = StringUtils.ordinalIndexOf(path, "/", 7);
+        if (pathStartIndex > -1 && pathStartIndex < path.length() - 1) {
+            path = path.substring(pathStartIndex + 1);
+        } else {
+            path = null;
+        }
 
         // Construct a GithubDetails object to search for in the database
         GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
@@ -177,6 +185,9 @@ public class WorkflowController {
 
         // Redirect to index with form autofilled if workflow does not already exist
         if (workflowModel == null) {
+            if (path == null) {
+                path = "";
+            }
             return new ModelAndView("redirect:/?url=https://github.com/" +
                     owner + "/" + repoName + "/tree/" + branch + "/" + path);
         }
