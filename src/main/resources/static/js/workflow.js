@@ -191,7 +191,7 @@ require(['jquery', 'bootstrap.modal'],
         $('#download-dot').click(function (event) {
             // Generate download link src
             var dotGraph = $("#dot").val();
-            var src = "data:text/plain;charset=utf-8," + encodeURIComponent(dotGraph);
+            var src = "data:text/vnd.graphviz;charset=utf-8," + encodeURIComponent(dotGraph);
 
             // Set hidden download link href to contents and click it
             var downloadLink = $("#download-link-dot");

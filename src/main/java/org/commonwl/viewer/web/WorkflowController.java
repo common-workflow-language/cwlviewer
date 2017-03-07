@@ -19,11 +19,11 @@
 
 package org.commonwl.viewer.web;
 
-import com.github.jabbalaci.graphviz.GraphViz;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.WorkflowForm;
+import org.commonwl.viewer.services.GraphVizService;
 import org.commonwl.viewer.services.WorkflowFormValidator;
 import org.commonwl.viewer.services.WorkflowRepository;
 import org.commonwl.viewer.services.WorkflowService;
@@ -55,6 +55,7 @@ public class WorkflowController {
     private final WorkflowFormValidator workflowFormValidator;
     private final WorkflowService workflowService;
     private final WorkflowRepository workflowRepository;
+    private final GraphVizService graphVizService;
 
     /**
      * Autowired constructor to initialise objects used by the controller
@@ -64,10 +65,12 @@ public class WorkflowController {
     @Autowired
     public WorkflowController(WorkflowFormValidator workflowFormValidator,
                               WorkflowService workflowService,
-                              WorkflowRepository workflowRepository) {
+                              WorkflowRepository workflowRepository,
+                              GraphVizService graphVizService) {
         this.workflowFormValidator = workflowFormValidator;
         this.workflowService = workflowService;
         this.workflowRepository = workflowRepository;
+        this.graphVizService = graphVizService;
     }
 
     /**
@@ -239,29 +242,12 @@ public class WorkflowController {
                     method = RequestMethod.GET,
                     produces = "image/svg+xml")
     @ResponseBody
-    public FileSystemResource getGraphAsSvg(@Value("${graphvizStorage}") String graphvizStorage,
-                                            @PathVariable("workflowID") String workflowID) throws IOException {
-
-        // Get workflow from database
+    public FileSystemResource getGraphAsSvg(@PathVariable("workflowID") String workflowID) throws IOException {
         Workflow workflowModel = workflowRepository.findOne(workflowID);
-
-        // 404 error if workflow does not exist
         if (workflowModel == null) {
             throw new WorkflowNotFoundException();
         }
-
-        // Generate graphviz image if it does not already exist
-        File out = new File(graphvizStorage + "/" + workflowID + ".svg");
-        if (!out.exists()) {
-            GraphViz gv = new GraphViz();
-            gv.decreaseDpi();
-            gv.decreaseDpi();
-            gv.decreaseDpi();
-            gv.writeGraphToFile(gv.getGraph(workflowModel.getDotGraph()
-                    .replace("bgcolor = \"#eeeeee\"", "bgcolor = \"transparent\""), "svg", "dot"), out.getAbsolutePath());
-        }
-
-        // Output the graph image
+        File out = graphVizService.getGraph(workflowID + ".svg", workflowModel.getDotGraph(), "svg");
         return new FileSystemResource(out);
     }
 
@@ -273,25 +259,29 @@ public class WorkflowController {
             method = RequestMethod.GET,
             produces = "image/png")
     @ResponseBody
-    public FileSystemResource getGraphAsPng(@Value("${graphvizStorage}") String graphvizStorage,
-                                            @PathVariable("workflowID") String workflowID) throws IOException {
-
-        // Get workflow from database
+    public FileSystemResource getGraphAsPng(@PathVariable("workflowID") String workflowID) throws IOException {
         Workflow workflowModel = workflowRepository.findOne(workflowID);
-
-        // 404 error if workflow does not exist
         if (workflowModel == null) {
             throw new WorkflowNotFoundException();
         }
+        File out = graphVizService.getGraph(workflowID + ".png", workflowModel.getDotGraph(), "png");
+        return new FileSystemResource(out);
+    }
 
-        // Generate graphviz image if it does not already exist
-        File out = new File(graphvizStorage + "/" + workflowID + ".png");
-        if (!out.exists()) {
-            GraphViz gv = new GraphViz();
-            gv.writeGraphToFile(gv.getGraph(workflowModel.getDotGraph(), "png", "dot"), out.getAbsolutePath());
+    /**
+     * Download a generated DOT graph for a workflow as xdot
+     * @param workflowID The ID of the workflow to download the graph for
+     */
+    @RequestMapping(value = "/workflows/{workflowID}/graph/xdot",
+            method = RequestMethod.GET,
+            produces = "text/vnd.graphviz")
+    @ResponseBody
+    public FileSystemResource getGraphAsXdot(@PathVariable("workflowID") String workflowID) throws IOException {
+        Workflow workflowModel = workflowRepository.findOne(workflowID);
+        if (workflowModel == null) {
+            throw new WorkflowNotFoundException();
         }
-
-        // Output the graph image
+        File out = graphVizService.getGraph(workflowID + ".dot", workflowModel.getDotGraph(), "xdot");
         return new FileSystemResource(out);
     }
 }
