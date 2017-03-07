@@ -141,10 +141,17 @@ digraph G {
     <div class="row">
         <div class="col-md-12">
             <div id="graph-menu" class="pull-right">
-                <a id="download-link-graph" href="" download="workflow.png"></a>
                 <strong>Graph: </strong>
                 <button id="view-dot" class="btn btn-primary" type="button" data-toggle="modal" data-target="#dotGraph">View DOT</button>
-                <a id="download-graph" class="btn btn-primary" type="button" th:href="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" download="graph.svg">Download Image</a>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Download Image <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a id="download-graph" th:href="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" download="graph.svg">As .svg</a></li>
+                        <li><a id="download-graph" th:href="@{'/workflows/' + ${workflow.id} + '/graph/png'}" download="graph.png">As .png</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
