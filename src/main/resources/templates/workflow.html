@@ -44,8 +44,7 @@
                 <h4 class="modal-title" id="dotGraphLabel">Workflow DOT Graph</h4>
             </div>
             <div class="modal-body">
-                <a id="download-link-dot" href="" download="workflow.dot"></a>
-                <button id="download-dot" class="btn btn-primary" type="button">Download as .dot File</button>
+                <h4 id="modalTitle">Dot File Source:</h4>
 <textarea id="dot" class="form-control" rows="15" th:field="${workflow.dotGraph}">
 digraph G {
     graph [
@@ -96,6 +95,9 @@ digraph G {
     input3->step3->output3;
 }
 </textarea>
+                <a id="download-link-dot" href="" download="workflow.dot"></a>
+                <button id="download-dot" class="btn btn-primary" type="button">Download dot File</button>
+                <a th:href="@{'/workflows/' + ${workflow.id} + '/graph/xdot'}" href="#" download="graph.dot" class="btn btn-primary" type="button">Download xdot File</a>
             </div>
         </div>
     </div>

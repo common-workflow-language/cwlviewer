@@ -40,8 +40,8 @@ public class WorkflowService {
     private final GitHubService githubService;
     private final WorkflowRepository workflowRepository;
     private final ROBundleFactory ROBundleFactory;
+    private final GraphVizService graphVizService;
     private final int cacheDays;
-    private final String graphvizStorage;
     private final int singleFileSizeLimit;
     private final int totalFileSizeLimit;
 
@@ -49,15 +49,15 @@ public class WorkflowService {
     public WorkflowService(GitHubService githubService,
                            WorkflowRepository workflowRepository,
                            ROBundleFactory ROBundleFactory,
+                           GraphVizService graphVizService,
                            @Value("${cacheDays}") int cacheDays,
-                           @Value("${graphvizStorage}") String graphvizStorage,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
                            @Value("${totalFileSizeLimit}") int totalFileSizeLimit) {
         this.githubService = githubService;
         this.workflowRepository = workflowRepository;
         this.ROBundleFactory = ROBundleFactory;
+        this.graphVizService = graphVizService;
         this.cacheDays = cacheDays;
-        this.graphvizStorage = graphvizStorage;
         this.singleFileSizeLimit = singleFileSizeLimit;
         this.totalFileSizeLimit = totalFileSizeLimit;
     }
@@ -128,10 +128,7 @@ public class WorkflowService {
         }
 
         // Delete cached graphviz images if they exist
-        File graphvizSvg = new File(graphvizStorage + "/" + workflow.getID() + ".svg");
-        graphvizSvg.delete();
-        File graphvizPng = new File(graphvizStorage + "/" + workflow.getID() + ".png");
-        graphvizPng.delete();
+        graphVizService.deleteCache(workflow.getID());
 
         // Remove the workflow from the database
         workflowRepository.delete(workflow);
