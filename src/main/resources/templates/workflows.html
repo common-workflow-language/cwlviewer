@@ -64,7 +64,7 @@
                                     </a>
                                     <p>Branch/Commit ID: <i th:text="${workflow.retrievedFrom.branch}">master</i></p>
                                 </td>
-                                <td><a th:href="${workflowURL}"><span class="icon-view glyphicon glyphicon-chevron-right"></span></a></td>
+                                <td><a th:href="${workflow.retrievedFrom.path == null} ? ${workflowURL} : ${workflowURL + '/' + workflow.retrievedFrom.path}"><span class="icon-view glyphicon glyphicon-chevron-right"></span></a></td>
                             </tr>
                         </tbody>
                     </table>
