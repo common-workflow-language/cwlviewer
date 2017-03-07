@@ -111,7 +111,9 @@ digraph G {
             </div>
             <div class="modal-body">
                 <span id="fullscreen-close" data-dismiss="modal" class="close glyphicon glyphicon-resize-small graphControl" data-tooltip="true" title="Close"></span>
-                <div id="graphFullscreen"></div>
+                <object id="graphFullscreen" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
+                    <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="fullscreen" />
+                </object>
             </div>
         </div>
     </div>

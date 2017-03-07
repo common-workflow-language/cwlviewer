@@ -43,7 +43,7 @@ requirejs.config({
  * Make the graph pannable and zoomable
  */
 require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
-    function ($, modal, svgPanZoom, hammerjs) {
+    function ($, modal, svgPanZoom, Hammer) {
         /**
          * Custom hammer event handler to add mobile support
          * Based on example in svg-pan-zoom/demo/mobile.html
@@ -106,9 +106,6 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
             loadURL: $("#graph").attr("data-svgurl"),
             onLoad: enablePanZoom
         });
-        /*$("#graphFullscreen").svg({
-            loadURL: $("#graph").attr("data-svgurl")
-        });*/
 
         /**
          * Enable svg-pan-zoom on the graph
@@ -117,8 +114,12 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
             var graph = svgPanZoom('#graph svg', {
                 zoomEnabled: true,
                 controlIconsEnabled: true,
-                customEventsHandler: eventHandler,
-                preventMouseEventsDefault: false
+                customEventsHandler: eventHandler
+            });
+
+            // Add deselect to reset control
+            $("#svg-pan-zoom-reset-pan-zoom").click(function() {
+                $("polygon.selected, tr.selected").removeClass("selected");
             });
 
             // Resizing window also resizes the graph
@@ -132,7 +133,7 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
             $('#fullScreenGraphModal').on('shown.bs.modal', function (e) {
                 // Timeout allows for modal to show
                 setTimeout(function() {
-                    var fullGraph = svgPanZoom('#graphFullscreen svg', {
+                    var fullGraph = svgPanZoom('#graphFullscreen', {
                         zoomEnabled: true,
                         controlIconsEnabled: true,
                         customEventsHandler: eventHandler
@@ -261,10 +262,12 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
          */
         $("tr").not('thead tr').on({
             click: function(event) {
+                var matchingGraphBox = getGraphBox(this);
                 if (!event.ctrlKey) {
-                    $("polygon.selected, tr.selected").not($(this)).removeClass("selected");
+                    $("polygon.selected, tr.selected").not($(this))
+                        .not(matchingGraphBox).removeClass("selected");
                 }
-                getGraphBox(this).toggleClass("selected");
+                matchingGraphBox.toggleClass("selected");
                 $(this).toggleClass("selected");
             },
             mouseenter: function() {
@@ -291,16 +294,34 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
         }
 
         /**
+         * Keep track of whether the graph is being dragged to
+         * be able to disable click events during pan
+         */
+        var draggingGraph = false;
+        $(document).on({
+            mousedown: function() {
+                draggingGraph = false;
+            },
+            mousemove: function() {
+                draggingGraph = true;
+            }
+        }, "#graph");
+
+        /**
          * When a graph box is hovered over/clicked, highlight
          */
         $(document).on({
             click: function(event) {
-                var thisPolygon = $(this).find("polygon");
-                if (!event.ctrlKey) {
-                    $("polygon.selected, tr.selected").not(thisPolygon).removeClass("selected");
+                if (!draggingGraph) {
+                    var thisPolygon = $(this).find("polygon");
+                    var matchingTableRow = getTableRow(this);
+                    if (!event.ctrlKey) {
+                        $("polygon.selected, tr.selected").not(thisPolygon)
+                            .not(matchingTableRow).removeClass("selected");
+                    }
+                    matchingTableRow.toggleClass("selected");
+                    thisPolygon.toggleClass("selected");
                 }
-                getTableRow(this).toggleClass("selected");
-                thisPolygon.toggleClass("selected");
             },
             mouseenter: function() {
                 getTableRow(this).addClass("hover");

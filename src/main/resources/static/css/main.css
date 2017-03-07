@@ -157,7 +157,7 @@ body {
 }
 
 tr.selected, .table-hover tbody tr.selected:hover td, .table-hover tbody tr.selected:hover th {
-    background-color: #adffaf !important;
+    background-color: #b9ffbb !important;
 }
 
 tr.hover, .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
@@ -165,7 +165,7 @@ tr.hover, .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
 }
 
 polygon.selected, polygon.hover.selected {
-    fill: #adffaf;
+    fill: #b9ffbb;
 }
 
 polygon.hover {
