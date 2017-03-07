@@ -21,10 +21,6 @@ body {
     padding-top: 61px;
 }
 
-.table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
-    background-color: rgba(0, 255, 0, 0.11);
-}
-
 .hide {
     display: none;
 }
@@ -60,21 +56,37 @@ body {
     margin-left: 10px;
 }
 
-#fullscreen-open, #fullscreen-close {
-    cursor: pointer;
-    font-size: 25px;
+.graphControl {
     position: absolute;
     top: 10px;
     right: 25px;
+    cursor: pointer;
+    font-size: 25px;
     opacity: 0.333;
+}
+
+.graphControl:hover {
+    opacity: 1;
 }
 
 #fullscreen-close {
     top: 25px;
 }
 
-#fullscreen-open:hover, #fullscreen-close:hover {
-    opacity: 1;
+#selectChildren, #selectParents {
+    top: 8px;
+    width: 30px;
+    height: 35px;
+}
+
+#selectChildren {
+    left: 25px;
+}
+
+#selectParents {
+    left: 62px;
+    height: 32px;
+    width: 50px;
 }
 
 #fullScreenGraphModal .modal-dialog {
@@ -128,8 +140,36 @@ body {
     height: 100%;
 }
 
+#graph svg text {
+    cursor: default;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#graph svg text::selection {
+    background: none;
+}
+
 #download-gv {
     margin-bottom: 5px;
+}
+
+tr.selected, .table-hover tbody tr.selected:hover td, .table-hover tbody tr.selected:hover th {
+    background-color: #b9ffbb !important;
+}
+
+tr.hover, .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+    background-color: #c9ffcb !important;
+}
+
+polygon.selected, polygon.hover.selected {
+    fill: #b9ffbb;
+}
+
+polygon.hover {
+    fill: #c9ffcb;
 }
 
 #footer {
