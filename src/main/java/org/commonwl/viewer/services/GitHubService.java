@@ -54,7 +54,7 @@ public class GitHubService {
     private final CommitService commitService;
 
     // URL validation for directory links
-    private final String GITHUB_DIR_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)\\/(.*))?$";
+    private final String GITHUB_DIR_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)(?:\\/(.*))?)?$";
     private final Pattern githubDirPattern = Pattern.compile(GITHUB_DIR_REGEX);
 
     @Autowired

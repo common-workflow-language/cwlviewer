@@ -92,8 +92,7 @@ public class ROBundle {
             // TODO: Make this importedBy/On/From
             manifest.setRetrievedBy(thisApp);
             manifest.setRetrievedOn(manifest.getCreatedOn());
-            manifest.setRetrievedFrom(new URI("https://github.com/" + githubInfo.getOwner() + "/"
-                    + githubInfo.getRepoName() + "/tree/" + commitSha + "/" + githubInfo.getPath()));
+            manifest.setRetrievedFrom(new URI(githubInfo.getURL()));
 
         } catch (URISyntaxException ex) {
             logger.error("Error creating URI for RO Bundle", ex);

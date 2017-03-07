@@ -76,4 +76,24 @@ public class GithubDetails implements Serializable {
     public void setPath(String path) {
         this.path = path;
     }
+
+    /**
+     * Get the link to the place on github this represents
+     * @return The Github URL including branch and path if given
+     */
+    public String getURL() {
+        return getURL(branch);
+    }
+
+    /**
+     * Get the link to the place on github this represents with set branch name/commit ID
+     * @return The Github URL including commit ID and path if given
+     */
+    public String getURL(String ref) {
+        String url = "https://github.com/" + owner + "/" + repoName + "/tree/" + ref;
+        if (path != null) {
+            url += "/" + this.path;
+        }
+        return url;
+    }
 }

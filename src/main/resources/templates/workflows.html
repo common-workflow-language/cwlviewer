@@ -46,9 +46,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="workflow : ${workflows}" th:with="workflowURL=@{'/workflows/github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch} + '/' + ${workflow.retrievedFrom.path}}">
+                            <tr th:each="workflow : ${workflows}" th:with="workflowURL=@{'/workflows/github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch}}">
                                 <td>
-                                    <a th:href="${workflowURL}">
+                                    <a th:href="${workflow.retrievedFrom.path == null} ? ${workflowURL} : ${workflowURL + '/' + workflow.retrievedFrom.path}">
                                         <img class="workflow-thumb" th:src="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" alt="workflow graph" />
                                     </a>
                                 </td>
@@ -57,9 +57,10 @@
                                     <p><i th:text="${workflow.doc}">Description</i></p>
                                 </td>
                                 <td>
-                                    <a th:href="@{'https://github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.lastCommit} + '/' + ${workflow.retrievedFrom.path}}" rel="noopener" target="_blank">
+                                    <a th:href="@{${workflow.retrievedFrom.getURL(workflow.lastCommit)}}" rel="noopener" target="_blank">
                                         <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="20" height="20" />
-                                        <span th:text="@{${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/' + ${workflow.retrievedFrom.path}}">https://github.com</span>
+                                        <span th:if="${workflow.retrievedFrom.path != null}" th:text="@{${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/' + ${workflow.retrievedFrom.path}}">https://github.com</span>
+                                        <span th:unless="${workflow.retrievedFrom.path != null}" th:text="@{${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/'}">https://github.com</span>
                                     </a>
                                     <p>Branch/Commit ID: <i th:text="${workflow.retrievedFrom.branch}">master</i></p>
                                 </td>
