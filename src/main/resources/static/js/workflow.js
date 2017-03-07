@@ -28,6 +28,7 @@ requirejs.config({
         'jquery.svgdom': 'jquery-svg/jquery.svgdom.min',
         'bootstrap.modal': 'bootstrap/js/modal',
         'bootstrap.tooltip': 'bootstrap/js/tooltip',
+        'bootstrap.dropdown': 'bootstrap/js/dropdown',
         'svg-pan-zoom': 'svg-pan-zoom/dist/svg-pan-zoom.min',
         'hammerjs': 'hammerjs/hammer.min'
     },
@@ -35,7 +36,8 @@ requirejs.config({
         'jquery.svg': ['jquery'],
         'jquery.svgdom': ['jquery'],
         'bootstrap.modal': ['jquery'],
-        'bootstrap.tooltip': ['jquery']
+        'bootstrap.tooltip': ['jquery'],
+        'bootstrap.dropdown': ['jquery']
     }
 });
 
@@ -401,7 +403,7 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
 
     });
 
-require(['jquery', 'bootstrap.tooltip'],
+require(['jquery', 'bootstrap.tooltip', 'bootstrap.dropdown'],
     function ($) {
         // Alterative notation as only a single data-toggle attribute is allowed
         $('[data-tooltip="true"]').tooltip();
