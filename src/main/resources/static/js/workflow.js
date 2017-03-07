@@ -106,10 +106,9 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
             loadURL: $("#graph").attr("data-svgurl"),
             onLoad: enablePanZoom
         });
-        $("#graphFullscreen").svg({
-            loadURL: $("#graph").attr("data-svgurl"),
-            onLoad: enablePanZoom
-        });
+        /*$("#graphFullscreen").svg({
+            loadURL: $("#graph").attr("data-svgurl")
+        });*/
 
         /**
          * Enable svg-pan-zoom on the graph
@@ -288,7 +287,7 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
             // Find corresponding table row and return
             return $("tr").filter(function() {
                 return $(this).find("td:first").html() == elementTitle;
-            }).add();
+            });
         }
 
         /**
@@ -312,6 +311,73 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
                 $(this).find("polygon").removeClass("hover");
             }
         }, ".node");
+
+        /**
+         * Stores an in+outlist style graph structure
+         * Generated at time of first use
+         */
+        var graphModel = {};
+
+        /**
+         * Generates the graph model
+         */
+        function generateGraphModel() {
+            var nodes = $(".node");
+
+            // Add all node titles to the model
+            nodes.each(function() {
+                graphModel[$(this).find("title").parent().attr("id")] = {
+                    inList: [],
+                    outList: []
+                }
+            });
+
+            // Add all links to the model
+            $(".edge").each(function() {
+                var edgeText = $(this).find("title").text();
+                var toFrom = edgeText.split("->");
+                var to = nodes.filter(function() {
+                    return $(this).find("title").text() === toFrom[0];
+                }).attr("id");
+                var from = nodes.filter(function() {
+                    return $(this).find("title").text() === toFrom[1];
+                }).attr("id");
+                graphModel[from].inList.push(to);
+                graphModel[to].outList.push(from);
+            });
+        }
+
+        /**
+         * Recursively select all the parents or children of a node
+         */
+        function expandSelection(root, listName) {
+            var rootID = root.attr("id");
+            for (var i = 0; i < graphModel[rootID][listName].length; i++) {
+                var next = $("#" + graphModel[rootID][listName][i]);
+                next.find("polygon").addClass("selected");
+                getTableRow(next).addClass("selected");
+                expandSelection(next, listName);
+            }
+        }
+
+        $("#selectChildren").click(function() {
+            if ($.isEmptyObject(graphModel)) {
+                generateGraphModel();
+            }
+            $("polygon.selected").each(function() {
+                expandSelection($(this).parent(), "outList");
+            });
+        });
+
+        $("#selectParents").click(function() {
+            if ($.isEmptyObject(graphModel)) {
+                generateGraphModel();
+            }
+            $("polygon.selected").each(function() {
+                expandSelection($(this).parent(), "inList");
+            });
+        });
+
     });
 
 require(['jquery', 'bootstrap.tooltip'],
