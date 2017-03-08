@@ -377,9 +377,11 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
             var rootID = root.attr("id");
             for (var i = 0; i < graphModel[rootID][listName].length; i++) {
                 var next = $("#" + graphModel[rootID][listName][i]);
-                next.find("polygon").addClass("selected");
-                getTableRow(next).addClass("selected");
-                expandSelection(next, listName);
+                if (!next.find("polygon").hasClass("selected")) {
+                    next.find("polygon").addClass("selected");
+                    getTableRow(next).addClass("selected");
+                    expandSelection(next, listName);
+                }
             }
         }
 
