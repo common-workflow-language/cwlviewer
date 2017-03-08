@@ -121,7 +121,7 @@ public class ROBundle {
         for (RepositoryContents repoContent : repoContents) {
 
             // Parse subdirectories if they exist
-            if (repoContent.getType().equals("dir")) {
+            if (repoContent.getType().equals(GitHubService.TYPE_DIR)) {
 
                 // Get the contents of the subdirectory
                 GithubDetails githubSubdir = new GithubDetails(githubInfo.getOwner(),
@@ -136,7 +136,7 @@ public class ROBundle {
                 addFiles(subdirectory, subdirPath);
 
                 // Otherwise this is a file so add to the bundle
-            } else if (repoContent.getType().equals("file")) {
+            } else if (repoContent.getType().equals(GitHubService.TYPE_FILE)) {
 
                 try {
                     // Where to store the new file in bundle

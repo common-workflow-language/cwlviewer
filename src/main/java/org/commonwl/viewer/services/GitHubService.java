@@ -48,6 +48,10 @@ import java.util.regex.Pattern;
 @Service
 public class GitHubService {
 
+    // Github API specific strings
+    public static final String TYPE_DIR = "dir";
+    public static final String TYPE_FILE = "file";
+
     // Github API services
     private final ContentsService contentsService;
     private final UserService userService;

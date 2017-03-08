@@ -32,6 +32,8 @@ import org.eclipse.egit.github.core.RepositoryContents;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -49,7 +51,7 @@ public class CWLCollection {
     private int singleFileSizeLimit;
 
     // Maps of ID to associated JSON
-    private Map<String, JsonNode> workflows = new HashMap<>();
+    private Map<String, JsonNode> cwlDocs = new HashMap<>();
 
     // The main workflow
     private String mainWorkflowKey;
@@ -57,14 +59,12 @@ public class CWLCollection {
     // Extension of CWL files
     private final String CWL_EXTENSION = "cwl";
 
-    // Github API specific strings
-    private final String DIR = "dir";
-    private final String FILE = "file";
-
     // CWL specific strings
     private final String DOC_GRAPH = "$graph";
     private final String CLASS = "class";
     private final String WORKFLOW = "Workflow";
+    private final String COMMANDLINETOOL = "CommandLineTool";
+    private final String EXPRESSIONTOOL = "ExpressionTool";
     private final String STEPS = "steps";
     private final String INPUTS = "inputs";
     private final String IN = "in";
@@ -117,7 +117,7 @@ public class CWLCollection {
         for (RepositoryContents repoContent : repoContents) {
 
             // Parse subdirectories if they exist
-            if (repoContent.getType().equals(DIR)) {
+            if (repoContent.getType().equals(GitHubService.TYPE_DIR)) {
 
                 // Get the contents of the subdirectory
                 GithubDetails githubSubdir = new GithubDetails(githubInfo.getOwner(),
@@ -127,7 +127,7 @@ public class CWLCollection {
                 // Add the files in the subdirectory to this new folder
                 addDocs(subdirectory);
 
-            } else if (repoContent.getType().equals(FILE)) {
+            } else if (repoContent.getType().equals(GitHubService.TYPE_FILE)) {
 
                 // Keep track of total file size for limit - only track files which
                 // will be added to the RO bundle due to being small enough
@@ -155,7 +155,7 @@ public class CWLCollection {
                                 JsonNode cwlFile = mapper.valueToTree(reader.load(fileContent));
 
                                 // Add document to those being considered
-                                addDoc(cwlFile, repoContent.getName());
+                                addDoc(cwlFile, repoContent.getPath());
                             } else {
                                 throw new IOException("File '" + repoContent.getName() +  "' is over singleFileSizeLimit - " +
                                         FileUtils.byteCountToDisplaySize(repoContent.getSize()) + "/" +
@@ -181,15 +181,11 @@ public class CWLCollection {
         if (newDoc.has(DOC_GRAPH)) {
             // Add each of the sub documents
             for (JsonNode jsonNode : newDoc.get(DOC_GRAPH)) {
-                if (isWorkflow(jsonNode)) {
-                    workflows.put(extractID(jsonNode), jsonNode);
-                }
+                cwlDocs.put(extractID(jsonNode), jsonNode);
             }
         } else {
             // Otherwise just add the document itself with ID of document name
-            if (isWorkflow(newDoc)) {
-                workflows.put(fileName, newDoc);
-            }
+            cwlDocs.put(fileName, newDoc);
         }
     }
 
@@ -204,12 +200,12 @@ public class CWLCollection {
 
         // Store the in degree of each workflow
         Map<String, Integer> inDegrees = new HashMap<String, Integer>();
-        for (String key : workflows.keySet()) {
+        for (String key : cwlDocs.keySet()) {
             inDegrees.put(key, 0);
         }
 
         // Loop through documents and calculate in degrees
-        for (Map.Entry<String, JsonNode> doc : workflows.entrySet()) {
+        for (Map.Entry<String, JsonNode> doc : cwlDocs.entrySet()) {
             JsonNode content = doc.getValue();
             if (content.get(CLASS).asText().equals(WORKFLOW)) {
                 // Parse workflow steps and see whether other workflows are run
@@ -269,7 +265,7 @@ public class CWLCollection {
                 return null;
             }
         }
-        JsonNode mainWorkflow = workflows.get(mainWorkflowKey);
+        JsonNode mainWorkflow = cwlDocs.get(mainWorkflowKey);
 
         // Use ID/filename for label if there is no defined one
         String label = extractLabel(mainWorkflow);
@@ -277,8 +273,23 @@ public class CWLCollection {
             label = mainWorkflowKey;
         }
 
-        return new Workflow(label, extractDoc(mainWorkflow), getInputs(mainWorkflow),
-                            getOutputs(mainWorkflow), getSteps(mainWorkflow), getDockerLink(mainWorkflow));
+        Workflow workflowModel = new Workflow(label, extractDoc(mainWorkflow), getInputs(mainWorkflow),
+                getOutputs(mainWorkflow), getSteps(mainWorkflow), getDockerLink(mainWorkflow));
+        fillStepRunTypes(workflowModel);
+        return workflowModel;
+    }
+
+    /**
+     * Fill the step runtypes based on types of other documents
+     * @param workflow The workflow model to set runtypes for
+     */
+    private void fillStepRunTypes(Workflow workflow) {
+        Map<String, CWLStep> steps = workflow.getSteps();
+        for (CWLStep step : steps.values()) {
+            Path filePath = Paths.get(githubInfo.getPath()).resolve(step.getRun());
+            JsonNode runDoc = cwlDocs.get(filePath.toString());
+            step.setRunType(extractProcess(runDoc));
+        }
     }
 
     /**
@@ -295,7 +306,7 @@ public class CWLCollection {
                 // Explicit ID and other fields within each input list
                 for (JsonNode step : steps) {
                     CWLStep stepObject = new CWLStep(extractLabel(step), extractDoc(step),
-                            extractTypes(step), getInputs(step), getOutputs(step));
+                            extractTypes(step), extractRun(step), getInputs(step), getOutputs(step));
                     returnMap.put(extractID(step), stepObject);
                 }
             } else if (steps.getClass() == ObjectNode.class) {
@@ -305,7 +316,8 @@ public class CWLCollection {
                     Map.Entry<String, JsonNode> stepNode = iterator.next();
                     JsonNode stepJson = stepNode.getValue();
                     CWLStep stepObject = new CWLStep(extractLabel(stepJson), extractDoc(stepJson),
-                            extractTypes(stepJson), getInputs(stepJson), getOutputs(stepJson));
+                            extractTypes(stepJson), extractRun(stepJson), getInputs(stepJson),
+                            getOutputs(stepJson));
                     returnMap.put(stepNode.getKey(), stepObject);
                 }
             }
@@ -710,12 +722,23 @@ public class CWLCollection {
     }
 
     /**
-     * Identify a JsonNode as a workflow
-     * @param rootNode The root node
-     * @return Whether or not the node is a workflow
+     * Extract the class parameter from a node representing a document
+     * @param rootNode The root node of a cwl document
+     * @return Which process this document represents
      */
-    private boolean isWorkflow(JsonNode rootNode) {
-        return (rootNode.has(CLASS)
-                && rootNode.get(CLASS).asText().equals(WORKFLOW));
+    private CWLProcess extractProcess(JsonNode rootNode) {
+        if (rootNode != null) {
+            if (rootNode.has(CLASS)) {
+                switch(rootNode.get(CLASS).asText()) {
+                    case WORKFLOW:
+                        return CWLProcess.WORKFLOW;
+                    case COMMANDLINETOOL:
+                        return CWLProcess.COMMANDLINETOOL;
+                    case EXPRESSIONTOOL:
+                        return CWLProcess.EXPRESSIONTOOL;
+                }
+            }
+        }
+        return null;
     }
 }

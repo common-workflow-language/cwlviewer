@@ -29,14 +29,17 @@ public class CWLStep {
     private String label;
     private String doc;
     private String type;
+    private String run;
+    private CWLProcess runType;
     private Map<String, CWLElement> inputs;
     private Map<String, CWLElement> outputs;
 
-    public CWLStep(String label, String doc, String type,
+    public CWLStep(String label, String doc, String type, String run,
                    Map<String, CWLElement> inputs, Map<String, CWLElement> outputs) {
         this.label = label;
         this.doc = doc;
         this.type = type;
+        this.run = run;
         this.inputs = inputs;
         this.outputs = outputs;
     }
@@ -63,6 +66,22 @@ public class CWLStep {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getRun() {
+        return run;
+    }
+
+    public void setRun(String run) {
+        this.run = run;
+    }
+
+    public CWLProcess getRunType() {
+        return runType;
+    }
+
+    public void setRunType(CWLProcess runType) {
+        this.runType = runType;
     }
 
     public Map<String, CWLElement> getInputs() {

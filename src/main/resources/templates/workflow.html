@@ -226,12 +226,17 @@ digraph G {
                     <th>ID</th>
                     <th>Label</th>
                     <th>Doc</th>
+                    <th>Runs</th>
                     </thead>
                     <tbody>
                     <tr th:each="step : ${workflow.steps}">
                         <td th:text="${step.key}">ID</td>
                         <td th:text="${step.value.label}">Label</td>
                         <td th:text="${step.value.doc}">Description</td>
+                        <td>
+                            <span th:text="${step.value.run}">run.cwl</span>
+                            (<span th:text="${step.value.runType}">Workflow</span>)
+                        </td>
                     </tr>
                     </tbody>
                 </table>
