@@ -19,9 +19,9 @@
 
 package org.commonwl.viewer.services;
 
-import org.commonwl.viewer.domain.CWLElement;
-import org.commonwl.viewer.domain.CWLStep;
 import org.commonwl.viewer.domain.Workflow;
+import org.commonwl.viewer.domain.cwl.CWLElement;
+import org.commonwl.viewer.domain.cwl.CWLStep;
 
 import java.io.IOException;
 import java.io.Writer;

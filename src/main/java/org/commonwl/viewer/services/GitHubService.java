@@ -21,7 +21,7 @@ package org.commonwl.viewer.services;
 
 import org.apache.commons.io.IOUtils;
 import org.commonwl.viewer.domain.GithubDetails;
-import org.commonwl.viewer.domain.HashableAgent;
+import org.commonwl.viewer.domain.researchobject.HashableAgent;
 import org.eclipse.egit.github.core.*;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;

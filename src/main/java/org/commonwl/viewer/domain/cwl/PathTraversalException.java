@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.web;
+package org.commonwl.viewer.domain.cwl;
 
 /**
  * Exception thrown when a potential path traversal attempt was prevented

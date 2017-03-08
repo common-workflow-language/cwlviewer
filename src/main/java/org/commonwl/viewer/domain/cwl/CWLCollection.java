@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.domain;
+package org.commonwl.viewer.domain.cwl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,9 +26,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.commonwl.viewer.domain.GithubDetails;
+import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.services.DockerService;
 import org.commonwl.viewer.services.GitHubService;
-import org.commonwl.viewer.web.PathTraversalException;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.yaml.snakeyaml.Yaml;
 
@@ -298,7 +299,7 @@ public class CWLCollection {
                     runDoc = cwlDocs.get(runParam.substring(1));
                 } else {
                     Path basePath = Paths.get(githubInfo.getPath());
-                    Path filePath = basePath.resolve(runParam);
+                    Path filePath = basePath.resolve(runParam).normalize();
                     if (!filePath.startsWith(basePath)) {
                         throw new PathTraversalException("Step run parameter path '" + filePath +
                                 "' is outside base path '" + basePath + "'");

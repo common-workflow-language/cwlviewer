@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.domain;
+package org.commonwl.viewer.domain.cwl;
 
 import java.util.ArrayList;
 import java.util.List;

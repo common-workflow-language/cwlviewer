@@ -20,8 +20,8 @@
 package org.commonwl.viewer.services;
 
 import org.commonwl.viewer.domain.GithubDetails;
-import org.commonwl.viewer.domain.ROBundle;
 import org.commonwl.viewer.domain.Workflow;
+import org.commonwl.viewer.domain.researchobject.ROBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

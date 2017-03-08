@@ -19,9 +19,9 @@
 
 package org.commonwl.viewer.services;
 
-import org.commonwl.viewer.domain.CWLCollection;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
+import org.commonwl.viewer.domain.cwl.CWLCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

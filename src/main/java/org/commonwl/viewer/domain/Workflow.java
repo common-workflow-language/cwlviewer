@@ -19,6 +19,8 @@
 
 package org.commonwl.viewer.domain;
 
+import org.commonwl.viewer.domain.cwl.CWLElement;
+import org.commonwl.viewer.domain.cwl.CWLStep;
 import org.commonwl.viewer.services.DotWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
