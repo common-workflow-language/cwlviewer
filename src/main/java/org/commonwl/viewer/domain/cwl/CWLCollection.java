@@ -258,9 +258,8 @@ public class CWLCollection {
     /**
      * Gets the Workflow object for this collection of documents
      * @return A Workflow object representing the main workflow amongst the files added
-     * @throws PathTraversalException If run path is outside the root Github directory
      */
-    public Workflow getWorkflow() throws PathTraversalException {
+    public Workflow getWorkflow() {
         // Get the main workflow
         if (mainWorkflowKey == null) {
             mainWorkflowKey = findMainWorkflow();
@@ -287,27 +286,25 @@ public class CWLCollection {
     /**
      * Fill the step runtypes based on types of other documents
      * @param workflow The workflow model to set runtypes for
-     * @throws PathTraversalException If run path is outside the root Github directory
      */
-    private void fillStepRunTypes(Workflow workflow) throws PathTraversalException {
+    private void fillStepRunTypes(Workflow workflow) {
         Map<String, CWLStep> steps = workflow.getSteps();
         for (CWLStep step : steps.values()) {
             String runParam = step.getRun();
             if (runParam != null) {
-                JsonNode runDoc;
                 if (runParam.startsWith("#")) {
-                    runDoc = cwlDocs.get(runParam.substring(1));
-                } else {
-                    Path basePath = Paths.get(githubInfo.getPath());
-                    Path filePath = basePath.resolve(runParam).normalize();
-                    if (!filePath.startsWith(basePath)) {
-                        throw new PathTraversalException("Step run parameter path '" + filePath +
-                                "' is outside base path '" + basePath + "'");
-                    }
-                    runDoc = cwlDocs.get(filePath.toString());
+                    JsonNode runDoc = cwlDocs.get(runParam.substring(1));
                     step.setRunType(extractProcess(runDoc));
+                } else {
+                    Path filePath = Paths.get(githubInfo.getPath());
+                    filePath = filePath.resolve(runParam).normalize();
+                    if (cwlDocs.containsKey(filePath.toString())) {
+                        JsonNode runDoc = cwlDocs.get(filePath.toString());
+                        step.setRunType(extractProcess(runDoc));
+                    }  else {
+                        step.setRun(null);
+                    }
                 }
-                step.setRunType(extractProcess(runDoc));
             }
         }
     }
