@@ -28,6 +28,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.commonwl.viewer.services.DockerService;
 import org.commonwl.viewer.services.GitHubService;
+import org.commonwl.viewer.web.PathTraversalException;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.yaml.snakeyaml.Yaml;
 
@@ -200,14 +201,16 @@ public class CWLCollection {
 
         // Store the in degree of each workflow
         Map<String, Integer> inDegrees = new HashMap<String, Integer>();
-        for (String key : cwlDocs.keySet()) {
-            inDegrees.put(key, 0);
+        for (Map.Entry<String, JsonNode> doc : cwlDocs.entrySet()) {
+            if (doc.getValue().get(CLASS).asText().equals(WORKFLOW)) {
+                inDegrees.put(doc.getKey(), 0);
+            }
         }
 
         // Loop through documents and calculate in degrees
         for (Map.Entry<String, JsonNode> doc : cwlDocs.entrySet()) {
             JsonNode content = doc.getValue();
-            if (content.get(CLASS).asText().equals(WORKFLOW)) {
+            if (inDegrees.containsKey(doc.getKey())) {
                 // Parse workflow steps and see whether other workflows are run
                 JsonNode steps = content.get(STEPS);
                 if (steps.getClass() == ArrayNode.class) {
@@ -254,8 +257,9 @@ public class CWLCollection {
     /**
      * Gets the Workflow object for this collection of documents
      * @return A Workflow object representing the main workflow amongst the files added
+     * @throws PathTraversalException If run path is outside the root Github directory
      */
-    public Workflow getWorkflow() {
+    public Workflow getWorkflow() throws PathTraversalException {
         // Get the main workflow
         if (mainWorkflowKey == null) {
             mainWorkflowKey = findMainWorkflow();
@@ -282,13 +286,28 @@ public class CWLCollection {
     /**
      * Fill the step runtypes based on types of other documents
      * @param workflow The workflow model to set runtypes for
+     * @throws PathTraversalException If run path is outside the root Github directory
      */
-    private void fillStepRunTypes(Workflow workflow) {
+    private void fillStepRunTypes(Workflow workflow) throws PathTraversalException {
         Map<String, CWLStep> steps = workflow.getSteps();
         for (CWLStep step : steps.values()) {
-            Path filePath = Paths.get(githubInfo.getPath()).resolve(step.getRun());
-            JsonNode runDoc = cwlDocs.get(filePath.toString());
-            step.setRunType(extractProcess(runDoc));
+            String runParam = step.getRun();
+            if (runParam != null) {
+                JsonNode runDoc;
+                if (runParam.startsWith("#")) {
+                    runDoc = cwlDocs.get(runParam.substring(1));
+                } else {
+                    Path basePath = Paths.get(githubInfo.getPath());
+                    Path filePath = basePath.resolve(runParam);
+                    if (!filePath.startsWith(basePath)) {
+                        throw new PathTraversalException("Step run parameter path '" + filePath +
+                                "' is outside base path '" + basePath + "'");
+                    }
+                    runDoc = cwlDocs.get(filePath.toString());
+                    step.setRunType(extractProcess(runDoc));
+                }
+                step.setRunType(extractProcess(runDoc));
+            }
         }
     }
 
