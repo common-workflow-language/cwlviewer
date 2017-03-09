@@ -197,9 +197,6 @@ public class CWLCollection {
      * @return The file name/key of the workflow
      */
     private String findMainWorkflow() {
-        // TODO: make this path dependant so it doesn't get messed up by duplicate filenames or graphs
-        // Currently this strategy fails gracefully and returns the first workflow in the case of a graph
-
         // Store the in degree of each workflow
         Map<String, Integer> inDegrees = new HashMap<String, Integer>();
         for (Map.Entry<String, JsonNode> doc : cwlDocs.entrySet()) {
@@ -301,8 +298,6 @@ public class CWLCollection {
                     if (cwlDocs.containsKey(filePath.toString())) {
                         JsonNode runDoc = cwlDocs.get(filePath.toString());
                         step.setRunType(extractProcess(runDoc));
-                    }  else {
-                        step.setRun(null);
                     }
                 }
             }

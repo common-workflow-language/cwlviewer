@@ -20,15 +20,14 @@
 package org.commonwl.viewer.services;
 
 import org.commonwl.viewer.domain.GithubDetails;
-import org.eclipse.egit.github.core.RepositoryContents;
 import org.commonwl.viewer.domain.WorkflowForm;
+import org.eclipse.egit.github.core.RepositoryContents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
-import org.springframework.validation.Validator;
 
 import java.io.IOException;
 import java.util.List;
@@ -87,12 +86,12 @@ public class WorkflowFormValidator {
                     } else {
                         // The URL does not contain any .cwl files
                         logger.error("No .cwl files found at Github URL");
-                        e.rejectValue("githubURL", "githubURL.missingWorkflow");
+                        e.rejectValue("githubURL", "githubURL.missingWorkflow", "No .cwl files were found in the specified Github directory");
                     }
                 } catch (IOException ex) {
                     // Given repository/branch/path does not exist or API error occured
-                    logger.error(ex.getMessage());
-                    e.rejectValue("githubURL", "githubURL.apiError");
+                    logger.error("Github API Error", ex);
+                    e.rejectValue("githubURL", "githubURL.apiError", "API Error - does the specified Github directory exist?");
                 }
             } else {
                 // The Github URL is not valid

@@ -26,7 +26,6 @@ import org.eclipse.egit.github.core.*;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.ContentsService;
-import org.eclipse.egit.github.core.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -54,7 +53,6 @@ public class GitHubService {
 
     // Github API services
     private final ContentsService contentsService;
-    private final UserService userService;
     private final CommitService commitService;
 
     // URL validation for directory links
@@ -73,7 +71,6 @@ public class GitHubService {
             client.setOAuth2Token(token);
         }
         this.contentsService = new ContentsService(client);
-        this.userService = new UserService(client);
         this.commitService = new CommitService(client);
     }
 
@@ -99,16 +96,6 @@ public class GitHubService {
     public List<RepositoryContents> getContents(GithubDetails githubInfo) throws IOException {
         return contentsService.getContents(new RepositoryId(githubInfo.getOwner(), githubInfo.getRepoName()),
                 githubInfo.getPath(), githubInfo.getBranch());
-    }
-
-    /**
-     * Get the details of a user from the Github API
-     * @param username The username of the user we want to get data about
-     * @return A user object containing the API information
-     * @throws IOException Any API errors which may have occurred
-     */
-    public User getUser(String username) throws IOException {
-        return userService.getUser(username);
     }
 
     /**

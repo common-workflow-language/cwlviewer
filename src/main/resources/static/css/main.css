@@ -165,6 +165,10 @@ body {
     margin-top: 0;
 }
 
+.notFound {
+    color: #c30000;
+}
+
 tr.selected, .table-hover tbody tr.selected:hover td, .table-hover tbody tr.selected:hover th {
     background-color: #b9ffbb !important;
 }

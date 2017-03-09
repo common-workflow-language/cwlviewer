@@ -25,7 +25,6 @@ import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.WorkflowForm;
 import org.commonwl.viewer.services.GraphVizService;
 import org.commonwl.viewer.services.WorkflowFormValidator;
-import org.commonwl.viewer.services.WorkflowRepository;
 import org.commonwl.viewer.services.WorkflowService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,10 +35,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -54,7 +55,6 @@ public class WorkflowController {
 
     private final WorkflowFormValidator workflowFormValidator;
     private final WorkflowService workflowService;
-    private final WorkflowRepository workflowRepository;
     private final GraphVizService graphVizService;
 
     /**
@@ -65,11 +65,9 @@ public class WorkflowController {
     @Autowired
     public WorkflowController(WorkflowFormValidator workflowFormValidator,
                               WorkflowService workflowService,
-                              WorkflowRepository workflowRepository,
                               GraphVizService graphVizService) {
         this.workflowFormValidator = workflowFormValidator;
         this.workflowService = workflowService;
-        this.workflowRepository = workflowRepository;
         this.graphVizService = graphVizService;
     }
 
@@ -81,7 +79,7 @@ public class WorkflowController {
      */
     @RequestMapping(value="/workflows")
     public String listWorkflows(Model model, @PageableDefault(size = 10) Pageable pageable) {
-        model.addAttribute("workflows", workflowRepository.findAllByOrderByRetrievedOnDesc(pageable));
+        model.addAttribute("workflows", workflowService.getPageOfWorkflows(pageable));
         model.addAttribute("pages", pageable);
         return "workflows";
     }
@@ -103,25 +101,13 @@ public class WorkflowController {
             // Go back to index if there are validation errors
             return new ModelAndView("index");
         } else {
-            // Check database for existing workflow
-            Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
+            // Get workflow or create if does not exist
+            Workflow workflow = workflowService.getWorkflow(githubInfo);
 
-            // Create a new workflow if we do not have one already
+            // Runtime error if workflow could not be generated
             if (workflow == null) {
-                // New workflow from Github URL
-                workflow = workflowService.newWorkflowFromGithub(githubInfo);
-
-                // Runtime error if workflow could not be generated
-                if (workflow == null) {
-                    bindingResult.rejectValue("githubURL", "githubURL.parsingError");
-                    return new ModelAndView("index");
-                }
-
-                // Save to the MongoDB database
-                logger.debug("Adding new workflow to DB");
-                workflowRepository.save(workflow);
-            } else {
-                logger.debug("Fetching existing workflow from DB");
+                bindingResult.rejectValue("githubURL", "githubURL.parsingError");
+                return new ModelAndView("index");
             }
 
             // Redirect to the workflow
@@ -148,7 +134,8 @@ public class WorkflowController {
                                                    @PathVariable("owner") String owner,
                                                    @PathVariable("repoName") String repoName,
                                                    @PathVariable("branch") String branch,
-                                                   HttpServletRequest request) {
+                                                   HttpServletRequest request,
+                                                   RedirectAttributes redirectAttrs) {
 
         // The wildcard end of the URL is the path
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
@@ -162,37 +149,19 @@ public class WorkflowController {
         // Construct a GithubDetails object to search for in the database
         GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
 
-        // Get workflow from database
-        Workflow workflowModel = workflowRepository.findByRetrievedFrom(githubDetails);
-
-        // Delete the existing workflow if the cache has expired
-        if (workflowModel != null) {
-            boolean cacheExpired = workflowService.cacheExpired(workflowModel);
-            if (cacheExpired) {
-                // Update by trying to add a new workflow
-                Workflow newWorkflow = workflowService.newWorkflowFromGithub(workflowModel.getRetrievedFrom());
-
-                // Only replace workflow if it could be successfully parsed
-                if (newWorkflow == null) {
-                    logger.error("Could not parse updated workflow " + workflowModel.id);
-                } else {
-                    // Delete the existing workflow
-                    workflowService.removeWorkflow(workflowModel);
-
-                    // Save new workflow
-                    workflowRepository.save(newWorkflow);
-                    workflowModel = newWorkflow;
-                }
-            }
-        }
-
-        // Redirect to index with form autofilled if workflow does not already exist
+        // Get workflow
+        Workflow workflowModel = workflowService.getWorkflow(githubDetails);
         if (workflowModel == null) {
-            if (path == null) {
-                path = "";
+            // Validation
+            WorkflowForm workflowForm = new WorkflowForm(githubDetails.getURL());
+            BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
+            workflowFormValidator.validateAndParse(workflowForm, errors);
+            if (errors.hasErrors()) {
+                redirectAttrs.addFlashAttribute("errors", errors);
+                return new ModelAndView("redirect:/");
+            } else {
+                workflowModel = workflowService.createWorkflow(githubDetails);
             }
-            return new ModelAndView("redirect:/?url=https://github.com/" +
-                    owner + "/" + repoName + "/tree/" + branch + "/" + path);
         }
 
         // Display this model along with the view
@@ -210,24 +179,7 @@ public class WorkflowController {
     @ResponseBody
     public FileSystemResource downloadROBundle(@PathVariable("workflowID") String workflowID,
                                                HttpServletResponse response) {
-
-        // Get workflow from database
-        Workflow workflowModel = workflowRepository.findOne(workflowID);
-
-        // 404 error if workflow does not exist or the bundle doesn't yet
-        if (workflowModel == null || workflowModel.getRoBundle() == null) {
-            throw new WorkflowNotFoundException();
-        }
-
-        // 404 error with retry if the file on disk does not exist
-        File bundleDownload = new File(workflowModel.getRoBundle());
-        if (!bundleDownload.exists()) {
-            // Clear current RO bundle link and create a new one (async)
-            workflowModel.setRoBundle(null);
-            workflowRepository.save(workflowModel);
-            workflowService.generateROBundle(workflowModel);
-            throw new WorkflowNotFoundException();
-        }
+        File bundleDownload = workflowService.getROBundle(workflowID);
 
         logger.info("Serving download for workflow " + workflowID + " [" + bundleDownload.toString() + "]");
         response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
@@ -243,7 +195,7 @@ public class WorkflowController {
                     produces = "image/svg+xml")
     @ResponseBody
     public FileSystemResource getGraphAsSvg(@PathVariable("workflowID") String workflowID) throws IOException {
-        Workflow workflowModel = workflowRepository.findOne(workflowID);
+        Workflow workflowModel = workflowService.getWorkflow(workflowID);
         if (workflowModel == null) {
             throw new WorkflowNotFoundException();
         }
@@ -260,7 +212,7 @@ public class WorkflowController {
             produces = "image/png")
     @ResponseBody
     public FileSystemResource getGraphAsPng(@PathVariable("workflowID") String workflowID) throws IOException {
-        Workflow workflowModel = workflowRepository.findOne(workflowID);
+        Workflow workflowModel = workflowService.getWorkflow(workflowID);
         if (workflowModel == null) {
             throw new WorkflowNotFoundException();
         }
@@ -277,7 +229,7 @@ public class WorkflowController {
             produces = "text/vnd.graphviz")
     @ResponseBody
     public FileSystemResource getGraphAsXdot(@PathVariable("workflowID") String workflowID) throws IOException {
-        Workflow workflowModel = workflowRepository.findOne(workflowID);
+        Workflow workflowModel = workflowService.getWorkflow(workflowID);
         if (workflowModel == null) {
             throw new WorkflowNotFoundException();
         }

@@ -46,6 +46,11 @@
                     <h2>Workflow from Github URL</h2>
                     <p>Provide a link to the directory of files making up your workflow here</p>
                     <form id="add" action="#" th:action="@{/}" th:object="${workflowForm}" method="POST">
+                        <div class="alert alert-danger" th:if="${errors} != null and ${errors.hasErrors()}">
+                            <div th:each="error : ${errors.getAllErrors()}">
+                                <strong>Error:</strong> <span th:text="${error.getDefaultMessage()}">Error message here</span>
+                            </div>
+                        </div>
                         <div class="alert alert-danger" th:if="${#fields.hasErrors('githubURL')}">
                             <strong>Error:</strong> <span th:errors="*{githubURL}">Error message here</span>
                         </div>

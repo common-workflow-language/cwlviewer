@@ -22,10 +22,13 @@ package org.commonwl.viewer.services;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.cwl.CWLCollection;
+import org.commonwl.viewer.web.ROBundleNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -63,12 +66,90 @@ public class WorkflowService {
     }
 
     /**
+     * Gets a page of all workflows from the database
+     * @param pageable The details of the page to be requested
+     * @return The resulting page of the workflow entries
+     */
+    public Page<Workflow> getPageOfWorkflows(Pageable pageable) {
+        return workflowRepository.findAllByOrderByRetrievedOnDesc(pageable);
+    }
+
+    /**
+     * Get a workflow from the database by its ID
+     * @param id The ID of the workflow
+     * @return The model for the workflow
+     */
+    public Workflow getWorkflow(String id) {
+        return workflowRepository.findOne(id);
+    }
+
+    /**
+     * Get a workflow from the database, refreshing it if cache has expired
+     * @param githubInfo Github information for the workflow
+     * @return The workflow model associated with githubInfo
+     */
+    public Workflow getWorkflow(GithubDetails githubInfo) {
+        // Check database for existing workflow
+        Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
+
+        // Create a new workflow if we do not have one already
+        if (workflow != null) {
+            // Delete the existing workflow if the cache has expired
+            if (cacheExpired(workflow)) {
+                // Update by trying to add a new workflow
+                Workflow newWorkflow = createWorkflow(workflow.getRetrievedFrom());
+
+                // Only replace workflow if it could be successfully parsed
+                if (newWorkflow == null) {
+                    logger.error("Could not parse updated workflow " + workflow.getID());
+                } else {
+                    // Delete the existing workflow
+                    removeWorkflow(workflow);
+
+                    // Save new workflow
+                    workflowRepository.save(newWorkflow);
+                    workflow = newWorkflow;
+                }
+            }
+        }
+
+        return workflow;
+    }
+
+    /**
+     * Get the RO bundle for a Workflow, triggering re-download if it does not exist
+     * @param id The ID of the workflow
+     * @return The file containing the RO bundle
+     * @throws ROBundleNotFoundException If the RO bundle was not found
+     */
+    public File getROBundle(String id) throws ROBundleNotFoundException {
+        // Get workflow from database
+        Workflow workflow = getWorkflow(id);
+
+        // If workflow does not exist or the bundle doesn't yet
+        if (workflow == null || workflow.getRoBundle() == null) {
+            throw new ROBundleNotFoundException();
+        }
+
+        // 404 error with retry if the file on disk does not exist
+        File bundleDownload = new File(workflow.getRoBundle());
+        if (!bundleDownload.exists()) {
+            // Clear current RO bundle link and create a new one (async)
+            workflow.setRoBundle(null);
+            workflowRepository.save(workflow);
+            generateROBundle(workflow);
+            throw new ROBundleNotFoundException();
+        }
+
+        return bundleDownload;
+    }
+
+    /**
      * Builds a new workflow from cwl files fetched from Github
      * @param githubInfo Github information for the workflow
      * @return The constructed model for the Workflow
      */
-    public Workflow newWorkflowFromGithub(GithubDetails githubInfo) {
-
+    public Workflow createWorkflow(GithubDetails githubInfo) {
         try {
             // Get the sha hash from a branch reference
             String latestCommit = githubService.getCommitSha(githubInfo);
@@ -89,9 +170,11 @@ public class WorkflowService {
                 // This is Async so cannot just call constructor, needs intermediate as per Spring framework
                 generateROBundle(workflowModel);
 
+                // Save to database
+                workflowRepository.save(workflowModel);
+
                 // Return this model to be displayed
                 return workflowModel;
-
             } else {
                 logger.error("No workflow could be found");
             }
@@ -106,7 +189,7 @@ public class WorkflowService {
      * Generates the RO bundle for a Workflow and adds it to the model
      * @param workflow The workflow model to create a Research Object for
      */
-    public void generateROBundle(Workflow workflow) {
+    private void generateROBundle(Workflow workflow) {
         try {
             ROBundleFactory.workflowROFromGithub(githubService, workflow.getRetrievedFrom(), workflow.getLastCommit());
         } catch (Exception ex) {
@@ -118,7 +201,7 @@ public class WorkflowService {
      * Removes a workflow and its research object bundle
      * @param workflow The workflow to be deleted
      */
-    public void removeWorkflow(Workflow workflow) {
+    private void removeWorkflow(Workflow workflow) {
         // Delete the Research Object Bundle from disk
         File roBundle = new File(workflow.getRoBundle());
         if (roBundle.delete()) {
@@ -139,7 +222,7 @@ public class WorkflowService {
      * @param workflow The cached workflow model
      * @return Whether or not there are new commits
      */
-    public boolean cacheExpired(Workflow workflow) {
+    private boolean cacheExpired(Workflow workflow) {
         try {
             // Calculate expiration
             Calendar expireCal = Calendar.getInstance();
