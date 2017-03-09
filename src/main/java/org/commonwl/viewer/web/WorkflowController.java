@@ -103,11 +103,14 @@ public class WorkflowController {
         } else {
             // Get workflow or create if does not exist
             Workflow workflow = workflowService.getWorkflow(githubInfo);
-
-            // Runtime error if workflow could not be generated
             if (workflow == null) {
-                bindingResult.rejectValue("githubURL", "githubURL.parsingError");
-                return new ModelAndView("index");
+                workflow = workflowService.createWorkflow(githubInfo);
+
+                // Runtime error if workflow could not be generated
+                if (workflow == null) {
+                    bindingResult.rejectValue("githubURL", "githubURL.parsingError");
+                    return new ModelAndView("index");
+                }
             }
 
             // Redirect to the workflow
@@ -141,7 +144,7 @@ public class WorkflowController {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         int pathStartIndex = StringUtils.ordinalIndexOf(path, "/", 7);
         if (pathStartIndex > -1 && pathStartIndex < path.length() - 1) {
-            path = path.substring(pathStartIndex + 1);
+            path = path.substring(pathStartIndex + 1).replaceAll("\\/$", "");
         } else {
             path = null;
         }
