@@ -67,21 +67,9 @@ public class WorkflowFormValidator {
 
                 // Check the repository exists and get content to ensure that branch/path exist
                 try {
+                    // Return the Github information if it is valid
                     List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
-
-                    // Check that there is at least 1 .cwl file
-                    boolean foundCWL = false;
-                    for (RepositoryContents repoContent : repoContents) {
-                        int eIndex = repoContent.getName().lastIndexOf('.') + 1;
-                        if (eIndex > 0) {
-                            String extension = repoContent.getName().substring(eIndex);
-                            if (extension.equals("cwl")) {
-                                foundCWL = true;
-                            }
-                        }
-                    }
-                    if (foundCWL) {
-                        // Return the Github information
+                    if (containsCWL(repoContents, githubInfo)) {
                         return githubInfo;
                     } else {
                         // The URL does not contain any .cwl files
@@ -104,5 +92,35 @@ public class WorkflowFormValidator {
 
         // Errors will stop this being used anyway
         return null;
+    }
+
+    /**
+     * Recursively check for CWL files within a Github repository
+     * @param repoContents A list of contents within a path in the repository
+     * @param githubDetails The details of the repository
+     * @return Whether the path contains CWL files
+     * @throws IOException Any API errors which may have occurred
+     */
+    private boolean containsCWL(List<RepositoryContents> repoContents, GithubDetails githubDetails) throws IOException {
+        // Check that there is at least 1 .cwl file
+        for (RepositoryContents repoContent : repoContents) {
+            if (repoContent.getType().equals(GitHubService.TYPE_DIR)) {
+                GithubDetails githubSubdir = new GithubDetails(githubDetails.getOwner(),
+                        githubDetails.getRepoName(), githubDetails.getBranch(), repoContent.getPath());
+                List<RepositoryContents> subdirectory = githubService.getContents(githubSubdir);
+                if (containsCWL(subdirectory, githubSubdir)) {
+                    return true;
+                }
+            } else if (repoContent.getType().equals(GitHubService.TYPE_FILE)) {
+                int eIndex = repoContent.getName().lastIndexOf('.') + 1;
+                if (eIndex > 0) {
+                    String extension = repoContent.getName().substring(eIndex);
+                    if (extension.equals("cwl")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
