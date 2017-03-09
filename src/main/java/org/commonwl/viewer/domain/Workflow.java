@@ -81,8 +81,12 @@ public class Workflow {
         this.outputs = outputs;
         this.steps = steps;
         this.dockerLink = dockerLink;
+    }
 
-        // Create a DOT graph for this workflow and store it
+    /**
+     * Create a DOT graph for this workflow and store it
+     */
+    public void generateDOT() {
         StringWriter graphWriter = new StringWriter();
         DotWriter dotWriter = new DotWriter(graphWriter);
         try {

@@ -277,6 +277,7 @@ public class CWLCollection {
         Workflow workflowModel = new Workflow(label, extractDoc(mainWorkflow), getInputs(mainWorkflow),
                 getOutputs(mainWorkflow), getSteps(mainWorkflow), getDockerLink(mainWorkflow));
         fillStepRunTypes(workflowModel);
+        workflowModel.generateDOT();
         return workflowModel;
     }
 
@@ -298,6 +299,13 @@ public class CWLCollection {
                     if (cwlDocs.containsKey(filePath.toString())) {
                         JsonNode runDoc = cwlDocs.get(filePath.toString());
                         step.setRunType(extractProcess(runDoc));
+                        // Set label/doc from linked document if none exists for step
+                        if (step.getLabel() == null) {
+                            step.setLabel(extractLabel(runDoc));
+                        }
+                        if (step.getDoc() == null) {
+                            step.setDoc(extractDoc(runDoc));
+                        }
                     }
                 }
             }

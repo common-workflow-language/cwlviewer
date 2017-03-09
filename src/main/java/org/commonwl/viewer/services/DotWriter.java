@@ -21,6 +21,7 @@ package org.commonwl.viewer.services;
 
 import org.commonwl.viewer.domain.Workflow;
 import org.commonwl.viewer.domain.cwl.CWLElement;
+import org.commonwl.viewer.domain.cwl.CWLProcess;
 import org.commonwl.viewer.domain.cwl.CWLStep;
 
 import java.io.IOException;
@@ -152,9 +153,13 @@ public class DotWriter {
      * @throws IOException Any errors in writing which may have occurred
      */
     private void writeSteps(Workflow workflow) throws IOException {
-        // Write each of the steps as a node
+        // Write each of the steps as a node or subgraph if it is a nested workflow
         for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
-            writeLine("  \"" + step.getKey() + "\"");
+            if (step.getValue().getRunType() == CWLProcess.WORKFLOW) {
+                writeLine("  \"" + step.getKey() + "\" [fillcolor=\"#F3CEA1\"];");
+            } else {
+                writeLine("  \"" + step.getKey() + "\";");
+            }
         }
 
         // Write the links between nodes
