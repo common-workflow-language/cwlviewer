@@ -382,7 +382,12 @@ public class CWLCollection {
                 Map.Entry<String, JsonNode> inOutNode = iterator.next();
                 CWLElement inputOutput = new CWLElement();
                 if (inOutNode.getValue().getClass() == ObjectNode.class) {
-                    inputOutput.setDefaultVal(extractDefault(inOutNode.getValue()));
+                    JsonNode properties = inOutNode.getValue();
+                    if (properties.has(SOURCE)) {
+                        inputOutput.addSourceID(stepIDFromSource(properties.get(SOURCE).asText()));
+                    } else {
+                        inputOutput.setDefaultVal(extractDefault(properties));
+                    }
                 } else if (inOutNode.getValue().getClass() == ArrayNode.class) {
                     for (JsonNode key : inOutNode.getValue()) {
                         inputOutput.addSourceID(stepIDFromSource(key.asText()));
