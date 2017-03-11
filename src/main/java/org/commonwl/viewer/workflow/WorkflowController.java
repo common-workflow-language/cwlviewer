@@ -17,15 +17,11 @@
  * under the License.
  */
 
-package org.commonwl.viewer.web;
+package org.commonwl.viewer.workflow;
 
 import org.apache.commons.lang.StringUtils;
-import org.commonwl.viewer.domain.GithubDetails;
-import org.commonwl.viewer.domain.Workflow;
-import org.commonwl.viewer.domain.WorkflowForm;
-import org.commonwl.viewer.services.GraphVizService;
-import org.commonwl.viewer.services.WorkflowFormValidator;
-import org.commonwl.viewer.services.WorkflowService;
+import org.commonwl.viewer.github.GithubDetails;
+import org.commonwl.viewer.graphviz.GraphVizService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

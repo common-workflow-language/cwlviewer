@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.services;
+package org.commonwl.viewer.cwl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,11 +26,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.commonwl.viewer.domain.GithubDetails;
-import org.commonwl.viewer.domain.Workflow;
-import org.commonwl.viewer.domain.cwl.CWLElement;
-import org.commonwl.viewer.domain.cwl.CWLProcess;
-import org.commonwl.viewer.domain.cwl.CWLStep;
+import org.commonwl.viewer.docker.DockerService;
+import org.commonwl.viewer.github.GitHubService;
+import org.commonwl.viewer.github.GithubDetails;
+import org.commonwl.viewer.workflow.Workflow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package org.commonwl.viewer.services;
+package org.commonwl.viewer.graphviz;
 
-import org.commonwl.viewer.domain.Workflow;
-import org.commonwl.viewer.domain.cwl.CWLElement;
-import org.commonwl.viewer.domain.cwl.CWLProcess;
-import org.commonwl.viewer.domain.cwl.CWLStep;
+import org.commonwl.viewer.cwl.CWLElement;
+import org.commonwl.viewer.cwl.CWLProcess;
+import org.commonwl.viewer.cwl.CWLStep;
+import org.commonwl.viewer.workflow.Workflow;
 
 import java.io.IOException;
 import java.io.Writer;

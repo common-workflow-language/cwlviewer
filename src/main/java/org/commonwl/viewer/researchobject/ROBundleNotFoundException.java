@@ -17,19 +17,14 @@
  * under the License.
  */
 
-package org.commonwl.viewer.domain.cwl;
+package org.commonwl.viewer.researchobject;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * Enum for possible CWL processes
+ * Exception thrown when a Research Object file does not exist
  */
-public enum CWLProcess {
-    WORKFLOW,
-    COMMANDLINETOOL,
-    EXPRESSIONTOOL;
-
-    @Override
-    public String toString() {
-        String defaultString = super.toString();
-        return defaultString.substring(0, 1) + defaultString.substring(1).toLowerCase();
-    }
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+public class ROBundleNotFoundException extends RuntimeException {
 }

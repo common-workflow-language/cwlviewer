@@ -17,24 +17,31 @@
  * under the License.
  */
 
-package org.commonwl.viewer.domain.cwl;
+package org.commonwl.viewer.cwl;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
 /**
- * Represents the input/output of a workflow/tool
+ * Represents a step of a workflow
  */
-public class CWLElement {
+public class CWLStep {
 
     private String label;
     private String doc;
     private String type;
-    private List<String> sourceID;
-    private String defaultVal;
+    private String run;
+    private CWLProcess runType;
+    private Map<String, CWLElement> inputs;
+    private Map<String, CWLElement> outputs;
 
-    public CWLElement() {
-        this.sourceID = new ArrayList<String>();
+    public CWLStep(String label, String doc, String type, String run,
+                   Map<String, CWLElement> inputs, Map<String, CWLElement> outputs) {
+        this.label = label;
+        this.doc = doc;
+        this.type = type;
+        this.run = run;
+        this.inputs = inputs;
+        this.outputs = outputs;
     }
 
     public String getLabel() {
@@ -61,21 +68,36 @@ public class CWLElement {
         this.type = type;
     }
 
-    public List<String> getSourceIDs() {
-        return sourceID;
+    public String getRun() {
+        return run;
     }
 
-    public void addSourceID(String sourceID) {
-        if (sourceID != null) {
-            this.sourceID.add(sourceID);
-        }
+    public void setRun(String run) {
+        this.run = run;
     }
 
-    public String getDefaultVal() {
-        return defaultVal;
+    public CWLProcess getRunType() {
+        return runType;
     }
 
-    public void setDefaultVal(String defaultVal) {
-        this.defaultVal = defaultVal;
+    public void setRunType(CWLProcess runType) {
+        this.runType = runType;
     }
+
+    public Map<String, CWLElement> getInputs() {
+        return inputs;
+    }
+
+    public void setInputs(Map<String, CWLElement> inputs) {
+        this.inputs = inputs;
+    }
+
+    public Map<String, CWLElement> getOutputs() {
+        return outputs;
+    }
+
+    public void setOutputs(Map<String, CWLElement> outputs) {
+        this.outputs = outputs;
+    }
+
 }

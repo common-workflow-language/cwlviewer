@@ -17,11 +17,12 @@
  * under the License.
  */
 
-package org.commonwl.viewer.services;
+package org.commonwl.viewer.researchobject;
 
-import org.commonwl.viewer.domain.GithubDetails;
-import org.commonwl.viewer.domain.Workflow;
-import org.commonwl.viewer.domain.researchobject.ROBundle;
+import org.commonwl.viewer.github.GitHubService;
+import org.commonwl.viewer.github.GithubDetails;
+import org.commonwl.viewer.workflow.Workflow;
+import org.commonwl.viewer.workflow.WorkflowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +73,7 @@ public class ROBundleFactory {
      * @throws IOException Any API errors which may have occurred
      */
     @Async
-    void workflowROFromGithub(GitHubService githubService, GithubDetails githubInfo, String commitSha)
+    public void workflowROFromGithub(GitHubService githubService, GithubDetails githubInfo, String commitSha)
             throws IOException, InterruptedException {
         logger.info("Creating Research Object Bundle");
 

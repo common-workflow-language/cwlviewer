@@ -17,14 +17,26 @@
  * under the License.
  */
 
-package org.commonwl.viewer.web;
+package org.commonwl.viewer;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.commonwl.viewer.workflow.WorkflowForm;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-/**
- * Exception thrown when a Research Object file does not exist
- */
-@ResponseStatus(value = HttpStatus.NOT_FOUND)
-public class ROBundleNotFoundException extends RuntimeException {
+@Controller
+public class PageController {
+
+    /**
+     * Main page of the application
+     * @param model The model for the home page where the workflow form is added
+     * @return The view for this page
+     */
+    @GetMapping("/")
+    public String homePage(Model model, @RequestParam(value = "url", required = false) String defaultURL) {
+        model.addAttribute("workflowForm", new WorkflowForm(defaultURL));
+        return "index";
+    }
+
 }

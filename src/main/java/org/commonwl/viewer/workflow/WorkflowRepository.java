@@ -17,10 +17,9 @@
  * under the License.
  */
 
-package org.commonwl.viewer.services;
+package org.commonwl.viewer.workflow;
 
-import org.commonwl.viewer.domain.GithubDetails;
-import org.commonwl.viewer.domain.Workflow;
+import org.commonwl.viewer.github.GithubDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;

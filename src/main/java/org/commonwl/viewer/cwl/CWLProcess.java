@@ -17,26 +17,19 @@
  * under the License.
  */
 
-package org.commonwl.viewer.web;
+package org.commonwl.viewer.cwl;
 
-import org.commonwl.viewer.domain.WorkflowForm;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+/**
+ * Enum for possible CWL processes
+ */
+public enum CWLProcess {
+    WORKFLOW,
+    COMMANDLINETOOL,
+    EXPRESSIONTOOL;
 
-@Controller
-public class PageController {
-
-    /**
-     * Main page of the application
-     * @param model The model for the home page where the workflow form is added
-     * @return The view for this page
-     */
-    @GetMapping("/")
-    public String homePage(Model model, @RequestParam(value = "url", required = false) String defaultURL) {
-        model.addAttribute("workflowForm", new WorkflowForm(defaultURL));
-        return "index";
+    @Override
+    public String toString() {
+        String defaultString = super.toString();
+        return defaultString.substring(0, 1) + defaultString.substring(1).toLowerCase();
     }
-
 }

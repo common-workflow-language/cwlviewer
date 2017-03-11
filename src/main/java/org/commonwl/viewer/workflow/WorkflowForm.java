@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.domain;
+package org.commonwl.viewer.workflow;
 
 /**
  * Represents the submission form on the main page to create a new workflow

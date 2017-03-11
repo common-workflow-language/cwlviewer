@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.services;
+package org.commonwl.viewer.graphviz;
 
 import com.github.jabbalaci.graphviz.GraphViz;
 import org.springframework.beans.factory.annotation.Autowired;

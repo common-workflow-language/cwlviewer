@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.domain.researchobject;
+package org.commonwl.viewer.researchobject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -26,8 +26,8 @@ import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.Agent;
 import org.apache.taverna.robundle.manifest.Manifest;
 import org.apache.taverna.robundle.manifest.PathMetadata;
-import org.commonwl.viewer.domain.GithubDetails;
-import org.commonwl.viewer.services.GitHubService;
+import org.commonwl.viewer.github.GitHubService;
+import org.commonwl.viewer.github.GithubDetails;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -17,11 +17,10 @@
  * under the License.
  */
 
-package org.commonwl.viewer.services;
+package org.commonwl.viewer.github;
 
 import org.apache.commons.io.IOUtils;
-import org.commonwl.viewer.domain.GithubDetails;
-import org.commonwl.viewer.domain.researchobject.HashableAgent;
+import org.commonwl.viewer.researchobject.HashableAgent;
 import org.eclipse.egit.github.core.*;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
@@ -43,6 +42,7 @@ import java.util.regex.Pattern;
 
 /**
  * Handles Github related functionality including API usage
+ * Is mainly a wrapper for org.eclipse.egit.github.core
  */
 @Service
 public class GitHubService {
