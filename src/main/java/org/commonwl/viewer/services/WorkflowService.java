@@ -89,10 +89,10 @@ public class WorkflowService {
      * @return The workflow model associated with githubInfo
      */
     public Workflow getWorkflow(GithubDetails githubInfo) {
-        // Check database for existing workflow
+        // Check database for existing workflows from this repository
         Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
 
-        // Create a new workflow if we do not have one already
+        // Cache update
         if (workflow != null) {
             // Delete the existing workflow if the cache has expired
             if (cacheExpired(workflow)) {
@@ -255,5 +255,15 @@ public class WorkflowService {
             // Default to no expiry if there was an API error
             return false;
         }
+    }
+
+    /**
+     * Check for the repository already being parsed
+     * @param details The details of the repository on Github
+     * @return Whether the workflows from the repository have already been added
+     */
+    private boolean repoAlreadyParsed(GithubDetails details) {
+        return (workflowRepository.findByRetrievedFromOwnerAndRetrievedFromRepoNameAndRetrievedFromBranch(
+                details.getOwner(), details.getRepoName(), details.getBranch()) != null);
     }
 }

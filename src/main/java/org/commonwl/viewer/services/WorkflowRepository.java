@@ -30,9 +30,27 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  */
 public interface WorkflowRepository extends PagingAndSortingRepository<Workflow, String> {
 
-    // Finds a workflow model in the database based on where it was retrieved from
+    /**
+     * Finds a workflow model in the database based on where it was retrieved from
+     * @param retrievedFrom Details of where the workflow is from
+     * @return The workflow model
+     */
     Workflow findByRetrievedFrom(GithubDetails retrievedFrom);
 
+    /**
+     * Finds a workflow model in the database based on which repository it is from
+     * @param owner The owner of the repository
+     * @param repoName The name of the repository
+     * @param branch The branch or commit ID of the repository
+     * @return The workflow model
+     */
+    Workflow findByRetrievedFromOwnerAndRetrievedFromRepoNameAndRetrievedFromBranch(String owner, String repoName, String branch);
+
+    /**
+     * Paged request to get all workflows
+     * @param pageable The details of the page to be retrieved
+     * @return The requested page of workflows
+     */
     Page<Workflow> findAllByOrderByRetrievedOnDesc(Pageable pageable);
 
 }
