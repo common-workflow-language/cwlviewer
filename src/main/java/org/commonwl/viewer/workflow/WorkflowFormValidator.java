@@ -75,7 +75,7 @@ public class WorkflowFormValidator {
                 }
             } else {
                 logger.error("The Github URL " + form.getGithubURL() + " is not valid");
-                e.rejectValue("githubURL", "githubURL.invalid");
+                e.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
             }
         } else {
             logger.error("Github URL is empty");

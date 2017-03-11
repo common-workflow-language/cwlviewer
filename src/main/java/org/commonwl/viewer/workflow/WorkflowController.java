@@ -153,7 +153,8 @@ public class WorkflowController {
             workflowFormValidator.validateAndParse(workflowForm, errors);
             if (errors.hasErrors()) {
                 redirectAttrs.addFlashAttribute("errors", errors);
-                return new ModelAndView("redirect:/");
+                return new ModelAndView("redirect:/?url=https://github.com/" +
+                        owner + "/" + repoName + "/tree/" + branch + "/" + path);
             } else {
                 workflowModel = workflowService.createWorkflow(githubDetails);
             }

@@ -19,6 +19,7 @@
 
 package org.commonwl.viewer.researchobject;
 
+import org.apache.commons.io.FilenameUtils;
 import org.commonwl.viewer.github.GitHubService;
 import org.commonwl.viewer.github.GithubDetails;
 import org.commonwl.viewer.workflow.Workflow;
@@ -77,8 +78,12 @@ public class ROBundleFactory {
             throws IOException, InterruptedException {
         logger.info("Creating Research Object Bundle");
 
+        // Get the whole containing folder, not just the workflow itself
+        GithubDetails roDetails = new GithubDetails(githubInfo.getOwner(), githubInfo.getRepoName(),
+                githubInfo.getBranch(), FilenameUtils.getPath(githubInfo.getPath()));
+
         // Create a new Research Object Bundle with Github contents
-        ROBundle bundle = new ROBundle(githubService, githubInfo, commitSha,
+        ROBundle bundle = new ROBundle(githubService, roDetails, commitSha,
                 applicationName, applicationURL, singleFileSizeLimit);
 
         // Save the bundle to the storage location in properties

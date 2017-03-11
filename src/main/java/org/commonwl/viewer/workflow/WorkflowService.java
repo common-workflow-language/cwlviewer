@@ -45,7 +45,7 @@ public class WorkflowService {
     private final GitHubService githubService;
     private final CWLService cwlService;
     private final WorkflowRepository workflowRepository;
-    private final org.commonwl.viewer.researchobject.ROBundleFactory ROBundleFactory;
+    private final ROBundleFactory ROBundleFactory;
     private final GraphVizService graphVizService;
     private final int cacheDays;
 

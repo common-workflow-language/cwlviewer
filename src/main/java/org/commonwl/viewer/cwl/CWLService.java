@@ -217,67 +217,6 @@ public class CWLService {
     }
 
     /**
-     * Find the main workflow object in the group of files being considered
-     * by finding the minimal inDegree in a graph of run: parameters within steps
-     * @return The file name/key of the workflow
-
-    private String findMainWorkflow() {
-        // Store the in degree of each workflow
-        Map<String, Integer> inDegrees = new HashMap<String, Integer>();
-        for (Map.Entry<String, JsonNode> doc : cwlDocs.entrySet()) {
-            if (doc.getValue().get(CLASS).asText().equals(WORKFLOW)) {
-                inDegrees.put(doc.getKey(), 0);
-            }
-        }
-
-        // Loop through documents and calculate in degrees
-        for (Map.Entry<String, JsonNode> doc : cwlDocs.entrySet()) {
-            JsonNode content = doc.getValue();
-            if (inDegrees.containsKey(doc.getKey())) {
-                // Parse workflow steps and see whether other workflows are run
-                JsonNode steps = content.get(STEPS);
-                if (steps.getClass() == ArrayNode.class) {
-                    // Explicit ID and other fields within each input list
-                    for (JsonNode step : steps) {
-                        String run = FilenameUtils.getName(extractRun(step));
-                        if (run != null && inDegrees.containsKey(run)) {
-                            inDegrees.put(run, inDegrees.get(run) + 1);
-                        }
-                    }
-                } else if (steps.getClass() == ObjectNode.class) {
-                    // ID is the key of each object
-                    Iterator<Map.Entry<String, JsonNode>> iterator = steps.fields();
-                    while (iterator.hasNext()) {
-                        Map.Entry<String, JsonNode> stepNode = iterator.next();
-                        JsonNode stepJson = stepNode.getValue();
-                        String run = FilenameUtils.getName(extractRun(stepJson));
-                        if (run != null && inDegrees.containsKey(run)) {
-                            inDegrees.put(run, inDegrees.get(run) + 1);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Find a workflow with minimum inDegree and return
-        int minVal = Integer.MAX_VALUE;
-        String minKey = null;
-        for (Map.Entry<String, Integer> inDegree : inDegrees.entrySet()) {
-            if (inDegree.getValue() < minVal) {
-                minKey = inDegree.getKey();
-                minVal = inDegree.getValue();
-            }
-
-            // Early escape if minVal is already minimal
-            if (minVal == 0) {
-                return minKey;
-            }
-        }
-
-        return minKey;
-    }
-
-    /**
      * Get the steps for a particular document
      * @param cwlDoc The document to get steps for
      * @return A map of step IDs and details related to them
