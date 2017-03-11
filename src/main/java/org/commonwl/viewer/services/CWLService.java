@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.domain.cwl;
+package org.commonwl.viewer.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,9 +28,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
-import org.commonwl.viewer.services.DockerService;
-import org.commonwl.viewer.services.GitHubService;
-import org.eclipse.egit.github.core.RepositoryContents;
+import org.commonwl.viewer.domain.cwl.CWLElement;
+import org.commonwl.viewer.domain.cwl.CWLProcess;
+import org.commonwl.viewer.domain.cwl.CWLStep;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -42,24 +47,14 @@ import java.util.*;
  * Provides CWL parsing for workflows to gather an overview
  * for display and visualisation
  */
-public class CWLCollection {
+@Service
+public class CWLService {
 
-    private GitHubService githubService;
-    private GithubDetails githubInfo;
-    private String commitSha;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private int totalFileSize;
-    private int totalFileSizeLimit;
-    private int singleFileSizeLimit;
-
-    // Maps of ID to associated JSON
-    private Map<String, JsonNode> cwlDocs = new HashMap<>();
-
-    // The main workflow
-    private String mainWorkflowKey;
-
-    // Extension of CWL files
-    private final String CWL_EXTENSION = "cwl";
+    // Autowired properties/services
+    private final GitHubService githubService;
+    private final int singleFileSizeLimit;
 
     // CWL specific strings
     private final String DOC_GRAPH = "$graph";
@@ -90,104 +85,135 @@ public class CWLCollection {
     private final String DOCKER_PULL = "dockerPull";
 
     /**
-     * Creates a new collection of CWL files from a Github repository
-     * @param githubService Service to provide the Github API functionality
-     * @param githubInfo The information necessary to access the Github directory associated with the RO
-     * @param commitSha The sha hash of the latest commit used for caching
-     * @throws IOException Any API errors which may have occurred
+     * Constructor for the Common Workflow Language service
+     * @param githubService A service for accessing Github functionality
+     * @param singleFileSizeLimit The file size limit for single files
      */
-    public CWLCollection(GitHubService githubService, GithubDetails githubInfo,
-                         String commitSha, int singleFileSizeLimit, int totalFileSizeLimit) throws IOException {
-        this.githubInfo = githubInfo;
+    @Autowired
+    public CWLService(GitHubService githubService,
+                      @Value("${singleFileSizeLimit}") int singleFileSizeLimit) {
         this.githubService = githubService;
-        this.commitSha = commitSha;
         this.singleFileSizeLimit = singleFileSizeLimit;
-        this.totalFileSizeLimit = totalFileSizeLimit;
-        this.totalFileSize = 0;
-
-        // Add any CWL files from the Github repo to this collection
-        List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
-        addDocs(repoContents);
     }
 
     /**
-     * Add the CWL documents from a Github repository
-     * @param repoContents The contents of the Github base directory
+     * Gets the Workflow object from a Github file
+     * @param githubInfo The Github repository information
+     * @param latestCommit The latest commit ID
+     * @return The constructed workflow object
      */
-    private void addDocs(List<RepositoryContents> repoContents) throws IOException {
-        // Loop through repo contents and add them
-        for (RepositoryContents repoContent : repoContents) {
+    public Workflow parseWorkflow(GithubDetails githubInfo, String latestCommit) throws IOException {
 
-            // Parse subdirectories if they exist
-            if (repoContent.getType().equals(GitHubService.TYPE_DIR)) {
+        // Get the content of this file from Github
+        String fileContent = githubService.downloadFile(githubInfo, latestCommit);
+        int fileSizeBytes = fileContent.getBytes("UTF-8").length;
 
-                // Get the contents of the subdirectory
-                GithubDetails githubSubdir = new GithubDetails(githubInfo.getOwner(),
-                        githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
-                List<RepositoryContents> subdirectory = githubService.getContents(githubSubdir);
+        // Check file size limit before parsing
+        if (fileSizeBytes <= singleFileSizeLimit) {
 
-                // Add the files in the subdirectory to this new folder
-                addDocs(subdirectory);
+            // Parse file as yaml
+            JsonNode cwlFile = yamlStringToJson(fileContent);
 
-            } else if (repoContent.getType().equals(GitHubService.TYPE_FILE)) {
-
-                // Keep track of total file size for limit - only track files which
-                // will be added to the RO bundle due to being small enough
-                if (repoContent.getSize() <= singleFileSizeLimit) {
-                    totalFileSize += repoContent.getSize();
+            // If the CWL file is packed there can be multiple workflows in a file
+            Map<String, JsonNode> packedFiles = new HashMap<>();
+            if (cwlFile.has(DOC_GRAPH)) {
+                // Packed CWL, find the first subelement which is a workflow and take it
+                for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
+                    packedFiles.put(jsonNode.get(ID).asText(), jsonNode);
+                    if (jsonNode.has(CLASS) && jsonNode.get(CLASS).asText().equals(WORKFLOW)) {
+                        cwlFile = jsonNode;
+                    }
                 }
+            }
 
-                if (totalFileSize <= totalFileSizeLimit) {
-                    // Get the file extension
-                    int eIndex = repoContent.getName().lastIndexOf('.') + 1;
-                    if (eIndex > 0) {
-                        String extension = repoContent.getName().substring(eIndex);
+            // Use filename for label if there is no defined one
+            String label = extractLabel(cwlFile);
+            if (label == null) {
+                label = FilenameUtils.getName(githubInfo.getPath());
+            }
 
-                        // If this is a cwl file which needs to be parsed
-                        if (extension.equals(CWL_EXTENSION)) {
-                            if (repoContent.getSize() <= singleFileSizeLimit) {
-                                // Get the content of this file from Github
-                                GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
-                                        githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
-                                String fileContent = githubService.downloadFile(githubFile, commitSha);
+            // Construct the rest of the workflow model
+            Workflow workflowModel = new Workflow(label, extractDoc(cwlFile), getInputs(cwlFile),
+                    getOutputs(cwlFile), getSteps(cwlFile), getDockerLink(cwlFile));
+            fillStepRunTypes(workflowModel, packedFiles, githubInfo, latestCommit);
+            workflowModel.generateDOT();
+            return workflowModel;
 
-                                // Parse yaml to JsonNode
-                                Yaml reader = new Yaml();
-                                ObjectMapper mapper = new ObjectMapper();
-                                JsonNode cwlFile = mapper.valueToTree(reader.load(fileContent));
+        } else {
+            throw new IOException("File '" + githubInfo.getPath() +  "' is over singleFileSizeLimit - " +
+                    FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +
+                    FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
+        }
 
-                                // Add document to those being considered
-                                addDoc(cwlFile, repoContent.getPath());
+    }
+
+    /**
+     * Converts a yaml String to JsonNode
+     * @param yaml A String containing the yaml content
+     * @return A JsonNode with the content of the document
+     */
+    private JsonNode yamlStringToJson(String yaml) {
+        Yaml reader = new Yaml();
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.valueToTree(reader.load(yaml));
+    }
+
+    /**
+     * Fill the step runtypes based on types of other documents
+     * @param workflow The workflow model to set runtypes for
+     * @param packedFiles A map of ID to the json document for packed files
+     */
+    private void fillStepRunTypes(Workflow workflow, Map<String, JsonNode> packedFiles,
+                                  GithubDetails githubInfo, String latestCommit) throws IOException {
+        Map<String, JsonNode> cache = new HashMap<>();
+        Map<String, CWLStep> steps = workflow.getSteps();
+        for (CWLStep step : steps.values()) {
+            String runParam = step.getRun();
+
+            // Run parameter for each step in the workflow
+            if (runParam != null) {
+                JsonNode runDoc = null;
+                if (runParam.startsWith("#")) {
+                    // Packed file ID, check packed files for the process type
+                    runDoc = packedFiles.get(runParam.substring(1));
+                    step.setRunType(extractProcess(runDoc));
+                } else {
+                    // External file path
+                    // Check that it is not outside of the repository
+                    String path = "root/" + FilenameUtils.getPath(githubInfo.getPath());
+                    Path filePath = Paths.get(path);
+                    filePath = filePath.resolve(runParam).normalize();
+                    if (filePath.startsWith("root/")) {
+                        // Download the file from the repository and parse it
+                        try {
+                            path = filePath.toString().substring(5);
+                            if (cache.containsKey(runParam)) {
+                                runDoc = cache.get(runParam);
+                                step.setRunType(extractProcess(runDoc));
                             } else {
-                                throw new IOException("File '" + repoContent.getName() +  "' is over singleFileSizeLimit - " +
-                                        FileUtils.byteCountToDisplaySize(repoContent.getSize()) + "/" +
-                                        FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
+                                GithubDetails runFile = new GithubDetails(githubInfo.getOwner(),
+                                        githubInfo.getRepoName(), latestCommit, path);
+                                String fileContent = githubService.downloadFile(runFile);
+                                runDoc = yamlStringToJson(fileContent);
+                                step.setRunType(extractProcess(runDoc));
+                                cache.put(runParam, runDoc);
                             }
+                        } catch (IOException ex) {
+                            logger.info("Could not find run file from CWL step", ex);
                         }
                     }
-                } else {
-                    throw new IOException("Contents of the repository are over totalFileSizeLimit of " +
-                            FileUtils.byteCountToDisplaySize(totalFileSizeLimit));
+                }
+
+                // Set label/doc from linked document if none exists for step
+                if (runDoc != null) {
+                    if (step.getLabel() == null) {
+                        step.setLabel(extractLabel(runDoc));
+                    }
+                    if (step.getDoc() == null) {
+                        step.setDoc(extractDoc(runDoc));
+                    }
                 }
             }
-        }
-    }
-
-    /**
-     * Adds a document to the group of those being parsed
-     * @param newDoc The document to be added
-     * @param fileName The name of the file this document has come from
-     */
-    private void addDoc(JsonNode newDoc, String fileName) {
-        // Make sure that this document is only one object and not multiple under a $graph directive
-        if (newDoc.has(DOC_GRAPH)) {
-            // Add each of the sub documents
-            for (JsonNode jsonNode : newDoc.get(DOC_GRAPH)) {
-                cwlDocs.put(extractID(jsonNode), jsonNode);
-            }
-        } else {
-            // Otherwise just add the document itself with ID of document name
-            cwlDocs.put(fileName, newDoc);
         }
     }
 
@@ -195,7 +221,7 @@ public class CWLCollection {
      * Find the main workflow object in the group of files being considered
      * by finding the minimal inDegree in a graph of run: parameters within steps
      * @return The file name/key of the workflow
-     */
+
     private String findMainWorkflow() {
         // Store the in degree of each workflow
         Map<String, Integer> inDegrees = new HashMap<String, Integer>();
@@ -250,66 +276,6 @@ public class CWLCollection {
         }
 
         return minKey;
-    }
-
-    /**
-     * Gets the Workflow object for this collection of documents
-     * @return A Workflow object representing the main workflow amongst the files added
-     */
-    public Workflow getWorkflow() {
-        // Get the main workflow
-        if (mainWorkflowKey == null) {
-            mainWorkflowKey = findMainWorkflow();
-
-            // If it is still null there is no workflow to be found
-            if (mainWorkflowKey == null) {
-                return null;
-            }
-        }
-        JsonNode mainWorkflow = cwlDocs.get(mainWorkflowKey);
-
-        // Use ID/filename for label if there is no defined one
-        String label = extractLabel(mainWorkflow);
-        if (label == null) {
-            label = mainWorkflowKey;
-        }
-
-        Workflow workflowModel = new Workflow(label, extractDoc(mainWorkflow), getInputs(mainWorkflow),
-                getOutputs(mainWorkflow), getSteps(mainWorkflow), getDockerLink(mainWorkflow));
-        fillStepRunTypes(workflowModel);
-        workflowModel.generateDOT();
-        return workflowModel;
-    }
-
-    /**
-     * Fill the step runtypes based on types of other documents
-     * @param workflow The workflow model to set runtypes for
-     */
-    private void fillStepRunTypes(Workflow workflow) {
-        Map<String, CWLStep> steps = workflow.getSteps();
-        for (CWLStep step : steps.values()) {
-            String runParam = step.getRun();
-            if (runParam != null) {
-                if (runParam.startsWith("#")) {
-                    JsonNode runDoc = cwlDocs.get(runParam.substring(1));
-                    step.setRunType(extractProcess(runDoc));
-                } else {
-                    Path filePath = Paths.get(githubInfo.getPath());
-                    filePath = filePath.resolve(runParam).normalize();
-                    if (cwlDocs.containsKey(filePath.toString())) {
-                        JsonNode runDoc = cwlDocs.get(filePath.toString());
-                        step.setRunType(extractProcess(runDoc));
-                        // Set label/doc from linked document if none exists for step
-                        if (step.getLabel() == null) {
-                            step.setLabel(extractLabel(runDoc));
-                        }
-                        if (step.getDoc() == null) {
-                            step.setDoc(extractDoc(runDoc));
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /**

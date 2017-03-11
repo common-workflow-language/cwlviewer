@@ -115,13 +115,9 @@ public class WorkflowController {
 
             // Redirect to the workflow
             GithubDetails githubDetails = workflow.getRetrievedFrom();
-            String path = githubDetails.getPath();
-            if (path == null) {
-                path = "";
-            }
             return new ModelAndView("redirect:/workflows/github.com/" + githubDetails.getOwner()
                     + "/" + githubDetails.getRepoName() + "/tree/" + githubDetails.getBranch()
-                    + "/" + path);
+                    + "/" + githubDetails.getPath());
         }
     }
 
@@ -183,8 +179,6 @@ public class WorkflowController {
     public FileSystemResource downloadROBundle(@PathVariable("workflowID") String workflowID,
                                                HttpServletResponse response) {
         File bundleDownload = workflowService.getROBundle(workflowID);
-
-        logger.info("Serving download for workflow " + workflowID + " [" + bundleDownload.toString() + "]");
         response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
         return new FileSystemResource(bundleDownload);
     }

@@ -194,6 +194,37 @@ digraph G {
                     </tbody>
                 </table>
             </div>
+            <h2>Steps</h2>
+            <div th:if="${workflow.steps.isEmpty()}" class="alert alert-info">
+                <p>There are no steps in this workflow</p>
+            </div>
+            <div th:unless="${workflow.steps.isEmpty()}">
+                <table class="table table-striped table-hover">
+                    <thead>
+                    <th>ID</th>
+                    <th>Runs</th>
+                    <th>Label</th>
+                    <th>Doc</th>
+                    </thead>
+                    <tbody>
+                    <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{'/workflows/github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch}}">
+                        <td th:text="${step.key}">ID</td>
+                        <td>
+                            <div th:if="${step.value.runType != null}">
+                                <a th:if="${step.value.runType.name() == 'WORKFLOW'}" th:href="${step.value.run}" th:text="${step.value.run}">workflow.cwl</a>
+                                <span th:unless="${step.value.runType.name() == 'WORKFLOW'}" th:text="${step.value.run}">cmdlinetool.cwl</span>
+                                (<span th:text="${step.value.runType}">Workflow</span>)
+                            </div>
+                            <div th:if="${step.value.run != null and step.value.runType == null}">
+                                <span th:text="${step.value.run} + '(?)'" class="notFound" data-tooltip="true" th:title="'Not Found - Must be somewhere within this repository in ' + ${workflow.retrievedFrom.path} + ' or its subdirectories'">workflow.cwl (?)</span>
+                            </div>
+                        </td>
+                        <td th:text="${step.value.label}">Label</td>
+                        <td th:text="${step.value.doc}">Description</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
             <h2>Outputs</h2>
             <div th:if="${workflow.outputs.isEmpty()}" class="alert alert-info">
                 <p>There are no outputs in this workflow</p>
@@ -213,37 +244,6 @@ digraph G {
                             <td th:text="${output.value.label}">Label</td>
                             <td th:text="${output.value.doc}">Description</td>
                         </tr>
-                    </tbody>
-                </table>
-            </div>
-            <h2>Steps</h2>
-            <div th:if="${workflow.steps.isEmpty()}" class="alert alert-info">
-                <p>There are no steps in this workflow</p>
-            </div>
-            <div th:unless="${workflow.steps.isEmpty()}">
-                <table class="table table-striped table-hover">
-                    <thead>
-                    <th>ID</th>
-                    <th>Runs</th>
-                    <th>Label</th>
-                    <th>Doc</th>
-                    </thead>
-                    <tbody>
-                    <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{'/workflows/github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch} + '/' + ${workflow.retrievedFrom.path}}">
-                        <td th:text="${step.key}">ID</td>
-                        <td>
-                            <div th:if="${step.value.runType != null}">
-                                <a th:if="${step.value.runType.name() == 'WORKFLOW'}" th:href="${workflowURL} + '/' + ${step.value.run}" th:text="${step.value.run}">workflow.cwl</a>
-                                <span th:unless="${step.value.runType.name() == 'WORKFLOW'}" th:text="${step.value.run}">cmdlinetool.cwl</span>
-                                (<span th:text="${step.value.runType}">Workflow</span>)
-                            </div>
-                            <div th:if="${step.value.run != null and step.value.runType == null}">
-                                <span th:text="${step.value.run}" class="notFound" data-tooltip="true" th:title="'Not Found - Must be somewhere within this repository in ' + ${workflow.retrievedFrom.path} + ' or its subdirectories'">workflow.cwl</span>
-                            </div>
-                        </td>
-                        <td th:text="${step.value.label}">Label</td>
-                        <td th:text="${step.value.doc}">Description</td>
-                    </tr>
                     </tbody>
                 </table>
             </div>

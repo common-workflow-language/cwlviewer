@@ -21,7 +21,6 @@ package org.commonwl.viewer.services;
 
 import org.commonwl.viewer.domain.GithubDetails;
 import org.commonwl.viewer.domain.Workflow;
-import org.commonwl.viewer.domain.cwl.CWLCollection;
 import org.commonwl.viewer.web.ROBundleNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,28 +40,25 @@ public class WorkflowService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final GitHubService githubService;
+    private final CWLService cwlService;
     private final WorkflowRepository workflowRepository;
     private final ROBundleFactory ROBundleFactory;
     private final GraphVizService graphVizService;
     private final int cacheDays;
-    private final int singleFileSizeLimit;
-    private final int totalFileSizeLimit;
 
     @Autowired
     public WorkflowService(GitHubService githubService,
+                           CWLService cwlService,
                            WorkflowRepository workflowRepository,
                            ROBundleFactory ROBundleFactory,
                            GraphVizService graphVizService,
-                           @Value("${cacheDays}") int cacheDays,
-                           @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
-                           @Value("${totalFileSizeLimit}") int totalFileSizeLimit) {
+                           @Value("${cacheDays}") int cacheDays) {
         this.githubService = githubService;
+        this.cwlService = cwlService;
         this.workflowRepository = workflowRepository;
         this.ROBundleFactory = ROBundleFactory;
         this.graphVizService = graphVizService;
         this.cacheDays = cacheDays;
-        this.singleFileSizeLimit = singleFileSizeLimit;
-        this.totalFileSizeLimit = totalFileSizeLimit;
     }
 
     /**
@@ -145,7 +141,7 @@ public class WorkflowService {
     }
 
     /**
-     * Builds a new workflow from cwl files fetched from Github
+     * Builds a new workflow from Github
      * @param githubInfo Github information for the workflow
      * @return The constructed model for the Workflow
      */
@@ -154,12 +150,9 @@ public class WorkflowService {
             // Get the sha hash from a branch reference
             String latestCommit = githubService.getCommitSha(githubInfo);
 
-            // Set up CWL utility to collect the documents
-            CWLCollection cwlFiles = new CWLCollection(githubService, githubInfo, latestCommit,
-                    singleFileSizeLimit, totalFileSizeLimit);
+            // Get the workflow model using the cwl service
+            Workflow workflowModel = cwlService.parseWorkflow(githubInfo, latestCommit);
 
-            // Get the workflow model
-            Workflow workflowModel = cwlFiles.getWorkflow();
             if (workflowModel != null) {
                 // Set origin details
                 workflowModel.setRetrievedOn(new Date());
@@ -255,15 +248,5 @@ public class WorkflowService {
             // Default to no expiry if there was an API error
             return false;
         }
-    }
-
-    /**
-     * Check for the repository already being parsed
-     * @param details The details of the repository on Github
-     * @return Whether the workflows from the repository have already been added
-     */
-    private boolean repoAlreadyParsed(GithubDetails details) {
-        return (workflowRepository.findByRetrievedFromOwnerAndRetrievedFromRepoNameAndRetrievedFromBranch(
-                details.getOwner(), details.getRepoName(), details.getBranch()) != null);
     }
 }

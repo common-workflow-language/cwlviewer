@@ -56,8 +56,8 @@ public class GitHubService {
     private final CommitService commitService;
 
     // URL validation for directory links
-    private final String GITHUB_DIR_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)(?:\\/(.*))?)?$";
-    private final Pattern githubDirPattern = Pattern.compile(GITHUB_DIR_REGEX);
+    private final String GITHUB_CWL_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
+    private final Pattern githubCwlPattern = Pattern.compile(GITHUB_CWL_REGEX);
 
     @Autowired
     public GitHubService(@Value("${githubAPI.authentication}") String authSetting,
@@ -75,12 +75,12 @@ public class GitHubService {
     }
 
     /**
-     * Extract the details of a Github directory URL using a regular expression
-     * @param url The Github directory URL
+     * Extract the details of a Github cwl file URL using a regular expression
+     * @param url The Github URL to a cwl file
      * @return A list with the groups of the regex match, [owner, repo, branch, path]
      */
-    public GithubDetails detailsFromDirURL(String url) {
-        Matcher m = githubDirPattern.matcher(url);
+    public GithubDetails detailsFromCwlURL(String url) {
+        Matcher m = githubCwlPattern.matcher(url);
         if (m.find()) {
             return new GithubDetails(m.group(1), m.group(2), m.group(3), m.group(4));
         }
@@ -120,20 +120,28 @@ public class GitHubService {
     }
 
     /**
-     * Gets the latest commit sha hash from a particular branch
+     * Download a single file from a repository
+     * @param githubInfo The information to access the repository
+     * @return A string with the contents of the file
+     * @throws IOException Any API errors which may have occurred
+     */
+    public String downloadFile(GithubDetails githubInfo) throws IOException {
+        return downloadFile(githubInfo, githubInfo.getBranch());
+    }
+
+    /**
+     * Gets the latest commit sha hash for a file on a branch
      * If hash is given as a branch, this will return the same hash if valid
      * @param githubInfo The information to access the repository
-     * @return A sha hash for the latest commit
+     * @return A sha hash for the latest commit on a file
      * @throws IOException Any API errors which may have occurred
      */
     public String getCommitSha(GithubDetails githubInfo) throws IOException {
         RepositoryId repo = new RepositoryId(githubInfo.getOwner(), githubInfo.getRepoName());
-        RepositoryCommit currentCommit = commitService.getCommit(repo, githubInfo.getBranch());
-        return currentCommit.getSha();
+        return commitService.getCommits(repo, githubInfo.getBranch(), githubInfo.getPath()).get(0).getSha();
     }
 
     /**
-     *
      * Get the contributors to a specific file by their commits
      * @param githubInfo The information to access the repository
      * @return A list of unique contributors
