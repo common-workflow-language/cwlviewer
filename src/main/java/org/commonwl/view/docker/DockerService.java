@@ -1,4 +1,4 @@
-package org.commonwl.viewer.docker;
+package org.commonwl.view.docker;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

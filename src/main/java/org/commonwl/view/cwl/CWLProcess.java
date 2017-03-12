@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.cwl;
+package org.commonwl.view.cwl;
 
 /**
  * Enum for possible CWL processes

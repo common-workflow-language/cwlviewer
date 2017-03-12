@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.researchobject;
+package org.commonwl.view.researchobject;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

@@ -17,26 +17,14 @@
  * under the License.
  */
 
-package org.commonwl.viewer;
+package org.commonwl.view.workflow;
 
-import org.commonwl.viewer.workflow.WorkflowForm;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-@Controller
-public class PageController {
-
-    /**
-     * Main page of the application
-     * @param model The model for the home page where the workflow form is added
-     * @return The view for this page
-     */
-    @GetMapping("/")
-    public String homePage(Model model, @RequestParam(value = "url", required = false) String defaultURL) {
-        model.addAttribute("workflowForm", new WorkflowForm(defaultURL));
-        return "index";
-    }
-
+/**
+ * Exception thrown when a workflow ID does not exist
+ */
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+public class WorkflowNotFoundException extends RuntimeException {
 }

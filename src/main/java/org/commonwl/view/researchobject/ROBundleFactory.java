@@ -17,13 +17,13 @@
  * under the License.
  */
 
-package org.commonwl.viewer.researchobject;
+package org.commonwl.view.researchobject;
 
 import org.apache.commons.io.FilenameUtils;
-import org.commonwl.viewer.github.GitHubService;
-import org.commonwl.viewer.github.GithubDetails;
-import org.commonwl.viewer.workflow.Workflow;
-import org.commonwl.viewer.workflow.WorkflowRepository;
+import org.commonwl.view.github.GitHubService;
+import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.workflow.Workflow;
+import org.commonwl.view.workflow.WorkflowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

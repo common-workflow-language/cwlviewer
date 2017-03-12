@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer;
+package org.commonwl.view;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

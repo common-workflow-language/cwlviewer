@@ -17,14 +17,14 @@
  * under the License.
  */
 
-package org.commonwl.viewer.workflow;
+package org.commonwl.view.workflow;
 
-import org.commonwl.viewer.cwl.CWLService;
-import org.commonwl.viewer.github.GitHubService;
-import org.commonwl.viewer.github.GithubDetails;
-import org.commonwl.viewer.graphviz.GraphVizService;
-import org.commonwl.viewer.researchobject.ROBundleFactory;
-import org.commonwl.viewer.researchobject.ROBundleNotFoundException;
+import org.commonwl.view.cwl.CWLService;
+import org.commonwl.view.github.GitHubService;
+import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.graphviz.GraphVizService;
+import org.commonwl.view.researchobject.ROBundleFactory;
+import org.commonwl.view.researchobject.ROBundleNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

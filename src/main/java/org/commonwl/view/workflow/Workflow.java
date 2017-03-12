@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package org.commonwl.viewer.workflow;
+package org.commonwl.view.workflow;
 
-import org.commonwl.viewer.cwl.CWLElement;
-import org.commonwl.viewer.cwl.CWLStep;
-import org.commonwl.viewer.github.GithubDetails;
-import org.commonwl.viewer.graphviz.DotWriter;
+import org.commonwl.view.cwl.CWLElement;
+import org.commonwl.view.cwl.CWLStep;
+import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.graphviz.DotWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;

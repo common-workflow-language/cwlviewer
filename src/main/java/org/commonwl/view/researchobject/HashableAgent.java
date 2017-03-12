@@ -1,4 +1,4 @@
-package org.commonwl.viewer.researchobject;
+package org.commonwl.view.researchobject;
 
 import org.apache.taverna.robundle.manifest.Agent;
 

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.github;
+package org.commonwl.view.github;
 
 import java.io.Serializable;
 

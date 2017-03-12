@@ -17,10 +17,10 @@
  * under the License.
  */
 
-package org.commonwl.viewer.workflow;
+package org.commonwl.view.workflow;
 
-import org.commonwl.viewer.github.GitHubService;
-import org.commonwl.viewer.github.GithubDetails;
+import org.commonwl.view.github.GitHubService;
+import org.commonwl.view.github.GithubDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer.github;
+package org.commonwl.view.github;
 
 import org.apache.commons.io.IOUtils;
 import org.eclipse.egit.github.core.RepositoryCommit;
