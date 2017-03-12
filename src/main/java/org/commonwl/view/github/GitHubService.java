@@ -53,8 +53,8 @@ public class GitHubService {
     private final CommitService commitService;
 
     // URL validation for directory links
-    private final String GITHUB_CWL_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
-    private final Pattern githubCwlPattern = Pattern.compile(GITHUB_CWL_REGEX);
+    private final String GITHUB_URL_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)\\/?(.*)?)?$";
+    private final Pattern githubUrlPattern = Pattern.compile(GITHUB_URL_REGEX);
 
     @Autowired
     public GitHubService(@Value("${githubAPI.authentication}") String authSetting,
@@ -72,12 +72,12 @@ public class GitHubService {
     }
 
     /**
-     * Extract the details of a Github cwl file URL using a regular expression
-     * @param url The Github URL to a cwl file
+     * Extract the details of a Github URL using a regular expression
+     * @param url The Github URL to a directory or file
      * @return A list with the groups of the regex match, [owner, repo, branch, path]
      */
-    public GithubDetails detailsFromCwlURL(String url) {
-        Matcher m = githubCwlPattern.matcher(url);
+    public GithubDetails detailsFromURL(String url) {
+        Matcher m = githubUrlPattern.matcher(url);
         if (m.find()) {
             return new GithubDetails(m.group(1), m.group(2), m.group(3), m.group(4));
         }

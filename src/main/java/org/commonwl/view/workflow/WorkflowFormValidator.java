@@ -58,7 +58,7 @@ public class WorkflowFormValidator {
 
         // Only continue if not null and isn't just whitespace
         if (!e.hasErrors()) {
-            GithubDetails githubInfo = githubService.detailsFromCwlURL(form.getGithubURL());
+            GithubDetails githubInfo = githubService.detailsFromURL(form.getGithubURL());
 
             // If the URL is valid and details could be extracted
             if (githubInfo != null) {
