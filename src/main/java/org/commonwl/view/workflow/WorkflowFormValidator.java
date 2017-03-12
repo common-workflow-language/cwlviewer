@@ -56,14 +56,11 @@ public class WorkflowFormValidator {
     public GithubDetails validateAndParse(WorkflowForm form, Errors e) {
         ValidationUtils.rejectIfEmptyOrWhitespace(e, "githubURL", "githubURL.emptyOrWhitespace");
 
-        // Only continue if not null and isn't just whitespace
+        // If not null and isn't just whitespace
         if (!e.hasErrors()) {
-            GithubDetails githubInfo = githubService.detailsFromURL(form.getGithubURL());
-
-            // If the URL is valid and details could be extracted
+            // Check for valid CWL file
+            GithubDetails githubInfo = githubService.detailsFromFileURL(form.getGithubURL());
             if (githubInfo != null) {
-
-                // Check the repository exists and get content to ensure that branch/path exist
                 try {
                     // Downloads the workflow file to check for existence
                     if (githubService.downloadFile(githubInfo) != null) {
@@ -74,8 +71,14 @@ public class WorkflowFormValidator {
                     e.rejectValue("githubURL", "githubURL.missingWorkflow", "Workflow was not found at the given Github URL");
                 }
             } else {
-                logger.error("The Github URL " + form.getGithubURL() + " is not valid");
-                e.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
+                // Check for valid Github directory
+                githubInfo = githubService.detailsFromDirURL(form.getGithubURL());
+                if (githubInfo != null) {
+                   return githubInfo;
+                } else {
+                    logger.error("The Github URL " + form.getGithubURL() + " is not valid");
+                    e.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
+                }
             }
         } else {
             logger.error("Github URL is empty");

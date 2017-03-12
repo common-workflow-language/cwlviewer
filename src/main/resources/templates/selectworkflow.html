@@ -33,14 +33,17 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-12" role="main" id="main">
-                    <h1>Choose Workflow</h1>
+                    <h1 th:text="'Choose Workflow from ' + ${githubDetails.path}">Choose Workflow</h1>
                     <div class="alert alert-info">
                         <p>Multiple CWL files were found, please select the workflow you would like to view below</p>
                     </div>
                     <div class="list-group">
-                        <a href="#" class="list-group-item" th:each="workflowName : ${workflowNames}">
-                            <h4 class="list-group-item-heading" th:text="${workflowName}">ExampleWorkflow.cwl</h4>
-                            <p class="list-group-item-text">Place any details with minimal overhead here, maybe label/doc</p>
+                        <a href="#" class="list-group-item" th:each="workflowOverview : ${workflowOverviews}" th:href="@{'/workflows/github.com/' + ${githubDetails.owner} + '/' + ${githubDetails.repoName} + '/tree/' + ${githubDetails.branch} + '/' + ${githubDetails.path} + '/' + ${workflowOverview.fileName}}">
+                            <h4 class="list-group-item-heading" th:text="${workflowOverview.fileName}">ExampleWorkflow.cwl</h4>
+                            <p class="list-group-item-text">
+                                <span th:if="${workflowOverview.label != null}" th:text="${workflowOverview.label}">Label</span>
+                                <i th:if="${workflowOverview.doc != null}" th:text="' - ' + ${workflowOverview.doc}">Doc</i>
+                            </p>
                         </a>
                     </div>
                 </div>

@@ -25,6 +25,7 @@ import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
+import org.eclipse.egit.github.core.RepositoryContents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +35,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class WorkflowService {
@@ -80,6 +84,30 @@ public class WorkflowService {
      */
     public Workflow getWorkflow(String id) {
         return workflowRepository.findOne(id);
+    }
+
+    /**
+     * Get a list of workflows from a directory in Github
+     * @param githubInfo Github information for the workflow
+     * @return The list of workflow names
+     */
+    public List<WorkflowOverview> getWorkflowsFromDirectory(GithubDetails githubInfo) throws IOException {
+        List<WorkflowOverview> workflowsInDir = new ArrayList<>();
+        for (RepositoryContents content : githubService.getContents(githubInfo)) {
+            int eIndex = content.getName().lastIndexOf('.') + 1;
+            if (eIndex > 0) {
+                String extension = content.getName().substring(eIndex);
+                if (extension.equals("cwl")) {
+                    GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
+                            githubInfo.getRepoName(), githubInfo.getBranch(), content.getPath());
+                    WorkflowOverview overview = cwlService.getWorkflowOverview(githubFile);
+                    if (overview != null) {
+                        workflowsInDir.add(overview);
+                    }
+                }
+            }
+        }
+        return workflowsInDir;
     }
 
     /**

@@ -30,6 +30,7 @@ import org.commonwl.view.docker.DockerService;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.workflow.Workflow;
+import org.commonwl.view.workflow.WorkflowOverview;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,7 +120,7 @@ public class CWLService {
                 // Packed CWL, find the first subelement which is a workflow and take it
                 for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
                     packedFiles.put(jsonNode.get(ID).asText(), jsonNode);
-                    if (jsonNode.has(CLASS) && jsonNode.get(CLASS).asText().equals(WORKFLOW)) {
+                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
                         cwlFile = jsonNode;
                     }
                 }
@@ -138,6 +139,57 @@ public class CWLService {
             workflowModel.generateDOT();
             return workflowModel;
 
+        } else {
+            throw new IOException("File '" + githubInfo.getPath() +  "' is over singleFileSizeLimit - " +
+                    FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +
+                    FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
+        }
+
+    }
+
+    /**
+     * Get an overview of a workflow
+     * @param githubInfo The details to access the workflow
+     * @return A constructed WorkflowOverview of the workflow
+     * @throws IOException Any API errors which may have occurred
+     */
+    public WorkflowOverview getWorkflowOverview(GithubDetails githubInfo) throws IOException {
+
+        // Get the content of this file from Github
+        String fileContent = githubService.downloadFile(githubInfo);
+        int fileSizeBytes = fileContent.getBytes("UTF-8").length;
+
+        // Check file size limit before parsing
+        if (fileSizeBytes <= singleFileSizeLimit) {
+
+            // Parse file as yaml
+            JsonNode cwlFile = yamlStringToJson(fileContent);
+
+            // If the CWL file is packed there can be multiple workflows in a file
+            if (cwlFile.has(DOC_GRAPH)) {
+                // Packed CWL, find the first subelement which is a workflow and take it
+                for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
+                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
+                        cwlFile = jsonNode;
+                    }
+                }
+            }
+
+            // Can only make an overview if this is a workflow
+            if (extractProcess(cwlFile) == CWLProcess.WORKFLOW) {
+                // Use filename for label if there is no defined one
+                String path = FilenameUtils.getName(githubInfo.getPath());
+                String label = extractLabel(cwlFile);
+                if (label == null) {
+                    label = path;
+                }
+
+                // Return the constructed overview
+                return new WorkflowOverview(path, label, extractDoc(cwlFile));
+
+            } else {
+                return null;
+            }
         } else {
             throw new IOException("File '" + githubInfo.getPath() +  "' is over singleFileSizeLimit - " +
                     FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +

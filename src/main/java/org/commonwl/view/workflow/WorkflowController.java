@@ -43,6 +43,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 @Controller
 public class WorkflowController {
@@ -97,23 +98,24 @@ public class WorkflowController {
             // Go back to index if there are validation errors
             return new ModelAndView("index");
         } else {
-            // Get workflow or create if does not exist
-            Workflow workflow = workflowService.getWorkflow(githubInfo);
-            if (workflow == null) {
-                workflow = workflowService.createWorkflow(githubInfo);
-
-                // Runtime error if workflow could not be generated
+            if (githubInfo.getPath().endsWith(".cwl")) {
+                // Get workflow or create if does not exist
+                Workflow workflow = workflowService.getWorkflow(githubInfo);
                 if (workflow == null) {
-                    bindingResult.rejectValue("githubURL", "githubURL.parsingError");
-                    return new ModelAndView("index");
-                }
-            }
+                    workflow = workflowService.createWorkflow(githubInfo);
 
-            // Redirect to the workflow
-            GithubDetails githubDetails = workflow.getRetrievedFrom();
-            return new ModelAndView("redirect:/workflows/github.com/" + githubDetails.getOwner()
-                    + "/" + githubDetails.getRepoName() + "/tree/" + githubDetails.getBranch()
-                    + "/" + githubDetails.getPath());
+                    // Runtime error if workflow could not be generated
+                    if (workflow == null) {
+                        bindingResult.rejectValue("githubURL", "githubURL.parsingError");
+                        return new ModelAndView("index");
+                    }
+                }
+                githubInfo = workflow.getRetrievedFrom();
+            }
+            // Redirect to the workflow or choice of files
+            return new ModelAndView("redirect:/workflows/github.com/" + githubInfo.getOwner()
+                    + "/" + githubInfo.getRepoName() + "/tree/" + githubInfo.getBranch()
+                    + "/" + githubInfo.getPath());
         }
     }
 
@@ -138,7 +140,7 @@ public class WorkflowController {
         if (pathStartIndex > -1 && pathStartIndex < path.length() - 1) {
             path = path.substring(pathStartIndex + 1).replaceAll("\\/$", "");
         } else {
-            path = null;
+            path = "/";
         }
 
         // Construct a GithubDetails object to search for in the database
@@ -151,12 +153,36 @@ public class WorkflowController {
             WorkflowForm workflowForm = new WorkflowForm(githubDetails.getURL());
             BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
             workflowFormValidator.validateAndParse(workflowForm, errors);
+            if (!errors.hasErrors()) {
+                if (githubDetails.getPath().endsWith(".cwl")) {
+                    workflowModel = workflowService.createWorkflow(githubDetails);
+                } else {
+                    // If this is a directory, get a list of workflows and return the view for it
+                    try {
+                        List<WorkflowOverview> workflowOverviews = workflowService.getWorkflowsFromDirectory(githubDetails);
+                        if (workflowOverviews.size() > 1) {
+                            return new ModelAndView("selectworkflow", "workflowOverviews", workflowOverviews)
+                                    .addObject("githubDetails", githubDetails);
+                        } else if (workflowOverviews.size() == 1) {
+                            return new ModelAndView("redirect:/workflows/github.com/" + githubDetails.getOwner()
+                                    + "/" + githubDetails.getRepoName() + "/tree/" + githubDetails.getBranch()
+                                    + "/" + githubDetails.getPath() + "/" + workflowOverviews.get(0).getFileName());
+                        } else {
+                            logger.error("No .cwl files were found in the given directory");
+                            errors.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
+                        }
+                    } catch (IOException ex) {
+                        logger.error("Contents of Github directory could not be found", ex);
+                        errors.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
+                    }
+                }
+            }
+
+            // Redirect to main page with errors if they occurred
             if (errors.hasErrors()) {
                 redirectAttrs.addFlashAttribute("errors", errors);
                 return new ModelAndView("redirect:/?url=https://github.com/" +
                         owner + "/" + repoName + "/tree/" + branch + "/" + path);
-            } else {
-                workflowModel = workflowService.createWorkflow(githubDetails);
             }
         }
 
