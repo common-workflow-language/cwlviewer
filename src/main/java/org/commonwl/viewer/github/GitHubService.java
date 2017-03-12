@@ -20,8 +20,9 @@
 package org.commonwl.viewer.github;
 
 import org.apache.commons.io.IOUtils;
-import org.commonwl.viewer.researchobject.HashableAgent;
-import org.eclipse.egit.github.core.*;
+import org.eclipse.egit.github.core.RepositoryCommit;
+import org.eclipse.egit.github.core.RepositoryContents;
+import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.ContentsService;
@@ -31,12 +32,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -142,34 +139,13 @@ public class GitHubService {
     }
 
     /**
-     * Get the contributors to a specific file by their commits
+     * Get a list of commits
      * @param githubInfo The information to access the repository
      * @return A list of unique contributors
      * @throws IOException Any API errors which may have occurred
-     * @throws URISyntaxException Any error in the author's URI (should never occur)
      */
-    public Set<HashableAgent> getContributors(GithubDetails githubInfo, String sha)
-            throws IOException, URISyntaxException {
+    public List<RepositoryCommit> getCommits(GithubDetails githubInfo) throws IOException {
         RepositoryId repo = new RepositoryId(githubInfo.getOwner(), githubInfo.getRepoName());
-        Set<HashableAgent> authors = new HashSet<HashableAgent>();
-
-        for (RepositoryCommit commit : commitService.getCommits(repo, sha, githubInfo.getPath())) {
-            User author = commit.getAuthor();
-            CommitUser commitAuthor = commit.getCommit().getAuthor();
-
-            // If there is author information for this commit in some form
-            if (author != null || commitAuthor != null) {
-                // Create a new agent and add as much detail as possible
-                HashableAgent newAgent = new HashableAgent();
-                if (author != null) {
-                    newAgent.setUri(new URI(author.getHtmlUrl()));
-                }
-                if (commitAuthor != null) {
-                    newAgent.setName(commitAuthor.getName());
-                }
-                authors.add(newAgent);
-            }
-        }
-        return authors;
+        return commitService.getCommits(repo, githubInfo.getBranch(), githubInfo.getPath());
     }
 }

@@ -57,7 +57,7 @@
                                     <p><i th:text="${workflow.doc}">Description</i></p>
                                 </td>
                                 <td>
-                                    <a th:href="@{${workflow.retrievedFrom.getURL(workflow.lastCommit)}}" rel="noopener" target="_blank">
+                                    <a th:href="@{${workflow.retrievedFrom.getURL()}}" rel="noopener" target="_blank">
                                         <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="20" height="20" />
                                         <span th:if="${workflow.retrievedFrom.path != null}" th:text="@{${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/' + ${workflow.retrievedFrom.path}}">https://github.com</span>
                                         <span th:unless="${workflow.retrievedFrom.path != null}" th:text="@{${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/'}">https://github.com</span>

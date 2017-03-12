@@ -28,7 +28,10 @@ import org.apache.taverna.robundle.manifest.Manifest;
 import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.commonwl.viewer.github.GitHubService;
 import org.commonwl.viewer.github.GithubDetails;
+import org.eclipse.egit.github.core.CommitUser;
+import org.eclipse.egit.github.core.RepositoryCommit;
 import org.eclipse.egit.github.core.RepositoryContents;
+import org.eclipse.egit.github.core.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,10 +58,9 @@ public class ROBundle {
 
     private Bundle bundle;
     private GithubDetails githubInfo;
-    private String commitSha;
     private Agent thisApp;
     private int singleFileSizeLimit;
-    private Set<HashableAgent> authors = new HashSet<HashableAgent>();
+    private Set<HashableAgent> authors = new HashSet<>();
 
     // Pattern for extracting version from a cwl file
     private final String CWL_VERSION_REGEX = "cwlVersion:\\s*\"?(?:cwl:)?([^\\s\"]+)\"?";
@@ -66,10 +68,13 @@ public class ROBundle {
 
     /**
      * Creates a new research object bundle for a workflow from a Github repository
+     * @param githubService The service for handling Github functionality
      * @param githubInfo The information necessary to access the Github directory associated with the RO
+     * @param appName The name of the application from properties, for attribution
+     * @param appURL The URL of the application from properties, for attribution
      * @throws IOException Any API errors which may have occurred
      */
-    public ROBundle(GitHubService githubService, GithubDetails githubInfo, String commitSha,
+    public ROBundle(GitHubService githubService, GithubDetails githubInfo,
                     String appName, String appURL, int singleFileSizeLimit) throws IOException {
         // File size limits
         this.singleFileSizeLimit = singleFileSizeLimit;
@@ -78,7 +83,6 @@ public class ROBundle {
         this.bundle = Bundles.createBundle();
         this.githubInfo = githubInfo;
         this.githubService = githubService;
-        this.commitSha = commitSha;
 
         Manifest manifest = bundle.getManifest();
 
@@ -108,7 +112,7 @@ public class ROBundle {
         addFiles(repoContents, bundleFiles);
 
         // Add combined authors
-        manifest.setAuthoredBy(new ArrayList<Agent>(authors));
+        manifest.setAuthoredBy(new ArrayList<>(authors));
     }
 
     /**
@@ -140,19 +144,21 @@ public class ROBundle {
             } else if (repoContent.getType().equals(GitHubService.TYPE_FILE)) {
 
                 try {
+                    GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
+                            githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+
                     // Where to store the new file in bundle
                     Path bundleFilePath = path.resolve(repoContent.getName());
 
-                    // Raw URI of the bundle
-                    GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
-                            githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+                    // Get commits
+                    List<RepositoryCommit> commitsOnFile = githubService.getCommits(githubFile);
+                    String commitSha = commitsOnFile.get(0).getSha();
+
                     URI rawURI = new URI("https://raw.githubusercontent.com/" + githubFile.getOwner() + "/" +
                             githubFile.getRepoName() + "/" + commitSha + "/" + githubFile.getPath());
 
-                    // Variable to store file contents
-                    String fileContent = null;
-
                     // Download or externally link if oversized
+                    String fileContent = null;
                     if (repoContent.getSize() <= singleFileSizeLimit) {
                         // Get the content of this file from Github
                         fileContent = githubService.downloadFile(githubFile, commitSha);
@@ -185,7 +191,24 @@ public class ROBundle {
                     }
 
                     // Add authors from github commits to the file
-                    Set<HashableAgent> fileAuthors = githubService.getContributors(githubFile, commitSha);
+                    Set<HashableAgent> fileAuthors = new HashSet<>();
+                    for (RepositoryCommit commit : commitsOnFile) {
+                        User author = commit.getAuthor();
+                        CommitUser commitAuthor = commit.getCommit().getAuthor();
+
+                        // If there is author information for this commit in some form
+                        if (author != null || commitAuthor != null) {
+                            // Create a new agent and add as much detail as possible
+                            HashableAgent newAgent = new HashableAgent();
+                            if (author != null) {
+                                newAgent.setUri(new URI(author.getHtmlUrl()));
+                            }
+                            if (commitAuthor != null) {
+                                newAgent.setName(commitAuthor.getName());
+                            }
+                            fileAuthors.add(newAgent);
+                        }
+                    }
                     authors.addAll(fileAuthors);
                     aggregation.setAuthoredBy(new ArrayList<Agent>(fileAuthors));
 
