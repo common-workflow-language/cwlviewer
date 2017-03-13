@@ -19,6 +19,7 @@
 
 package org.commonwl.view.github;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.egit.github.core.RepositoryCommit;
 import org.eclipse.egit.github.core.RepositoryContents;
@@ -60,8 +61,11 @@ public class GitHubService {
     private final String GITHUB_CWL_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
     private final Pattern githubCwlPattern = Pattern.compile(GITHUB_CWL_REGEX);
 
+    private final boolean downloadWithAPI;
+
     @Autowired
-    public GitHubService(@Value("${githubAPI.authentication}") String authSetting,
+    public GitHubService(@Value("${githubAPI.useForDownloads}") boolean downloadWithAPI,
+                         @Value("${githubAPI.authentication}") String authSetting,
                          @Value("${githubAPI.oauthToken}") String token,
                          @Value("${githubAPI.username}") String username,
                          @Value("${githubAPI.password}") String password) {
@@ -73,6 +77,7 @@ public class GitHubService {
         }
         this.contentsService = new ContentsService(client);
         this.commitService = new CommitService(client);
+        this.downloadWithAPI = downloadWithAPI;
     }
 
     /**
@@ -120,16 +125,28 @@ public class GitHubService {
      * @throws IOException Any API errors which may have occurred
      */
     public String downloadFile(GithubDetails githubInfo, String sha) throws IOException {
-        // Download the file and return the contents
-        // rawgit.com used to download individual files from git with the correct media type
-        String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
-                githubInfo.getRepoName(), sha, githubInfo.getPath());
-        URL downloadURL = new URL(url);
-        InputStream download = downloadURL.openStream();
-        try {
-            return IOUtils.toString(download);
-        } finally {
-            IOUtils.closeQuietly(download);
+        if (downloadWithAPI) {
+            // Download the file using the Github Contents API
+            RepositoryId repo = new RepositoryId(githubInfo.getOwner(), githubInfo.getRepoName());
+            List<RepositoryContents> content = contentsService.getContents(repo, githubInfo.getPath(), sha);
+            if (content.isEmpty() || content.size() > 1) {
+                throw new IOException("Error retrieving file content from Github API");
+            } else {
+                byte[] base64FileContent = Base64.decodeBase64(content.get(0).getContent());
+                return new String(base64FileContent);
+            }
+        } else {
+            // Download the file and return the contents
+            // rawgit.com used to download individual files from git with the correct media type
+            String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
+                    githubInfo.getRepoName(), sha, githubInfo.getPath());
+            URL downloadURL = new URL(url);
+            InputStream download = downloadURL.openStream();
+            try {
+                return IOUtils.toString(download);
+            } finally {
+                IOUtils.closeQuietly(download);
+            }
         }
     }
 
