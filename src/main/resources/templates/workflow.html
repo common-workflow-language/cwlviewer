@@ -216,7 +216,7 @@ digraph G {
                                 (<span th:text="${step.value.runType}">Workflow</span>)
                             </div>
                             <div th:if="${step.value.run != null and step.value.runType == null}">
-                                <span th:text="${step.value.run} + '(?)'" class="notFound" data-tooltip="true" th:title="'Not Found - Must be somewhere within this repository in ' + ${workflow.retrievedFrom.path} + ' or its subdirectories'">workflow.cwl (?)</span>
+                                <span th:text="${step.value.run} + '(?)'" class="notFound" data-tooltip="true" th:title="'Not Found - Must be somewhere within this repository">workflow.cwl (?)</span>
                             </div>
                         </td>
                         <td th:text="${step.value.label}">Label</td>
