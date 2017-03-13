@@ -34,7 +34,6 @@ public class GithubDetails implements Serializable {
     public GithubDetails(String owner, String repoName, String branch, String path) {
         this.owner = owner;
         this.repoName = repoName;
-        this.path = path;
 
         // Default to the master branch
         if (branch == null || branch.isEmpty()) {
@@ -42,6 +41,13 @@ public class GithubDetails implements Serializable {
             this.branch = "master";
         } else {
             this.branch = branch;
+        }
+
+        // Default to root path
+        if (path == null || path.isEmpty()) {
+            this.path = "/";
+        } else {
+            this.path = path;
         }
     }
 
