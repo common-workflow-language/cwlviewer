@@ -131,11 +131,11 @@ You can create an executable JAR file by using:
 
 Afterwards, run:
 
-    java -jar target/cwlvisualizer*.jar
+    java -jar target/cwlviewer*.jar
 
 (The exact filename will vary per version)
 
-Once CWL Visualizer is running, you should see log output somewhat like:
+Once CWL Viewer is running, you should see log output somewhat like:
 
 ```
 ()..)
