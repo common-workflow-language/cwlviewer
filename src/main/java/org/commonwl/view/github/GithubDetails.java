@@ -97,7 +97,7 @@ public class GithubDetails implements Serializable {
      */
     public String getURL(String ref) {
         String url = "https://github.com/" + owner + "/" + repoName + "/tree/" + ref;
-        if (path != null) {
+        if (path != null && path != "/") {
             url += "/" + this.path;
         }
         return url;

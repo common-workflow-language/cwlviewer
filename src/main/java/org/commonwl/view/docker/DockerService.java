@@ -20,8 +20,8 @@ public class DockerService {
     public static String getDockerHubURL(String dockerPull) {
         Matcher m = dockerhubPattern.matcher(dockerPull);
         if (m.find()) {
-            if (m.group(1).isEmpty()) {
-                return "https://hub.docker.com/r/_/" + m.group(2);
+            if (m.group(2) == null) {
+                return "https://hub.docker.com/r/_/" + m.group(1);
             } else {
                 return "https://hub.docker.com/r/" + m.group(1) + "/" + m.group(2);
             }
