@@ -1,33 +1,47 @@
 package org.commonwl.view.cwl;
 
+import org.apache.commons.io.FileUtils;
+import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowOverview;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
+import java.io.File;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
 public class CWLServiceTest {
-
-    /**
-     * Create a service to test
-     */
-    @Autowired
-    private CWLService cwlService;
 
     /**
      * Test main parsing of a the LobSTR workflow CWL version draft-3
      */
     @Test
     public void parseLobSTRDraft3Workflow() throws Exception {
+
+        // Mock githubService class
+        GitHubService githubService = Mockito.mock(GitHubService.class);
+        Answer fileAnswer = new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                GithubDetails details = (GithubDetails) args[0];
+                File workflowFile = new File("src/test/resources/cwl/lobstr-draft3/"
+                        + details.getPath().replace("workflows/lobSTR/", ""));
+                return FileUtils.readFileToString(workflowFile);
+            }
+        };
+        when(githubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
+        when(githubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
+
+        // Test cwl service
+        CWLService cwlService = new CWLService(githubService, 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails lobSTRDraft3Details = new GithubDetails("common-workflow-language",
@@ -45,6 +59,24 @@ public class CWLServiceTest {
      */
     @Test
     public void parseLobSTRv1Workflow() throws Exception {
+
+        // Mock githubService class
+        GitHubService githubService = Mockito.mock(GitHubService.class);
+        Answer fileAnswer = new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                GithubDetails details = (GithubDetails) args[0];
+                File workflowFile = new File("src/test/resources/cwl/lobstr-v1/"
+                        + details.getPath().replace("workflows/lobSTR/", ""));
+                return FileUtils.readFileToString(workflowFile);
+            }
+        };
+        when(githubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
+        when(githubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
+
+        // Test cwl service
+        CWLService cwlService = new CWLService(githubService, 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language",
@@ -103,6 +135,15 @@ public class CWLServiceTest {
      */
     @Test
     public void getHelloWorkflowOverview() throws Exception {
+
+        // Mock githubService class
+        GitHubService githubService = Mockito.mock(GitHubService.class);
+        File workflowFile = new File("src/test/resources/cwl/hello/hello.cwl");
+        when(githubService.downloadFile(anyObject()))
+                .thenReturn(FileUtils.readFileToString(workflowFile));
+
+        // Test cwl service
+        CWLService cwlService = new CWLService(githubService, 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails helloDetails = new GithubDetails("common-workflow-language",
