@@ -668,7 +668,7 @@ public class CWLService {
                 }
 
                 // Add optional if null was included in the multiple types
-                if (optional) typeDetails.append(" (Optional)");
+                if (optional) typeDetails.append("?");
 
                 // Set the type to the constructed string
                 return typeDetails.toString();

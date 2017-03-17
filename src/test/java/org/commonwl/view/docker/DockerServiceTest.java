@@ -3,6 +3,7 @@ package org.commonwl.view.docker;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class DockerServiceTest {
 
@@ -20,6 +21,9 @@ public class DockerServiceTest {
 
         String test3 = DockerService.getDockerHubURL("ubuntu");
         assertEquals("https://hub.docker.com/r/_/ubuntu", test3);
+
+        String test4 = DockerService.getDockerHubURL(null);
+        assertNull(test4);
 
     }
 
