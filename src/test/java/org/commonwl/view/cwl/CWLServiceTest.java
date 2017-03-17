@@ -25,7 +25,7 @@ public class CWLServiceTest {
     @Test
     public void parseLobSTRDraft3Workflow() throws Exception {
 
-        // Mock githubService class
+        // Mock githubService class to redirect downloads to resources folder
         GitHubService githubService = Mockito.mock(GitHubService.class);
         Answer fileAnswer = new Answer<String>() {
             @Override
@@ -60,7 +60,7 @@ public class CWLServiceTest {
     @Test
     public void parseLobSTRv1Workflow() throws Exception {
 
-        // Mock githubService class
+        // Mock githubService class to redirect downloads to resources folder
         GitHubService githubService = Mockito.mock(GitHubService.class);
         Answer fileAnswer = new Answer<String>() {
             @Override
