@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.Manifest;
+import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.eclipse.egit.github.core.*;
@@ -15,6 +16,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +46,7 @@ public class ROBundleTest {
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
         ROBundle bundle = new ROBundle(mockGithubService, lobSTRv1Details, "CWL Viewer",
                 "https://view.commonwl.org", 5242880);
+        Path bundleRoot = bundle.getBundle().getRoot().resolve("workflow");
 
         // Check bundle exists
         assertNotNull(bundle.getBundle());
@@ -53,7 +56,17 @@ public class ROBundleTest {
         assertEquals("CWL Viewer", manifest.getCreatedBy().getName());
         assertEquals("https://view.commonwl.org", manifest.getCreatedBy().getUri().toString());
         assertEquals("Mark Robinson", manifest.getAuthoredBy().get(0).getName());
-        assertEquals(10, manifest.getAggregates().size());
+        assertEquals(12, manifest.getAggregates().size());
+
+        // Check cwl aggregation information
+        PathMetadata cwlAggregate = manifest.getAggregation(
+                bundleRoot.resolve("lobSTR-workflow.cwl"));
+        assertEquals("https://raw.githubusercontent.com/common-workflow-language/workflows/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/lobSTR/lobSTR-workflow.cwl",
+                cwlAggregate.getRetrievedFrom().toString());
+        assertEquals("Mark Robinson", cwlAggregate.getAuthoredBy().get(0).getName());
+        assertNull(cwlAggregate.getAuthoredBy().get(0).getOrcid());
+        assertEquals("text/x-yaml", cwlAggregate.getMediatype());
+        assertEquals("https://w3id.org/cwl/v1.0", cwlAggregate.getConformsTo().toString());
 
         // Save and check it exists in the temporary folder
         bundle.saveToFile(roBundleFolder.getRoot().toPath());
@@ -64,6 +77,31 @@ public class ROBundleTest {
             Bundle savedBundle = Bundles.openBundle(ro.toPath());
             assertNotNull(savedBundle);
         }
+
+    }
+
+    /**
+     * Test file size limit
+     */
+    @Test
+    public void filesOverLimit() throws Exception {
+
+        // Get mock Github service
+        GitHubService mockGithubService = getMock();
+
+        // Create new RO bundle where all files are external
+        GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language", "workflows",
+                "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
+        ROBundle bundle = new ROBundle(mockGithubService, lobSTRv1Details, "CWL Viewer",
+                "https://view.commonwl.org", 0);
+
+        Manifest manifest = bundle.getBundle().getManifest();
+
+        // Check files are externally linked in the aggregate
+        Path bundleRoot = bundle.getBundle().getRoot().resolve("workflow");
+        PathMetadata urlAggregate = manifest.getAggregation(
+                bundleRoot.resolve("lobSTR-demo.url"));
+        assertEquals("Mark Robinson", urlAggregate.getAuthoredBy().get(0).getName());
 
     }
 
@@ -88,21 +126,40 @@ public class ROBundleTest {
         when(mockGithubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
         when(mockGithubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
 
-        // TODO: Also add mock for directories and account for their path
         Answer contentsAnswer = new Answer<List<RepositoryContents>>() {
             @Override
             public List<RepositoryContents> answer(InvocationOnMock invocation) throws Throwable {
-                File[] fileList = new File("src/test/resources/cwl/lobstr-v1/").listFiles();
+                Object[] args = invocation.getArguments();
+                GithubDetails details = (GithubDetails) args[0];
 
-                // Add all files from lobstr-v1 directory
                 List<RepositoryContents> returnList = new ArrayList<>();
-                for (File thisFile : fileList) {
-                    if (thisFile.isFile()) {
-                        RepositoryContents singleFile = new RepositoryContents();
-                        singleFile.setType(GitHubService.TYPE_FILE);
-                        singleFile.setName(thisFile.getName());
-                        singleFile.setPath("workflows/lobSTR/" + thisFile.getName());
-                        returnList.add(singleFile);
+
+                if (!details.getPath().endsWith("models")) {
+                    // Add all files from lobstr-v1 directory
+                    File[] fileList = new File("src/test/resources/cwl/lobstr-v1/").listFiles();
+                    for (File thisFile : fileList) {
+                        RepositoryContents contentsEntry = new RepositoryContents();
+                        if (thisFile.isDirectory()) {
+                            contentsEntry.setType(GitHubService.TYPE_DIR);
+                            contentsEntry.setSize(0);
+                        } else if (thisFile.isFile()) {
+                            contentsEntry.setType(GitHubService.TYPE_FILE);
+                            contentsEntry.setSize(100);
+                        }
+                        contentsEntry.setName(thisFile.getName());
+                        contentsEntry.setPath("workflows/lobSTR/" + thisFile.getName());
+                        returnList.add(contentsEntry);
+                    }
+                } else {
+                    // Add all files from lobstr-v1/models subdirectory
+                    File[] subDirFileList = new File("src/test/resources/cwl/lobstr-v1/models/").listFiles();
+                    for (File thisFile : subDirFileList) {
+                        RepositoryContents contentsEntry = new RepositoryContents();
+                        contentsEntry.setType(GitHubService.TYPE_FILE);
+                        contentsEntry.setName(thisFile.getName());
+                        contentsEntry.setSize(100);
+                        contentsEntry.setPath("workflows/lobSTR/models/" + thisFile.getName());
+                        returnList.add(contentsEntry);
                     }
                 }
 
