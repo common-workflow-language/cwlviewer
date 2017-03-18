@@ -26,7 +26,7 @@ public class CWLServiceTest {
     public void parseLobSTRDraft3Workflow() throws Exception {
 
         // Mock githubService class to redirect downloads to resources folder
-        GitHubService githubService = Mockito.mock(GitHubService.class);
+        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
         Answer fileAnswer = new Answer<String>() {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
@@ -37,11 +37,11 @@ public class CWLServiceTest {
                 return FileUtils.readFileToString(workflowFile);
             }
         };
-        when(githubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
-        when(githubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
+        when(mockGithubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
+        when(mockGithubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
 
         // Test cwl service
-        CWLService cwlService = new CWLService(githubService, 5242880);
+        CWLService cwlService = new CWLService(mockGithubService, 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails lobSTRDraft3Details = new GithubDetails("common-workflow-language",
@@ -61,7 +61,7 @@ public class CWLServiceTest {
     public void parseLobSTRv1Workflow() throws Exception {
 
         // Mock githubService class to redirect downloads to resources folder
-        GitHubService githubService = Mockito.mock(GitHubService.class);
+        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
         Answer fileAnswer = new Answer<String>() {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
@@ -72,11 +72,11 @@ public class CWLServiceTest {
                 return FileUtils.readFileToString(workflowFile);
             }
         };
-        when(githubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
-        when(githubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
+        when(mockGithubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
+        when(mockGithubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
 
         // Test cwl service
-        CWLService cwlService = new CWLService(githubService, 5242880);
+        CWLService cwlService = new CWLService(mockGithubService, 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language",
@@ -137,13 +137,13 @@ public class CWLServiceTest {
     public void getHelloWorkflowOverview() throws Exception {
 
         // Mock githubService class
-        GitHubService githubService = Mockito.mock(GitHubService.class);
+        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
         File workflowFile = new File("src/test/resources/cwl/hello/hello.cwl");
-        when(githubService.downloadFile(anyObject()))
+        when(mockGithubService.downloadFile(anyObject()))
                 .thenReturn(FileUtils.readFileToString(workflowFile));
 
         // Test cwl service
-        CWLService cwlService = new CWLService(githubService, 5242880);
+        CWLService cwlService = new CWLService(mockGithubService, 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails helloDetails = new GithubDetails("common-workflow-language",
