@@ -1,5 +1,6 @@
 package org.commonwl.view.docker;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -7,24 +8,50 @@ import static org.junit.Assert.assertNull;
 
 public class DockerServiceTest {
 
+    private DockerService dockerService;
+
+    /**
+     * New instance of DockerService
+     */
+    @Before
+    public void setUp() throws Exception {
+        dockerService = new DockerService();
+    }
+
     /**
      * Test conversion from docker pull tag to dockerhub URL
      */
     @Test
-    public void getDockerHubURL() throws Exception {
+    public void getStandardDockerHubURL() throws Exception {
+        String test = DockerService.getDockerHubURL("stain/cwlviewer");
+        assertEquals("https://hub.docker.com/r/stain/cwlviewer", test);
+    }
 
-        String test1 = DockerService.getDockerHubURL("stain/cwlviewer");
-        assertEquals("https://hub.docker.com/r/stain/cwlviewer", test1);
+    /**
+     * Second valid example
+     */
+    @Test
+    public void getStandardDockerHubURL2() throws Exception {
+        String test = DockerService.getDockerHubURL("rabix/lobSTR");
+        assertEquals("https://hub.docker.com/r/rabix/lobSTR", test);
+    }
 
-        String test2 = DockerService.getDockerHubURL("rabix/lobSTR");
-        assertEquals("https://hub.docker.com/r/rabix/lobSTR", test2);
+    /**
+     * Example from the official repository
+     */
+    @Test
+    public void getOfficialRepoDockerHubURL() throws Exception {
+        String test = DockerService.getDockerHubURL("ubuntu");
+        assertEquals("https://hub.docker.com/r/_/ubuntu", test);
+    }
 
-        String test3 = DockerService.getDockerHubURL("ubuntu");
-        assertEquals("https://hub.docker.com/r/_/ubuntu", test3);
-
-        String test4 = DockerService.getDockerHubURL("clearly/not/a/valid/tag");
-        assertNull(test4);
-
+    /**
+     * Invalid tag should fail to get URL
+     */
+    @Test
+    public void getInvalidDockerHubURL() throws Exception {
+        String test = DockerService.getDockerHubURL("clearly/not/a/valid/tag");
+        assertNull(test);
     }
 
 }

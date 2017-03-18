@@ -52,29 +52,31 @@ public class ROBundleFactory {
     private final int singleFileSizeLimit;
     private final Path storageLocation;
     private final WorkflowRepository workflowRepository;
+    private final GitHubService githubService;
 
     @Autowired
     public ROBundleFactory(@Value("${applicationName}") String applicationName,
                            @Value("${applicationURL}") String applicationURL,
                            @Value("${graphvizStorage}") Path graphvizStorage,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
+                           GitHubService gitHubService,
                            WorkflowRepository workflowRepository) {
         this.applicationName = applicationName;
         this.applicationURL = applicationURL;
         this.storageLocation = graphvizStorage;
         this.workflowRepository = workflowRepository;
+        this.githubService = gitHubService;
         this.singleFileSizeLimit = singleFileSizeLimit;
     }
 
     /**
      * Creates a new Workflow Research Object Bundle from a Github URL
      * and saves it to a file
-     * @param githubService The service for Github API functionality
      * @param githubInfo Details of the Github repository
      * @throws IOException Any API errors which may have occurred
      */
     @Async
-    public void workflowROFromGithub(GitHubService githubService, GithubDetails githubInfo)
+    public void workflowROFromGithub(GithubDetails githubInfo)
             throws IOException, InterruptedException {
         logger.info("Creating Research Object Bundle");
 
