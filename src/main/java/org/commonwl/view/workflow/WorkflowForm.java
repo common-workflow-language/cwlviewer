@@ -27,8 +27,6 @@ public class WorkflowForm {
 
     private String githubURL;
 
-    public WorkflowForm() {}
-
     public WorkflowForm(String githubURL) {
         if (githubURL != null) {
             this.githubURL = trimTrailingSlashes(githubURL);

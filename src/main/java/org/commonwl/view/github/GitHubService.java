@@ -54,12 +54,12 @@ public class GitHubService {
     private final CommitService commitService;
 
     // URL validation for directory links
-    private final String GITHUB_DIR_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)\\/?(.*)?)?$";
-    private final Pattern githubDirPattern = Pattern.compile(GITHUB_DIR_REGEX);
+    private static final String GITHUB_DIR_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)\\/?(.*)?)?$";
+    private static final Pattern githubDirPattern = Pattern.compile(GITHUB_DIR_REGEX);
 
     // URL validation for cwl files
-    private final String GITHUB_CWL_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
-    private final Pattern githubCwlPattern = Pattern.compile(GITHUB_CWL_REGEX);
+    private static final String GITHUB_CWL_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
+    private static final Pattern githubCwlPattern = Pattern.compile(GITHUB_CWL_REGEX);
 
     private final boolean downloadWithAPI;
 

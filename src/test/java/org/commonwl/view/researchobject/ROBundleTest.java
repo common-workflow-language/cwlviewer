@@ -88,6 +88,7 @@ public class ROBundleTest {
         when(mockGithubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
         when(mockGithubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
 
+        // TODO: Also add mock for directories and account for their path
         Answer contentsAnswer = new Answer<List<RepositoryContents>>() {
             @Override
             public List<RepositoryContents> answer(InvocationOnMock invocation) throws Throwable {
