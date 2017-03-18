@@ -237,4 +237,11 @@ public class ROBundle {
         return bundleLocation;
     }
 
+    /**
+     * Getter method for the bundle
+     * @return The RO bundle
+     */
+    public Bundle getBundle() {
+        return bundle;
+    }
 }
