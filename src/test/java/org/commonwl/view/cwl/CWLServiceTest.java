@@ -137,7 +137,7 @@ public class CWLServiceTest {
         assertEquals("lobSTR-tool.cwl", steps.get("lobSTR").getRun());
         assertEquals(CWLProcess.COMMANDLINETOOL, steps.get("lobSTR").getRunType());
         assertNotNull(steps.get("samindex"));
-        assertTrue(steps.get("samindex").getInputs().get("input").getSourceIDs().contains("samsort"));
+        assertTrue(steps.get("samindex").getSources().get("input").getSourceIDs().contains("samsort"));
 
         // Output tests
         Map<String, CWLElement> outputs = lobSTR.getOutputs();

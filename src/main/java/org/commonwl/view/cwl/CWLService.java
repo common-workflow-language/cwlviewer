@@ -282,7 +282,7 @@ public class CWLService {
                 // Explicit ID and other fields within each input list
                 for (JsonNode step : steps) {
                     CWLStep stepObject = new CWLStep(extractLabel(step), extractDoc(step),
-                            extractTypes(step), extractRun(step), getInputs(step), getOutputs(step));
+                            extractRun(step), getInputs(step));
                     returnMap.put(extractID(step), stepObject);
                 }
             } else if (steps.getClass() == ObjectNode.class) {
@@ -292,8 +292,7 @@ public class CWLService {
                     Map.Entry<String, JsonNode> stepNode = iterator.next();
                     JsonNode stepJson = stepNode.getValue();
                     CWLStep stepObject = new CWLStep(extractLabel(stepJson), extractDoc(stepJson),
-                            extractTypes(stepJson), extractRun(stepJson), getInputs(stepJson),
-                            getOutputs(stepJson));
+                            extractRun(stepJson), getInputs(stepJson));
                     returnMap.put(stepNode.getKey(), stepObject);
                 }
             }

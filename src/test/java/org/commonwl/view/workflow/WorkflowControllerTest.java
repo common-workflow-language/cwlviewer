@@ -104,6 +104,32 @@ public class WorkflowControllerTest {
     }
 
     /**
+     * Endpoint for displaying workflows and directories of workflows
+     */
+    @Test
+    public void getWorkflowByGithubDetails() throws Exception {
+
+        // Mock service to return a bundle file and then throw ROBundleNotFoundException
+        WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
+
+
+        // Mock controller/MVC
+        WorkflowController workflowController = new WorkflowController(
+                Mockito.mock(WorkflowFormValidator.class),
+                mockWorkflowService,
+                Mockito.mock(GraphVizService.class));
+        MockMvc mockMvc = MockMvcBuilders
+                .standaloneSetup(workflowController)
+                .build();
+
+        // Redirect with error
+        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/?url=https://github.com/owner/reponame/tree/branch/path/within"));
+
+    }
+
+    /**
      * Endpoint for downloading RO bundle for a workflow
      */
     @Test

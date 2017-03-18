@@ -173,8 +173,8 @@ public class DotWriter {
         // Write links between the remaining steps
         int defaultCount = 0;
         for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
-            if (step.getValue().getInputs() != null) {
-                for (Map.Entry<String, CWLElement> input : step.getValue().getInputs().entrySet()) {
+            if (step.getValue().getSources() != null) {
+                for (Map.Entry<String, CWLElement> input : step.getValue().getSources().entrySet()) {
                     List<String> sourceIDs = input.getValue().getSourceIDs();
 
                     // Draw the default value on the graph if there are no step inputs (it is a constant)

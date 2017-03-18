@@ -24,9 +24,9 @@ package org.commonwl.view.workflow;
  */
 public class WorkflowOverview {
 
-    private String fileName;
-    private String label;
-    private String doc;
+    private final String fileName;
+    private final String label;
+    private final String doc;
 
     public WorkflowOverview(String fileName, String label, String doc) {
         this.fileName = fileName;
@@ -38,24 +38,12 @@ public class WorkflowOverview {
         return fileName;
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
     public String getLabel() {
         return label;
     }
 
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
     public String getDoc() {
         return doc;
-    }
-
-    public void setDoc(String doc) {
-        this.doc = doc;
     }
 
 }

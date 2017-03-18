@@ -61,14 +61,14 @@ public class DotWriterTest {
         step1InputElement.addSourceID("input2");
         Map<String, CWLElement> step1inputs = new HashMap<>();
         step1inputs.put("toolinput1", step1InputElement);
-        CWLStep step1 = new CWLStep(null, null, null, null, step1inputs, null);
+        CWLStep step1 = new CWLStep(null, null, null, step1inputs);
         steps.put("step1", step1);
 
         CWLElement default1InputElement  = new CWLElement();
         default1InputElement.setDefaultVal("examplefile.jar");
         Map<String, CWLElement> default1inputs = new HashMap<>();
         step1inputs.put("defaultInput", default1InputElement);
-        CWLStep default1 = new CWLStep(null, null, null, null, default1inputs, null);
+        CWLStep default1 = new CWLStep(null, null, null, default1inputs);
         steps.put("default1", default1);
 
         CWLElement step2InputElement  = new CWLElement();
@@ -76,8 +76,9 @@ public class DotWriterTest {
         step2InputElement.addSourceID("default1");
         Map<String, CWLElement> step2inputs = new HashMap<>();
         step2inputs.put("toolinput1", step2InputElement);
-        CWLStep step2 = new CWLStep(null, null, null, null, step2inputs, null);
+        CWLStep step2 = new CWLStep(null, null, null, step2inputs);
         step2.setRunType(CWLProcess.WORKFLOW);
+        step2.setRun("subworkflow.cwl");
         steps.put("step2", step2);
 
         // Output
