@@ -94,7 +94,7 @@ public class WorkflowController {
         // Run validator which checks the github URL is valid
         GithubDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, bindingResult);
 
-        if (bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors() || githubInfo == null) {
             // Go back to index if there are validation errors
             return new ModelAndView("index");
         } else {
