@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 
-public class ROBundleTest {
+public class ROBundleServiceTest {
 
     /**
      * Use a temporary directory for testing
@@ -44,15 +44,16 @@ public class ROBundleTest {
         // Create new RO bundle
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
-        ROBundle bundle = new ROBundle(mockGithubService, lobSTRv1Details, "CWL Viewer",
-                "https://view.commonwl.org", 5242880);
-        Path bundleRoot = bundle.getBundle().getRoot().resolve("workflow");
+        ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
+                "CWL Viewer", "https://view.commonwl.org", 5242880, mockGithubService);
+        Bundle bundle = bundleService.newBundleFromGithub(lobSTRv1Details);
+        Path bundleRoot = bundle.getRoot().resolve("workflow");
 
         // Check bundle exists
-        assertNotNull(bundle.getBundle());
+        assertNotNull(bundle);
 
         // Check basic manifest metadata
-        Manifest manifest = bundle.getBundle().getManifest();
+        Manifest manifest = bundle.getManifest();
         assertEquals("CWL Viewer", manifest.getCreatedBy().getName());
         assertEquals("https://view.commonwl.org", manifest.getCreatedBy().getUri().toString());
         assertEquals("Mark Robinson", manifest.getAuthoredBy().get(0).getName());
@@ -69,7 +70,7 @@ public class ROBundleTest {
         assertEquals("https://w3id.org/cwl/v1.0", cwlAggregate.getConformsTo().toString());
 
         // Save and check it exists in the temporary folder
-        bundle.saveToFile(roBundleFolder.getRoot().toPath());
+        bundleService.saveToFile(bundle);
         File[] fileList =  roBundleFolder.getRoot().listFiles();
         assertTrue(fileList.length == 1);
         for (File ro : fileList) {
@@ -92,13 +93,14 @@ public class ROBundleTest {
         // Create new RO bundle where all files are external
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
-        ROBundle bundle = new ROBundle(mockGithubService, lobSTRv1Details, "CWL Viewer",
-                "https://view.commonwl.org", 0);
+        ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
+                "CWL Viewer", "https://view.commonwl.org", 0, mockGithubService);
+        Bundle bundle = bundleService.newBundleFromGithub(lobSTRv1Details);
 
-        Manifest manifest = bundle.getBundle().getManifest();
+        Manifest manifest = bundle.getManifest();
 
         // Check files are externally linked in the aggregate
-        Path bundleRoot = bundle.getBundle().getRoot().resolve("workflow");
+        Path bundleRoot = bundle.getRoot().resolve("workflow");
         PathMetadata urlAggregate = manifest.getAggregation(
                 bundleRoot.resolve("lobSTR-demo.url"));
         assertEquals("Mark Robinson", urlAggregate.getAuthoredBy().get(0).getName());
