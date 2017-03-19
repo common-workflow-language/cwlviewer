@@ -17,33 +17,22 @@
  * under the License.
  */
 
-package org.commonwl.view.workflow;
+package org.commonwl.view.cwl;
 
-/**
- * Gives an overview of a workflow
- */
-public class WorkflowOverview {
+import org.junit.Test;
 
-    private final String fileName;
-    private final String label;
-    private final String doc;
+import static org.junit.Assert.assertEquals;
 
-    public WorkflowOverview(String fileName, String label, String doc) {
-        this.fileName = fileName;
-        this.label = label;
-        this.doc = doc;
-    }
+public class CWLProcessTest {
 
-    public String getFileName() {
-        return fileName;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public String getDoc() {
-        return doc;
+    /**
+     * Test toString method for enum
+     */
+    @Test
+    public void testToString() throws Exception {
+        assertEquals("Workflow", CWLProcess.WORKFLOW.toString());
+        assertEquals("Commandlinetool", CWLProcess.COMMANDLINETOOL.toString());
+        assertEquals("Expressiontool", CWLProcess.EXPRESSIONTOOL.toString());
     }
 
 }

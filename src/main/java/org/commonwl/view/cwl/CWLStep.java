@@ -28,20 +28,16 @@ public class CWLStep {
 
     private String label;
     private String doc;
-    private String type;
     private String run;
     private CWLProcess runType;
-    private Map<String, CWLElement> inputs;
-    private Map<String, CWLElement> outputs;
+    private Map<String, CWLElement> sources;
 
-    public CWLStep(String label, String doc, String type, String run,
-                   Map<String, CWLElement> inputs, Map<String, CWLElement> outputs) {
+    public CWLStep(String label, String doc, String run,
+                   Map<String, CWLElement> sources) {
         this.label = label;
         this.doc = doc;
-        this.type = type;
         this.run = run;
-        this.inputs = inputs;
-        this.outputs = outputs;
+        this.sources = sources;
     }
 
     public String getLabel() {
@@ -60,14 +56,6 @@ public class CWLStep {
         this.doc = doc;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public String getRun() {
         return run;
     }
@@ -84,20 +72,8 @@ public class CWLStep {
         this.runType = runType;
     }
 
-    public Map<String, CWLElement> getInputs() {
-        return inputs;
-    }
-
-    public void setInputs(Map<String, CWLElement> inputs) {
-        this.inputs = inputs;
-    }
-
-    public Map<String, CWLElement> getOutputs() {
-        return outputs;
-    }
-
-    public void setOutputs(Map<String, CWLElement> outputs) {
-        this.outputs = outputs;
+    public Map<String, CWLElement> getSources() {
+        return sources;
     }
 
 }

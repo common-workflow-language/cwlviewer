@@ -20,14 +20,13 @@
 package org.commonwl.view.researchobject;
 
 import org.apache.commons.io.FilenameUtils;
-import org.commonwl.view.github.GitHubService;
+import org.apache.taverna.robundle.Bundle;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
@@ -47,34 +46,24 @@ public class ROBundleFactory {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final String applicationName;
-    private final String applicationURL;
-    private final int singleFileSizeLimit;
-    private final Path storageLocation;
     private final WorkflowRepository workflowRepository;
+    private final ROBundleService roBundleService;
 
     @Autowired
-    public ROBundleFactory(@Value("${applicationName}") String applicationName,
-                           @Value("${applicationURL}") String applicationURL,
-                           @Value("${graphvizStorage}") Path graphvizStorage,
-                           @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
+    public ROBundleFactory(ROBundleService roBundleService,
                            WorkflowRepository workflowRepository) {
-        this.applicationName = applicationName;
-        this.applicationURL = applicationURL;
-        this.storageLocation = graphvizStorage;
         this.workflowRepository = workflowRepository;
-        this.singleFileSizeLimit = singleFileSizeLimit;
+        this.roBundleService = roBundleService;
     }
 
     /**
      * Creates a new Workflow Research Object Bundle from a Github URL
      * and saves it to a file
-     * @param githubService The service for Github API functionality
      * @param githubInfo Details of the Github repository
      * @throws IOException Any API errors which may have occurred
      */
     @Async
-    public void workflowROFromGithub(GitHubService githubService, GithubDetails githubInfo)
+    public void workflowROFromGithub(GithubDetails githubInfo)
             throws IOException, InterruptedException {
         logger.info("Creating Research Object Bundle");
 
@@ -83,16 +72,15 @@ public class ROBundleFactory {
                 githubInfo.getBranch(), FilenameUtils.getPath(githubInfo.getPath()));
 
         // Create a new Research Object Bundle with Github contents
-        ROBundle bundle = new ROBundle(githubService, roDetails,
-                applicationName, applicationURL, singleFileSizeLimit);
+        Bundle bundle = roBundleService.newBundleFromGithub(roDetails);
 
         // Save the bundle to the storage location in properties
-        Path bundleLocation = bundle.saveToFile(storageLocation);
+        Path bundleLocation = roBundleService.saveToFile(bundle);
 
         // Add the path to the bundle to the bundle
         Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
 
-        // Chance that this thread could be created before workflow model is saved
+        // Chance that this thread could be done before workflow model is saved
         int attempts = 5;
         while (attempts > 0 && workflow == null) {
             // Delay this thread by 0.5s and try again until success or too many attempts

@@ -34,6 +34,9 @@ import org.eclipse.egit.github.core.RepositoryContents;
 import org.eclipse.egit.github.core.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URI;
@@ -48,54 +51,66 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Represents a Workflow Research Object Bundle
+ * Service handling Research Object Bundles
  */
-public class ROBundle {
+@Service
+public class ROBundleService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    // Services
     private GitHubService githubService;
 
-    private Bundle bundle;
-    private GithubDetails githubInfo;
-    private Agent thisApp;
+    // Configuration variables
+    private Agent appAgent;
     private int singleFileSizeLimit;
-    private Set<HashableAgent> authors = new HashSet<>();
+    private Path bundleStorage;
 
     // Pattern for extracting version from a cwl file
     private final String CWL_VERSION_REGEX = "cwlVersion:\\s*\"?(?:cwl:)?([^\\s\"]+)\"?";
     private final Pattern cwlVersionPattern = Pattern.compile(CWL_VERSION_REGEX);
 
     /**
-     * Creates a new research object bundle for a workflow from a Github repository
-     * @param githubService The service for handling Github functionality
-     * @param githubInfo The information necessary to access the Github directory associated with the RO
+     * Creates an instance of this service which handles Research Object Bundles
+     * @param bundleStorage The configured storage location for bundles
      * @param appName The name of the application from properties, for attribution
      * @param appURL The URL of the application from properties, for attribution
-     * @throws IOException Any API errors which may have occurred
+     * @param singleFileSizeLimit The file size limit for the RO bundle
+     * @param githubService The service for handling Github functionality
+     * @throws URISyntaxException Error in creating URI for appURL
      */
-    public ROBundle(GitHubService githubService, GithubDetails githubInfo,
-                    String appName, String appURL, int singleFileSizeLimit) throws IOException {
-        // File size limits
+    @Autowired
+    public ROBundleService(@Value("${bundleStorage}") Path bundleStorage,
+                           @Value("${applicationName}") String appName,
+                           @Value("${applicationURL}") String appURL,
+                           @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
+                           GitHubService githubService) throws URISyntaxException {
+        this.bundleStorage = bundleStorage;
+        this.appAgent = new Agent(appName);
+        appAgent.setUri(new URI(appURL));
         this.singleFileSizeLimit = singleFileSizeLimit;
+        this.githubService = githubService;
+    }
+
+    /**
+     * Creates a new research object bundle for a workflow from a Github repository
+     * @param githubInfo The information to access the repository
+     * @return The constructed bundle
+     */
+    public Bundle newBundleFromGithub(GithubDetails githubInfo) throws IOException {
 
         // Create a new RO bundle
-        this.bundle = Bundles.createBundle();
-        this.githubInfo = githubInfo;
-        this.githubService = githubService;
-
+        Bundle bundle = Bundles.createBundle();
         Manifest manifest = bundle.getManifest();
 
         // Simplified attribution for RO bundle
         try {
             // Tool attribution in createdBy
-            thisApp = new Agent(appName);
-            thisApp.setUri(new URI(appURL));
-            manifest.setCreatedBy(thisApp);
+            manifest.setCreatedBy(appAgent);
 
             // Retrieval Info
             // TODO: Make this importedBy/On/From
-            manifest.setRetrievedBy(thisApp);
+            manifest.setRetrievedBy(appAgent);
             manifest.setRetrievedOn(manifest.getCreatedOn());
             manifest.setRetrievedFrom(new URI(githubInfo.getURL()));
 
@@ -109,18 +124,40 @@ public class ROBundle {
 
         // Add the files from the Github repo to this workflow
         List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
-        addFiles(repoContents, bundleFiles);
+        Set<HashableAgent> authors = new HashSet<HashableAgent>();
+        addFilesToBundle(bundle, githubInfo, repoContents, bundleFiles, authors);
 
         // Add combined authors
         manifest.setAuthoredBy(new ArrayList<>(authors));
+
+        // Return the completed bundle
+        return bundle;
+
+    }
+
+    /**
+     * Save the Research Object bundle to disk
+     * @param roBundle The bundle to be saved
+     * @return The path to the research object
+     * @throws IOException Any errors in saving
+     */
+    public Path saveToFile(Bundle roBundle) throws IOException {
+        String fileName = "bundle-" + java.util.UUID.randomUUID() + ".zip";
+        Path bundleLocation = Files.createFile(bundleStorage.resolve(fileName));
+        Bundles.closeAndSaveBundle(roBundle, bundleLocation);
+        return bundleLocation;
     }
 
     /**
      * Add files to this bundle from a list of Github repository contents
+     * @param bundle The RO bundle to add files/directories to
+     * @param githubInfo The information used to access the repository
      * @param repoContents The contents of the Github repository
      * @param path The path in the Research Object to add the files
      */
-    private void addFiles(List<RepositoryContents> repoContents, Path path) throws IOException {
+    private void addFilesToBundle(Bundle bundle, GithubDetails githubInfo,
+                                  List<RepositoryContents> repoContents, Path path,
+                                  Set<HashableAgent> authors) throws IOException {
 
         // Loop through repo contents and add them
         for (RepositoryContents repoContent : repoContents) {
@@ -138,7 +175,7 @@ public class ROBundle {
                 Files.createDirectory(subdirPath);
 
                 // Add the files in the subdirectory to this new folder
-                addFiles(subdirectory, subdirPath);
+                addFilesToBundle(bundle, githubInfo, subdirectory, subdirPath, authors);
 
                 // Otherwise this is a file so add to the bundle
             } else if (repoContent.getType().equals(GitHubService.TYPE_FILE)) {
@@ -214,7 +251,7 @@ public class ROBundle {
 
                     // Set retrieved information for this file in the manifest
                     aggregation.setRetrievedFrom(rawURI);
-                    aggregation.setRetrievedBy(thisApp);
+                    aggregation.setRetrievedBy(appAgent);
                     aggregation.setRetrievedOn(aggregation.getCreatedOn());
 
                 } catch (URISyntaxException ex) {
@@ -222,19 +259,6 @@ public class ROBundle {
                 }
             }
         }
-    }
-
-    /**
-     * Save the Research Object bundle to disk
-     * @param directory The directory in which the RO will be saved
-     * @return The path to the research object
-     * @throws IOException Any errors in saving
-     */
-    public Path saveToFile(Path directory) throws IOException {
-        String fileName = "bundle-" + java.util.UUID.randomUUID() + ".zip";
-        Path bundleLocation = Files.createFile(directory.resolve(fileName));
-        Bundles.closeAndSaveBundle(bundle, bundleLocation);
-        return bundleLocation;
     }
 
 }

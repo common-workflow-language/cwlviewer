@@ -4,3 +4,7 @@ dist: trusty
 language: java
 
 services: mongodb
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install graphviz

@@ -17,33 +17,35 @@
  * under the License.
  */
 
-package org.commonwl.view.workflow;
+package org.commonwl.view.cwl;
 
-/**
- * Gives an overview of a workflow
- */
-public class WorkflowOverview {
+import org.junit.Test;
 
-    private final String fileName;
-    private final String label;
-    private final String doc;
+import java.util.List;
 
-    public WorkflowOverview(String fileName, String label, String doc) {
-        this.fileName = fileName;
-        this.label = label;
-        this.doc = doc;
-    }
+import static org.junit.Assert.assertEquals;
 
-    public String getFileName() {
-        return fileName;
-    }
+public class CWLElementTest {
 
-    public String getLabel() {
-        return label;
-    }
+    /**
+     * Test addition and retrieval of source IDs from a node
+     * null values should not be added to the list
+     */
+    @Test
+    public void testSourceIDList() throws Exception {
 
-    public String getDoc() {
-        return doc;
+        CWLElement element = new CWLElement();
+
+        element.addSourceID("sourceID1");
+        element.addSourceID("sourceID2");
+        element.addSourceID(null);
+        element.addSourceID("sourceID3");
+
+        List<String> sourceIDs = element.getSourceIDs();
+
+        assertEquals(3, sourceIDs.size());
+        assertEquals("sourceID3", sourceIDs.get(2));
+
     }
 
 }

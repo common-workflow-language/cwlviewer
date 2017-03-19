@@ -215,7 +215,7 @@ public class WorkflowService {
      */
     private void generateROBundle(Workflow workflow) {
         try {
-            ROBundleFactory.workflowROFromGithub(githubService, workflow.getRetrievedFrom());
+            ROBundleFactory.workflowROFromGithub(workflow.getRetrievedFrom());
         } catch (Exception ex) {
             logger.error("Error creating RO Bundle", ex);
         }

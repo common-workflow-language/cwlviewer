@@ -282,7 +282,7 @@ public class CWLService {
                 // Explicit ID and other fields within each input list
                 for (JsonNode step : steps) {
                     CWLStep stepObject = new CWLStep(extractLabel(step), extractDoc(step),
-                            extractTypes(step), extractRun(step), getInputs(step), getOutputs(step));
+                            extractRun(step), getInputs(step));
                     returnMap.put(extractID(step), stepObject);
                 }
             } else if (steps.getClass() == ObjectNode.class) {
@@ -292,8 +292,7 @@ public class CWLService {
                     Map.Entry<String, JsonNode> stepNode = iterator.next();
                     JsonNode stepJson = stepNode.getValue();
                     CWLStep stepObject = new CWLStep(extractLabel(stepJson), extractDoc(stepJson),
-                            extractTypes(stepJson), extractRun(stepJson), getInputs(stepJson),
-                            getOutputs(stepJson));
+                            extractRun(stepJson), getInputs(stepJson));
                     returnMap.put(stepNode.getKey(), stepObject);
                 }
             }
@@ -311,7 +310,7 @@ public class CWLService {
     private Map<String, CWLElement> getInputs(JsonNode cwlDoc) {
         if (cwlDoc != null) {
             if (cwlDoc.has(INPUTS)) {
-                // For workflow/draft steps
+                // For all version workflow inputs/outputs and draft steps
                 return getInputsOutputs(cwlDoc.get(INPUTS));
             } else if (cwlDoc.has(IN)) {
                 // For V1.0 steps
@@ -328,13 +327,11 @@ public class CWLService {
      */
     private Map<String, CWLElement> getOutputs(JsonNode cwlDoc) {
         if (cwlDoc != null) {
+            // For all version workflow inputs/outputs and draft steps
             if (cwlDoc.has(OUTPUTS)) {
-                // For workflow/draft steps
                 return getInputsOutputs(cwlDoc.get(OUTPUTS));
-            } else if (cwlDoc.has(OUT)) {
-                // For V1.0 steps
-                return getStepInputsOutputs(cwlDoc.get(OUT));
             }
+            // Outputs are not gathered for v1 steps
         }
         return null;
     }
@@ -668,7 +665,7 @@ public class CWLService {
                 }
 
                 // Add optional if null was included in the multiple types
-                if (optional) typeDetails.append(" (Optional)");
+                if (optional) typeDetails.append("?");
 
                 // Set the type to the constructed string
                 return typeDetails.toString();
