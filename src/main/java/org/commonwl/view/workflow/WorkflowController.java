@@ -156,6 +156,9 @@ public class WorkflowController {
             if (!errors.hasErrors()) {
                 if (githubDetails.getPath().endsWith(".cwl")) {
                     workflowModel = workflowService.createWorkflow(githubDetails);
+                    if (workflowModel == null) {
+                        errors.rejectValue("githubURL", "githubURL.parsingError", "The workflow could not be parsed from the given URL");
+                    }
                 } else {
                     // If this is a directory, get a list of workflows and return the view for it
                     try {

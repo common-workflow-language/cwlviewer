@@ -56,12 +56,12 @@ public class PageControllerTest {
      */
     @Test
     public void homePageWithURL() throws Exception {
-        mockMvc.perform(get("/").param("url", "https://github.com/test/repo"))
+        mockMvc.perform(get("/").param("url", "https://github.com/test/default/link"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"))
                 .andExpect(model().attributeExists("workflowForm"))
                 .andExpect(model().attribute("workflowForm",
-                        hasProperty("githubURL", is("https://github.com/test/repo"))));
+                        hasProperty("githubURL", is("https://github.com/test/default/link"))));
     }
 
 }

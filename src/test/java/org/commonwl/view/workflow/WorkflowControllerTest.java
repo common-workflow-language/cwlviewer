@@ -25,10 +25,22 @@ import org.commonwl.view.researchobject.ROBundleNotFoundException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -36,6 +48,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Tests the controller for workflow related functionality
+ */
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class WorkflowControllerTest {
 
     /**
@@ -43,6 +60,38 @@ public class WorkflowControllerTest {
      */
     @Rule
     public TemporaryFolder roBundleFolder = new TemporaryFolder();
+
+    /**
+     * Get the full list of workflows
+     * TODO: Mock the repository and test model attributes
+     */
+    @Test
+    public void getListOfWorkflows() throws Exception {
+
+        // Mock controller/MVC
+        WorkflowController workflowController = new WorkflowController(
+                Mockito.mock(WorkflowFormValidator.class),
+                Mockito.mock(WorkflowService.class),
+                Mockito.mock(GraphVizService.class));
+
+        // Lots of hassle to make Spring Data Pageable work
+        PageableHandlerMethodArgumentResolver pageableArgumentResolver =
+                new PageableHandlerMethodArgumentResolver();
+        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
+        viewResolver.setPrefix("/src/main/resources/templates");
+        viewResolver.setSuffix(".html");
+        MockMvc mockMvc = MockMvcBuilders
+                .standaloneSetup(workflowController)
+                .setCustomArgumentResolvers(pageableArgumentResolver)
+                .setViewResolvers(viewResolver)
+                .build();
+
+        // Simple test to check the view
+        mockMvc.perform(get("/workflows"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("workflows"));
+
+    }
 
     /**
      * Endpoint for main form submission
@@ -104,14 +153,22 @@ public class WorkflowControllerTest {
     }
 
     /**
-     * Endpoint for displaying workflows and directories of workflows
+     * Displaying workflows
      */
     @Test
-    public void getWorkflowByGithubDetails() throws Exception {
+    public void directWorkflowURL() throws Exception {
 
-        // Mock service to return a bundle file and then throw ROBundleNotFoundException
+        Workflow mockWorkflow = Mockito.mock(Workflow.class);
+        Workflow mockWorkflow2 = Mockito.mock(Workflow.class);
+
+        // Mock service
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-
+        when(mockWorkflowService.getWorkflow(Matchers.<GithubDetails>anyObject()))
+                .thenReturn(mockWorkflow)
+                .thenReturn(null);
+        when(mockWorkflowService.createWorkflow(anyObject()))
+                .thenReturn(mockWorkflow2)
+                .thenReturn(null);
 
         // Mock controller/MVC
         WorkflowController workflowController = new WorkflowController(
@@ -122,9 +179,89 @@ public class WorkflowControllerTest {
                 .standaloneSetup(workflowController)
                 .build();
 
-        // Redirect with error
+        // Workflow already exists in the database
+        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within/workflow.cwl"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("workflow"))
+                .andExpect(model().attribute("workflow", is(mockWorkflow)));
+
+        // Workflow needs to be created
+        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within/workflow.cwl"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("workflow"))
+                .andExpect(model().attribute("workflow", is(mockWorkflow2)));
+
+        // Error creating workflow
+        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within/badworkflow.cwl"))
+                .andExpect(status().isFound())
+                .andExpect(flash().attributeExists("errors"))
+                .andExpect(redirectedUrl("/?url=https://github.com/owner/reponame/tree/branch/path/within/badworkflow.cwl"));
+
+    }
+
+    /**
+     * Displaying directories of workflows
+     */
+    @Test
+    public void directDirectoryURL() throws Exception {
+
+        // Workflow overviews for testing
+        WorkflowOverview overview1 = new WorkflowOverview("workflow1.cwl", "label1", "doc1");
+        WorkflowOverview overview2 = new WorkflowOverview("workflow2.cwl", "label2", "doc2");
+
+        // Mock service to return these overviews
+        WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
+        when(mockWorkflowService.getWorkflowsFromDirectory(anyObject()))
+                .thenReturn(new ArrayList<>())
+                .thenReturn(new ArrayList<>(Arrays.asList(overview1)))
+                .thenReturn(new ArrayList<>(Arrays.asList(overview1, overview2)))
+                .thenReturn(new ArrayList<>(Arrays.asList(overview1, overview2)))
+                .thenThrow(new IOException("Error getting contents"));
+
+        // Mock controller/MVC
+        WorkflowController workflowController = new WorkflowController(
+                Mockito.mock(WorkflowFormValidator.class),
+                mockWorkflowService,
+                Mockito.mock(GraphVizService.class));
+        MockMvc mockMvc = MockMvcBuilders
+                .standaloneSetup(workflowController)
+                .build();
+
+        // No workflows in directory, redirect with errors
         mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within"))
                 .andExpect(status().isFound())
+                .andExpect(flash().attributeExists("errors"))
+                .andExpect(redirectedUrl("/?url=https://github.com/owner/reponame/tree/branch/path/within"));
+
+        // 1 workflow in directory, redirect to it
+        mockMvc.perform(get("/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/workflow1.cwl"));
+
+        // Multiple workflows in directory, show list
+        mockMvc.perform(get("/workflows/github.com/common-workflow-language/workflows/tree/visu/workflows/scidap"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("selectworkflow"))
+                .andExpect(model().attribute("githubDetails", allOf(
+                        hasProperty("owner", is("common-workflow-language")),
+                        hasProperty("repoName", is("workflows")),
+                        hasProperty("branch", is("visu")),
+                        hasProperty("path", is("workflows/scidap"))
+                )))
+                .andExpect(model().attribute("workflowOverviews",
+                        containsInAnyOrder(overview1, overview2)));
+
+        // Workflows at the base of a repository
+        mockMvc.perform(get("/workflows/github.com/genome/arvados_trial/tree/master"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("selectworkflow"))
+                .andExpect(model().attribute("githubDetails",
+                        hasProperty("path", is("/"))));
+
+        // Error getting contents of Github directory, redirect with errors
+        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within"))
+                .andExpect(status().isFound())
+                .andExpect(flash().attributeExists("errors"))
                 .andExpect(redirectedUrl("/?url=https://github.com/owner/reponame/tree/branch/path/within"));
 
     }
