@@ -24,12 +24,15 @@ import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowOverview;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -39,27 +42,40 @@ import static org.mockito.Mockito.when;
 public class CWLServiceTest {
 
     /**
+     * Used for expected IOExceptions for filesize limits
+     */
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    /**
+     * Test main parsing of a the Hello World example (packed CWL version v1.0)
+     */
+    @Test
+    public void parsePackedHellov1Workflow() throws Exception {
+
+        // Test cwl service
+        GitHubService mockGithubService = getMockGithubService("workflows/hello/",
+                "src/test/resources/cwl/hello/");
+        CWLService cwlService = new CWLService(mockGithubService, 5242880);
+
+        // Get workflow from community repo by commit ID so it will not change
+        GithubDetails helloDetails = new GithubDetails("common-workflow-language",
+                "workflows", null, "workflows/hello/hello.cwl");
+        Workflow hello = cwlService.parseWorkflow(helloDetails, "920c6be45f08e979e715a0018f22c532b024074f");
+
+        assertNotNull(hello);
+
+    }
+
+    /**
      * Test main parsing of a the LobSTR workflow CWL version draft-3
      */
     @Test
     public void parseLobSTRDraft3Workflow() throws Exception {
 
-        // Mock githubService class to redirect downloads to resources folder
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
-        Answer fileAnswer = new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                GithubDetails details = (GithubDetails) args[0];
-                File workflowFile = new File("src/test/resources/cwl/lobstr-draft3/"
-                        + details.getPath().replace("workflows/lobSTR/", ""));
-                return FileUtils.readFileToString(workflowFile);
-            }
-        };
-        when(mockGithubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
-        when(mockGithubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
-
         // Test cwl service
+        GitHubService mockGithubService = getMockGithubService("workflows/lobSTR/",
+                "src/test/resources/cwl/lobstr-draft3/");
         CWLService cwlService = new CWLService(mockGithubService, 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
@@ -79,22 +95,9 @@ public class CWLServiceTest {
     @Test
     public void parseLobSTRv1Workflow() throws Exception {
 
-        // Mock githubService class to redirect downloads to resources folder
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
-        Answer fileAnswer = new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                GithubDetails details = (GithubDetails) args[0];
-                File workflowFile = new File("src/test/resources/cwl/lobstr-v1/"
-                        + details.getPath().replace("workflows/lobSTR/", ""));
-                return FileUtils.readFileToString(workflowFile);
-            }
-        };
-        when(mockGithubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
-        when(mockGithubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
-
         // Test cwl service
+        GitHubService mockGithubService = getMockGithubService("workflows/lobSTR/",
+                "src/test/resources/cwl/lobstr-v1/");
         CWLService cwlService = new CWLService(mockGithubService, 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
@@ -107,6 +110,103 @@ public class CWLServiceTest {
         // Extra docker requirement test
         assertEquals("https://hub.docker.com/r/rabix/lobstr", lobSTRv1.getDockerLink());
 
+    }
+
+    /**
+     * Test IOException is thrown when files are over limit with parseWorkflow
+     */
+    @Test
+    public void parseWorkflowOverSingleFileSizeLimitThrowsIOException() throws Exception {
+
+        // Test cwl service
+        GitHubService mockGithubService = getMockGithubService("workflows/hello/",
+                "src/test/resources/cwl/hello/");
+        CWLService cwlService = new CWLService(mockGithubService, 0);
+
+        // Get workflow from community repo by commit ID so it will not change
+        GithubDetails helloDetails = new GithubDetails("common-workflow-language",
+                "workflows", null, "workflows/hello/hello.cwl");
+
+        thrown.expect(IOException.class);
+        thrown.expectMessage("File 'workflows/hello/hello.cwl' is over singleFileSizeLimit - 672 bytes/0 bytes");
+        cwlService.parseWorkflow(helloDetails, "920c6be45f08e979e715a0018f22c532b024074f");
+
+    }
+
+    /**
+     * Test retrieval of a workflow overview for hello world example in cwl
+     */
+    @Test
+    public void getHelloWorkflowOverview() throws Exception {
+
+        // Mock githubService class
+        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
+        File workflowFile = new File("src/test/resources/cwl/hello/hello.cwl");
+        when(mockGithubService.downloadFile(anyObject()))
+                .thenReturn(FileUtils.readFileToString(workflowFile));
+
+        // Test cwl service
+        CWLService cwlService = new CWLService(mockGithubService, 5242880);
+
+        // Run workflow overview
+        GithubDetails helloDetails = new GithubDetails("common-workflow-language",
+                "workflows", "8296e92d358bb5da4dc3c6e7aabefa89726e3409", "workflows/hello/hello.cwl");
+        WorkflowOverview hello = cwlService.getWorkflowOverview(helloDetails);
+        assertNotNull(hello);
+
+        // No docs for this workflow
+        assertEquals("Hello World", hello.getLabel());
+        assertEquals("Puts a message into a file using echo", hello.getDoc());
+        assertEquals("hello.cwl", hello.getFileName());
+
+    }
+
+    /**
+     * Test IOException is thrown when files are over limit with getWorkflowOverview
+     */
+    @Test
+    public void workflowOverviewOverSingleFileSizeLimitThrowsIOException() throws Exception {
+
+        // Mock githubService class
+        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
+        File workflowFile = new File("src/test/resources/cwl/hello/hello.cwl");
+        when(mockGithubService.downloadFile(anyObject()))
+                .thenReturn(FileUtils.readFileToString(workflowFile));
+
+        // Test cwl service with 0 filesize limit
+        CWLService cwlService = new CWLService(mockGithubService, 0);
+
+        // Run workflow overview
+        GithubDetails helloDetails = new GithubDetails("common-workflow-language",
+                "workflows", "8296e92d358bb5da4dc3c6e7aabefa89726e3409", "workflows/hello/hello.cwl");
+
+        // Should throw IOException due to oversized files
+        thrown.expect(IOException.class);
+        thrown.expectMessage("File 'workflows/hello/hello.cwl' is over singleFileSizeLimit - 672 bytes/0 bytes");
+        cwlService.getWorkflowOverview(helloDetails);
+
+    }
+
+    /**
+     * Get a mock GithubService which redirects downloads to the filesystem
+     */
+    private GitHubService getMockGithubService(String originalFolder,
+                                               String resourcesFolder) throws IOException {
+        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
+        Answer fileAnswer = new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                GithubDetails details = (GithubDetails) args[0];
+                File workflowFile = new File(resourcesFolder
+                        + details.getPath().replace(originalFolder, ""));
+                return FileUtils.readFileToString(workflowFile);
+            }
+        };
+        when(mockGithubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
+        when(mockGithubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
+
+        return mockGithubService;
     }
 
     /**
@@ -146,34 +246,6 @@ public class CWLServiceTest {
         assertNotNull(outputs.get("bam_stats"));
         assertEquals("File", outputs.get("bam_stats").getType());
         assertTrue(outputs.get("bam").getSourceIDs().contains("samindex"));
-
-    }
-
-    /**
-     * Test retrieval of a workflow overview for hello world example in cwl
-     */
-    @Test
-    public void getHelloWorkflowOverview() throws Exception {
-
-        // Mock githubService class
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
-        File workflowFile = new File("src/test/resources/cwl/hello/hello.cwl");
-        when(mockGithubService.downloadFile(anyObject()))
-                .thenReturn(FileUtils.readFileToString(workflowFile));
-
-        // Test cwl service
-        CWLService cwlService = new CWLService(mockGithubService, 5242880);
-
-        // Get workflow from community repo by commit ID so it will not change
-        GithubDetails helloDetails = new GithubDetails("common-workflow-language",
-                "workflows", "8296e92d358bb5da4dc3c6e7aabefa89726e3409", "workflows/hello/hello.cwl");
-        WorkflowOverview hello = cwlService.getWorkflowOverview(helloDetails);
-        assertNotNull(hello);
-
-        // No docs for this workflow
-        assertEquals("Hello World", hello.getLabel());
-        assertEquals("Puts a message into a file using echo", hello.getDoc());
-        assertEquals("hello.cwl", hello.getFileName());
 
     }
 

@@ -55,7 +55,7 @@ outputs:
     type: File
     outputSource: allelotype/vcf_stats
 
-hints:
+requirements:
   DockerRequirement:
     dockerPull: rabix/lobstr
 
@@ -74,8 +74,10 @@ steps:
   samsort:
     run: samtools-sort.cwl
     in:
-      input: lobSTR/bam
-      output_name: {default: "aligned.sorted.bam" }
+      - id: input
+        source: lobSTR/bam
+      - id: output_name
+        default: "aligned.sorted.bam"
     out: [output_file]
 
   samindex:

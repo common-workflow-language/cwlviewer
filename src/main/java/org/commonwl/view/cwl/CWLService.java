@@ -310,7 +310,7 @@ public class CWLService {
     private Map<String, CWLElement> getInputs(JsonNode cwlDoc) {
         if (cwlDoc != null) {
             if (cwlDoc.has(INPUTS)) {
-                // For workflow/draft steps
+                // For all version workflow inputs/outputs and draft steps
                 return getInputsOutputs(cwlDoc.get(INPUTS));
             } else if (cwlDoc.has(IN)) {
                 // For V1.0 steps
@@ -327,13 +327,11 @@ public class CWLService {
      */
     private Map<String, CWLElement> getOutputs(JsonNode cwlDoc) {
         if (cwlDoc != null) {
+            // For all version workflow inputs/outputs and draft steps
             if (cwlDoc.has(OUTPUTS)) {
-                // For workflow/draft steps
                 return getInputsOutputs(cwlDoc.get(OUTPUTS));
-            } else if (cwlDoc.has(OUT)) {
-                // For V1.0 steps
-                return getStepInputsOutputs(cwlDoc.get(OUT));
             }
+            // Outputs are not gathered for v1 steps
         }
         return null;
     }

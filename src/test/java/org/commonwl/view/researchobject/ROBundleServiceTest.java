@@ -192,9 +192,6 @@ public class ROBundleServiceTest {
         Answer commitsAnswer = new Answer<List<RepositoryCommit>>() {
             @Override
             public List<RepositoryCommit> answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                GithubDetails details = (GithubDetails) args[0];
-
                 // Make up a commit for the file and return it
                 List<RepositoryCommit> commitList = new ArrayList<>();
                 RepositoryCommit commit = new RepositoryCommit();
