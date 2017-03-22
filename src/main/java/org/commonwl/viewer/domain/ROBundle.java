@@ -26,6 +26,7 @@ import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.Agent;
 import org.apache.taverna.robundle.manifest.Manifest;
 import org.apache.taverna.robundle.manifest.PathMetadata;
+import org.apache.taverna.robundle.manifest.Proxy;
 import org.commonwl.viewer.services.GitHubService;
 import org.eclipse.egit.github.core.RepositoryContents;
 import org.slf4j.Logger;
@@ -49,7 +50,6 @@ import java.util.regex.Pattern;
 public class ROBundle {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     private GitHubService githubService;
 
     private Bundle bundle;
@@ -139,17 +139,15 @@ public class ROBundle {
             } else if (repoContent.getType().equals("file")) {
 
                 try {
-                    // Where to store the new file in bundle
-                    Path bundleFilePath = path.resolve(repoContent.getName());
-
                     // Raw URI of the bundle
                     GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
                             githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
                     URI rawURI = new URI("https://raw.githubusercontent.com/" + githubFile.getOwner() + "/" +
                             githubFile.getRepoName() + "/" + commitSha + "/" + githubFile.getPath());
 
-                    // Variable to store file contents
+                    // Variable to store file contents and aggregation
                     String fileContent = null;
+                    PathMetadata aggregation;
 
                     // Download or externally link if oversized
                     if (repoContent.getSize() <= singleFileSizeLimit) {
@@ -157,17 +155,27 @@ public class ROBundle {
                         fileContent = githubService.downloadFile(githubFile, commitSha);
 
                         // Save file to research object bundle
+                        Path bundleFilePath = path.resolve(repoContent.getName());
                         Bundles.setStringValue(bundleFilePath, fileContent);
+
+                        // Set retrieved information for this file in the manifest
+                        aggregation = bundle.getManifest().getAggregation(bundleFilePath);
+                        aggregation.setRetrievedFrom(rawURI);
+                        aggregation.setRetrievedBy(thisApp);
+                        aggregation.setRetrievedOn(aggregation.getCreatedOn());
                     } else {
-                        logger.info("File " + repoContent.getName() + " is too large to download -" +
+                        logger.info("File " + repoContent.getName() + " is too large to download - " +
                                 FileUtils.byteCountToDisplaySize(repoContent.getSize()) + "/" +
                                 FileUtils.byteCountToDisplaySize(singleFileSizeLimit) +
-                                " + linking externally to RO bundle");
-                        bundleFilePath = Bundles.setReference(bundleFilePath, rawURI);
-                    }
+                                ", linking externally to RO bundle");
 
-                    // Manifest aggregation
-                    PathMetadata aggregation = bundle.getManifest().getAggregation(bundleFilePath);
+                        // Set information for this file in the manifest
+                        aggregation = bundle.getManifest().getAggregation(rawURI);
+                        Proxy bundledAs = new Proxy();
+                        bundledAs.setURI();
+                        bundledAs.setFolder(path);
+                        aggregation.setBundledAs(bundledAs);
+                    }
 
                     // Special handling for cwl files
                     if (FilenameUtils.getExtension(repoContent.getName()).equals("cwl")) {
@@ -187,11 +195,6 @@ public class ROBundle {
                     Set<HashableAgent> fileAuthors = githubService.getContributors(githubFile, commitSha);
                     authors.addAll(fileAuthors);
                     aggregation.setAuthoredBy(new ArrayList<Agent>(fileAuthors));
-
-                    // Set retrieved information for this file in the manifest
-                    aggregation.setRetrievedFrom(rawURI);
-                    aggregation.setRetrievedBy(thisApp);
-                    aggregation.setRetrievedOn(aggregation.getCreatedOn());
 
                 } catch (URISyntaxException ex) {
                     logger.error("Error creating URI for RO Bundle", ex);
