@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.viewer;
+package org.commonwl.view;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

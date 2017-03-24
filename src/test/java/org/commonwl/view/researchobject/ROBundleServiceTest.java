@@ -35,6 +35,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -119,9 +120,12 @@ public class ROBundleServiceTest {
         Manifest manifest = bundle.getManifest();
 
         // Check files are externally linked in the aggregate
-        Path bundleRoot = bundle.getRoot().resolve("workflow");
+        assertEquals(12, manifest.getAggregates().size());
+
         PathMetadata urlAggregate = manifest.getAggregation(
-                bundleRoot.resolve("lobSTR-demo.url"));
+                new URI("https://raw.githubusercontent.com/common-workflow-language/workflows/" +
+                        "933bf2a1a1cce32d88f88f136275535da9df0954/workflows/lobSTR/models/" +
+                        "illumina_v3.pcrfree.stepmodel"));
         assertEquals("Mark Robinson", urlAggregate.getAuthoredBy().get(0).getName());
 
     }
