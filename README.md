@@ -98,6 +98,19 @@ If you run cwlviewer in production, you are likely to hit the GitHub API's rate 
 
 OAuth tokens can be obtained using the [Github authorizations API](https://developer.github.com/v3/oauth_authorizations/).
 
+## Private Repositories
+
+If you wish to use cwlviewer to view private Github repositories, set
+
+```
+githubAPI.useForDownloads = true
+singleFileSizeLimit = 1048575
+```
+
+Along with an authentication method which has the privileges necessary to access the repository (see above).
+
+**WARNING**: This uses the [Github Contents API](https://developer.github.com/v3/repos/contents/) to download files instead of [Rawgit](https://rawgit.com/) which will increase API calls significantly.
+
 ## Building and Running
 
 To compile you will need [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html) or OpenJDK 8 (`apt install openjdk-8-jdk`),
@@ -118,11 +131,11 @@ You can create an executable JAR file by using:
 
 Afterwards, run:
 
-    java -jar target/cwlvisualizer*.jar
+    java -jar target/cwlviewer*.jar
 
 (The exact filename will vary per version)
 
-Once CWL Visualizer is running, you should see log output somewhat like:
+Once CWL Viewer is running, you should see log output somewhat like:
 
 ```
 ()..)

@@ -35,7 +35,7 @@
                 <div class="col-md-12" role="main" id="main">
                     <h1>Common Workflow Language Viewer</h1>
                     <p>This tool visualises and lists the details of a workflow with its inputs, outputs and steps and
-                        packages the files into a downloadable
+                        packages the files involved into a downloadable
                         <a href="https://researchobject.github.io/specifications/bundle/" rel="noopener" target="_blank">
                             Research Object Bundle</a>
                         (zip file with metadata in a manifest), allowing it to be easily viewed and shared.</p>
@@ -44,17 +44,22 @@
                     </div>
 
                     <h2>Workflow from Github URL</h2>
-                    <p>Provide a link to the directory of files making up your workflow here</p>
+                    <p>Provide a Github link to the workflow here</p>
                     <form id="add" action="#" th:action="@{/}" th:object="${workflowForm}" method="POST">
+                        <div class="alert alert-danger" th:if="${errors} != null and ${errors.hasErrors()}">
+                            <div th:each="error : ${errors.getAllErrors()}">
+                                <strong>Error:</strong> <span th:text="${error.getDefaultMessage()}">Error message here</span>
+                            </div>
+                        </div>
                         <div class="alert alert-danger" th:if="${#fields.hasErrors('githubURL')}">
                             <strong>Error:</strong> <span th:errors="*{githubURL}">Error message here</span>
                         </div>
                         <div class="alert alert-grey">
                             <strong>Don't know what to view?</strong> Try these from <i>common-workflow-language/workflows</i>:
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/compile">compile</a>,
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/make-to-cwl">make-to-cwl</a>,
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR">lobSTR</a>,
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/scidap">scidap</a>
+                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/compile/compile1.cwl">compile</a>,
+                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/make-to-cwl/dna.cwl">make-to-cwl</a>,
+                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl">lobSTR</a>,
+                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/scidap/bam-genomecov-bigwig-rna-dutp.cwl">scidap</a>
                             or <a href="/workflows">explore the collection</a>
                         </div>
                         <div class="input-group">

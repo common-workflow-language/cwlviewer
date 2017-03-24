@@ -29,7 +29,7 @@
     </head>
     <body>
 
-        <nav th:replace="/fragments/header :: navbar"></nav>
+        <nav th:replace="fragments/header :: navbar"></nav>
 
         <div class="container">
             <div class="row">
@@ -40,13 +40,13 @@
                     </div>
                     <p>
                         If this error was unexpected, you can help us by
-                        <a href="https://github.com/common-workflow-language/cwlviewer/issues" rel="noopener" target="_blank">creating a Github issue</a>
+                        <a href="https://github.com/common-workflow-language/cwlviewer/issues" rel="noopener" target="_blank">creating a Github issue</a> with details on how to reproduce it
                         and/or <a href="https://gitter.im/common-workflow-language/common-workflow-language" rel="noopener" target="_blank">discussing it on Gitter</a>
                     </p>
                 </div>
             </div>
         </div>
 
-        <div th:replace="/fragments/footer :: copy"></div>
+        <div th:replace="fragments/footer :: copy"></div>
     </body>
 </html>

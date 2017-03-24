@@ -3,13 +3,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.commonwl</groupId>
-	<artifactId>cwlvisualiser</artifactId>
+	<groupId>org.commonwl.view</groupId>
+	<artifactId>cwlviewer</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>CWLVisualiser</name>
-	<description>Gets a workflow from Github and displays details of it</description>
+	<name>CWLViewer</name>
+	<description>Web application to visualise and enable easy sharing of Common Workflow Language workflows</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
