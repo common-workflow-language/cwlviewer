@@ -27,7 +27,6 @@ import org.apache.taverna.robundle.manifest.Agent;
 import org.apache.taverna.robundle.manifest.Manifest;
 import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.apache.taverna.robundle.manifest.Proxy;
-import org.commonwl.viewer.services.GitHubService;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.eclipse.egit.github.core.CommitUser;
@@ -138,19 +137,6 @@ public class ROBundleService {
     }
 
     /**
-     * Save the Research Object bundle to disk
-     * @param roBundle The bundle to be saved
-     * @return The path to the research object
-     * @throws IOException Any errors in saving
-     */
-    public Path saveToFile(Bundle roBundle) throws IOException {
-        String fileName = "bundle-" + java.util.UUID.randomUUID() + ".zip";
-        Path bundleLocation = Files.createFile(bundleStorage.resolve(fileName));
-        Bundles.closeAndSaveBundle(roBundle, bundleLocation);
-        return bundleLocation;
-    }
-
-    /**
      * Add files to this bundle from a list of Github repository contents
      * @param bundle The RO bundle to add files/directories to
      * @param githubInfo The information used to access the repository
@@ -207,13 +193,12 @@ public class ROBundleService {
                         fileContent = githubService.downloadFile(githubFile, commitSha);
 
                         // Save file to research object bundle
-                        Path bundleFilePath = path.resolve(repoContent.getName());
                         Bundles.setStringValue(bundleFilePath, fileContent);
 
                         // Set retrieved information for this file in the manifest
                         aggregation = bundle.getManifest().getAggregation(bundleFilePath);
                         aggregation.setRetrievedFrom(rawURI);
-                        aggregation.setRetrievedBy(thisApp);
+                        aggregation.setRetrievedBy(appAgent);
                         aggregation.setRetrievedOn(aggregation.getCreatedOn());
                     } else {
                         logger.info("File " + repoContent.getName() + " is too large to download - " +
@@ -279,14 +264,14 @@ public class ROBundleService {
 
     /**
      * Save the Research Object bundle to disk
-     * @param directory The directory in which the RO will be saved
+     * @param roBundle The bundle to be saved
      * @return The path to the research object
      * @throws IOException Any errors in saving
      */
-    public Path saveToFile(Path directory) throws IOException {
+    public Path saveToFile(Bundle roBundle) throws IOException {
         String fileName = "bundle-" + java.util.UUID.randomUUID() + ".zip";
-        Path bundleLocation = Files.createFile(directory.resolve(fileName));
-        Bundles.closeAndSaveBundle(bundle, bundleLocation);
+        Path bundleLocation = Files.createFile(bundleStorage.resolve(fileName));
+        Bundles.closeAndSaveBundle(roBundle, bundleLocation);
         return bundleLocation;
     }
 
