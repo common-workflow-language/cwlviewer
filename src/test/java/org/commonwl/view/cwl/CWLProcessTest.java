@@ -31,8 +31,8 @@ public class CWLProcessTest {
     @Test
     public void testToString() throws Exception {
         assertEquals("Workflow", CWLProcess.WORKFLOW.toString());
-        assertEquals("Commandlinetool", CWLProcess.COMMANDLINETOOL.toString());
-        assertEquals("Expressiontool", CWLProcess.EXPRESSIONTOOL.toString());
+        assertEquals("CommandLineTool", CWLProcess.COMMANDLINETOOL.toString());
+        assertEquals("ExpressionTool", CWLProcess.EXPRESSIONTOOL.toString());
     }
 
 }
