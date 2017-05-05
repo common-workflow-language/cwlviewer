@@ -29,7 +29,15 @@ public enum CWLProcess {
 
     @Override
     public String toString() {
-        String defaultString = super.toString();
-        return defaultString.substring(0, 1) + defaultString.substring(1).toLowerCase();
+        switch (this) {
+            case WORKFLOW:
+                return "Workflow";
+            case COMMANDLINETOOL:
+                return "CommandLineTool";
+            case EXPRESSIONTOOL:
+                return "ExpressionTool";
+            default:
+                return super.toString();
+        }
     }
 }
