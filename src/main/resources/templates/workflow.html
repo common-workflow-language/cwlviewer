@@ -189,7 +189,9 @@ digraph G {
                             <td th:text="${input.key}">ID</td>
                             <td th:text="${input.value.type}">Type</td>
                             <td th:text="${input.value.label}">Label</td>
-                            <td th:text="${input.value.doc}">Description</td>
+                            <td>
+                                <p th:if="${input.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(input.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -220,7 +222,9 @@ digraph G {
                             </div>
                         </td>
                         <td th:text="${step.value.label}">Label</td>
-                        <td th:text="${step.value.doc}">Description</td>
+                        <td>
+                            <p th:if="${step.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(step.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                        </td>
                     </tr>
                     </tbody>
                 </table>
@@ -242,7 +246,9 @@ digraph G {
                             <td th:text="${output.key}">ID</td>
                             <td th:text="${output.value.type}">Type</td>
                             <td th:text="${output.value.label}">Label</td>
-                            <td th:text="${output.value.doc}">Description</td>
+                            <td>
+                                <p th:if="${output.value.doc != null}" th:utext="${#strings.replace(#strings.escapeXml(output.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
