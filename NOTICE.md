@@ -1,5 +1,4 @@
----------------
-CWL Viewer
+# CWL Viewer
 https://github.com/common-workflow-language/cwlviewer/
 
 * Copyright (c) 2016-2017 Mark Robinson
@@ -17,40 +16,72 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
 implied. See the License for the specific language governing
 permissions and limitations under the License.
 
------------------
-static/img/manchester.svg
-Trademark of The University of Manchester.
+-----------
 
+# The University of Manchester logo
+img/manchester.svg
 http://www.brand.manchester.ac.uk/visual-identity/logo/
 
+Trademark of The University of Manchester.
+
 This logo may be used only for attribution within the CWL Viewer project.
------------------
-static/img/BioExcel_logo_cropped.svg
 
-BioExcel logo.
+-----------
 
+# BioExcel logo
+img/BioExcel_logo_cropped.svg
 http://bioexcel.eu/
 
 Distributed under a Creative Commons Attribution 4.0 license.
 https://creativecommons.org/licenses/by/4.0/
------------------
-static/img/CWL-Logo-header.png
+
+-----------
+
+# Common Workflow Language logo
+img/CWL-Logo-header.png
 https://github.com/common-workflow-language/logo
 
 The Common Workflow Language Logos are:
 (C) Copyright 2016 The Common Workflow Language Project
 
-Released under the terms of the [GNU Lesser General Public License, version 3](https://www.gnu.org/licenses/lgpl-3.0.html) or any later version; or, at your option, of the [Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/).
------------------
-static/img/Docker-logo.png
+Released under the terms of the
+[GNU Lesser General Public License, version 3](https://www.gnu.org/licenses/lgpl-3.0.html)
+or any later version; or, at your option, of the
+[Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/).
+
+-----------
+
+# Docker logo
+img/Docker-logo.png
+
 Docker is a registered trademark of Docker, Inc.
 
-Logo used only according to https://www.docker.com/brand-guidelines
------------------
-static/img/Flag_of_Europe.svg
+Logo use according to https://www.docker.com/brand-guidelines
 
+-----------
+
+# GitHub logo
+img/GitHub-Mark-32px.png
+https://github.com/logos
+
+## Logo and Octocat terms of use
+
+GITHUB®, the GITHUB® logo design, OCTOCAT® and the OCTOCAT® logo design are exclusive trademarks registered in the United States by GitHub, Inc.
+
+The OCTOCAT design is the exclusive property of GitHub, Inc and has been federally registered with the United States Copyright Office. All rights reserved.
+
+No adaptation or use of any kind of any of our registered trademarks or copyrights, or any other contents of this website, is allowed without the express written permission of GitHub, Inc.
+
+For more information regarding the authorized uses of these items please [contact us](https://github.com/contact).
+
+-----------
+
+# European Union flag
+img/Flag_of_Europe.svg
 Public Domain
 Source: https://commons.wikimedia.org/wiki/File:Flag_of_Europe.svg
+
+## Copyright
 
 The Council of Europe holds the copyright for the European flag.
 
@@ -71,4 +102,5 @@ The use of the European emblem and/or any of its elements is allowed, irrespecti
 ## Trade mark and related issues
 
 The use of the European emblem in accordance with the conditions in the previous section does not mean consent to registration of the emblem or an imitation thereof as a trade mark or any other IP right. The European Commission (embl@ec.europa.eu) and the Council of Europe (legal.advice@coe.int) will continue the monitoring of applications for registration of the European emblem or part thereof as (part of) IP rights, in accordance with the applicable legal provisions.
------------------
+
+-----------
