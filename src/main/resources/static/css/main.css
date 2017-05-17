@@ -56,6 +56,17 @@ body {
     margin-left: 10px;
 }
 
+.logos {
+  margin-top: 1em;
+}
+
+.logos img {
+  height: 3em;
+  align: top;
+  margin-left: 1em;
+  margin-right: 1em;
+}
+
 .graphControl {
     position: absolute;
     top: 10px;

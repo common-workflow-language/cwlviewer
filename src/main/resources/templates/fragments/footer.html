@@ -30,13 +30,26 @@
             <div class="col-lg-12 muted text-center">
                 <a href="https://github.com/common-workflow-language/cwlviewer" rel="noopener" target="_blank">CWL Viewer</a>
                 &copy; 2016-2017 <a href="https://github.com/common-workflow-language/" rel="noopener" target="_blank">Common Workflow Language Project</a>
-                and <a href="https://github.com/orgs/common-workflow-language/people" rel="noopener" target="_blank">contributors</a>,
-                distributed under <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener" target="_blank">Apache license, version 2.0</a>
+                and <a href="https://github.com/orgs/common-workflow-language/people" rel="noopener" target="_blank">contributors</a>.
+                Distributed under <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener" target="_blank">Apache License, version 2.0</a>
+                (required <a href="https://github.com/common-workflow-language/cwlviewer/blob/master/NOTICE.md" rel="noopener" target="_blank">attribution notices</a>)
                 <br />
                 <span th:if="${workflow != null}">
-                    <a th:href="@{${workflow.retrievedFrom.getURL(workflow.lastCommit)}}" href="#" rel="noopener" target="_blank">Shown workflow</a> has separate copyright and license
+                    <a th:href="@{${workflow.retrievedFrom.getURL(workflow.lastCommit)}}" href="#" rel="noopener" target="_blank">Shown workflow</a> has separate copyright and license.
                 </span>
             </div>
+        </div>
+        <div class="row logos">
+          <div class="col-lg-12 muted text-center">
+            CWL Viewer development thanks to:
+            <a href="http://www.esciencelab.org.uk/" rel="noopener" target="_blank"><img src="/img/manchester.svg"
+              alt="The University of Manchester"
+              title="eScienceLab, School of Computer Science, The University of Manchester" /></a>
+            <a href="http://bioexcel.eu/" rel="noopener" target="_blank"><img src="/img/BioExcel_logo_cropped.svg"
+              alt="BioExcel" title="BioExcel Center of Excellence for Computational Biomolecular Research" /></a>
+            <a href="http://cordis.europa.eu/projects/675728" rel="noopener" target="_blank"><img src="/img/Flag_of_Europe.svg"
+              alt="EU" title="European Commision grant 675728" /></a>
+          </div>
         </div>
     </div>
 </body>
