@@ -104,3 +104,71 @@ The use of the European emblem and/or any of its elements is allowed, irrespecti
 The use of the European emblem in accordance with the conditions in the previous section does not mean consent to registration of the emblem or an imitation thereof as a trade mark or any other IP right. The European Commission (embl@ec.europa.eu) and the Council of Europe (legal.advice@coe.int) will continue the monitoring of applications for registration of the European emblem or part thereof as (part of) IP rights, in accordance with the applicable legal provisions.
 
 -----------
+
+# Bootstrap
+
+bower_components/bootstrap
+https://github.com/twbs/bootstrap/
+
+Code and documentation copyright 2011-2016 Twitter, Inc.
+Code released under the
+[MIT license](src/main/resources/static/bower_components/bootstrap/LICENSE).
+
+-----------
+
+# Hammer.js
+
+bower_components/hammerjs
+https://hammerjs.github.io/
+
+[MIT license](src/main/resources/static/bower_components/hammerjs/LICENSE.md)
+
+-----------
+
+# jquery
+bower_components/jquery
+https://jquery.com/
+
+[MIT license](src/main/resources/static/bower_components/jquery/LICENSE.txt)
+
+
+-----------
+
+# jquery-svg
+
+bower_components/jquery-svg
+http://keith-wood.name/svg.html
+
+[MIT license](http://keith-wood.name/licence.html)
+
+Copyright 2007 - 2015 Keith Wood
+
+================================
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+# requirejs
+bower_components/requirejs
+http://requirejs.org
+
+RequireJS 2.1.15 Copyright (c) 2010-2014, The Dojo Foundation All Rights Reserved.
+
+Available via the MIT or new BSD license.
+See http://github.com/jrburke/requirejs for details
+
+-----------
+
+# svg-pan-zoom
+bower_components/svg-pan-zoom
+http://ariutta.github.io/svg-pan-zoom/
+https://github.com/ariutta/svg-pan-zoom
+
+[BSD 2-clause license](src/main/resources/static/bower_components/svg-pan-zoom/LICENSE)
+
+-----------
