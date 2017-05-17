@@ -144,3 +144,12 @@ org.researchobject.CwlViewerApplication  : Started CwlViewerApplication in 28.60
 ```
 
 Now check out http://localhost:8080/ to access CWL Viewer.
+
+# Thanks
+
+CWL Viewer development thanks to:  
+
+* [eScience Lab](http://www.esciencelab.org.uk/) at [The University of Manchester](http://www.cs.manchester.ac.uk/)
+* [BioExcel Center of Excellence for Computational Biomolecular Research](http://bioexcel.eu/)
+* * European Commission's [H2020 grant 675728](http://cordis.europa.eu/projects/675728)
+* [Common Workflow Language](http://www.commonwl.org/) community
