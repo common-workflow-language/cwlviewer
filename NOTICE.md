@@ -41,7 +41,6 @@ https://creativecommons.org/licenses/by/4.0/
 img/CWL-Logo-header.png
 https://github.com/common-workflow-language/logo
 
-The Common Workflow Language Logos are:
 (C) Copyright 2016 The Common Workflow Language Project
 
 Released under the terms of the
