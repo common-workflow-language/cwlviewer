@@ -38,7 +38,8 @@ https://creativecommons.org/licenses/by/4.0/
 -----------
 
 # Common Workflow Language logo
-img/CWL-Logo-header.png
+img/CWL-Logo-Header.png
+img/CWL-Logo-nofonts.svg
 https://github.com/common-workflow-language/logo
 
 (C) Copyright 2016 The Common Workflow Language Project
@@ -165,7 +166,6 @@ See http://github.com/jrburke/requirejs for details
 
 # svg-pan-zoom
 bower_components/svg-pan-zoom
-http://ariutta.github.io/svg-pan-zoom/
 https://github.com/ariutta/svg-pan-zoom
 
 [BSD 2-clause license](src/main/resources/static/bower_components/svg-pan-zoom/LICENSE)
