@@ -1,7 +1,7 @@
 # CWL Viewer
 https://github.com/common-workflow-language/cwlviewer/
 
-* Copyright (c) 2016-2017 Mark Robinson
+* Copyright (c) 2016-2017 Mark Robinson http://orcid.org/0000-0002-8184-7507
 * Copyright (c) 2016-2017 The University of Manchester
 
 Licensed under the Apache License, Version 2.0 (the "License");
