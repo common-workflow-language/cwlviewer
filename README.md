@@ -147,9 +147,15 @@ Now check out http://localhost:8080/ to access CWL Viewer.
 
 # Thanks
 
-CWL Viewer development thanks to:  
+Developers and [contributors](https://github.com/common-workflow-language/cwlviewer/graphs/contributors) include:
+
+* **Mark Robinson** http://orcid.org/0000-0002-8184-7507 
+* Stian Soiland-Reyes http://orcid.org/0000-0001-9842-9718
+* Michael Crusoe http://orcid.org/0000-0002-2961-9670
+
+Thanks to:  
 
 * [eScience Lab](http://www.esciencelab.org.uk/) at [The University of Manchester](http://www.cs.manchester.ac.uk/)
 * [BioExcel Center of Excellence for Computational Biomolecular Research](http://bioexcel.eu/)
 * * European Commission's [H2020 grant 675728](http://cordis.europa.eu/projects/675728)
-* [Common Workflow Language](http://www.commonwl.org/) community
+* [Common Workflow Language](http://www.commonwl.org/) community and the [CWL Gitter room](https://gitter.im/common-workflow-language/common-workflow-language)
