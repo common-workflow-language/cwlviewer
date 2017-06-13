@@ -40,7 +40,7 @@ public class CWLTool {
             String line;
             String output = "";
             while ((line = br.readLine()) != null) {
-                output += line;
+                output += line + "\n";
             }
 
             int exitCode = process.waitFor();
@@ -78,7 +78,7 @@ public class CWLTool {
             String line;
             String rdf = "";
             while ((line = br.readLine()) != null) {
-                rdf += line;
+                rdf += line + "\n";
             }
 
             return rdf;

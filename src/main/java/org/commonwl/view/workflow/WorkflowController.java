@@ -89,7 +89,6 @@ public class WorkflowController {
      */
     @PostMapping("/")
     public ModelAndView newWorkflowFromGithubURL(@Valid WorkflowForm workflowForm, BindingResult bindingResult) {
-        logger.info("Retrieving workflow from Github: \"" + workflowForm.getGithubURL() + "\"");
 
         // Run validator which checks the github URL is valid
         GithubDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, bindingResult);
