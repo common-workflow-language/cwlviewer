@@ -198,25 +198,65 @@ public class WorkflowService {
                 }
 
                 final String context = "PREFIX cwl: <https://w3id.org/cwl/cwl#>\n" +
-                        "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n";
+                        "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                        "PREFIX sld: <https://w3id.org/cwl/salad#>\n" +
+                        "PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>";
 
                 // Read inputs (cwl:inputs)
+                logger.info("INPUTS");
+                String inputsQuery = context +
+                        "SELECT ?input ?type ?label ?doc \n" +
+                        "WHERE { \n" +
+                        "?wf rdf:type cwl:Workflow .\n" +
+                        "?wf cwl:inputs ?input .\n" +
+                        "OPTIONAL { ?input sld:type ?type } \n" +
+                        "OPTIONAL { ?input sld:label ?label } \n" +
+                        "OPTIONAL { ?input sld:doc ?doc } \n" +
+                        "}";
+                Query query = QueryFactory.create(inputsQuery) ;
+                try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
+                    ResultSet results = qexec.execSelect();
+                    while (results.hasNext()) {
+                        QuerySolution sln = results.nextSolution();
+                        String output = sln.get("input") + " " + sln.get("type");
+                        if (sln.contains("label")) {
+                            output += sln.get("label");
+                        }
+                        if (sln.contains("doc")) {
+                            output += sln.get("doc");
+                        }
+                        logger.info(output);
+                    }
+                }
 
                 // Read outputs (cwl:outputs)
+                logger.info("OUTPUTS");
+                // Outputs are similar to inputs but also have sources for links
 
                 // Read steps (Workflow:steps)
+                logger.info("STEPS");
                 String stepQuery = context +
-                        "SELECT ?step ?run ?runtype \n" +
+                        "SELECT ?step ?run ?runtype ?label ?doc \n" +
                         "WHERE { \n" +
+                        "?wf Workflow:steps ?step .\n" +
                         "?step cwl:run ?run .\n" +
                         "?run rdf:type ?runtype .\n" +
+                        "OPTIONAL { ?run sld:label ?label } \n" +
+                        "OPTIONAL { ?run sld:doc ?doc } \n" +
                         "}";
-                Query query = QueryFactory.create(stepQuery) ;
+                query = QueryFactory.create(stepQuery) ;
                 try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
                     ResultSet results = qexec.execSelect() ;
                     while(results.hasNext()) {
-                        QuerySolution soln = results.nextSolution();
-                        logger.error(soln.get("step") + " " + soln.get("run") + " " + soln.get("runtype"));
+                        QuerySolution sln = results.nextSolution();
+                        String output = sln.get("step") + " " + sln.get("run") + " " + sln.get("runtype");
+                        if (sln.contains("label")) {
+                            output += sln.get("label");
+                        }
+                        if (sln.contains("doc")) {
+                            output += sln.get("doc");
+                        }
+                        logger.info(output);
                     }
                 }
 
