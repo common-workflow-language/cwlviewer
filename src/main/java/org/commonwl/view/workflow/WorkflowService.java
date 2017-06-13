@@ -123,18 +123,16 @@ public class WorkflowService {
         if (workflow != null) {
             // Delete the existing workflow if the cache has expired
             if (cacheExpired(workflow)) {
-                // Update by trying to add a new workflow
+                removeWorkflow(workflow);
+
+                // Add the new workflow if it exists
                 Workflow newWorkflow = createWorkflow(workflow.getRetrievedFrom());
 
-                // Only replace workflow if it could be successfully parsed
                 if (newWorkflow == null) {
+                    // Add back the old workflow if it is broken now
                     logger.error("Could not parse updated workflow " + workflow.getID());
+                    workflowRepository.save(workflow);
                 } else {
-                    // Delete the existing workflow
-                    removeWorkflow(workflow);
-
-                    // Save new workflow
-                    workflowRepository.save(newWorkflow);
                     workflow = newWorkflow;
                 }
             }
