@@ -32,6 +32,9 @@ public class CWLStep {
     private CWLProcess runType;
     private Map<String, CWLElement> sources;
 
+    public CWLStep() {
+    }
+
     public CWLStep(String label, String doc, String run,
                    Map<String, CWLElement> sources) {
         this.label = label;
@@ -74,6 +77,10 @@ public class CWLStep {
 
     public Map<String, CWLElement> getSources() {
         return sources;
+    }
+
+    public void setSources(Map<String, CWLElement> sources) {
+        this.sources = sources;
     }
 
 }

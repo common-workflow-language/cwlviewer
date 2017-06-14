@@ -19,14 +19,12 @@
 
 package org.commonwl.view.workflow;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.jena.query.*;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.vocabulary.RDFS;
-import org.commonwl.view.cwl.CWLService;
-import org.commonwl.view.cwl.CWLTool;
+import org.commonwl.view.cwl.*;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -44,10 +42,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class WorkflowService {
@@ -57,6 +52,7 @@ public class WorkflowService {
     private final GitHubService githubService;
     private final CWLService cwlService;
     private final CWLTool cwlTool;
+    private final RDFService rdfService;
     private final WorkflowRepository workflowRepository;
     private final ROBundleFactory ROBundleFactory;
     private final GraphVizService graphVizService;
@@ -66,6 +62,7 @@ public class WorkflowService {
     public WorkflowService(GitHubService githubService,
                            CWLService cwlService,
                            CWLTool cwlTool,
+                           RDFService rdfService,
                            WorkflowRepository workflowRepository,
                            ROBundleFactory ROBundleFactory,
                            GraphVizService graphVizService,
@@ -73,6 +70,7 @@ public class WorkflowService {
         this.githubService = githubService;
         this.cwlService = cwlService;
         this.cwlTool = cwlTool;
+        this.rdfService = rdfService;
         this.workflowRepository = workflowRepository;
         this.ROBundleFactory = ROBundleFactory;
         this.graphVizService = graphVizService;
@@ -184,86 +182,92 @@ public class WorkflowService {
 
                 // Base workflow details
                 Resource workflow = model.getResource(url);
-                String label;
-                String doc;
+                String label = rdfService.getLabel(workflow);
+                String doc = rdfService.getDoc(workflow);
 
-                if (workflow.hasProperty(RDFS.label)) {
-                    label = workflow.getProperty(RDFS.label).toString();
-                } else {
-                    label = FilenameUtils.getName(url);
+                // Inputs
+                Map<String, CWLElement> wfInputs = new HashMap<>();
+                ResultSet inputs = rdfService.getInputs(model);
+                while (inputs.hasNext()) {
+                    QuerySolution input = inputs.nextSolution();
+                    CWLElement wfInput = new CWLElement();
+                    wfInput.setType(input.get("type").toString());
+                    if (input.contains("label")) {
+                        wfInput.setLabel(input.get("label").toString());
+                    }
+                    if (input.contains("doc")) {
+                        wfInput.setDoc(input.get("doc").toString());
+                    }
+                    wfInputs.put(input.get("input").toString(), wfInput);
                 }
 
-                if (workflow.hasProperty(RDFS.comment)) {
-                    doc = workflow.getProperty(RDFS.comment).toString();
+                // Outputs
+                Map<String, CWLElement> wfOutputs = new HashMap<>();
+                ResultSet outputs = rdfService.getOutputs(model);
+                while (outputs.hasNext()) {
+                    QuerySolution output = outputs.nextSolution();
+                    CWLElement wfOutput = new CWLElement();
+                    wfOutput.setType(output.get("type").toString());
+                    if (output.contains("src")) {
+                        wfOutput.addSourceID(output.get("src").toString());
+                    }
+                    if (output.contains("label")) {
+                        wfOutput.setLabel(output.get("label").toString());
+                    }
+                    if (output.contains("doc")) {
+                        wfOutput.setDoc(output.get("doc").toString());
+                    }
+                    wfOutputs.put(output.get("output").toString(), wfOutput);
                 }
 
-                final String context = "PREFIX cwl: <https://w3id.org/cwl/cwl#>\n" +
-                        "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-                        "PREFIX sld: <https://w3id.org/cwl/salad#>\n" +
-                        "PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>";
 
-                // Read inputs (cwl:inputs)
-                logger.info("INPUTS");
-                String inputsQuery = context +
-                        "SELECT ?input ?type ?label ?doc \n" +
-                        "WHERE { \n" +
-                        "?wf rdf:type cwl:Workflow .\n" +
-                        "?wf cwl:inputs ?input .\n" +
-                        "OPTIONAL { ?input sld:type ?type } \n" +
-                        "OPTIONAL { ?input sld:label ?label } \n" +
-                        "OPTIONAL { ?input sld:doc ?doc } \n" +
-                        "}";
-                Query query = QueryFactory.create(inputsQuery) ;
-                try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
-                    ResultSet results = qexec.execSelect();
-                    while (results.hasNext()) {
-                        QuerySolution sln = results.nextSolution();
-                        String output = sln.get("input") + " " + sln.get("type");
-                        if (sln.contains("label")) {
-                            output += sln.get("label");
+                // Steps
+                Map<String, CWLStep> wfSteps = new HashMap<>();
+                ResultSet steps = rdfService.getSteps(model);
+                while(steps.hasNext()) {
+                    QuerySolution step = steps.nextSolution();
+                    String uri = step.get("step").toString();
+                    if (wfSteps.containsKey(uri)) {
+                        // Already got step details, add extra source ID
+                        if (step.contains("src")) {
+                            CWLElement src = new CWLElement();
+                            src.addSourceID(step.get("src").toString());
+                            wfSteps.get(uri).getSources().put(
+                                    step.get("stepinput").toString(), src);
                         }
-                        if (sln.contains("doc")) {
-                            output += sln.get("doc");
+                    } else {
+                        // Add new step
+                        CWLStep wfStep = new CWLStep();
+                        wfStep.setRun(step.get("run").toString());
+                        if (step.contains("src")) {
+                            CWLElement src = new CWLElement();
+                            src.addSourceID(step.get("src").toString());
+                            Map<String, CWLElement> srcList = new HashMap<>();
+                            srcList.put(step.get("stepinput").toString(), src);
+                            wfStep.setSources(srcList);
                         }
-                        logger.info(output);
+                        if (step.contains("label")) {
+                            wfStep.setLabel(step.get("label").toString());
+                        }
+                        if (step.contains("doc")) {
+                            wfStep.setDoc(step.get("doc").toString());
+                        }
+                        wfSteps.put(uri, wfStep);
                     }
                 }
 
-                // Read outputs (cwl:outputs)
-                logger.info("OUTPUTS");
-                // Outputs are similar to inputs but also have sources for links
-
-                // Read steps (Workflow:steps)
-                logger.info("STEPS");
-                String stepQuery = context +
-                        "SELECT ?step ?run ?runtype ?label ?doc \n" +
-                        "WHERE { \n" +
-                        "?wf Workflow:steps ?step .\n" +
-                        "?step cwl:run ?run .\n" +
-                        "?run rdf:type ?runtype .\n" +
-                        "OPTIONAL { ?run sld:label ?label } \n" +
-                        "OPTIONAL { ?run sld:doc ?doc } \n" +
-                        "}";
-                query = QueryFactory.create(stepQuery) ;
-                try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
-                    ResultSet results = qexec.execSelect() ;
-                    while(results.hasNext()) {
-                        QuerySolution sln = results.nextSolution();
-                        String output = sln.get("step") + " " + sln.get("run") + " " + sln.get("runtype");
-                        if (sln.contains("label")) {
-                            output += sln.get("label");
-                        }
-                        if (sln.contains("doc")) {
-                            output += sln.get("doc");
-                        }
-                        logger.info(output);
-                    }
-                }
-
-                // Read docker image (cwl:requirements)
+                // Docker link
 
                 // Create workflow model
-                //Workflow workflowModel = new Workflow(label, doc, );
+                Workflow workflowModel = new Workflow(label, doc,
+                        wfInputs, wfOutputs, wfSteps, null);
+                workflowModel.generateDOT();
+
+                workflowModel.setRetrievedOn(new Date());
+                workflowModel.setRetrievedFrom(githubInfo);
+                workflowModel.setLastCommit(latestCommit);
+
+                return workflowModel;
 
             }
 
