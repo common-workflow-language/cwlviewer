@@ -19,6 +19,7 @@
 
 package org.commonwl.view.workflow;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
@@ -42,6 +43,8 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @Service
@@ -198,7 +201,8 @@ public class WorkflowService {
                     if (input.contains("doc")) {
                         wfInput.setDoc(input.get("doc").toString());
                     }
-                    wfInputs.put(input.get("input").toString(), wfInput);
+                    wfInputs.put(simplifyURI(
+                            input.get("input").toString()), wfInput);
                 }
 
                 // Outputs
@@ -209,7 +213,8 @@ public class WorkflowService {
                     CWLElement wfOutput = new CWLElement();
                     wfOutput.setType(output.get("type").toString());
                     if (output.contains("src")) {
-                        wfOutput.addSourceID(output.get("src").toString());
+                        wfOutput.addSourceID(simplifyURI(
+                                output.get("src").toString()));
                     }
                     if (output.contains("label")) {
                         wfOutput.setLabel(output.get("label").toString());
@@ -217,7 +222,8 @@ public class WorkflowService {
                     if (output.contains("doc")) {
                         wfOutput.setDoc(output.get("doc").toString());
                     }
-                    wfOutputs.put(output.get("output").toString(), wfOutput);
+                    wfOutputs.put(simplifyURI(
+                            output.get("output").toString()), wfOutput);
                 }
 
 
@@ -226,24 +232,29 @@ public class WorkflowService {
                 ResultSet steps = rdfService.getSteps(model);
                 while(steps.hasNext()) {
                     QuerySolution step = steps.nextSolution();
-                    String uri = step.get("step").toString();
+                    String uri = simplifyURI(step.get("step").toString());
                     if (wfSteps.containsKey(uri)) {
                         // Already got step details, add extra source ID
                         if (step.contains("src")) {
                             CWLElement src = new CWLElement();
-                            src.addSourceID(step.get("src").toString());
+                            src.addSourceID(simplifyURI(step.get("src").toString()));
                             wfSteps.get(uri).getSources().put(
                                     step.get("stepinput").toString(), src);
                         }
                     } else {
                         // Add new step
                         CWLStep wfStep = new CWLStep();
-                        wfStep.setRun(step.get("run").toString());
+
+                        Path workflowPath = Paths.get(FilenameUtils.getPath(url));
+                        Path runPath = Paths.get(step.get("run").toString());
+                        wfStep.setRun(workflowPath.relativize(runPath).toString());
+
                         if (step.contains("src")) {
                             CWLElement src = new CWLElement();
-                            src.addSourceID(step.get("src").toString());
+                            src.addSourceID(simplifyURI(step.get("src").toString()));
                             Map<String, CWLElement> srcList = new HashMap<>();
-                            srcList.put(step.get("stepinput").toString(), src);
+                            srcList.put(simplifyURI(
+                                    step.get("stepinput").toString()), src);
                             wfStep.setSources(srcList);
                         }
                         if (step.contains("label")) {
@@ -263,17 +274,6 @@ public class WorkflowService {
                         wfInputs, wfOutputs, wfSteps, null);
                 workflowModel.generateDOT();
 
-                workflowModel.setRetrievedOn(new Date());
-                workflowModel.setRetrievedFrom(githubInfo);
-                workflowModel.setLastCommit(latestCommit);
-
-                return workflowModel;
-
-            }
-
-            //Workflow workflowModel = new Workflow();
-
-            /*if (workflowModel != null) {
                 // Set origin details
                 workflowModel.setRetrievedOn(new Date());
                 workflowModel.setRetrievedFrom(githubInfo);
@@ -288,15 +288,26 @@ public class WorkflowService {
 
                 // Return this model to be displayed
                 return workflowModel;
-            } else {
-                logger.error("No workflow could be found");
-            }*/
+
+            }
 
         } catch (Exception ex) {
             logger.error("Error creating workflow", ex);
         }
 
         return null;
+    }
+
+    private String simplifyURI(String uri) {
+        int lastHash = uri.lastIndexOf('#');
+        if (lastHash != -1) {
+            uri = uri.substring(lastHash + 1);
+            int lastSlash = uri.lastIndexOf('/');
+            if (lastSlash != -1) {
+                uri = uri.substring(0, lastSlash);
+            }
+        }
+        return uri;
     }
 
     /**
