@@ -7,4 +7,5 @@ services: mongodb
 
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install graphviz
+  - sudo apt-get install graphviz python-pip
+  - sudo pip install cwltool
