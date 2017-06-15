@@ -25,9 +25,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.*;
 import org.commonwl.view.docker.DockerService;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
@@ -97,7 +95,7 @@ public class CWLService {
      */
     public Workflow parseWorkflow(GithubDetails githubInfo, String latestCommit) throws IOException {
 
-        // Get rdf representation from cwltool
+        // Get RDF representation from cwltool
         String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
                 githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
         String rdf = cwlTool.getRDF(url);
@@ -117,7 +115,20 @@ public class CWLService {
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
             CWLElement wfInput = new CWLElement();
+
+            // Standard types
             wfInput.setType(typeURIToString(input.get("type").toString()));
+
+            // Array types
+            StmtIterator itr = input.get("type").asResource().listProperties();
+            while (itr.hasNext()) {
+                Statement complexType = itr.nextStatement();
+                if (complexType.getPredicate().toString()
+                        .equals("https://w3id.org/cwl/salad#items")) {
+                    wfInput.setType(typeURIToString(complexType.getObject().toString()) + "[]");
+                }
+            }
+
             if (input.contains("label")) {
                 wfInput.setLabel(input.get("label").toString());
             }
