@@ -113,7 +113,7 @@ public class CWLService {
 
         // Inputs
         Map<String, CWLElement> wfInputs = new HashMap<>();
-        ResultSet inputs = rdfService.getInputs(model);
+        ResultSet inputs = rdfService.getInputs(model, url);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
             CWLElement wfInput = new CWLElement();
@@ -130,7 +130,7 @@ public class CWLService {
 
         // Outputs
         Map<String, CWLElement> wfOutputs = new HashMap<>();
-        ResultSet outputs = rdfService.getOutputs(model);
+        ResultSet outputs = rdfService.getOutputs(model, url);
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
             CWLElement wfOutput = new CWLElement();
@@ -152,7 +152,7 @@ public class CWLService {
 
         // Steps
         Map<String, CWLStep> wfSteps = new HashMap<>();
-        ResultSet steps = rdfService.getSteps(model);
+        ResultSet steps = rdfService.getSteps(model, url);
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
             String uri = stepFromURI(step.get("step").toString());
@@ -163,6 +163,11 @@ public class CWLService {
                     src.addSourceID(stepFromURI(step.get("src").toString()));
                     wfSteps.get(uri).getSources().put(
                             step.get("stepinput").toString(), src);
+                } else if (step.contains("default")) {
+                    CWLElement src = new CWLElement();
+                    src.setDefaultVal(formatDefault(step.get("default").toString()));
+                    wfSteps.get(uri).getSources().put(
+                            step.get("stepinput").toString(), src);
                 }
             } else {
                 // Add new step
@@ -171,10 +176,18 @@ public class CWLService {
                 Path workflowPath = Paths.get(FilenameUtils.getPath(url));
                 Path runPath = Paths.get(step.get("run").toString());
                 wfStep.setRun(workflowPath.relativize(runPath).toString());
+                wfStep.setRunType(strToRuntype(step.get("runtype").toString()));
 
                 if (step.contains("src")) {
                     CWLElement src = new CWLElement();
                     src.addSourceID(stepFromURI(step.get("src").toString()));
+                    Map<String, CWLElement> srcList = new HashMap<>();
+                    srcList.put(stepFromURI(
+                            step.get("stepinput").toString()), src);
+                    wfStep.setSources(srcList);
+                } else if (step.contains("default")) {
+                    CWLElement src = new CWLElement();
+                    src.setDefaultVal(formatDefault(step.get("default").toString()));
                     Map<String, CWLElement> srcList = new HashMap<>();
                     srcList.put(stepFromURI(
                             step.get("stepinput").toString()), src);
@@ -191,7 +204,7 @@ public class CWLService {
         }
 
         // Docker link
-        ResultSet dockerResult = rdfService.getDockerLink(model);
+        ResultSet dockerResult = rdfService.getDockerLink(model, url);
         String dockerLink = null;
         if (dockerResult.hasNext()) {
             QuerySolution docker = dockerResult.nextSolution();
@@ -277,6 +290,37 @@ public class CWLService {
             }
         }
         return uri;
+    }
+
+    /**
+     * Format a default value
+     * @param defaultVal The default value
+     * @return Default value suitable for a node label
+     */
+    private String formatDefault(String defaultVal) {
+        int lastCaret = defaultVal.indexOf("^^");
+        if (lastCaret != -1) {
+            return defaultVal.substring(0, lastCaret);
+        }
+        return defaultVal;
+    }
+
+    /**
+     * Convert an RDF type to cwl process
+     * @param runtype The string from the RDF
+     * @return CWL process the string refers to
+     */
+    private CWLProcess strToRuntype(String runtype) {
+        switch (runtype) {
+            case "https://w3id.org/cwl/cwl#Workflow":
+                return CWLProcess.WORKFLOW;
+            case "https://w3id.org/cwl/cwl#CommandLineTool":
+                return CWLProcess.COMMANDLINETOOL;
+            case "https://w3id.org/cwl/cwl#ExpressionTool":
+                return CWLProcess.EXPRESSIONTOOL;
+            default:
+                return null;
+        }
     }
 
     /**

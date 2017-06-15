@@ -49,14 +49,15 @@ public class RDFService {
     /**
      * Get the inputs for the workflow in the model
      * @param model RDF model of the workflow and tools
+     * @param workflowURI URI of the workflow
      * @return The result set of inputs
      */
-    public ResultSet getInputs(Model model) {
+    public ResultSet getInputs(Model model, String workflowURI) {
         String inputsQuery = queryCtx +
-                "SELECT ?input ?type ?label ?doc ?default\n" +
+                "SELECT ?input ?type ?label ?doc\n" +
                 "WHERE {\n" +
-                "    ?wf rdf:type cwl:Workflow .\n" +
-                "    ?wf cwl:inputs ?input .\n" +
+                "    <" + workflowURI + "> rdf:type cwl:Workflow .\n" +
+                "    <" + workflowURI + "> cwl:inputs ?input .\n" +
                 "    OPTIONAL { ?input sld:type ?type }\n" +
                 "    OPTIONAL { ?input sld:label ?label }\n" +
                 "    OPTIONAL { ?input sld:doc ?doc }\n" +
@@ -67,14 +68,15 @@ public class RDFService {
     /**
      * Get the outputs for the workflow in the model
      * @param model RDF model of the workflow and tools
+     * @param workflowURI URI of the workflow
      * @return The result set of outputs
      */
-    public ResultSet getOutputs(Model model) {
+    public ResultSet getOutputs(Model model, String workflowURI) {
         String outputsQuery = queryCtx +
                 "SELECT ?output ?type ?src ?label ?doc\n" +
                 "WHERE {\n" +
-                "    ?wf rdf:type cwl:Workflow .\n" +
-                "    ?wf cwl:outputs ?output .\n" +
+                "    <" + workflowURI + "> rdf:type cwl:Workflow .\n" +
+                "    <" + workflowURI + "> cwl:outputs ?output .\n" +
                 "    OPTIONAL { ?output cwl:outputSource ?src }\n" +
                 "    OPTIONAL { ?output sld:type ?type }\n" +
                 "    OPTIONAL { ?output sld:label ?label }\n" +
@@ -86,18 +88,19 @@ public class RDFService {
     /**
      * Get the steps for the workflow in the model
      * @param model RDF model of the workflow and tools
+     * @param workflowURI URI of the workflow
      * @return The result set of steps
      */
-    public ResultSet getSteps(Model model) {
+    public ResultSet getSteps(Model model, String workflowURI) {
         String stepQuery = queryCtx +
-                "SELECT ?step ?run ?runtype ?label ?doc ?stepinput ?src\n" +
+                "SELECT ?step ?run ?runtype ?label ?doc ?stepinput ?default ?src\n" +
                 "WHERE {\n" +
-                "    ?wf Workflow:steps ?step .\n" +
+                "    <" + workflowURI + "> Workflow:steps ?step .\n" +
                 "    ?step cwl:run ?run .\n" +
                 "    ?run rdf:type ?runtype .\n" +
                 "    OPTIONAL { \n" +
                 "        ?step cwl:in ?stepinput .\n" +
-                "        ?stepinput cwl:source ?src\n" +
+                "        { ?stepinput cwl:source ?src } UNION {?stepinput cwl:default ?default}\n" +
                 "    }\n" +
                 "    OPTIONAL { ?run sld:label ?label }\n" +
                 "    OPTIONAL { ?run sld:doc ?doc }\n" +
@@ -108,14 +111,15 @@ public class RDFService {
     /**
      * Gets the docker requirement and pull link for a workflow
      * @param model RDF model of the workflow and tools
+     * @param workflowURI URI of the workflow
      * @return Result set of docker hint and pull link
      */
-    public ResultSet getDockerLink(Model model) {
+    public ResultSet getDockerLink(Model model, String workflowURI) {
         String dockerQuery = queryCtx +
                 "SELECT ?docker ?pull\n" +
                 "WHERE {\n" +
-                "    ?wf rdf:type cwl:Workflow .\n" +
-                "    { ?wf cwl:requirements ?docker } UNION { ?wf cwl:hints ?docker} .\n" +
+                "    <" + workflowURI + "> rdf:type cwl:Workflow .\n" +
+                "    { <" + workflowURI + "> cwl:requirements ?docker } UNION { <" + workflowURI + "> cwl:hints ?docker} .\n" +
                 "    ?docker rdf:type cwl:DockerRequirement.\n" +
                 "    OPTIONAL { ?docker DockerRequirement:dockerPull ?pull }\n" +
                 "}";
