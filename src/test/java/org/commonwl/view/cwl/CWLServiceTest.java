@@ -56,7 +56,8 @@ public class CWLServiceTest {
         // Test cwl service
         GitHubService mockGithubService = getMockGithubService("workflows/hello/",
                 "src/test/resources/cwl/hello/");
-        CWLService cwlService = new CWLService(mockGithubService, 5242880);
+        CWLService cwlService = new CWLService(mockGithubService,
+                Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails helloDetails = new GithubDetails("common-workflow-language",
@@ -76,7 +77,8 @@ public class CWLServiceTest {
         // Test cwl service
         GitHubService mockGithubService = getMockGithubService("workflows/lobSTR/",
                 "src/test/resources/cwl/lobstr-draft3/");
-        CWLService cwlService = new CWLService(mockGithubService, 5242880);
+        CWLService cwlService = new CWLService(mockGithubService,
+                Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails lobSTRDraft3Details = new GithubDetails("common-workflow-language",
@@ -98,7 +100,8 @@ public class CWLServiceTest {
         // Test cwl service
         GitHubService mockGithubService = getMockGithubService("workflows/lobSTR/",
                 "src/test/resources/cwl/lobstr-v1/");
-        CWLService cwlService = new CWLService(mockGithubService, 5242880);
+        CWLService cwlService = new CWLService(mockGithubService,
+                Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language",
@@ -121,7 +124,8 @@ public class CWLServiceTest {
         // Test cwl service
         GitHubService mockGithubService = getMockGithubService("workflows/hello/",
                 "src/test/resources/cwl/hello/");
-        CWLService cwlService = new CWLService(mockGithubService, 0);
+        CWLService cwlService = new CWLService(mockGithubService,
+                Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 0);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails helloDetails = new GithubDetails("common-workflow-language",
@@ -146,7 +150,8 @@ public class CWLServiceTest {
                 .thenReturn(FileUtils.readFileToString(workflowFile));
 
         // Test cwl service
-        CWLService cwlService = new CWLService(mockGithubService, 5242880);
+        CWLService cwlService = new CWLService(mockGithubService,
+                Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 5242880);
 
         // Run workflow overview
         GithubDetails helloDetails = new GithubDetails("common-workflow-language",
@@ -174,7 +179,8 @@ public class CWLServiceTest {
                 .thenReturn(FileUtils.readFileToString(workflowFile));
 
         // Test cwl service with 0 filesize limit
-        CWLService cwlService = new CWLService(mockGithubService, 0);
+        CWLService cwlService = new CWLService(mockGithubService,
+                Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 0);
 
         // Run workflow overview
         GithubDetails helloDetails = new GithubDetails("common-workflow-language",

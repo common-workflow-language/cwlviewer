@@ -19,13 +19,8 @@
 
 package org.commonwl.view.workflow;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
-import org.commonwl.view.cwl.*;
+import org.commonwl.view.cwl.CWLService;
+import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -40,12 +35,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 @Service
 public class WorkflowService {
@@ -54,8 +49,6 @@ public class WorkflowService {
 
     private final GitHubService githubService;
     private final CWLService cwlService;
-    private final CWLTool cwlTool;
-    private final RDFService rdfService;
     private final WorkflowRepository workflowRepository;
     private final ROBundleFactory ROBundleFactory;
     private final GraphVizService graphVizService;
@@ -64,16 +57,12 @@ public class WorkflowService {
     @Autowired
     public WorkflowService(GitHubService githubService,
                            CWLService cwlService,
-                           CWLTool cwlTool,
-                           RDFService rdfService,
                            WorkflowRepository workflowRepository,
                            ROBundleFactory ROBundleFactory,
                            GraphVizService graphVizService,
                            @Value("${cacheDays}") int cacheDays) {
         this.githubService = githubService;
         this.cwlService = cwlService;
-        this.cwlTool = cwlTool;
-        this.rdfService = rdfService;
         this.workflowRepository = workflowRepository;
         this.ROBundleFactory = ROBundleFactory;
         this.graphVizService = graphVizService;
@@ -128,7 +117,27 @@ public class WorkflowService {
      * @return The workflow model associated with githubInfo
      */
     public Workflow getWorkflow(GithubDetails githubInfo) {
-        return null;
+        // Check database for existing workflows from this repository
+        Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
+
+        // Cache update
+        if (workflow != null) {
+            // Delete the existing workflow if the cache has expired
+            if (cacheExpired(workflow)) {
+                removeWorkflow(workflow);
+
+                // Add the new workflow if it exists
+                try {
+                    workflow = createWorkflow(workflow.getRetrievedFrom());
+                } catch (Exception e) {
+                    // Add back the old workflow if it is broken now
+                    logger.error("Could not parse updated workflow " + workflow.getID());
+                    workflowRepository.save(workflow);
+                }
+            }
+        }
+
+        return workflow;
     }
 
     /**
@@ -168,110 +177,10 @@ public class WorkflowService {
      */
     public Workflow createWorkflow(GithubDetails githubInfo)
             throws IOException, CWLValidationException {
-        // Get the sha hash from a branch reference
+
+        // Construct basic workflow model from cwl
         String latestCommit = githubService.getCommitSha(githubInfo);
-
-        // Get rdf representation from cwltool
-        String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
-                githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
-
-        // If valid, get the RDF representation
-        String rdf = cwlTool.getRDF(url);
-
-        // Create a workflow model from RDF representation
-        final Model model = ModelFactory.createDefaultModel();
-        model.read(new ByteArrayInputStream(rdf.getBytes()), null, "TURTLE");
-
-        // Base workflow details
-        Resource workflow = model.getResource(url);
-        String label = rdfService.getLabel(workflow);
-        String doc = rdfService.getDoc(workflow);
-
-        // Inputs
-        Map<String, CWLElement> wfInputs = new HashMap<>();
-        ResultSet inputs = rdfService.getInputs(model);
-        while (inputs.hasNext()) {
-            QuerySolution input = inputs.nextSolution();
-            CWLElement wfInput = new CWLElement();
-            wfInput.setType(input.get("type").toString());
-            if (input.contains("label")) {
-                wfInput.setLabel(input.get("label").toString());
-            }
-            if (input.contains("doc")) {
-                wfInput.setDoc(input.get("doc").toString());
-            }
-            wfInputs.put(simplifyURI(
-                    input.get("input").toString()), wfInput);
-        }
-
-        // Outputs
-        Map<String, CWLElement> wfOutputs = new HashMap<>();
-        ResultSet outputs = rdfService.getOutputs(model);
-        while (outputs.hasNext()) {
-            QuerySolution output = outputs.nextSolution();
-            CWLElement wfOutput = new CWLElement();
-            wfOutput.setType(output.get("type").toString());
-            if (output.contains("src")) {
-                wfOutput.addSourceID(simplifyURI(
-                        output.get("src").toString()));
-            }
-            if (output.contains("label")) {
-                wfOutput.setLabel(output.get("label").toString());
-            }
-            if (output.contains("doc")) {
-                wfOutput.setDoc(output.get("doc").toString());
-            }
-            wfOutputs.put(simplifyURI(
-                    output.get("output").toString()), wfOutput);
-        }
-
-
-        // Steps
-        Map<String, CWLStep> wfSteps = new HashMap<>();
-        ResultSet steps = rdfService.getSteps(model);
-        while(steps.hasNext()) {
-            QuerySolution step = steps.nextSolution();
-            String uri = simplifyURI(step.get("step").toString());
-            if (wfSteps.containsKey(uri)) {
-                // Already got step details, add extra source ID
-                if (step.contains("src")) {
-                    CWLElement src = new CWLElement();
-                    src.addSourceID(simplifyURI(step.get("src").toString()));
-                    wfSteps.get(uri).getSources().put(
-                            step.get("stepinput").toString(), src);
-                }
-            } else {
-                // Add new step
-                CWLStep wfStep = new CWLStep();
-
-                Path workflowPath = Paths.get(FilenameUtils.getPath(url));
-                Path runPath = Paths.get(step.get("run").toString());
-                wfStep.setRun(workflowPath.relativize(runPath).toString());
-
-                if (step.contains("src")) {
-                    CWLElement src = new CWLElement();
-                    src.addSourceID(simplifyURI(step.get("src").toString()));
-                    Map<String, CWLElement> srcList = new HashMap<>();
-                    srcList.put(simplifyURI(
-                            step.get("stepinput").toString()), src);
-                    wfStep.setSources(srcList);
-                }
-                if (step.contains("label")) {
-                    wfStep.setLabel(step.get("label").toString());
-                }
-                if (step.contains("doc")) {
-                    wfStep.setDoc(step.get("doc").toString());
-                }
-                wfSteps.put(uri, wfStep);
-            }
-        }
-
-        // Docker link
-
-        // Create workflow model
-        Workflow workflowModel = new Workflow(label, doc,
-                wfInputs, wfOutputs, wfSteps, null);
-        workflowModel.generateDOT();
+        Workflow workflowModel = cwlService.parseWorkflow(githubInfo, latestCommit);
 
         // Set origin details
         workflowModel.setRetrievedOn(new Date());
@@ -288,18 +197,6 @@ public class WorkflowService {
         // Return this model to be displayed
         return workflowModel;
 
-    }
-
-    private String simplifyURI(String uri) {
-        int lastHash = uri.lastIndexOf('#');
-        if (lastHash != -1) {
-            uri = uri.substring(lastHash + 1);
-            int lastSlash = uri.lastIndexOf('/');
-            if (lastSlash != -1) {
-                uri = uri.substring(0, lastSlash);
-            }
-        }
-        return uri;
     }
 
     /**

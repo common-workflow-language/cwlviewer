@@ -20,8 +20,6 @@
 package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLService;
-import org.commonwl.view.cwl.CWLTool;
-import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -95,7 +93,6 @@ public class WorkflowServiceTest {
         // Create service under test
         WorkflowService testWorkflowService = new WorkflowService(
                 mockGithubService, mockCWLService,
-                Mockito.mock(CWLTool.class), Mockito.mock(RDFService.class),
                 Mockito.mock(WorkflowRepository.class), Mockito.mock(ROBundleFactory.class),
                 Mockito.mock(GraphVizService.class), 1);
 
@@ -143,7 +140,6 @@ public class WorkflowServiceTest {
         // Create service under test with negative cache time (always create new workflow)
         WorkflowService testWorkflowService = new WorkflowService(
                 Mockito.mock(GitHubService.class), mockCWLService,
-                Mockito.mock(CWLTool.class), Mockito.mock(RDFService.class),
                 mockWorkflowRepo, Mockito.mock(ROBundleFactory.class),
                 Mockito.mock(GraphVizService.class), -1);
 
@@ -177,7 +173,6 @@ public class WorkflowServiceTest {
         // Create service under test
         WorkflowService testWorkflowService = new WorkflowService(
                 Mockito.mock(GitHubService.class), Mockito.mock(CWLService.class),
-                Mockito.mock(CWLTool.class), Mockito.mock(RDFService.class),
                 mockWorkflowRepo, Mockito.mock(ROBundleFactory.class),
                 Mockito.mock(GraphVizService.class), -1);
 
