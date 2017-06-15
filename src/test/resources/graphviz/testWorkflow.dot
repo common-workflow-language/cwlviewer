@@ -49,4 +49,9 @@ digraph workflow {
   "input2" -> "step1";
   "default1" [label="examplefile.jar", fillcolor="#D5AEFC"]
   "default1" -> "step1";
+
+  // Invisible links to force outputs to be at lowest rank
+  "default1" -> "output" [style=invis];
+  "step2" -> "output" [style=invis];
+  "step1" -> "output" [style=invis];
 }
