@@ -16,7 +16,10 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
   org.label-schema.schema-version="1.0"
 
 
-RUN apk add --update graphviz ttf-freefont && rm -rf /var/cache/apk/*
+RUN apk add --update graphviz ttf-freefont py2-pip gcc python2-dev libc-dev && rm -rf /var/cache/apk/*
+
+RUN pip install cwltool
+# cwl-refrunner?
 
 RUN mkdir /usr/share/maven/ref/repository
 
