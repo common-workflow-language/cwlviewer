@@ -145,7 +145,20 @@ public class CWLService {
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
             CWLElement wfOutput = new CWLElement();
+
+            // Standard types
             wfOutput.setType(typeURIToString(output.get("type").toString()));
+
+            // Array types
+            StmtIterator itr = output.get("type").asResource().listProperties();
+            while (itr.hasNext()) {
+                Statement complexType = itr.nextStatement();
+                if (complexType.getPredicate().toString()
+                        .equals("https://w3id.org/cwl/salad#items")) {
+                    wfOutput.setType(typeURIToString(complexType.getObject().toString()) + "[]");
+                }
+            }
+
             if (output.contains("src")) {
                 wfOutput.addSourceID(stepFromURI(
                         output.get("src").toString()));
