@@ -17,7 +17,8 @@ public class RDFService {
     private final String queryCtx = "PREFIX cwl: <https://w3id.org/cwl/cwl#>\n" +
             "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
             "PREFIX sld: <https://w3id.org/cwl/salad#>\n" +
-            "PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>";
+            "PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>\n" +
+            "PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>";
 
     /**
      * Get the doc string for a workflow resource
@@ -102,6 +103,23 @@ public class RDFService {
                 "    OPTIONAL { ?run sld:doc ?doc }\n" +
                 "}";
         return runQuery(stepQuery, model);
+    }
+
+    /**
+     * Gets the docker requirement and pull link for a workflow
+     * @param model RDF model of the workflow and tools
+     * @return Result set of docker hint and pull link
+     */
+    public ResultSet getDockerLink(Model model) {
+        String dockerQuery = queryCtx +
+                "SELECT ?docker ?pull\n" +
+                "WHERE {\n" +
+                "    ?wf rdf:type cwl:Workflow .\n" +
+                "    { ?wf cwl:requirements ?docker } UNION { ?wf cwl:hints ?docker} .\n" +
+                "    ?docker rdf:type cwl:DockerRequirement.\n" +
+                "    OPTIONAL { ?docker DockerRequirement:dockerPull ?pull }\n" +
+                "}";
+        return runQuery(dockerQuery, model);
     }
 
     /**

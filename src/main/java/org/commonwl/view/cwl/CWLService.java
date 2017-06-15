@@ -28,6 +28,7 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
+import org.commonwl.view.docker.DockerService;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.workflow.Workflow;
@@ -152,7 +153,7 @@ public class CWLService {
         // Steps
         Map<String, CWLStep> wfSteps = new HashMap<>();
         ResultSet steps = rdfService.getSteps(model);
-        while(steps.hasNext()) {
+        while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
             String uri = stepFromURI(step.get("step").toString());
             if (wfSteps.containsKey(uri)) {
@@ -190,10 +191,20 @@ public class CWLService {
         }
 
         // Docker link
+        ResultSet dockerResult = rdfService.getDockerLink(model);
+        String dockerLink = null;
+        if (dockerResult.hasNext()) {
+            QuerySolution docker = dockerResult.nextSolution();
+            if (docker.contains("pull")) {
+                dockerLink = DockerService.getDockerHubURL(docker.get("pull").toString());
+            } else {
+                dockerLink = "true";
+            }
+        }
 
         // Create workflow model
         Workflow workflowModel = new Workflow(label, doc,
-                wfInputs, wfOutputs, wfSteps, null);
+                wfInputs, wfOutputs, wfSteps, dockerLink);
         workflowModel.generateDOT();
 
         return workflowModel;
