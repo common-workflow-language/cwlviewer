@@ -117,7 +117,7 @@ public class CWLService {
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
             CWLElement wfInput = new CWLElement();
-            wfInput.setType(input.get("type").toString());
+            wfInput.setType(typeURIToString(input.get("type").toString()));
             if (input.contains("label")) {
                 wfInput.setLabel(input.get("label").toString());
             }
@@ -134,7 +134,7 @@ public class CWLService {
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
             CWLElement wfOutput = new CWLElement();
-            wfOutput.setType(output.get("type").toString());
+            wfOutput.setType(typeURIToString(output.get("type").toString()));
             if (output.contains("src")) {
                 wfOutput.addSourceID(stepFromURI(
                         output.get("src").toString()));
@@ -320,6 +320,30 @@ public class CWLService {
                 return CWLProcess.EXPRESSIONTOOL;
             default:
                 return null;
+        }
+    }
+
+    /**
+     * Convert RDF URI for a type to a name
+     * @param uri The URI for the type
+     * @return The human readable name for that type
+     */
+    private String typeURIToString(String uri) {
+        switch (uri) {
+            case "http://www.w3.org/2001/XMLSchema#string":
+                return "String";
+            case "https://w3id.org/cwl/cwl#File":
+                return "File";
+            case "http://www.w3.org/2001/XMLSchema#int":
+                return "Integer";
+            case "http://www.w3.org/2001/XMLSchema#double":
+                return "Double";
+            case "http://www.w3.org/2001/XMLSchema#float":
+                return "Float";
+            case "http://www.w3.org/2001/XMLSchema#long":
+                return "Long";
+            default:
+                return uri;
         }
     }
 
