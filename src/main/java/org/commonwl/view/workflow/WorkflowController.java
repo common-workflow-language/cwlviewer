@@ -109,6 +109,7 @@ public class WorkflowController {
                         return new ModelAndView("index");
                     } catch (Exception ex) {
                         bindingResult.rejectValue("githubURL", "githubURL.parsingError");
+                        logger.error(ex.getMessage(), ex);
                         return new ModelAndView("index");
                     }
                 }

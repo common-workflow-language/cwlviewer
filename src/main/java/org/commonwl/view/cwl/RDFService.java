@@ -53,15 +53,17 @@ public class RDFService {
      * @return The result set of inputs
      */
     public ResultSet getInputs(Model model, String workflowURI) {
-        String inputsQuery = queryCtx +
+        ParameterizedSparqlString inputsQuery = new ParameterizedSparqlString();
+        inputsQuery.setCommandText(queryCtx +
                 "SELECT ?input ?type ?label ?doc\n" +
                 "WHERE {\n" +
-                "    <" + workflowURI + "> rdf:type cwl:Workflow .\n" +
-                "    <" + workflowURI + "> cwl:inputs ?input .\n" +
+                "    ?wf rdf:type cwl:Workflow .\n" +
+                "    ?wf cwl:inputs ?input .\n" +
                 "    OPTIONAL { ?input sld:type ?type }\n" +
                 "    OPTIONAL { ?input sld:label ?label }\n" +
                 "    OPTIONAL { ?input sld:doc ?doc }\n" +
-                "}";
+                "}");
+        inputsQuery.setIri("wf", workflowURI);
         return runQuery(inputsQuery, model);
     }
 
@@ -72,16 +74,18 @@ public class RDFService {
      * @return The result set of outputs
      */
     public ResultSet getOutputs(Model model, String workflowURI) {
-        String outputsQuery = queryCtx +
+        ParameterizedSparqlString outputsQuery = new ParameterizedSparqlString();
+        outputsQuery.setCommandText(queryCtx +
                 "SELECT ?output ?type ?src ?label ?doc\n" +
                 "WHERE {\n" +
-                "    <" + workflowURI + "> rdf:type cwl:Workflow .\n" +
-                "    <" + workflowURI + "> cwl:outputs ?output .\n" +
+                "    ?wf rdf:type cwl:Workflow .\n" +
+                "    ?wf cwl:outputs ?output .\n" +
                 "    OPTIONAL { ?output cwl:outputSource ?src }\n" +
                 "    OPTIONAL { ?output sld:type ?type }\n" +
                 "    OPTIONAL { ?output sld:label ?label }\n" +
                 "    OPTIONAL { ?output sld:doc ?doc }\n" +
-                "}";
+                "}");
+        outputsQuery.setIri("wf", workflowURI);
         return runQuery(outputsQuery, model);
     }
 
@@ -92,19 +96,21 @@ public class RDFService {
      * @return The result set of steps
      */
     public ResultSet getSteps(Model model, String workflowURI) {
-        String stepQuery = queryCtx +
+        ParameterizedSparqlString stepQuery = new ParameterizedSparqlString();
+        stepQuery.setCommandText(queryCtx +
                 "SELECT ?step ?run ?runtype ?label ?doc ?stepinput ?default ?src\n" +
                 "WHERE {\n" +
-                "    <" + workflowURI + "> Workflow:steps ?step .\n" +
+                "    ?wf Workflow:steps ?step .\n" +
                 "    ?step cwl:run ?run .\n" +
                 "    ?run rdf:type ?runtype .\n" +
                 "    OPTIONAL { \n" +
                 "        ?step cwl:in ?stepinput .\n" +
-                "        { ?stepinput cwl:source ?src } UNION {?stepinput cwl:default ?default}\n" +
+                "        { ?stepinput cwl:source ?src } UNION { ?stepinput cwl:default ?default }\n" +
                 "    }\n" +
                 "    OPTIONAL { ?run sld:label ?label }\n" +
                 "    OPTIONAL { ?run sld:doc ?doc }\n" +
-                "}";
+                "}");
+        stepQuery.setIri("wf", workflowURI);
         return runQuery(stepQuery, model);
     }
 
@@ -115,14 +121,16 @@ public class RDFService {
      * @return Result set of docker hint and pull link
      */
     public ResultSet getDockerLink(Model model, String workflowURI) {
-        String dockerQuery = queryCtx +
+        ParameterizedSparqlString dockerQuery = new ParameterizedSparqlString();
+        dockerQuery.setCommandText(queryCtx +
                 "SELECT ?docker ?pull\n" +
                 "WHERE {\n" +
-                "    <" + workflowURI + "> rdf:type cwl:Workflow .\n" +
-                "    { <" + workflowURI + "> cwl:requirements ?docker } UNION { <" + workflowURI + "> cwl:hints ?docker} .\n" +
-                "    ?docker rdf:type cwl:DockerRequirement.\n" +
+                "    ?wf rdf:type cwl:Workflow .\n" +
+                "    { ?wf cwl:requirements ?docker } UNION { ?wf cwl:hints ?docker} .\n" +
+                "    ?docker rdf:type cwl:DockerRequirement\n" +
                 "    OPTIONAL { ?docker DockerRequirement:dockerPull ?pull }\n" +
-                "}";
+                "}");
+        dockerQuery.setIri("wf", workflowURI);
         return runQuery(dockerQuery, model);
     }
 
@@ -132,8 +140,8 @@ public class RDFService {
      * @param model The model to be run on
      * @return The result set of the query
      */
-    private ResultSet runQuery(String queryString, Model model) {
-        Query query = QueryFactory.create(queryString);
+    private ResultSet runQuery(ParameterizedSparqlString queryString, Model model) {
+        Query query = QueryFactory.create(queryString.toString());
         try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
             return ResultSetFactory.copyResults(qexec.execSelect());
         }
