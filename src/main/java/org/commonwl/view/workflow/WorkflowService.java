@@ -163,139 +163,131 @@ public class WorkflowService {
      * Builds a new workflow from Github
      * @param githubInfo Github information for the workflow
      * @return The constructed model for the Workflow
+     * @throws IOException Github errors
+     * @throws CWLValidationException cwltool errors
      */
-    public Workflow createWorkflow(GithubDetails githubInfo) {
-        try {
-            // Get the sha hash from a branch reference
-            String latestCommit = githubService.getCommitSha(githubInfo);
+    public Workflow createWorkflow(GithubDetails githubInfo)
+            throws IOException, CWLValidationException {
+        // Get the sha hash from a branch reference
+        String latestCommit = githubService.getCommitSha(githubInfo);
 
-            // Get rdf representation from cwltool
-            String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
-                    githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
+        // Get rdf representation from cwltool
+        String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
+                githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
 
-            // Validate CWL
-            if (cwlTool.isValid(url)) {
+        // If valid, get the RDF representation
+        String rdf = cwlTool.getRDF(url);
 
-                // If valid, get the RDF representation
-                String rdf = cwlTool.getRDF(url);
+        // Create a workflow model from RDF representation
+        final Model model = ModelFactory.createDefaultModel();
+        model.read(new ByteArrayInputStream(rdf.getBytes()), null, "TURTLE");
 
-                // Create a workflow model from RDF representation
-                final Model model = ModelFactory.createDefaultModel();
-                model.read(new ByteArrayInputStream(rdf.getBytes()), null, "TURTLE");
+        // Base workflow details
+        Resource workflow = model.getResource(url);
+        String label = rdfService.getLabel(workflow);
+        String doc = rdfService.getDoc(workflow);
 
-                // Base workflow details
-                Resource workflow = model.getResource(url);
-                String label = rdfService.getLabel(workflow);
-                String doc = rdfService.getDoc(workflow);
-
-                // Inputs
-                Map<String, CWLElement> wfInputs = new HashMap<>();
-                ResultSet inputs = rdfService.getInputs(model);
-                while (inputs.hasNext()) {
-                    QuerySolution input = inputs.nextSolution();
-                    CWLElement wfInput = new CWLElement();
-                    wfInput.setType(input.get("type").toString());
-                    if (input.contains("label")) {
-                        wfInput.setLabel(input.get("label").toString());
-                    }
-                    if (input.contains("doc")) {
-                        wfInput.setDoc(input.get("doc").toString());
-                    }
-                    wfInputs.put(simplifyURI(
-                            input.get("input").toString()), wfInput);
-                }
-
-                // Outputs
-                Map<String, CWLElement> wfOutputs = new HashMap<>();
-                ResultSet outputs = rdfService.getOutputs(model);
-                while (outputs.hasNext()) {
-                    QuerySolution output = outputs.nextSolution();
-                    CWLElement wfOutput = new CWLElement();
-                    wfOutput.setType(output.get("type").toString());
-                    if (output.contains("src")) {
-                        wfOutput.addSourceID(simplifyURI(
-                                output.get("src").toString()));
-                    }
-                    if (output.contains("label")) {
-                        wfOutput.setLabel(output.get("label").toString());
-                    }
-                    if (output.contains("doc")) {
-                        wfOutput.setDoc(output.get("doc").toString());
-                    }
-                    wfOutputs.put(simplifyURI(
-                            output.get("output").toString()), wfOutput);
-                }
-
-
-                // Steps
-                Map<String, CWLStep> wfSteps = new HashMap<>();
-                ResultSet steps = rdfService.getSteps(model);
-                while(steps.hasNext()) {
-                    QuerySolution step = steps.nextSolution();
-                    String uri = simplifyURI(step.get("step").toString());
-                    if (wfSteps.containsKey(uri)) {
-                        // Already got step details, add extra source ID
-                        if (step.contains("src")) {
-                            CWLElement src = new CWLElement();
-                            src.addSourceID(simplifyURI(step.get("src").toString()));
-                            wfSteps.get(uri).getSources().put(
-                                    step.get("stepinput").toString(), src);
-                        }
-                    } else {
-                        // Add new step
-                        CWLStep wfStep = new CWLStep();
-
-                        Path workflowPath = Paths.get(FilenameUtils.getPath(url));
-                        Path runPath = Paths.get(step.get("run").toString());
-                        wfStep.setRun(workflowPath.relativize(runPath).toString());
-
-                        if (step.contains("src")) {
-                            CWLElement src = new CWLElement();
-                            src.addSourceID(simplifyURI(step.get("src").toString()));
-                            Map<String, CWLElement> srcList = new HashMap<>();
-                            srcList.put(simplifyURI(
-                                    step.get("stepinput").toString()), src);
-                            wfStep.setSources(srcList);
-                        }
-                        if (step.contains("label")) {
-                            wfStep.setLabel(step.get("label").toString());
-                        }
-                        if (step.contains("doc")) {
-                            wfStep.setDoc(step.get("doc").toString());
-                        }
-                        wfSteps.put(uri, wfStep);
-                    }
-                }
-
-                // Docker link
-
-                // Create workflow model
-                Workflow workflowModel = new Workflow(label, doc,
-                        wfInputs, wfOutputs, wfSteps, null);
-                workflowModel.generateDOT();
-
-                // Set origin details
-                workflowModel.setRetrievedOn(new Date());
-                workflowModel.setRetrievedFrom(githubInfo);
-                workflowModel.setLastCommit(latestCommit);
-
-                // Create a new research object bundle for the workflow
-                // This is Async so cannot just call constructor, needs intermediate as per Spring framework
-                generateROBundle(workflowModel);
-
-                // Save to database
-                workflowRepository.save(workflowModel);
-
-                // Return this model to be displayed
-                return workflowModel;
-
+        // Inputs
+        Map<String, CWLElement> wfInputs = new HashMap<>();
+        ResultSet inputs = rdfService.getInputs(model);
+        while (inputs.hasNext()) {
+            QuerySolution input = inputs.nextSolution();
+            CWLElement wfInput = new CWLElement();
+            wfInput.setType(input.get("type").toString());
+            if (input.contains("label")) {
+                wfInput.setLabel(input.get("label").toString());
             }
-
-        } catch (Exception ex) {
-            logger.error("Error creating workflow", ex);
+            if (input.contains("doc")) {
+                wfInput.setDoc(input.get("doc").toString());
+            }
+            wfInputs.put(simplifyURI(
+                    input.get("input").toString()), wfInput);
         }
 
-        return null;
+        // Outputs
+        Map<String, CWLElement> wfOutputs = new HashMap<>();
+        ResultSet outputs = rdfService.getOutputs(model);
+        while (outputs.hasNext()) {
+            QuerySolution output = outputs.nextSolution();
+            CWLElement wfOutput = new CWLElement();
+            wfOutput.setType(output.get("type").toString());
+            if (output.contains("src")) {
+                wfOutput.addSourceID(simplifyURI(
+                        output.get("src").toString()));
+            }
+            if (output.contains("label")) {
+                wfOutput.setLabel(output.get("label").toString());
+            }
+            if (output.contains("doc")) {
+                wfOutput.setDoc(output.get("doc").toString());
+            }
+            wfOutputs.put(simplifyURI(
+                    output.get("output").toString()), wfOutput);
+        }
+
+
+        // Steps
+        Map<String, CWLStep> wfSteps = new HashMap<>();
+        ResultSet steps = rdfService.getSteps(model);
+        while(steps.hasNext()) {
+            QuerySolution step = steps.nextSolution();
+            String uri = simplifyURI(step.get("step").toString());
+            if (wfSteps.containsKey(uri)) {
+                // Already got step details, add extra source ID
+                if (step.contains("src")) {
+                    CWLElement src = new CWLElement();
+                    src.addSourceID(simplifyURI(step.get("src").toString()));
+                    wfSteps.get(uri).getSources().put(
+                            step.get("stepinput").toString(), src);
+                }
+            } else {
+                // Add new step
+                CWLStep wfStep = new CWLStep();
+
+                Path workflowPath = Paths.get(FilenameUtils.getPath(url));
+                Path runPath = Paths.get(step.get("run").toString());
+                wfStep.setRun(workflowPath.relativize(runPath).toString());
+
+                if (step.contains("src")) {
+                    CWLElement src = new CWLElement();
+                    src.addSourceID(simplifyURI(step.get("src").toString()));
+                    Map<String, CWLElement> srcList = new HashMap<>();
+                    srcList.put(simplifyURI(
+                            step.get("stepinput").toString()), src);
+                    wfStep.setSources(srcList);
+                }
+                if (step.contains("label")) {
+                    wfStep.setLabel(step.get("label").toString());
+                }
+                if (step.contains("doc")) {
+                    wfStep.setDoc(step.get("doc").toString());
+                }
+                wfSteps.put(uri, wfStep);
+            }
+        }
+
+        // Docker link
+
+        // Create workflow model
+        Workflow workflowModel = new Workflow(label, doc,
+                wfInputs, wfOutputs, wfSteps, null);
+        workflowModel.generateDOT();
+
+        // Set origin details
+        workflowModel.setRetrievedOn(new Date());
+        workflowModel.setRetrievedFrom(githubInfo);
+        workflowModel.setLastCommit(latestCommit);
+
+        // Create a new research object bundle for the workflow
+        // This is Async so cannot just call constructor, needs intermediate as per Spring framework
+        generateROBundle(workflowModel);
+
+        // Save to database
+        workflowRepository.save(workflowModel);
+
+        // Return this model to be displayed
+        return workflowModel;
+
     }
 
     private String simplifyURI(String uri) {

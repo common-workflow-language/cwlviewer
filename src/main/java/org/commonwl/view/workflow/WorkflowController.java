@@ -20,6 +20,7 @@
 package org.commonwl.view.workflow;
 
 import org.apache.commons.lang.StringUtils;
+import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.slf4j.Logger;
@@ -101,10 +102,12 @@ public class WorkflowController {
                 // Get workflow or create if does not exist
                 Workflow workflow = workflowService.getWorkflow(githubInfo);
                 if (workflow == null) {
-                    workflow = workflowService.createWorkflow(githubInfo);
-
-                    // Runtime error if workflow could not be generated
-                    if (workflow == null) {
+                    try {
+                        workflow = workflowService.createWorkflow(githubInfo);
+                    } catch (CWLValidationException ex) {
+                        bindingResult.rejectValue("githubURL", "cwltool.validationError", ex.getMessage());
+                        return new ModelAndView("index");
+                    } catch (Exception ex) {
                         bindingResult.rejectValue("githubURL", "githubURL.parsingError");
                         return new ModelAndView("index");
                     }
@@ -154,8 +157,11 @@ public class WorkflowController {
             workflowFormValidator.validateAndParse(workflowForm, errors);
             if (!errors.hasErrors()) {
                 if (githubDetails.getPath().endsWith(".cwl")) {
-                    workflowModel = workflowService.createWorkflow(githubDetails);
-                    if (workflowModel == null) {
+                    try {
+                        workflowModel = workflowService.createWorkflow(githubDetails);
+                    } catch (CWLValidationException ex) {
+                        errors.rejectValue("githubURL", "cwltool.validationError", ex.getMessage());
+                    } catch (IOException ex) {
                         errors.rejectValue("githubURL", "githubURL.parsingError", "The workflow could not be parsed from the given URL");
                     }
                 } else {
