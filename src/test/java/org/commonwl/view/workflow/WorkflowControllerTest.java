@@ -19,6 +19,7 @@
 
 package org.commonwl.view.workflow;
 
+import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
@@ -114,7 +115,7 @@ public class WorkflowControllerTest {
         // Mock workflow service returning valid workflow
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
         when(mockWorkflowService.createWorkflow(anyObject()))
-                .thenReturn(null)
+                .thenThrow(new CWLValidationException("Error"))
                 .thenReturn(mockWorkflow);
 
         // Mock controller/MVC
@@ -168,7 +169,7 @@ public class WorkflowControllerTest {
                 .thenReturn(null);
         when(mockWorkflowService.createWorkflow(anyObject()))
                 .thenReturn(mockWorkflow2)
-                .thenReturn(null);
+                .thenThrow(new CWLValidationException("Error"));
 
         // Mock controller/MVC
         WorkflowController workflowController = new WorkflowController(
