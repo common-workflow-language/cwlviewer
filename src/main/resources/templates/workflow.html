@@ -29,7 +29,7 @@
     <meta name="twitter:image" th:content="${appURL + '/workflows/' + workflow.id + '/graph/png'}" />
     <title>Common Workflow Language Viewer</title>
     <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170517.css}" href="../static/css/main-20170517.css" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170616.css}" href="../static/css/main-20170616.css" />
 </head>
 <body>
 
@@ -165,6 +165,14 @@ digraph G {
                 <img id="selectParents" class="graphControl" th:src="@{/img/parents-logo.svg}" src="../static/img/parents-logo.svg" alt="parents" data-tooltip="true" title="Select All Parents" />
                 <div id="graph" data-th-attr="data-svgurl=@{'/workflows/' + ${workflow.id} + '/graph/svg'}"></div>
             </div>
+            <ul class="legend">
+                <li><span class="selectednode"></span> Selected</li>
+                <li class="hidden-xs">|</li>
+                <li><span class="defaults"></span> Default Values</li>
+                <li><span class="nestedworkflows"></span> Nested Workflows</li>
+                <li><span class="tools"></span> Tools</li>
+                <li><span class="inputoutputs"></span> Inputs/Outputs</li>
+            </ul>
             <div th:if="${workflow.dockerLink != null}">
                 <h2 style="float:left;">Requires: </h2>
                 <a th:unless="${workflow.dockerLink == 'true'}" th:href="${workflow.dockerLink}" rel="noopener" target="_blank">

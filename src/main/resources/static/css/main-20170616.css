@@ -138,6 +138,7 @@ body {
     overflow: hidden;
     padding: 0;
     height: 500px;
+    margin-bottom: 10px;
 }
 
 @media (max-width: 767px) {
@@ -179,6 +180,26 @@ body {
 .notFound {
     color: #c30000;
 }
+
+
+.legend {
+    list-style: none;
+    height:30px;
+}
+.legend li { float: right; margin-right: 15px; }
+.legend span {
+    border: 1px solid #ccc;
+    float: left;
+    width: 20px;
+    height: 15px;
+    margin: 2px 4px 2px 2px;
+}
+
+.legend .inputoutputs { background-color: #94DDF4; }
+.legend .tools { background-color: #FAFAD2; }
+.legend .nestedworkflows { background-color: #F3CEA1; }
+.legend .defaults { background-color: #D5AEFC; }
+.legend .selectednode { background-color: #B9FFBB; }
 
 tr.selected, .table-hover tbody tr.selected:hover td, .table-hover tbody tr.selected:hover th {
     background-color: #b9ffbb !important;
