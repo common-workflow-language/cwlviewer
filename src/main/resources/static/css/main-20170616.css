@@ -37,8 +37,11 @@ body {
 
 #logo {
     height: 61px;
-    margin-top: -20px;
-    margin-left: -20px
+    padding: 5px;
+}
+
+#explore {
+    padding-top: 20px;
 }
 
 #githubURL {
