@@ -33,7 +33,7 @@ public class CWLTool {
             validate(url);
 
             // Run cwltool --print-rdf with the URL
-            String[] command = {"cwltool", "--print-rdf", url};
+            String[] command = {"cwltool", "--non-strict", "--quiet", "--print-rdf", url};
             ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
             Process process = cwlToolProcess.start();
 
@@ -67,7 +67,7 @@ public class CWLTool {
     private void validate(String url)
             throws CWLValidationException, InterruptedException, IOException {
         // Run cwltool --validate with the URL
-        String[] command = {"cwltool", "--validate", url};
+        String[] command = {"cwltool", "--non-strict", "--quiet", "--validate", url};
         ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
         Process process = cwlToolProcess.start();
 
