@@ -115,27 +115,22 @@ public class RDFService {
     }
 
     /**
-     * Get links between steps within a workflow
+     * Get links between steps for the entire model
      * @param model RDF model of the workflow and tools
-     * @param workflowURI URI of the workflow
      * @return The result set of steps
      */
-    public ResultSet getStepLinks(Model model, String workflowURI) {
+    public ResultSet getStepLinks(Model model) {
         ParameterizedSparqlString stepQuery = new ParameterizedSparqlString();
         stepQuery.setCommandText(queryCtx +
                 "SELECT ?src ?dest ?default\n" +
                 "WHERE {\n" +
-                "    { \n" +
-                "        ?wf Workflow:steps ?dest .\n" +
-                "        ?dest cwl:in ?stepinput .\n" +
-                "        { ?stepinput cwl:source ?src } UNION { ?stepinput cwl:default ?default }\n" +
-                "  \t} UNION {\n" +
-                "        ?wf rdf:type cwl:Workflow .\n" +
-                "        ?wf cwl:outputs ?dest .\n" +
+                "    {\n" +
                 "        ?dest cwl:outputSource ?src\n" +
-                "  \t}\n" +
+                "    } UNION {\n" +
+                "        ?dest cwl:source ?src \n" +
+                "        OPTIONAL { ?dest cwl:default ?default }\n" +
+                "    }\n" +
                 "}");
-        stepQuery.setIri("wf", workflowURI);
         return runQuery(stepQuery, model);
     }
 
@@ -160,18 +155,19 @@ public class RDFService {
     }
 
     /**
-     * Gets the step ID from a full URI
+     * Gets the last part (final slash) from a full URI
      * @param uri The URI
      * @return The step ID
      */
-    public String stepFromURI(String uri) {
-        int lastHash = uri.lastIndexOf('#');
-        if (lastHash != -1) {
-            uri = uri.substring(lastHash + 1);
-            int lastSlash = uri.lastIndexOf('/');
-            if (lastSlash != -1) {
-                uri = uri.substring(0, lastSlash);
+    public String lastURIPart(String uri) {
+        int lastSlash = uri.lastIndexOf('/');
+        if (lastSlash != -1) {
+            String strippedUri = uri.substring(lastSlash + 1);
+            if (!strippedUri.contains("#")) {
+                int secondToLastSlash = uri.lastIndexOf('/', lastSlash - 1);
+                return uri.substring(secondToLastSlash + 1, lastSlash);
             }
+            return strippedUri;
         }
         return uri;
     }
