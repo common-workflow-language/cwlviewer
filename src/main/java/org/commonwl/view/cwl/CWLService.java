@@ -352,7 +352,7 @@ public class CWLService {
                     List<String> sources = extractSource(inOutNode);
                     if (sources.size() > 0) {
                         for (String source : sources) {
-                            inputOutput.addSourceID(source);
+                            inputOutput.addSourceID(stepIDFromSource(source));
                         }
                     } else {
                         inputOutput.setDefaultVal(extractDefault(inOutNode));
@@ -399,6 +399,9 @@ public class CWLService {
             // Explicit ID and other fields within each list
             for (JsonNode inputOutput : inputsOutputs) {
                 String id = inputOutput.get(ID).asText();
+                if (id.charAt(0) == '#') {
+                    id = id.substring(1);
+                }
                 returnMap.put(id, getDetails(inputOutput));
             }
         } else if (inputsOutputs.getClass() == ObjectNode.class) {
