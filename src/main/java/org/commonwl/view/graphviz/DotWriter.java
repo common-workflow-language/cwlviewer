@@ -183,7 +183,8 @@ public class DotWriter {
                     subworkflows.put(stepName, FilenameUtils.getName(runFile));
                     writeSubworkflow(stepName, rdfModel, runFile);
                 } else {
-                    writeLine("  \"" + stepName + "\";");
+                    String label = labelFromName(stepName);
+                    writeLine("  \"" + stepName + "\" [label=\"" + label + "\"];");
                 }
                 addedSteps.add(stepName);
             }
@@ -260,7 +261,7 @@ public class DotWriter {
         writeLine("  subgraph \"cluster_" + name + "\" {");
         writeLine("    rank = \"same\";");
         writeLine("    style = \"dotted\";");
-        writeLine("    label = \"" + name + "\";");
+        writeLine("    label = \"" + labelFromName(name) + "\";");
 
         writeInputs(rdfModel, subWorkflowUri);
         writeSteps(rdfModel, subWorkflowUri);
@@ -281,15 +282,27 @@ public class DotWriter {
         List<String> nodeOptions = new ArrayList<>();
         nodeOptions.add("fillcolor=\"#94DDF4\"");
 
-        // Use label if it is defined
+        // Label for the node
+        String label;
         if (inputOutput.contains("label")) {
-            String label = inputOutput.get("label").toString();
-            nodeOptions.add("label=\"" + label + "\";");
+            label = inputOutput.get("label").toString();
+        } else {
+            label = labelFromName(inputOutput.get("name").toString());
         }
+        nodeOptions.add("label=\"" + label + "\";");
 
         // Write the line for the node
         String inputOutputName = rdfService.lastURIPart(inputOutput.get("name").toString());
         writeLine("    \"" + inputOutputName + "\" [" + String.join(",", nodeOptions) + "];");
+    }
+
+    /**
+     * Get the label for the node from its name
+     * @param name The name in the form filename#step
+     * @return The second part of the name, just the step
+     */
+    private String labelFromName(String name) {
+        return name.substring(name.indexOf('#') + 1);
     }
 
     /**
