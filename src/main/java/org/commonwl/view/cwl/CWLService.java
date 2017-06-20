@@ -29,6 +29,7 @@ import org.apache.jena.rdf.model.*;
 import org.commonwl.view.docker.DockerService;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.graphviz.DotWriter;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowOverview;
 import org.slf4j.Logger;
@@ -40,6 +41,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -114,7 +116,7 @@ public class CWLService {
         ResultSet inputs = rdfService.getInputs(model, url);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
-            String inputName = stepFromURI(input.get("input").toString());
+            String inputName = rdfService.stepFromURI(input.get("name").toString());
 
             CWLElement wfInput = new CWLElement();
 
@@ -167,7 +169,7 @@ public class CWLService {
             QuerySolution output = outputs.nextSolution();
             CWLElement wfOutput = new CWLElement();
 
-            String outputName = stepFromURI(output.get("output").toString());
+            String outputName = rdfService.stepFromURI(output.get("name").toString());
 
             // Array types
             StmtIterator itr = output.get("type").asResource().listProperties();
@@ -204,7 +206,7 @@ public class CWLService {
             }
 
             if (output.contains("src")) {
-                wfOutput.addSourceID(stepFromURI(
+                wfOutput.addSourceID(rdfService.stepFromURI(
                         output.get("src").toString()));
             }
             if (output.contains("label")) {
@@ -222,17 +224,17 @@ public class CWLService {
         ResultSet steps = rdfService.getSteps(model, url);
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
-            String uri = stepFromURI(step.get("step").toString());
+            String uri = rdfService.stepFromURI(step.get("step").toString());
             if (wfSteps.containsKey(uri)) {
                 // Already got step details, add extra source ID
                 if (step.contains("src")) {
                     CWLElement src = new CWLElement();
-                    src.addSourceID(stepFromURI(step.get("src").toString()));
+                    src.addSourceID(rdfService.stepFromURI(step.get("src").toString()));
                     wfSteps.get(uri).getSources().put(
                             step.get("stepinput").toString(), src);
                 } else if (step.contains("default")) {
                     CWLElement src = new CWLElement();
-                    src.setDefaultVal(formatDefault(step.get("default").toString()));
+                    src.setDefaultVal(rdfService.formatDefault(step.get("default").toString()));
                     wfSteps.get(uri).getSources().put(
                             step.get("stepinput").toString(), src);
                 }
@@ -243,20 +245,20 @@ public class CWLService {
                 Path workflowPath = Paths.get(FilenameUtils.getPath(url));
                 Path runPath = Paths.get(step.get("run").toString());
                 wfStep.setRun(workflowPath.relativize(runPath).toString());
-                wfStep.setRunType(strToRuntype(step.get("runtype").toString()));
+                wfStep.setRunType(rdfService.strToRuntype(step.get("runtype").toString()));
 
                 if (step.contains("src")) {
                     CWLElement src = new CWLElement();
-                    src.addSourceID(stepFromURI(step.get("src").toString()));
+                    src.addSourceID(rdfService.stepFromURI(step.get("src").toString()));
                     Map<String, CWLElement> srcList = new HashMap<>();
-                    srcList.put(stepFromURI(
+                    srcList.put(rdfService.stepFromURI(
                             step.get("stepinput").toString()), src);
                     wfStep.setSources(srcList);
                 } else if (step.contains("default")) {
                     CWLElement src = new CWLElement();
-                    src.setDefaultVal(formatDefault(step.get("default").toString()));
+                    src.setDefaultVal(rdfService.formatDefault(step.get("default").toString()));
                     Map<String, CWLElement> srcList = new HashMap<>();
-                    srcList.put(stepFromURI(
+                    srcList.put(rdfService.stepFromURI(
                             step.get("stepinput").toString()), src);
                     wfStep.setSources(srcList);
                 }
@@ -285,7 +287,16 @@ public class CWLService {
         // Create workflow model
         Workflow workflowModel = new Workflow(label, doc,
                 wfInputs, wfOutputs, wfSteps, dockerLink);
-        workflowModel.generateDOT();
+
+        // Generate DOT graph
+        StringWriter graphWriter = new StringWriter();
+        DotWriter dotWriter = new DotWriter(graphWriter, rdfService);
+        try {
+            dotWriter.writeGraph(model, url);
+            workflowModel.setDotGraph(graphWriter.toString());
+        } catch (IOException ex) {
+            logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
+        }
 
         return workflowModel;
 
@@ -340,54 +351,6 @@ public class CWLService {
                     FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
         }
 
-    }
-
-    /**
-     * Gets the step ID from a full URI
-     * @param uri The URI
-     * @return The step ID
-     */
-    private String stepFromURI(String uri) {
-        int lastHash = uri.lastIndexOf('#');
-        if (lastHash != -1) {
-            uri = uri.substring(lastHash + 1);
-            int lastSlash = uri.lastIndexOf('/');
-            if (lastSlash != -1) {
-                uri = uri.substring(0, lastSlash);
-            }
-        }
-        return uri;
-    }
-
-    /**
-     * Format a default value
-     * @param defaultVal The default value
-     * @return Default value suitable for a node label
-     */
-    private String formatDefault(String defaultVal) {
-        int lastCaret = defaultVal.indexOf("^^");
-        if (lastCaret != -1) {
-            return defaultVal.substring(0, lastCaret);
-        }
-        return defaultVal;
-    }
-
-    /**
-     * Convert an RDF type to cwl process
-     * @param runtype The string from the RDF
-     * @return CWL process the string refers to
-     */
-    private CWLProcess strToRuntype(String runtype) {
-        switch (runtype) {
-            case "https://w3id.org/cwl/cwl#Workflow":
-                return CWLProcess.WORKFLOW;
-            case "https://w3id.org/cwl/cwl#CommandLineTool":
-                return CWLProcess.COMMANDLINETOOL;
-            case "https://w3id.org/cwl/cwl#ExpressionTool":
-                return CWLProcess.EXPRESSIONTOOL;
-            default:
-                return null;
-        }
     }
 
     /**

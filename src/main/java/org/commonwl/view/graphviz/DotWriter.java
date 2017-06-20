@@ -19,16 +19,21 @@
 
 package org.commonwl.view.graphviz;
 
-import org.commonwl.view.cwl.CWLElement;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
 import org.commonwl.view.cwl.CWLProcess;
-import org.commonwl.view.cwl.CWLStep;
-import org.commonwl.view.workflow.Workflow;
+import org.commonwl.view.cwl.RDFService;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * Writes GraphViz DOT files from Workflows
@@ -37,17 +42,20 @@ public class DotWriter {
 
     private static final String EOL = System.getProperty("line.separator");
     private Writer writer;
+    private RDFService rdfService;
 
-    public DotWriter(Writer writer) {
+    public DotWriter(Writer writer, RDFService rdfService) {
         this.writer = writer;
+        this.rdfService = rdfService;
     }
 
     /**
      * Write a graph representing a workflow to the Writer
-     * @param workflow The workflow to be graphed
+     * @param rdfModel The model containing the workflow to be graphed
+     * @param workflowUri The URI of the workflow in the model
      * @throws IOException Any errors in writing which may have occurred
      */
-    public void writeGraph(Workflow workflow) throws IOException {
+    public void writeGraph(Model rdfModel, String workflowUri) throws IOException {
 
         /**
          * DOT graph styling is based on the Apache
@@ -90,13 +98,13 @@ public class DotWriter {
         writeLine("  ];");
 
         // Write inputs as a subgraph
-        writeInputs(workflow);
+        writeInputs(rdfModel, workflowUri);
 
         // Write outputs as a subgraph
-        writeOutputs(workflow);
+        writeOutputs(rdfModel, workflowUri);
 
         // Write steps as nodes
-        writeSteps(workflow);
+        writeSteps(rdfModel, workflowUri);
 
         // End graph
         writeLine("}");
@@ -104,12 +112,11 @@ public class DotWriter {
 
     /**
      * Writes a set of inputs from a workflow to the Writer
-     * @param workflow The workflow to get the inputs from
+     * @param rdfModel The model containing the workflow to be graphed
+     * @param workflowUri The URI of the workflow in the model
      * @throws IOException Any errors in writing which may have occurred
      */
-    private void writeInputs(Workflow workflow) throws IOException {
-        // Get inputs from workflow
-        Map<String, CWLElement> inputs = workflow.getInputs();
+    private void writeInputs(Model rdfModel, String workflowUri) throws IOException {
 
         // Start of subgraph with styling
         writeLine("  subgraph cluster_inputs {");
@@ -118,7 +125,9 @@ public class DotWriter {
         writeLine("    label = \"Workflow Inputs\";");
 
         // Write each of the inputs as a node
-        for (Map.Entry<String, CWLElement> input : workflow.getInputs().entrySet()) {
+        ResultSet inputs = rdfService.getInputs(rdfModel, workflowUri);
+        while (inputs.hasNext()) {
+            QuerySolution input = inputs.nextSolution();
             writeInputOutput(input);
         }
 
@@ -128,10 +137,11 @@ public class DotWriter {
 
     /**
      * Writes a set of outputs from a workflow to the Writer
-     * @param workflow The workflow to get the outputs from
+     * @param rdfModel The model containing the workflow to be graphed
+     * @param workflowUri The URI of the workflow in the model
      * @throws IOException Any errors in writing which may have occurred
      */
-    private void writeOutputs(Workflow workflow) throws IOException {
+    private void writeOutputs(Model rdfModel, String workflowUri) throws IOException {
         // Start of subgraph with styling
         writeLine("  subgraph cluster_outputs {");
         writeLine("    rank = \"same\";");
@@ -139,7 +149,9 @@ public class DotWriter {
         writeLine("    label = \"Workflow Outputs\";");
 
         // Write each of the outputs as a node
-        for (Map.Entry<String, CWLElement> output : workflow.getOutputs().entrySet()) {
+        ResultSet outputs = rdfService.getOutputs(rdfModel, workflowUri);
+        while (outputs.hasNext()) {
+            QuerySolution output = outputs.nextSolution();
             writeInputOutput(output);
         }
 
@@ -149,48 +161,58 @@ public class DotWriter {
 
     /**
      * Writes a set of steps from a workflow to the Writer
-     * @param workflow The workflow to get the steps from
+     * @param rdfModel The model containing the workflow to be graphed
+     * @param workflowUri The URI of the workflow in the model
      * @throws IOException Any errors in writing which may have occurred
      */
-    private void writeSteps(Workflow workflow) throws IOException {
-        // Write each of the steps as a node or subgraph if it is a nested workflow
-        for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
-            if (step.getValue().getRunType() == CWLProcess.WORKFLOW) {
-                writeLine("  \"" + step.getKey() + "\" [fillcolor=\"#F3CEA1\"];");
-            } else {
-                writeLine("  \"" + step.getKey() + "\";");
-            }
-        }
+    private void writeSteps(Model rdfModel, String workflowUri) throws IOException {
 
-        // Write the links between nodes
-        // Write links between outputs and penultimate steps
-        for (Map.Entry<String, CWLElement> output : workflow.getOutputs().entrySet()) {
-            for (String sourceID : output.getValue().getSourceIDs()) {
-                writeLine("  \"" + sourceID + "\" -> \"" + output.getKey() + "\";");
-            }
-        }
+        ResultSet steps = rdfService.getSteps(rdfModel, workflowUri);
+        while (steps.hasNext()) {
+            QuerySolution step = steps.nextSolution();
+            Set<String> addedSteps = new HashSet<>();
+            String stepName = rdfService.stepFromURI(step.get("step").toString());
 
-        // Write links between the remaining steps
-        int defaultCount = 0;
-        for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
-            if (step.getValue().getSources() != null) {
-                for (Map.Entry<String, CWLElement> input : step.getValue().getSources().entrySet()) {
-                    List<String> sourceIDs = input.getValue().getSourceIDs();
-
-                    // Draw the default value on the graph if there are no step inputs (it is a constant)
-                    String defaultVal = input.getValue().getDefaultVal();
-                    if (sourceIDs.isEmpty() && defaultVal != null) {
-                        // New node for a default value to be used as the source
-                        defaultCount++;
-                        writeLine("  \"default" + defaultCount + "\" [label=\"" + defaultVal + "\", fillcolor=\"#D5AEFC\"]");
-                        writeLine("  \"default" + defaultCount + "\" -> \"" + step.getKey() + "\";");
-                    }
-
-                    // Otherwise write regular links from source step to destination step
-                    for (String sourceID : sourceIDs) {
-                        writeLine("  \"" + sourceID + "\" -> \"" + step.getKey() + "\";");
-                    }
+            // Only write each step once
+            if (!addedSteps.contains(stepName)) {
+                // Distinguish nested workflows
+                CWLProcess runType = rdfService.strToRuntype(step.get("runtype").toString());
+                if (runType == CWLProcess.WORKFLOW) {
+                    writeLine("  \"" + stepName + "\" [fillcolor=\"#F3CEA1\"];");
+                } else {
+                    writeLine("  \"" + stepName + "\";");
                 }
+                addedSteps.add(stepName);
+            }
+        }
+
+        // Write links between steps
+        ResultSet stepLinks = rdfService.getStepLinks(rdfModel, workflowUri);
+        int defaultCount = 0;
+        while (stepLinks.hasNext()) {
+            QuerySolution stepLink = stepLinks.nextSolution();
+            if (stepLink.contains("src")) {
+                // Normal link from step
+                String sourceID = rdfService.stepFromURI(stepLink.get("src").toString());
+                String destID = rdfService.stepFromURI(stepLink.get("dest").toString());
+                writeLine("  \"" + sourceID + "\" -> \"" + destID + "\";");
+            } else if (stepLink.contains("default")) {
+                // Default values
+                defaultCount++;
+                String defaultVal = rdfService.formatDefault(stepLink.get("default").toString());
+                String destID = rdfService.stepFromURI(stepLink.get("dest").toString());
+                String label;
+                if (stepLink.get("default").isLiteral()) {
+                    label = "\\\"" + defaultVal + "\\\"";
+                } else if (stepLink.get("default").isURIResource()) {
+                    Path workflowPath = Paths.get(FilenameUtils.getPath(workflowUri));
+                    Path resourcePath = Paths.get(defaultVal);
+                    label = workflowPath.relativize(resourcePath).toString();
+                } else {
+                    label = "[Complex Object]";
+                }
+                writeLine("  \"default" + defaultCount + "\" -> \"" + destID + "\";");
+                writeLine("  \"default" + defaultCount + "\" [label=\"" + label + "\", fillcolor=\"#D5AEFC\"]");
             }
         }
     }
@@ -200,19 +222,20 @@ public class DotWriter {
      * @param inputOutput The input or output
      * @throws IOException Any errors in writing which may have occurred
      */
-    private void writeInputOutput(Map.Entry<String, CWLElement> inputOutput) throws IOException {
+    private void writeInputOutput(QuerySolution inputOutput) throws IOException {
         // List of options for this node
         List<String> nodeOptions = new ArrayList<>();
         nodeOptions.add("fillcolor=\"#94DDF4\"");
 
         // Use label if it is defined
-        String label = inputOutput.getValue().getLabel();
-        if (label != null && !label.isEmpty()) {
+        if (inputOutput.contains("label")) {
+            String label = inputOutput.get("label").toString();
             nodeOptions.add("label=\"" + label + "\";");
         }
 
         // Write the line for the node
-        writeLine("    \"" + inputOutput.getKey() + "\" [" + String.join(",", nodeOptions) + "];");
+        String inputOutputName = rdfService.stepFromURI(inputOutput.get("name").toString());
+        writeLine("    \"" + inputOutputName + "\" [" + String.join(",", nodeOptions) + "];");
     }
 
     /**

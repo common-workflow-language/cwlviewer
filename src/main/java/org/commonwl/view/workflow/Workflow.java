@@ -22,16 +22,11 @@ package org.commonwl.view.workflow;
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.github.GithubDetails;
-import org.commonwl.view.graphviz.DotWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Date;
 import java.util.Map;
 
@@ -40,8 +35,6 @@ import java.util.Map;
  */
 @Document
 public class Workflow {
-
-    static private final Logger logger = LoggerFactory.getLogger(Workflow.class);
 
     // ID for database
     @Id
@@ -82,20 +75,6 @@ public class Workflow {
         this.outputs = outputs;
         this.steps = steps;
         this.dockerLink = dockerLink;
-    }
-
-    /**
-     * Create a DOT graph for this workflow and store it
-     */
-    public void generateDOT() {
-        StringWriter graphWriter = new StringWriter();
-        DotWriter dotWriter = new DotWriter(graphWriter);
-        try {
-            dotWriter.writeGraph(this);
-            this.dotGraph = graphWriter.toString();
-        } catch (IOException ex) {
-            logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
-        }
     }
 
     public String getID() { return id; }

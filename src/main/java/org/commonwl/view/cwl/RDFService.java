@@ -55,13 +55,13 @@ public class RDFService {
     public ResultSet getInputs(Model model, String workflowURI) {
         ParameterizedSparqlString inputsQuery = new ParameterizedSparqlString();
         inputsQuery.setCommandText(queryCtx +
-                "SELECT ?input ?type ?label ?doc\n" +
+                "SELECT ?name ?type ?label ?doc\n" +
                 "WHERE {\n" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
-                "    ?wf cwl:inputs ?input .\n" +
-                "    OPTIONAL { ?input sld:type ?type }\n" +
-                "    OPTIONAL { ?input sld:label ?label }\n" +
-                "    OPTIONAL { ?input sld:doc ?doc }\n" +
+                "    ?wf cwl:inputs ?name .\n" +
+                "    OPTIONAL { ?name sld:type ?type }\n" +
+                "    OPTIONAL { ?name sld:label ?label }\n" +
+                "    OPTIONAL { ?name sld:doc ?doc }\n" +
                 "}");
         inputsQuery.setIri("wf", workflowURI);
         return runQuery(inputsQuery, model);
@@ -76,14 +76,14 @@ public class RDFService {
     public ResultSet getOutputs(Model model, String workflowURI) {
         ParameterizedSparqlString outputsQuery = new ParameterizedSparqlString();
         outputsQuery.setCommandText(queryCtx +
-                "SELECT ?output ?type ?src ?label ?doc\n" +
+                "SELECT ?name ?type ?src ?label ?doc\n" +
                 "WHERE {\n" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
-                "    ?wf cwl:outputs ?output .\n" +
-                "    OPTIONAL { ?output cwl:outputSource ?src }\n" +
-                "    OPTIONAL { ?output sld:type ?type }\n" +
-                "    OPTIONAL { ?output sld:label ?label }\n" +
-                "    OPTIONAL { ?output sld:doc ?doc }\n" +
+                "    ?wf cwl:outputs ?name .\n" +
+                "    OPTIONAL { ?name cwl:outputSource ?src }\n" +
+                "    OPTIONAL { ?name sld:type ?type }\n" +
+                "    OPTIONAL { ?name sld:label ?label }\n" +
+                "    OPTIONAL { ?name sld:doc ?doc }\n" +
                 "}");
         outputsQuery.setIri("wf", workflowURI);
         return runQuery(outputsQuery, model);
@@ -115,6 +115,31 @@ public class RDFService {
     }
 
     /**
+     * Get links between steps within a workflow
+     * @param model RDF model of the workflow and tools
+     * @param workflowURI URI of the workflow
+     * @return The result set of steps
+     */
+    public ResultSet getStepLinks(Model model, String workflowURI) {
+        ParameterizedSparqlString stepQuery = new ParameterizedSparqlString();
+        stepQuery.setCommandText(queryCtx +
+                "SELECT ?src ?dest ?default\n" +
+                "WHERE {\n" +
+                "    { \n" +
+                "        ?wf Workflow:steps ?dest .\n" +
+                "        ?dest cwl:in ?stepinput .\n" +
+                "        { ?stepinput cwl:source ?src } UNION { ?stepinput cwl:default ?default }\n" +
+                "  \t} UNION {\n" +
+                "        ?wf rdf:type cwl:Workflow .\n" +
+                "        ?wf cwl:outputs ?dest .\n" +
+                "        ?dest cwl:outputSource ?src\n" +
+                "  \t}\n" +
+                "}");
+        stepQuery.setIri("wf", workflowURI);
+        return runQuery(stepQuery, model);
+    }
+
+    /**
      * Gets the docker requirement and pull link for a workflow
      * @param model RDF model of the workflow and tools
      * @param workflowURI URI of the workflow
@@ -132,6 +157,54 @@ public class RDFService {
                 "}");
         dockerQuery.setIri("wf", workflowURI);
         return runQuery(dockerQuery, model);
+    }
+
+    /**
+     * Gets the step ID from a full URI
+     * @param uri The URI
+     * @return The step ID
+     */
+    public String stepFromURI(String uri) {
+        int lastHash = uri.lastIndexOf('#');
+        if (lastHash != -1) {
+            uri = uri.substring(lastHash + 1);
+            int lastSlash = uri.lastIndexOf('/');
+            if (lastSlash != -1) {
+                uri = uri.substring(0, lastSlash);
+            }
+        }
+        return uri;
+    }
+
+    /**
+     * Format a default value
+     * @param defaultVal The default value
+     * @return Default value suitable for a node label
+     */
+    public String formatDefault(String defaultVal) {
+        int lastCaret = defaultVal.indexOf("^^");
+        if (lastCaret != -1) {
+            return defaultVal.substring(0, lastCaret);
+        }
+        return defaultVal;
+    }
+
+    /**
+     * Convert an RDF type to cwl process
+     * @param runtype The string from the RDF
+     * @return CWL process the string refers to
+     */
+    public CWLProcess strToRuntype(String runtype) {
+        switch (runtype) {
+            case "https://w3id.org/cwl/cwl#Workflow":
+                return CWLProcess.WORKFLOW;
+            case "https://w3id.org/cwl/cwl#CommandLineTool":
+                return CWLProcess.COMMANDLINETOOL;
+            case "https://w3id.org/cwl/cwl#ExpressionTool":
+                return CWLProcess.EXPRESSIONTOOL;
+            default:
+                return null;
+        }
     }
 
     /**
