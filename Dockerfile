@@ -1,4 +1,4 @@
-FROM maven:3.3-jdk-8-alpine
+FROM maven:3.5-jdk-8-alpine
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
 # Build-time metadata as defined at http://label-schema.org
@@ -20,13 +20,7 @@ RUN apk add --update graphviz ttf-freefont py2-pip gcc python2-dev libc-dev && r
 
 
 RUN pip install cwltool
-# cwl-refrunner?
 
-# Workaround to enable <1024-bit certificates
-# as Alpine Linux Python 2 links to 
-# libressl2.4-libssl-2.4.4-r0
-# https://github.com/certifi/python-certifi#1024-bit-root-certificates
-RUN sed -i 's/import where/import old_where as where/' /usr/lib/python2.7/site-packages/requests/certs.py
 RUN cwltool --version
 
 RUN mkdir /usr/share/maven/ref/repository
