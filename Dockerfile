@@ -18,8 +18,13 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
 
 RUN apk add --update graphviz ttf-freefont py2-pip gcc python2-dev libc-dev && rm -rf /var/cache/apk/*
 
+
 RUN pip install cwltool
 # cwl-refrunner?
+
+# Workaround to enable <1024-bit certificates
+RUN sed -i 's/import where/import old_where as where/' /usr/lib/python2.7/site-packages/requests/certs.py
+RUN cwltool --version
 
 RUN mkdir /usr/share/maven/ref/repository
 
