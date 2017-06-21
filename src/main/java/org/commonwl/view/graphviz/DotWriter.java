@@ -33,7 +33,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 /**
- * Writes GraphViz DOT files from Workflows
+ * Writes GraphViz DOT files from a workflow RDF model
  */
 public class DotWriter {
 
@@ -102,7 +102,7 @@ public class DotWriter {
         writeOutputs(rdfModel, workflowUri);
 
         // Write steps as nodes
-        writeSteps(rdfModel, workflowUri);
+        writeSteps(rdfModel, workflowUri, false);
 
         // Write the links between steps
         writeStepLinks(rdfModel, workflowUri);
@@ -164,9 +164,10 @@ public class DotWriter {
      * Writes a set of steps from a workflow to the Writer
      * @param rdfModel The model containing the workflow to be graphed
      * @param workflowUri The URI of the workflow in the model
+     * @param subworkflow Whether these are steps of a subworkflow
      * @throws IOException Any errors in writing which may have occurred
      */
-    private void writeSteps(Model rdfModel, String workflowUri) throws IOException {
+    private void writeSteps(Model rdfModel, String workflowUri, boolean subworkflow) throws IOException {
 
         ResultSet steps = rdfService.getSteps(rdfModel, workflowUri);
         Set<String> addedSteps = new HashSet<>();
@@ -179,9 +180,13 @@ public class DotWriter {
                 // Distinguish nested workflows
                 CWLProcess runType = rdfService.strToRuntype(step.get("runtype").toString());
                 if (runType == CWLProcess.WORKFLOW) {
-                    String runFile = step.get("run").toString();
-                    subworkflows.put(stepName, FilenameUtils.getName(runFile));
-                    writeSubworkflow(stepName, rdfModel, runFile);
+                    if (subworkflow) {
+                        writeLine("  \"" + stepName + "\" [fillcolor=\"#F3CEA1\"];");
+                    } else {
+                        String runFile = step.get("run").toString();
+                        subworkflows.put(stepName, FilenameUtils.getName(runFile));
+                        writeSubworkflow(stepName, rdfModel, runFile);
+                    }
                 } else {
                     String label = labelFromName(stepName);
                     writeLine("  \"" + stepName + "\" [label=\"" + label + "\"];");
@@ -238,6 +243,7 @@ public class DotWriter {
      * @return A string in the format filename#stepID
      */
     private String nodeIDFromUri(String uri) {
+
         String nodeID = rdfService.lastURIPart(uri);
         if (subworkflows.containsKey(nodeID)) {
             int slashAfterHashIndex = uri.indexOf('/', uri.lastIndexOf('#'));
@@ -264,10 +270,8 @@ public class DotWriter {
         writeLine("    label = \"" + labelFromName(name) + "\";");
 
         writeInputs(rdfModel, subWorkflowUri);
-        writeSteps(rdfModel, subWorkflowUri);
+        writeSteps(rdfModel, subWorkflowUri, true);
         writeOutputs(rdfModel, subWorkflowUri);
-
-        //writeLine("  \"" + name + "\" [fillcolor=\"#F3CEA1\"];");
 
         writeLine("  }");
     }
