@@ -23,6 +23,9 @@ RUN pip install cwltool
 # cwl-refrunner?
 
 # Workaround to enable <1024-bit certificates
+# as Alpine Linux Python 2 links to 
+# libressl2.4-libssl-2.4.4-r0
+# https://github.com/certifi/python-certifi#1024-bit-root-certificates
 RUN sed -i 's/import where/import old_where as where/' /usr/lib/python2.7/site-packages/requests/certs.py
 RUN cwltool --version
 
