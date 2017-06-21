@@ -67,6 +67,13 @@ public class Workflow {
     // DOT graph of the contents
     private String dotGraph;
 
+    // Cwltool run details
+    public enum Status {
+        RUNNING, ERROR, SUCCESS
+    }
+    private Status cwltoolStatus = Status.RUNNING;
+    private String cwltoolLog = "";
+
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
                     Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink) {
         this.label = label;
@@ -169,5 +176,21 @@ public class Workflow {
 
     public void setDockerLink(String dockerLink) {
         this.dockerLink = dockerLink;
+    }
+
+    public Status getCwltoolStatus() {
+        return cwltoolStatus;
+    }
+
+    public void setCwltoolStatus(Status cwltoolStatus) {
+        this.cwltoolStatus = cwltoolStatus;
+    }
+
+    public String getCwltoolLog() {
+        return cwltoolLog;
+    }
+
+    public void setCwltoolLog(String cwltoolLog) {
+        this.cwltoolLog = cwltoolLog;
     }
 }

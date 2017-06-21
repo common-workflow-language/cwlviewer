@@ -95,7 +95,7 @@ public class DotWriterTest {
     public void writeGraph() throws Exception {
 /*
         StringWriter dotSource = new StringWriter();
-        DotWriter dotWriter = new DotWriter(dotSource);
+        RDFDotWriter dotWriter = new RDFDotWriter(dotSource);
 
         dotWriter.writeGraph(testWorkflow);
 

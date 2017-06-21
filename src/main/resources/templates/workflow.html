@@ -125,6 +125,14 @@ digraph G {
     <div class="row">
         <div class="col-md-12" role="main" id="main">
             <h2>Workflow: <span th:text="${workflow.label}">Workflow Name</span></h2>
+            <div class="alert alert-info" th:if="${workflow.cwltoolStatus.name() == 'RUNNING'}">
+                <p><strong>Preliminary result:</strong> cwltool verification is still being run on this workflow.
+                    The visualisation and details may be improved once this is completed</p>
+            </div>
+            <div class="alert alert-danger" th:if="${workflow.cwltoolStatus.name() == 'ERROR'}">
+                <p><strong>Error:</strong> cwltool failed to run on this workflow with:</p>
+                <p th:text="${workflow.cwltoolLog}"></p>
+            </div>
             <p>
                 <a th:href="@{${workflow.retrievedFrom.getURL()}}" href="#" rel="noopener" target="_blank">
                     <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
