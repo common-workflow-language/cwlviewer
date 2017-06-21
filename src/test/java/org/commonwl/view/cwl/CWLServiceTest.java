@@ -58,7 +58,7 @@ public class CWLServiceTest {
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails lobSTRDraft3Details = new GithubDetails("common-workflow-language",
                 "workflows", null, "workflows/lobSTR/lobSTR-workflow.cwl");
-        Workflow lobSTRDraft3 = cwlService.parseWorkflow(lobSTRDraft3Details, "920c6be45f08e979e715a0018f22c532b024074f");
+        Workflow lobSTRDraft3 = cwlService.parseWorkflowNative(lobSTRDraft3Details, "920c6be45f08e979e715a0018f22c532b024074f");
 
         testLobSTRWorkflow(lobSTRDraft3);
 
@@ -79,7 +79,7 @@ public class CWLServiceTest {
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language",
                 "workflows", null, "workflows/lobSTR/lobSTR-workflow.cwl");
-        Workflow lobSTRv1 = cwlService.parseWorkflow(lobSTRv1Details, "933bf2a1a1cce32d88f88f136275535da9df0954");
+        Workflow lobSTRv1 = cwlService.parseWorkflowNative(lobSTRv1Details, "933bf2a1a1cce32d88f88f136275535da9df0954");
 
         testLobSTRWorkflow(lobSTRv1);
 
