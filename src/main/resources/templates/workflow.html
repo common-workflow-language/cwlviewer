@@ -130,8 +130,8 @@ digraph G {
                     The visualisation and details may be improved once this is completed</p>
             </div>
             <div class="alert alert-danger" th:if="${workflow.cwltoolStatus.name() == 'ERROR'}">
-                <p><strong>Error:</strong> cwltool failed to run on this workflow with:</p>
-                <p th:text="${workflow.cwltoolLog}"></p>
+                <p><strong>Error:</strong> cwltool failed to run on this workflow:</p>
+                <pre th:text="${workflow.cwltoolLog}"></pre>
             </div>
             <p>
                 <a th:href="@{${workflow.retrievedFrom.getURL()}}" href="#" rel="noopener" target="_blank">
