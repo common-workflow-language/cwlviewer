@@ -20,7 +20,6 @@
 package org.commonwl.view.graphviz;
 
 import org.commonwl.view.cwl.CWLElement;
-import org.commonwl.view.cwl.CWLProcess;
 import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.workflow.Workflow;
 
@@ -102,11 +101,7 @@ public class ModelDotWriter extends DotWriter {
     private void writeSteps(Workflow workflow) throws IOException {
         // Write each of the steps as a node or subgraph if it is a nested workflow
         for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
-            if (step.getValue().getRunType() == CWLProcess.WORKFLOW) {
-                writeLine("  \"" + step.getKey() + "\" [fillcolor=\"#F3CEA1\"];");
-            } else {
-                writeLine("  \"" + step.getKey() + "\";");
-            }
+            writeLine("  \"" + step.getKey() + "\";");
         }
 
         // Write the links between nodes

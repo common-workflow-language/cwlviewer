@@ -34,7 +34,7 @@ public class CWLElement {
     private String defaultVal;
 
     public CWLElement() {
-        this.sourceID = new ArrayList<String>();
+        this.sourceID = new ArrayList<>();
     }
 
     public String getLabel() {

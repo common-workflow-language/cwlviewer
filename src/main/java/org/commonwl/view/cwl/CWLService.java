@@ -88,10 +88,6 @@ public class CWLService {
     private final String ARRAY_ITEMS = "items";
     private final String LOCATION = "location";
     private final String RUN = "run";
-    private final String REQUIREMENTS = "requirements";
-    private final String HINTS = "hints";
-    private final String DOCKER_REQUIREMENT = "DockerRequirement";
-    private final String DOCKER_PULL = "dockerPull";
 
     /**
      * Constructor for the Common Workflow Language service
@@ -148,8 +144,7 @@ public class CWLService {
 
             // Construct the rest of the workflow model
             Workflow workflowModel = new Workflow(label, extractDoc(cwlFile), getInputs(cwlFile),
-                    getOutputs(cwlFile), getSteps(cwlFile), getDockerLink(cwlFile));
-            fillStepRunTypes(workflowModel, packedFiles, githubInfo, latestCommit);
+                    getOutputs(cwlFile), getSteps(cwlFile), null);
 
             if (packedFiles.size() > 0) {
                 workflowModel.setPackedWorkflowID(cwlFile.get(ID).asText());
@@ -486,65 +481,6 @@ public class CWLService {
     }
 
     /**
-     * Fill the step runtypes based on types of other documents
-     * @param workflow The workflow model to set runtypes for
-     * @param packedFiles A map of ID to the json document for packed files
-     */
-    private void fillStepRunTypes(Workflow workflow, Map<String, JsonNode> packedFiles,
-                                  GithubDetails githubInfo, String latestCommit) throws IOException {
-        Map<String, JsonNode> cache = new HashMap<>();
-        Map<String, CWLStep> steps = workflow.getSteps();
-        for (CWLStep step : steps.values()) {
-            String runParam = step.getRun();
-
-            // Run parameter for each step in the workflow
-            if (runParam != null) {
-                JsonNode runDoc = null;
-                if (runParam.startsWith("#")) {
-                    // Packed file ID, check packed files for the process type
-                    runDoc = packedFiles.get(runParam.substring(1));
-                    step.setRunType(extractProcess(runDoc));
-                } else {
-                    // External file path
-                    // Check that it is not outside of the repository
-                    String path = "root/" + FilenameUtils.getPath(githubInfo.getPath());
-                    Path filePath = Paths.get(path);
-                    filePath = filePath.resolve(runParam).normalize();
-                    if (filePath.startsWith("root/")) {
-                        // Download the file from the repository and parse it
-                        try {
-                            path = filePath.toString().substring(5);
-                            if (cache.containsKey(runParam)) {
-                                runDoc = cache.get(runParam);
-                                step.setRunType(extractProcess(runDoc));
-                            } else {
-                                GithubDetails runFile = new GithubDetails(githubInfo.getOwner(),
-                                        githubInfo.getRepoName(), latestCommit, path);
-                                String fileContent = githubService.downloadFile(runFile);
-                                runDoc = yamlStringToJson(fileContent);
-                                step.setRunType(extractProcess(runDoc));
-                                cache.put(runParam, runDoc);
-                            }
-                        } catch (IOException ex) {
-                            logger.info("Could not find run file from CWL step", ex);
-                        }
-                    }
-                }
-
-                // Set label/doc from linked document if none exists for step
-                if (runDoc != null) {
-                    if (step.getLabel() == null) {
-                        step.setLabel(extractLabel(runDoc));
-                    }
-                    if (step.getDoc() == null) {
-                        step.setDoc(extractDoc(runDoc));
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Extract the label from a node
      * @param node The node to have the label extracted from
      * @return The string for the label of the node
@@ -750,69 +686,6 @@ public class CWLService {
             }
 
             return details;
-        }
-        return null;
-    }
-
-    /**
-     * Get the docker link from a workflow node
-     * @param node The overall workflow node
-     * @return A string with a dockerhub or image link
-     */
-    private String getDockerLink(JsonNode node) {
-        if (node != null) {
-            if (node.has(REQUIREMENTS)) {
-                String dockerLink = extractDockerLink(node.get(REQUIREMENTS));
-                if (dockerLink != null) {
-                    return extractDockerLink(node.get(REQUIREMENTS));
-                }
-            }
-            if (node.has(HINTS)) {
-                String dockerLink = extractDockerLink(node.get(HINTS));
-                if (dockerLink != null) {
-                    return extractDockerLink(node.get(HINTS));
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get the docker link from a workflow hints or requriements node
-     * @param hintReq A hints or requirements node
-     * @return A string with a dockerhub or image link
-     */
-    private String extractDockerLink(JsonNode hintReq) {
-        // ArrayNode syntax using yaml lists
-        if (hintReq.getClass() == ArrayNode.class) {
-            for (JsonNode requirement : hintReq) {
-                if (requirement.has(CLASS)
-                        && requirement.get(CLASS).asText().equals(DOCKER_REQUIREMENT)) {
-                    if (requirement.has(DOCKER_PULL)) {
-                        // Format dockerPull string as a dockerhub URL
-                        return DockerService.getDockerHubURL(requirement.get(DOCKER_PULL).asText());
-                    } else {
-                        // Indicate that the docker requirement exists, but we cannot
-                        // provide a link to dockerhub as docker pull is not used
-                        return "true";
-                    }
-                }
-            }
-            // v1.0 object syntax with requirement class as key
-        } else if (hintReq.getClass() == ObjectNode.class) {
-            // Look for DockerRequirement
-            if (hintReq.has(DOCKER_REQUIREMENT)) {
-                JsonNode dockerReq = hintReq.get(DOCKER_REQUIREMENT);
-                if (dockerReq.has(DOCKER_PULL)) {
-                    // Format dockerPull string as a dockerhub URL
-                    String dockerPull = dockerReq.get(DOCKER_PULL).asText();
-                    return DockerService.getDockerHubURL(dockerPull);
-                } else {
-                    // Indicate that the docker requirement exists, but we cannot
-                    // provide a link to dockerhub as docker pull is not used
-                    return "true";
-                }
-            }
         }
         return null;
     }
