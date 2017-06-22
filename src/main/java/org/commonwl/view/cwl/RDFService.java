@@ -127,8 +127,12 @@ public class RDFService {
                 "    {\n" +
                 "        ?dest cwl:outputSource ?src\n" +
                 "    } UNION {\n" +
-                "        ?dest cwl:source ?src \n" +
-                "        OPTIONAL { ?dest cwl:default ?default }\n" +
+                "        { ?dest cwl:source ?src } \n" +
+                "        UNION {" +
+                "            ?wf Workflow:steps ?step .\n" +
+                "            ?step cwl:in ?dest . \n" +
+                "            ?dest cwl:default ?default" +
+                "        }\n" +
                 "    }\n" +
                 "}");
         return runQuery(stepQuery, model);
