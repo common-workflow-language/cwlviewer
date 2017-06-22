@@ -45,6 +45,7 @@ public class Workflow {
     private GithubDetails retrievedFrom;
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss z")
     private Date retrievedOn;
+    private String packedWorkflowID;
 
     // The last commit from the branch at the time of fetching
     // Used for caching purposes
@@ -192,5 +193,17 @@ public class Workflow {
 
     public void setCwltoolLog(String cwltoolLog) {
         this.cwltoolLog = cwltoolLog;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getPackedWorkflowID() {
+        return packedWorkflowID;
+    }
+
+    public void setPackedWorkflowID(String packedWorkflowID) {
+        this.packedWorkflowID = packedWorkflowID;
     }
 }

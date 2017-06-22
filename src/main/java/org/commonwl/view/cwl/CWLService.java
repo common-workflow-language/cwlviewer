@@ -151,6 +151,10 @@ public class CWLService {
                     getOutputs(cwlFile), getSteps(cwlFile), getDockerLink(cwlFile));
             fillStepRunTypes(workflowModel, packedFiles, githubInfo, latestCommit);
 
+            if (packedFiles.size() > 0) {
+                workflowModel.setPackedWorkflowID(cwlFile.get(ID).asText());
+            }
+
             // Generate DOT graph
             StringWriter graphWriter = new StringWriter();
             ModelDotWriter dotWriter = new ModelDotWriter(graphWriter);
@@ -175,14 +179,22 @@ public class CWLService {
      * Create a workflow model from cwltool rdf output
      * @param githubInfo The Github repository information
      * @param latestCommit The latest commit ID
+     * @param packedWorkflowID The workflow ID if the file has multiple objects
      * @return The constructed workflow object
      */
     public Workflow parseWorkflowWithCwltool(GithubDetails githubInfo,
-                                             String latestCommit) throws CWLValidationException {
+                                             String latestCommit,
+                                             String packedWorkflowID) throws CWLValidationException {
 
         // Get RDF representation from cwltool
         String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
                 githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
+        if (packedWorkflowID != null) {
+            if (packedWorkflowID.charAt(0) != '#') {
+                url += "#";
+            }
+            url += packedWorkflowID;
+        }
         String rdf = cwlTool.getRDF(url);
 
         // Create a workflow model from RDF representation

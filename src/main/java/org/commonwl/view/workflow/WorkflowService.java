@@ -194,7 +194,8 @@ public class WorkflowService {
         // ASYNC OPERATIONS
         // Parse with cwltool and update model
         try {
-            cwlToolRunner.updateModelWithCwltool(githubInfo, latestCommit);
+            cwlToolRunner.updateModelWithCwltool(githubInfo, latestCommit,
+                    workflowModel.getPackedWorkflowID());
         } catch (Exception e) {}
 
         // Create a new research object bundle for the workflow

@@ -405,8 +405,26 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
 
     });
 
+/**
+ * Bootstrap tooltips
+ */
 require(['jquery', 'bootstrap.tooltip', 'bootstrap.dropdown'],
     function ($) {
         // Alterative notation as only a single data-toggle attribute is allowed
         $('[data-tooltip="true"]').tooltip();
+    });
+
+/**
+ * Toggle viewing the cwl log details
+ */
+require(['jquery'],
+    function ($) {
+        $("#cwllog").click(function() {
+            $("#cwltooldetails").slideToggle();
+            if($(this).text() == 'show details'){
+                $(this).text('hide details');
+            } else {
+                $(this).text('show details');
+            }
+        });
     });

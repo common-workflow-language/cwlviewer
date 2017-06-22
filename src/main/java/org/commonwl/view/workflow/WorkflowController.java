@@ -196,8 +196,38 @@ public class WorkflowController {
         }
 
         // Display this model along with the view
-        return new ModelAndView("workflow", "workflow", workflowModel).addObject("appURL", applicationURL);
+        String model;
+        if (workflowModel.getCwltoolStatus() == Workflow.Status.RUNNING) {
+            model = "loading";
+        } else {
+            model = "workflow";
+        }
+        return new ModelAndView(model, "workflow", workflowModel).addObject("appURL", applicationURL);
 
+    }
+
+    /**
+     * Checks whether cwltool has finished running on a workflow
+     * @param workflowID The workflow ID to check
+     * @return Either "RUNNING", "SUCCESS" or an error message
+     */
+    @RequestMapping(value = "/workflows/{workflowID}/cwlstatus",
+            method = RequestMethod.GET)
+    @ResponseBody
+    public String checkCwlStatus(@PathVariable("workflowID") String workflowID) {
+        Workflow workflowModel = workflowService.getWorkflow(workflowID);
+        if (workflowModel == null) {
+            throw new WorkflowNotFoundException();
+        }
+        switch (workflowModel.getCwltoolStatus()) {
+            case RUNNING:
+                return "RUNNING";
+            case SUCCESS:
+                return "SUCCESS";
+            case ERROR:
+                return workflowModel.getCwltoolLog();
+        }
+        return "";
     }
 
     /**

@@ -31,8 +31,28 @@ pre {
     color: #a94442;
 }
 
-.hide {
+#loadingWorkflow {
+    opacity: 0.3;
+    max-height: 500px;
+}
+
+#loadingWorkflowContainer {
+    position: relative;
+}
+
+#loadingSpinner, #loadingSuccess, #loadingFail {
+    position: absolute;
+    top: calc(50% - 100px);
+    left: calc(50% - 100px);
+    z-index: 99;
+}
+
+.hide, #cwltooldetails, #loadingSuccess, #loadingFail {
     display: none;
+}
+
+#loadingWarning {
+    margin-top: 10px;
 }
 
 :target {

@@ -37,7 +37,8 @@ public class CWLToolRunner {
 
     @Async
     public void updateModelWithCwltool(GithubDetails githubInfo,
-                                       String latestCommit)
+                                       String latestCommit,
+                                       String packedWorkflowID)
             throws IOException, InterruptedException {
 
         Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
@@ -53,7 +54,8 @@ public class CWLToolRunner {
 
         // Parse using cwltool and replace in database
         try {
-            Workflow newWorkflow = cwlService.parseWorkflowWithCwltool(githubInfo, latestCommit);
+            Workflow newWorkflow = cwlService.parseWorkflowWithCwltool(
+                    githubInfo, latestCommit, packedWorkflowID);
 
             workflowRepository.delete(workflow);
             graphVizService.deleteCache(workflow.getID());

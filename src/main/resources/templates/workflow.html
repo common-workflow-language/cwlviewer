@@ -125,14 +125,6 @@ digraph G {
     <div class="row">
         <div class="col-md-12" role="main" id="main">
             <h2>Workflow: <span th:text="${workflow.label}">Workflow Name</span></h2>
-            <div class="alert alert-info" th:if="${workflow.cwltoolStatus.name() == 'RUNNING'}">
-                <p><strong>Preliminary result:</strong> cwltool verification is still being run on this workflow.
-                    The visualisation and details may be improved once this is completed</p>
-            </div>
-            <div class="alert alert-danger" th:if="${workflow.cwltoolStatus.name() == 'ERROR'}">
-                <p><strong>Error:</strong> cwltool failed to run on this workflow:</p>
-                <pre th:text="${workflow.cwltoolLog}"></pre>
-            </div>
             <p>
                 <a th:href="@{${workflow.retrievedFrom.getURL()}}" href="#" rel="noopener" target="_blank">
                     <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
@@ -144,6 +136,9 @@ digraph G {
                     - <a th:href="@{'/workflows/' + ${workflow.id} + '/download'}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
                     <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>
                 </span>
+            </p>
+            <p th:if="${workflow.cwltoolStatus.name() == 'SUCCESS'}">
+                <img class="verification_icon" src="../static/img/tick.svg" th:src="@{/img/tick.svg}" width="20" height="22" /> Verified with cwltool version <span>1.0.20170622090721</span>
             </p>
             <p th:text="${workflow.doc}">Workflow Doc</p>
         </div>
