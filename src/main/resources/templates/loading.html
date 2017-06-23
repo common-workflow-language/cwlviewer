@@ -40,7 +40,8 @@
 <div class="container">
     <div class="row">
         <div class="col-md-12 text-center" role="main" id="main">
-            <h2 id="loadingHeader">Validating workflow <span th:text="${workflow.label}" id="workflowName">Workflow Name</span> with <a href="https://github.com/common-workflow-language/cwltool" rel="noopener" target="_blank">cwltool</a>...</h2>
+            <h2 id="loadingHeader">Validating workflow <span th:text="${workflow.label}" id="workflowName">Workflow Name</span> with
+                <a href="https://github.com/common-workflow-language/cwltool" rel="noopener" target="_blank">cwltool</a>...</h2>
             <p id="loadingOverview">
                 Consists of
                 <span th:text="${workflow.inputs.size()}">2</span> input<span th:if="${workflow.inputs.size() != 1}">s</span>,

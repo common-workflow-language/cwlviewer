@@ -46,7 +46,9 @@ require(['jquery'],
             $("#loadingSpinner").fadeOut(function() {
                 $("#loadingFail").fadeIn();
             });
-            $("#loadingWarning").html('<a href="javascript:window.location.reload(true)">Try Again</a>');
+            $("#loadingWarning").html('<a class="btn btn-default" role="button" href="javascript:window.location.reload(true)">' +
+                '<span class="glyphicon glyphicon-refresh" aria-hidden="true"></span> Try Again' +
+                '</a>');
             $("#errorMsg").text(error);
         }
 
@@ -83,7 +85,6 @@ require(['jquery'],
         }
 
         checkForDone();
-
 
         // Click to show the complete error log
         $(document).on("click", "#cwllog", function() {
