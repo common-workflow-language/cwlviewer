@@ -21,8 +21,40 @@ body {
     padding-top: 61px;
 }
 
-.hide {
+pre {
+    border: 0;
+    background-color: transparent;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -o-pre-wrap;
+    word-wrap: break-word;
+    color: #a94442;
+}
+
+#loadingWorkflow {
+    opacity: 0.3;
+    max-height: 500px;
+    max-width: 100%;
+}
+
+#loadingWorkflowContainer {
+    position: relative;
+    min-height: 220px;
+}
+
+#loadingSpinner, #loadingSuccess, #loadingFail {
+    position: absolute;
+    top: calc(50% - 100px);
+    left: calc(50% - 100px);
+    z-index: 99;
+}
+
+.hide, #cwltooldetails, #loadingSuccess, #loadingFail {
     display: none;
+}
+
+#loadingWarning {
+    margin-top: 10px;
 }
 
 :target {

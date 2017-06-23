@@ -20,6 +20,7 @@
 package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLService;
+import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
@@ -52,6 +53,7 @@ public class WorkflowService {
     private final WorkflowRepository workflowRepository;
     private final ROBundleFactory ROBundleFactory;
     private final GraphVizService graphVizService;
+    private final CWLToolRunner cwlToolRunner;
     private final int cacheDays;
 
     @Autowired
@@ -60,12 +62,14 @@ public class WorkflowService {
                            WorkflowRepository workflowRepository,
                            ROBundleFactory ROBundleFactory,
                            GraphVizService graphVizService,
+                           CWLToolRunner cwlToolRunner,
                            @Value("${cacheDays}") int cacheDays) {
         this.githubService = githubService;
         this.cwlService = cwlService;
         this.workflowRepository = workflowRepository;
         this.ROBundleFactory = ROBundleFactory;
         this.graphVizService = graphVizService;
+        this.cwlToolRunner = cwlToolRunner;
         this.cacheDays = cacheDays;
     }
 
@@ -75,7 +79,7 @@ public class WorkflowService {
      * @return The resulting page of the workflow entries
      */
     public Page<Workflow> getPageOfWorkflows(Pageable pageable) {
-        return workflowRepository.findAllByOrderByRetrievedOnDesc(pageable);
+        return workflowRepository.findByCwltoolStatusOrderByRetrievedOnDesc(Workflow.Status.SUCCESS, pageable);
     }
 
     /**
@@ -180,16 +184,25 @@ public class WorkflowService {
 
         // Construct basic workflow model from cwl
         String latestCommit = githubService.getCommitSha(githubInfo);
-        Workflow workflowModel = cwlService.parseWorkflow(githubInfo, latestCommit);
+        Workflow workflowModel = cwlService.parseWorkflowNative(githubInfo, latestCommit);
 
         // Set origin details
         workflowModel.setRetrievedOn(new Date());
         workflowModel.setRetrievedFrom(githubInfo);
         workflowModel.setLastCommit(latestCommit);
 
+        // ASYNC OPERATIONS
+        // Parse with cwltool and update model
+        try {
+            cwlToolRunner.updateModelWithCwltool(githubInfo, latestCommit,
+                    workflowModel.getPackedWorkflowID());
+        } catch (Exception e) {
+            logger.error("Could not update workflow with cwltool", e);
+        }
+
         // Create a new research object bundle for the workflow
-        // This is Async so cannot just call constructor, needs intermediate as per Spring framework
         generateROBundle(workflowModel);
+        // END ASYNC
 
         // Save to database
         workflowRepository.save(workflowModel);
@@ -197,6 +210,23 @@ public class WorkflowService {
         // Return this model to be displayed
         return workflowModel;
 
+    }
+
+    /**
+     * Update a workflow by running cwltool
+     * @param workflowModel The old workflow model, possibly incomplete
+     * @param githubInfo The details of the github repository
+     */
+    public void updateWorkflow(Workflow workflowModel, GithubDetails githubInfo) {
+        workflowModel.setCwltoolStatus(Workflow.Status.RUNNING);
+        workflowRepository.save(workflowModel);
+        try {
+            String latestCommit = githubService.getCommitSha(githubInfo);
+            cwlToolRunner.updateModelWithCwltool(githubInfo, latestCommit,
+                    workflowModel.getPackedWorkflowID());
+        } catch (Exception e) {
+            logger.error("Could not update workflow with cwltool", e);
+        }
     }
 
     /**

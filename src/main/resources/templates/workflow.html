@@ -137,6 +137,9 @@ digraph G {
                     <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>
                 </span>
             </p>
+            <p th:if="${workflow.cwltoolStatus.name() == 'SUCCESS'}">
+                <img class="verification_icon" src="../static/img/tick.svg" th:src="@{/img/tick.svg}" width="20" height="22" /> Verified with cwltool version <span th:text="${workflow.cwltoolVersion}">1.0.20170622090721</span>
+            </p>
             <p th:text="${workflow.doc}">Workflow Doc</p>
         </div>
     </div>

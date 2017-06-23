@@ -37,10 +37,11 @@ public interface WorkflowRepository extends PagingAndSortingRepository<Workflow,
     Workflow findByRetrievedFrom(GithubDetails retrievedFrom);
 
     /**
-     * Paged request to get all workflows
+     * Paged request to get workflows of a specific status
+     * @param status The status of the workflows to be retrieved
      * @param pageable The details of the page to be retrieved
      * @return The requested page of workflows
      */
-    Page<Workflow> findAllByOrderByRetrievedOnDesc(Pageable pageable);
+    Page<Workflow>findByCwltoolStatusOrderByRetrievedOnDesc(Workflow.Status status, Pageable pageable);
 
 }

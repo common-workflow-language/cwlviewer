@@ -45,6 +45,7 @@ public class Workflow {
     private GithubDetails retrievedFrom;
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss z")
     private Date retrievedOn;
+    private String packedWorkflowID;
 
     // The last commit from the branch at the time of fetching
     // Used for caching purposes
@@ -66,6 +67,14 @@ public class Workflow {
 
     // DOT graph of the contents
     private String dotGraph;
+
+    // Cwltool run details
+    public enum Status {
+        RUNNING, ERROR, SUCCESS
+    }
+    private Status cwltoolStatus = Status.RUNNING;
+    private String cwltoolLog = "";
+    private String cwltoolVersion = "";
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
                     Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink) {
@@ -169,5 +178,41 @@ public class Workflow {
 
     public void setDockerLink(String dockerLink) {
         this.dockerLink = dockerLink;
+    }
+
+    public Status getCwltoolStatus() {
+        return cwltoolStatus;
+    }
+
+    public void setCwltoolStatus(Status cwltoolStatus) {
+        this.cwltoolStatus = cwltoolStatus;
+    }
+
+    public String getCwltoolLog() {
+        return cwltoolLog;
+    }
+
+    public void setCwltoolLog(String cwltoolLog) {
+        this.cwltoolLog = cwltoolLog;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getPackedWorkflowID() {
+        return packedWorkflowID;
+    }
+
+    public void setPackedWorkflowID(String packedWorkflowID) {
+        this.packedWorkflowID = packedWorkflowID;
+    }
+
+    public String getCwltoolVersion() {
+        return cwltoolVersion;
+    }
+
+    public void setCwltoolVersion(String cwltoolVersion) {
+        this.cwltoolVersion = cwltoolVersion;
     }
 }

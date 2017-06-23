@@ -405,6 +405,9 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
 
     });
 
+/**
+ * Bootstrap tooltips
+ */
 require(['jquery', 'bootstrap.tooltip', 'bootstrap.dropdown'],
     function ($) {
         // Alterative notation as only a single data-toggle attribute is allowed
