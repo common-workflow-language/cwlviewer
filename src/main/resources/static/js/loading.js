@@ -55,6 +55,7 @@ require(['jquery'],
                 type: 'GET',
                 url: '/workflows/' + $('#workflowID').text() + '/cwlstatus',
                 dataType: "text",
+                cache: false,
                 success: function(response) {
                     console.log(response);
                     switch (response) {

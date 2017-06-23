@@ -25,14 +25,17 @@ public class CWLToolRunner {
     private final WorkflowRepository workflowRepository;
     private final CWLService cwlService;
     private final GraphVizService graphVizService;
+    private final String cwlToolVersion;
 
     @Autowired
     public CWLToolRunner(WorkflowRepository workflowRepository,
                          CWLService cwlService,
+                         CWLTool cwlTool,
                          GraphVizService graphVizService) {
         this.workflowRepository = workflowRepository;
         this.cwlService = cwlService;
         this.graphVizService = graphVizService;
+        this.cwlToolVersion = cwlTool.getVersion();
     }
 
     @Async
@@ -65,6 +68,7 @@ public class CWLToolRunner {
             newWorkflow.setRetrievedFrom(githubInfo);
             newWorkflow.setLastCommit(latestCommit);
             newWorkflow.setCwltoolStatus(Workflow.Status.SUCCESS);
+            newWorkflow.setCwltoolVersion(cwlToolVersion);
             workflowRepository.save(newWorkflow);
         } catch (CWLValidationException ex) {
             logger.error(ex.getMessage(), ex);

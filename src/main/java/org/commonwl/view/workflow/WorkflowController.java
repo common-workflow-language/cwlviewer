@@ -195,6 +195,11 @@ public class WorkflowController {
             }
         }
 
+        // Retry creation if there is an error in cwltool parsing
+        if (workflowModel.getCwltoolStatus() == Workflow.Status.ERROR) {
+            workflowService.updateWorkflow(workflowModel, githubDetails);
+        }
+
         // Display this model along with the view
         String model;
         if (workflowModel.getCwltoolStatus() == Workflow.Status.RUNNING) {

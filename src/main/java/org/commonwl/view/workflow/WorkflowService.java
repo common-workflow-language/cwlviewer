@@ -79,7 +79,7 @@ public class WorkflowService {
      * @return The resulting page of the workflow entries
      */
     public Page<Workflow> getPageOfWorkflows(Pageable pageable) {
-        return workflowRepository.findAllByOrderByRetrievedOnDesc(pageable);
+        return workflowRepository.findByCwltoolStatusOrderByRetrievedOnDesc(Workflow.Status.SUCCESS, pageable);
     }
 
     /**
@@ -196,7 +196,9 @@ public class WorkflowService {
         try {
             cwlToolRunner.updateModelWithCwltool(githubInfo, latestCommit,
                     workflowModel.getPackedWorkflowID());
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            logger.error("Could not update workflow with cwltool", e);
+        }
 
         // Create a new research object bundle for the workflow
         generateROBundle(workflowModel);
@@ -208,6 +210,23 @@ public class WorkflowService {
         // Return this model to be displayed
         return workflowModel;
 
+    }
+
+    /**
+     * Update a workflow by running cwltool
+     * @param workflowModel The old workflow model, possibly incomplete
+     * @param githubInfo The details of the github repository
+     */
+    public void updateWorkflow(Workflow workflowModel, GithubDetails githubInfo) {
+        workflowModel.setCwltoolStatus(Workflow.Status.RUNNING);
+        workflowRepository.save(workflowModel);
+        try {
+            String latestCommit = githubService.getCommitSha(githubInfo);
+            cwlToolRunner.updateModelWithCwltool(githubInfo, latestCommit,
+                    workflowModel.getPackedWorkflowID());
+        } catch (Exception e) {
+            logger.error("Could not update workflow with cwltool", e);
+        }
     }
 
     /**

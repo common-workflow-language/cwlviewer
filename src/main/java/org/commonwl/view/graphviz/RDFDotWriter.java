@@ -180,7 +180,7 @@ public class RDFDotWriter extends DotWriter {
                     label = "[Complex Object]";
                 }
                 writeLine("  \"default" + defaultCount + "\" -> \"" + destID + "\";");
-                writeLine("  \"default" + defaultCount + "\" [label=\"" + label + "\", fillcolor=\"#D5AEFC\"]");
+                writeLine("  \"default" + defaultCount + "\" [label=\"" + label + "\", fillcolor=\"#D5AEFC\"];");
             }
         }
 
@@ -242,7 +242,7 @@ public class RDFDotWriter extends DotWriter {
         } else {
             label = labelFromName(inputOutput.get("name").toString());
         }
-        nodeOptions.add("label=\"" + label + "\";");
+        nodeOptions.add("label=\"" + label + "\"");
 
         // Write the line for the node
         String inputOutputName = rdfService.lastURIPart(inputOutput.get("name").toString());

@@ -1,5 +1,6 @@
 package org.commonwl.view.cwl;
 
+import org.commonwl.view.util.StreamGobbler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ public class CWLTool {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    // TODO: Multiple graph objects require appending id eg #something
+    private String cwlToolVersion;
 
     /**
      * Get the RDF representation of a CWL file
@@ -27,64 +28,59 @@ public class CWLTool {
      * @throws CWLValidationException cwltool errors
      */
     public String getRDF(String url) throws CWLValidationException {
-
         try {
-            // Make sure the CWL is valid
-            validate(url);
-
             // Run cwltool --print-rdf with the URL
             String[] command = {"cwltool", "--non-strict", "--quiet", "--print-rdf", url};
             ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
             Process process = cwlToolProcess.start();
 
-            // Read response rdf from the process
+            // Read output from the process using threads
+            StreamGobbler inputGobbler = new StreamGobbler(process.getInputStream());
+            StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream());
+            errorGobbler.start();
+            inputGobbler.start();
+
+            // Wait for process to complete
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                return inputGobbler.getContent();
+            } else {
+                throw new CWLValidationException(errorGobbler.getContent());
+            }
+        } catch (IOException|InterruptedException e) {
+            logger.error("Error running cwltool process", e);
+            throw new CWLValidationException("Error running cwltool process");
+        }
+    }
+
+    /**
+     * Gets the version of cwltool being used
+     * @return The version number
+     */
+    public String getVersion() {
+        if (cwlToolVersion != null) {
+            return cwlToolVersion;
+        }
+        try {
+            // Run cwltool --version
+            String[] command = {"cwltool", "--version"};
+            ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
+            Process process = cwlToolProcess.start();
+
+            // Get input stream
             InputStream is = process.getInputStream();
             InputStreamReader isr = new InputStreamReader(is);
             BufferedReader br = new BufferedReader(isr);
 
             String line;
-            String rdf = "";
-            while ((line = br.readLine()) != null) {
-                rdf += line + "\n";
+            if ((line = br.readLine()) != null) {
+                return line.substring(line.indexOf(' '));
+            } else {
+                return "<error getting cwl version>";
             }
-
-            return rdf;
-
-        } catch (IOException|InterruptedException e) {
-            logger.error("Error running cwltool process", e);
-            throw new CWLValidationException("Error running cwltool process");
-        }
-
-    }
-
-    /**
-     * Validate a CWL file
-     * @param url The URL of the CWL file
-     * @throws CWLValidationException cwltool errors
-     * @throws InterruptedException cwltool does not run to completion
-     * @throws IOException Process errors while running cwltool
-     */
-    private void validate(String url)
-            throws CWLValidationException, InterruptedException, IOException {
-        // Run cwltool --validate with the URL
-        String[] command = {"cwltool", "--non-strict", "--quiet", "--validate", url};
-        ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
-        Process process = cwlToolProcess.start();
-
-        // Read error from the process if exists
-        InputStream is = process.getErrorStream();
-        InputStreamReader isr = new InputStreamReader(is);
-        BufferedReader br = new BufferedReader(isr);
-
-        String line;
-        String output = "";
-        while ((line = br.readLine()) != null) {
-            output += line + "\n";
-        }
-
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            throw new CWLValidationException(output);
+        } catch (IOException ex) {
+            return "<error getting cwl version>";
         }
     }
+
 }

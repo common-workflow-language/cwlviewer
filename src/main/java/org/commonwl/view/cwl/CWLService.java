@@ -150,6 +150,8 @@ public class CWLService {
                 workflowModel.setPackedWorkflowID(cwlFile.get(ID).asText());
             }
 
+            workflowModel.setCwltoolVersion(cwlTool.getVersion());
+
             // Generate DOT graph
             StringWriter graphWriter = new StringWriter();
             ModelDotWriter dotWriter = new ModelDotWriter(graphWriter);

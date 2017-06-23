@@ -74,6 +74,7 @@ public class Workflow {
     }
     private Status cwltoolStatus = Status.RUNNING;
     private String cwltoolLog = "";
+    private String cwltoolVersion = "";
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
                     Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink) {
@@ -205,5 +206,13 @@ public class Workflow {
 
     public void setPackedWorkflowID(String packedWorkflowID) {
         this.packedWorkflowID = packedWorkflowID;
+    }
+
+    public String getCwltoolVersion() {
+        return cwltoolVersion;
+    }
+
+    public void setCwltoolVersion(String cwltoolVersion) {
+        this.cwltoolVersion = cwltoolVersion;
     }
 }
