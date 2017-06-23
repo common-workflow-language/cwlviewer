@@ -57,6 +57,7 @@ public class CWLToolRunner {
 
         // Parse using cwltool and replace in database
         try {
+
             Workflow newWorkflow = cwlService.parseWorkflowWithCwltool(
                     githubInfo, latestCommit, packedWorkflowID);
 
@@ -69,11 +70,20 @@ public class CWLToolRunner {
             newWorkflow.setLastCommit(latestCommit);
             newWorkflow.setCwltoolStatus(Workflow.Status.SUCCESS);
             newWorkflow.setCwltoolVersion(cwlToolVersion);
+
             workflowRepository.save(newWorkflow);
+
         } catch (CWLValidationException ex) {
             logger.error(ex.getMessage(), ex);
             workflow.setCwltoolStatus(Workflow.Status.ERROR);
             workflow.setCwltoolLog(ex.getMessage());
+            workflowRepository.save(workflow);
+        } catch (Exception ex) {
+            logger.error("Unexpected error", ex);
+            workflow.setCwltoolStatus(Workflow.Status.ERROR);
+            workflow.setCwltoolLog("Whoops! Cwltool ran successfully, but an unexpected " +
+                    "error occurred in CWLViewer!\n" +
+                    "Help us by reporting it on Gitter or a Github issue\n");
             workflowRepository.save(workflow);
         }
 
