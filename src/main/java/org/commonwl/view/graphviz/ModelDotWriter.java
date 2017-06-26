@@ -99,9 +99,14 @@ public class ModelDotWriter extends DotWriter {
      * @throws IOException Any errors in writing which may have occurred
      */
     private void writeSteps(Workflow workflow) throws IOException {
-        // Write each of the steps as a node or subgraph if it is a nested workflow
+        // Write each of the steps as a node
         for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
-            writeLine("  \"" + step.getKey() + "\";");
+            String label = step.getValue().getLabel();
+            if (label == null) {
+                writeLine("  \"" + step.getKey() + "\";");
+            } else {
+                writeLine("  \"" + step.getKey() + "\" [label=\"" + label + "\"]");
+            }
         }
 
         // Write the links between nodes

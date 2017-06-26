@@ -20,7 +20,8 @@ public class RDFService {
             "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
             "PREFIX sld: <https://w3id.org/cwl/salad#>\n" +
             "PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>\n" +
-            "PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>";
+            "PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>\n" +
+            "PREFIX rdfs: <rdfs:>";
 
     private String rdfService;
 
@@ -84,8 +85,8 @@ public class RDFService {
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:inputs ?name .\n" +
                 "    OPTIONAL { ?name sld:type ?type }\n" +
-                "    OPTIONAL { ?name sld:label ?label }\n" +
-                "    OPTIONAL { ?name sld:doc ?doc }\n" +
+                "    OPTIONAL { ?name sld:label|rdfs:label ?label }\n" +
+                "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }\n" +
                 "  }" +
                 "}");
         inputsQuery.setIri("wf", workflowURI);
@@ -108,8 +109,8 @@ public class RDFService {
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:outputs ?name .\n" +
                 "    OPTIONAL { ?name sld:type ?type }\n" +
-                "    OPTIONAL { ?name sld:label ?label }\n" +
-                "    OPTIONAL { ?name sld:doc ?doc }\n" +
+                "    OPTIONAL { ?name sld:label|rdfs:label ?label }\n" +
+                "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }\n" +
                 "  }" +
                 "}");
         outputsQuery.setIri("wf", workflowURI);
@@ -136,8 +137,8 @@ public class RDFService {
                 "        ?step cwl:in ?stepinput .\n" +
                 "        { ?stepinput cwl:source ?src } UNION { ?stepinput cwl:default ?default }\n" +
                 "    }\n" +
-                "    OPTIONAL { ?run sld:label ?label }\n" +
-                "    OPTIONAL { ?run sld:doc ?doc }\n" +
+                "    OPTIONAL { ?run sld:label|rdfs:label ?label }\n" +
+                "    OPTIONAL { ?run sld:doc|rdfs:comment ?doc }\n" +
                 "  }" +
                 "}");
         stepQuery.setIri("wf", workflowURI);

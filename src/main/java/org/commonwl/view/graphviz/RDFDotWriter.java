@@ -123,11 +123,18 @@ public class RDFDotWriter extends DotWriter {
 
             // Only write each step once
             if (!addedSteps.contains(stepName)) {
+                String label;
+                if (step.contains("label")) {
+                    label = step.get("label").toString();
+                } else {
+                    label = rdfService.labelFromName(stepName);
+                }
+
                 // Distinguish nested workflows
                 CWLProcess runType = rdfService.strToRuntype(step.get("runtype").toString());
                 if (runType == CWLProcess.WORKFLOW) {
                     //if (subworkflow) {
-                        writeLine("  \"" + stepName + "\" [label=\"" + rdfService.labelFromName(stepName) +
+                        writeLine("  \"" + stepName + "\" [label=\"" + label +
                                 "\", fillcolor=\"#F3CEA1\"];");
                     /*} else {
                         String runFile = step.get("run").toString();
@@ -135,7 +142,6 @@ public class RDFDotWriter extends DotWriter {
                         writeSubworkflow(stepName, runFile);
                     }*/
                 } else {
-                    String label = rdfService.labelFromName(stepName);
                     writeLine("  \"" + stepName + "\" [label=\"" + label + "\"];");
                 }
                 addedSteps.add(stepName);
