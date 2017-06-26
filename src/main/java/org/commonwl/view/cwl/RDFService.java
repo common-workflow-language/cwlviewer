@@ -76,11 +76,10 @@ public class RDFService {
     public ResultSet getOutputs(Model model, String workflowURI) {
         ParameterizedSparqlString outputsQuery = new ParameterizedSparqlString();
         outputsQuery.setCommandText(queryCtx +
-                "SELECT ?name ?type ?src ?label ?doc\n" +
+                "SELECT ?name ?type ?label ?doc\n" +
                 "WHERE {\n" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:outputs ?name .\n" +
-                "    OPTIONAL { ?name cwl:outputSource ?src }\n" +
                 "    OPTIONAL { ?name sld:type ?type }\n" +
                 "    OPTIONAL { ?name sld:label ?label }\n" +
                 "    OPTIONAL { ?name sld:doc ?doc }\n" +
@@ -205,6 +204,15 @@ public class RDFService {
             default:
                 return null;
         }
+    }
+
+    /**
+     * Get the label for the node from its name
+     * @param name The name in the form filename#step
+     * @return The second part of the name, just the step
+     */
+    public String labelFromName(String name) {
+        return name.substring(name.indexOf('#') + 1);
     }
 
     /**

@@ -251,7 +251,7 @@ public class CWLService {
             if (input.contains("doc")) {
                 wfInput.setDoc(input.get("doc").toString());
             }
-            wfInputs.put(inputName, wfInput);
+            wfInputs.put(rdfService.labelFromName(inputName), wfInput);
         }
 
         // Outputs
@@ -307,7 +307,7 @@ public class CWLService {
             if (output.contains("doc")) {
                 wfOutput.setDoc(output.get("doc").toString());
             }
-            wfOutputs.put(outputName, wfOutput);
+            wfOutputs.put(rdfService.labelFromName(outputName), wfOutput);
         }
 
 
@@ -360,7 +360,7 @@ public class CWLService {
                 if (step.contains("doc")) {
                     wfStep.setDoc(step.get("doc").toString());
                 }
-                wfSteps.put(uri, wfStep);
+                wfSteps.put(rdfService.labelFromName(uri), wfStep);
             }
         }
 

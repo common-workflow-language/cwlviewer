@@ -129,15 +129,15 @@ public class RDFDotWriter extends DotWriter {
                 // Distinguish nested workflows
                 CWLProcess runType = rdfService.strToRuntype(step.get("runtype").toString());
                 if (runType == CWLProcess.WORKFLOW) {
-                    if (subworkflow) {
+                    //if (subworkflow) {
                         writeLine("  \"" + stepName + "\" [fillcolor=\"#F3CEA1\"];");
-                    } else {
+                    /*} else {
                         String runFile = step.get("run").toString();
                         subworkflows.put(stepName, FilenameUtils.getName(runFile));
                         writeSubworkflow(stepName, rdfModel, runFile);
-                    }
+                    }*/
                 } else {
-                    String label = labelFromName(stepName);
+                    String label = rdfService.labelFromName(stepName);
                     writeLine("  \"" + stepName + "\" [label=\"" + label + "\"];");
                 }
                 addedSteps.add(stepName);
@@ -215,8 +215,10 @@ public class RDFDotWriter extends DotWriter {
         // Start of subgraph with styling
         writeLine("  subgraph \"cluster_" + name + "\" {");
         writeLine("    rank = \"same\";");
-        writeLine("    style = \"dotted\";");
-        writeLine("    label = \"" + labelFromName(name) + "\";");
+        writeLine("    style=\"filled,dotted\";");
+        writeLine("    color=\"black\";");
+        writeLine("    fillcolor=\"#F9DBB7\";");
+        writeLine("    label = \"" + rdfService.labelFromName(name) + "\";");
 
         writeInputs(rdfModel, subWorkflowUri);
         writeSteps(rdfModel, subWorkflowUri, true);
@@ -240,22 +242,13 @@ public class RDFDotWriter extends DotWriter {
         if (inputOutput.contains("label")) {
             label = inputOutput.get("label").toString();
         } else {
-            label = labelFromName(inputOutput.get("name").toString());
+            label = rdfService.labelFromName(inputOutput.get("name").toString());
         }
         nodeOptions.add("label=\"" + label + "\"");
 
         // Write the line for the node
         String inputOutputName = rdfService.lastURIPart(inputOutput.get("name").toString());
         writeLine("    \"" + inputOutputName + "\" [" + String.join(",", nodeOptions) + "];");
-    }
-
-    /**
-     * Get the label for the node from its name
-     * @param name The name in the form filename#step
-     * @return The second part of the name, just the step
-     */
-    private String labelFromName(String name) {
-        return name.substring(name.indexOf('#') + 1);
     }
 
 }
