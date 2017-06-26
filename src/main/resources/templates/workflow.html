@@ -125,22 +125,24 @@ digraph G {
     <div class="row">
         <div class="col-md-12" role="main" id="main">
             <h2>Workflow: <span th:text="${workflow.label}">Workflow Name</span></h2>
-            <p>
-                <a th:href="@{${workflow.retrievedFrom.getURL()}}" href="#" rel="noopener" target="_blank">
-                    <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
-                </a>
-                <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
+            <p th:text="${workflow.doc}">Workflow Doc</p>
+        </div>
+        <div class="col-md-6">
+            <a th:href="@{${workflow.retrievedFrom.getURL()}}" href="#" rel="noopener" target="_blank">
+                <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
+            </a>
+        <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
                 <span th:if="${workflow.roBundle == null}" id="ajaxRequired"></span>
-                <span th:class="${workflow.roBundle != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
-                <span th:class="${workflow.roBundle == null} ? hide : ''" id="generated">
+            <span th:class="${workflow.roBundle != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
+            <span th:class="${workflow.roBundle == null} ? hide : ''" id="generated">
                     - <a th:href="@{'/workflows/' + ${workflow.id} + '/download'}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
                     <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>
                 </span>
-            </p>
+        </div>
+        <div class="col-md-6 text-right">
             <p th:if="${workflow.cwltoolStatus.name() == 'SUCCESS'}">
                 <img class="verification_icon" src="../static/img/tick.svg" th:src="@{/img/tick.svg}" width="20" height="22" /> Verified with cwltool version <span th:text="${workflow.cwltoolVersion}">1.0.20170622090721</span>
             </p>
-            <p th:text="${workflow.doc}">Workflow Doc</p>
         </div>
     </div>
     <div class="row">
