@@ -245,6 +245,15 @@ require(['jquery'],
 require(['jquery', 'jquery.svg', 'jquery.svgdom'],
     function ($) {
         /**
+         * endsWith function to check suffix
+         */
+        if (typeof String.prototype.endsWith !== 'function') {
+            String.prototype.endsWith = function(suffix) {
+                return this.indexOf(suffix, this.length - suffix.length) !== -1;
+            };
+        }
+
+        /**
          * Gets the corresponding graph box for a table row
          * @param trElement The table row element
          * @return The graph box element(s)
@@ -255,7 +264,7 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
 
             // Find corresponding graph box and return
             return $("title").filter(function() {
-                return $(this).text() == elementTitle;
+                return $(this).text().endsWith(elementTitle);
             }).siblings("polygon");
         }
 
@@ -291,7 +300,7 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
 
             // Find corresponding table row and return
             return $("tr").filter(function() {
-                return $(this).find("td:first").html() == elementTitle;
+                return elementTitle.endsWith($(this).find("td:first").html());
             });
         }
 
