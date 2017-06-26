@@ -198,6 +198,11 @@ public class CWLService {
         final Model model = ModelFactory.createDefaultModel();
         model.read(new ByteArrayInputStream(rdf.getBytes()), null, "TURTLE");
 
+        // Store the model
+        String graphName = String.format("github.com/%s/%s/%s/%s", githubInfo.getOwner(),
+                githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
+        rdfService.storeModel(graphName, model);
+
         // Base workflow details
         Resource workflow = model.getResource(url);
         String label = rdfService.getLabel(workflow);
@@ -205,7 +210,7 @@ public class CWLService {
 
         // Inputs
         Map<String, CWLElement> wfInputs = new HashMap<>();
-        ResultSet inputs = rdfService.getInputs(model, url);
+        ResultSet inputs = rdfService.getInputs(graphName, url);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
             String inputName = rdfService.lastURIPart(input.get("name").toString());
@@ -256,7 +261,7 @@ public class CWLService {
 
         // Outputs
         Map<String, CWLElement> wfOutputs = new HashMap<>();
-        ResultSet outputs = rdfService.getOutputs(model, url);
+        ResultSet outputs = rdfService.getOutputs(graphName, url);
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
             CWLElement wfOutput = new CWLElement();
@@ -313,7 +318,7 @@ public class CWLService {
 
         // Steps
         Map<String, CWLStep> wfSteps = new HashMap<>();
-        ResultSet steps = rdfService.getSteps(model, url);
+        ResultSet steps = rdfService.getSteps(graphName, url);
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
             String uri = rdfService.lastURIPart(step.get("step").toString());
@@ -365,7 +370,7 @@ public class CWLService {
         }
 
         // Docker link
-        ResultSet dockerResult = rdfService.getDockerLink(model, url);
+        ResultSet dockerResult = rdfService.getDockerLink(graphName, url);
         String dockerLink = null;
         if (dockerResult.hasNext()) {
             QuerySolution docker = dockerResult.nextSolution();
@@ -382,9 +387,9 @@ public class CWLService {
 
         // Generate DOT graph
         StringWriter graphWriter = new StringWriter();
-        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService);
+        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService, graphName);
         try {
-            RDFDotWriter.writeGraph(model, url);
+            RDFDotWriter.writeGraph(url);
             workflowModel.setDotGraph(graphWriter.toString());
         } catch (IOException ex) {
             logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());

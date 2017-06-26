@@ -22,7 +22,6 @@ package org.commonwl.view.graphviz;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Model;
 import org.commonwl.view.cwl.CWLProcess;
 import org.commonwl.view.cwl.RDFService;
 
@@ -37,36 +36,36 @@ import java.util.*;
  */
 public class RDFDotWriter extends DotWriter {
 
+    private String graphName;
     private RDFService rdfService;
     private Map<String, String> subworkflows = new HashMap<>();
 
-    public RDFDotWriter(Writer writer, RDFService rdfService) {
+    public RDFDotWriter(Writer writer, RDFService rdfService, String graphName) {
         super(writer);
         this.rdfService = rdfService;
+        this.graphName = graphName;
     }
 
     /**
      * Write a graph representing a workflow to the Writer
-     * @param rdfModel The model containing the workflow to be graphed
      * @param workflowUri The URI of the workflow in the model
      * @throws IOException Any errors in writing which may have occurred
      */
-    public void writeGraph(Model rdfModel, String workflowUri) throws IOException {
+    public void writeGraph(String workflowUri) throws IOException {
         writePreamble();
-        writeInputs(rdfModel, workflowUri);
-        writeOutputs(rdfModel, workflowUri);
-        writeSteps(rdfModel, workflowUri, false);
-        writeStepLinks(rdfModel, workflowUri);
+        writeInputs(workflowUri);
+        writeOutputs(workflowUri);
+        writeSteps(workflowUri, false);
+        writeStepLinks(workflowUri);
         writeLine("}");
     }
 
     /**
      * Writes a set of inputs from a workflow to the Writer
-     * @param rdfModel The model containing the workflow to be graphed
      * @param workflowUri The URI of the workflow in the model
      * @throws IOException Any errors in writing which may have occurred
      */
-    private void writeInputs(Model rdfModel, String workflowUri) throws IOException {
+    private void writeInputs(String workflowUri) throws IOException {
 
         // Start of subgraph with styling
         writeLine("  subgraph cluster_inputs {");
@@ -75,7 +74,7 @@ public class RDFDotWriter extends DotWriter {
         writeLine("    label = \"Workflow Inputs\";");
 
         // Write each of the inputs as a node
-        ResultSet inputs = rdfService.getInputs(rdfModel, workflowUri);
+        ResultSet inputs = rdfService.getInputs(graphName, workflowUri);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
             writeInputOutput(input);
@@ -87,11 +86,10 @@ public class RDFDotWriter extends DotWriter {
 
     /**
      * Writes a set of outputs from a workflow to the Writer
-     * @param rdfModel The model containing the workflow to be graphed
      * @param workflowUri The URI of the workflow in the model
      * @throws IOException Any errors in writing which may have occurred
      */
-    private void writeOutputs(Model rdfModel, String workflowUri) throws IOException {
+    private void writeOutputs(String workflowUri) throws IOException {
         // Start of subgraph with styling
         writeLine("  subgraph cluster_outputs {");
         writeLine("    rank = \"same\";");
@@ -99,7 +97,7 @@ public class RDFDotWriter extends DotWriter {
         writeLine("    label = \"Workflow Outputs\";");
 
         // Write each of the outputs as a node
-        ResultSet outputs = rdfService.getOutputs(rdfModel, workflowUri);
+        ResultSet outputs = rdfService.getOutputs(graphName, workflowUri);
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
             writeInputOutput(output);
@@ -111,14 +109,13 @@ public class RDFDotWriter extends DotWriter {
 
     /**
      * Writes a set of steps from a workflow to the Writer
-     * @param rdfModel The model containing the workflow to be graphed
      * @param workflowUri The URI of the workflow in the model
      * @param subworkflow Whether these are steps of a subworkflow
      * @throws IOException Any errors in writing which may have occurred
      */
-    private void writeSteps(Model rdfModel, String workflowUri, boolean subworkflow) throws IOException {
+    private void writeSteps(String workflowUri, boolean subworkflow) throws IOException {
 
-        ResultSet steps = rdfService.getSteps(rdfModel, workflowUri);
+        ResultSet steps = rdfService.getSteps(graphName, workflowUri);
         Set<String> addedSteps = new HashSet<>();
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
@@ -130,11 +127,12 @@ public class RDFDotWriter extends DotWriter {
                 CWLProcess runType = rdfService.strToRuntype(step.get("runtype").toString());
                 if (runType == CWLProcess.WORKFLOW) {
                     //if (subworkflow) {
-                        writeLine("  \"" + stepName + "\" [fillcolor=\"#F3CEA1\"];");
+                        writeLine("  \"" + stepName + "\" [label=\"" + rdfService.labelFromName(stepName) +
+                                "\", fillcolor=\"#F3CEA1\"];");
                     /*} else {
                         String runFile = step.get("run").toString();
                         subworkflows.put(stepName, FilenameUtils.getName(runFile));
-                        writeSubworkflow(stepName, rdfModel, runFile);
+                        writeSubworkflow(stepName, runFile);
                     }*/
                 } else {
                     String label = rdfService.labelFromName(stepName);
@@ -148,14 +146,13 @@ public class RDFDotWriter extends DotWriter {
 
     /**
      * Write the links between steps for the entire model
-     * @param rdfModel The model containing workflows and tools
      * @param workflowUri The URI of the workflow in the model
      * @throws IOException Any errors in writing which may have occurredn
      */
-    private void writeStepLinks(Model rdfModel, String workflowUri) throws IOException {
+    private void writeStepLinks(String workflowUri) throws IOException {
 
         // Write links between steps
-        ResultSet stepLinks = rdfService.getStepLinks(rdfModel);
+        ResultSet stepLinks = rdfService.getStepLinks(graphName, workflowUri);
         int defaultCount = 0;
         while (stepLinks.hasNext()) {
             QuerySolution stepLink = stepLinks.nextSolution();
@@ -207,10 +204,9 @@ public class RDFDotWriter extends DotWriter {
     /**
      * Writes a subworkflow as a cluster on the graph
      * @param name The name of the step the subworkflow is running in
-     * @param rdfModel The model containing the workflow to be graphed
      * @param subWorkflowUri The URI of the subworkflow in the model
      */
-    private void writeSubworkflow(String name, Model rdfModel, String subWorkflowUri) throws IOException {
+    private void writeSubworkflow(String name, String subWorkflowUri) throws IOException {
 
         // Start of subgraph with styling
         writeLine("  subgraph \"cluster_" + name + "\" {");
@@ -220,9 +216,9 @@ public class RDFDotWriter extends DotWriter {
         writeLine("    fillcolor=\"#F9DBB7\";");
         writeLine("    label = \"" + rdfService.labelFromName(name) + "\";");
 
-        writeInputs(rdfModel, subWorkflowUri);
-        writeSteps(rdfModel, subWorkflowUri, true);
-        writeOutputs(rdfModel, subWorkflowUri);
+        writeInputs(subWorkflowUri);
+        writeSteps(subWorkflowUri, true);
+        writeOutputs(subWorkflowUri);
 
         writeLine("  }");
     }
