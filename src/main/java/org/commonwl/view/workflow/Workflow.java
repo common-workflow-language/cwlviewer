@@ -196,10 +196,6 @@ public class Workflow {
         this.cwltoolLog = cwltoolLog;
     }
 
-    public String getId() {
-        return id;
-    }
-
     public String getPackedWorkflowID() {
         return packedWorkflowID;
     }
