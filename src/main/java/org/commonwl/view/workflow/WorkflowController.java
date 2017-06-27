@@ -28,10 +28,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -46,9 +44,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 public class WorkflowController {
@@ -84,16 +80,6 @@ public class WorkflowController {
         model.addAttribute("workflows", workflowService.getPageOfWorkflows(pageable));
         model.addAttribute("pages", pageable);
         return "workflows";
-    }
-
-    /**
-     * List all the workflows in the database, paginated
-     * @return A list of all the workflows
-     */
-    @GetMapping(value="/workflows", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    @ResponseBody
-    public Page<Workflow> listWorkflowsJson(Model model, @PageableDefault(size = 10) Pageable pageable) {
-        return workflowService.getPageOfWorkflows(pageable);
     }
 
     /**
@@ -137,63 +123,13 @@ public class WorkflowController {
     }
 
     /**
-     * Create a new workflow from the given github URL
-     * @param url The URL of the workflow
-     * @return Appropriate response code and optional JSON string with message
-     */
-    @PostMapping(value = "/workflows", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    @ResponseBody
-    public Map<String, String> newWorkflowFromGithubURLJson(@RequestParam(value="url") String url,
-                                                            HttpServletResponse response) {
-
-        // Run validator which checks the github URL is valid
-        WorkflowForm workflowForm = new WorkflowForm(url);
-        BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
-        GithubDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, errors);
-
-        if (errors.hasErrors() || githubInfo == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return Collections.singletonMap("message", "Error: " + errors.getAllErrors().get(0).getDefaultMessage());
-        } else {
-            if (githubInfo.getPath().endsWith(".cwl")) {
-                // Get workflow or create if does not exist
-                Workflow workflow = workflowService.getWorkflow(githubInfo);
-                String resourceLocation = "/workflows/github.com/" + githubInfo.getOwner()
-                        + "/" + githubInfo.getRepoName() + "/tree/" + githubInfo.getBranch()
-                        + "/" + githubInfo.getPath();
-                if (workflow == null) {
-                    try {
-                        workflow = workflowService.createWorkflow(githubInfo);
-                        response.setStatus(HttpServletResponse.SC_ACCEPTED);
-                        response.setHeader("Location", resourceLocation);
-                    } catch (CWLValidationException ex) {
-                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        return Collections.singletonMap("message", "Error:" + ex.getMessage());
-                    } catch (Exception ex) {
-                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        return Collections.singletonMap("message", "Error: Workflow could not be created from the provided cwl file");
-                    }
-                } else {
-                    // Workflow already exists and is equivalent
-                    response.setStatus(HttpServletResponse.SC_SEE_OTHER);
-                    response.setHeader("Location", resourceLocation);
-                }
-            } else {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                return Collections.singletonMap("message", "Error: URL provided was not a .cwl file");
-            }
-        }
-        return null;
-    }
-
-    /**
      * Display a page for a particular workflow from Github details
      * @param owner The owner of the Github repository
      * @param repoName The name of the repository
      * @param branch The branch of repository
      * @return The workflow view with the workflow as a model
      */
-    @RequestMapping(value="/workflows/github.com/{owner}/{repoName}/tree/{branch}/**")
+    @GetMapping(value="/workflows/github.com/{owner}/{repoName}/tree/{branch}/**")
     public ModelAndView getWorkflowByGithubDetails(@Value("${applicationURL}") String applicationURL,
                                                    @PathVariable("owner") String owner,
                                                    @PathVariable("repoName") String repoName,
@@ -268,36 +204,6 @@ public class WorkflowController {
         }
         return new ModelAndView(model, "workflow", workflowModel).addObject("appURL", applicationURL);
 
-    }
-
-    /**
-     * Get the JSON representation of a workflow from Github details
-     * @param owner The owner of the Github repository
-     * @param repoName The name of the repository
-     * @param branch The branch of repository
-     * @return The JSON representation of the workflow
-     */
-    @PostMapping(value = "/workflows/github.com/{owner}/{repoName}/tree/{branch}/**",
-                 produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    @ResponseBody
-    public Workflow getWorkflowByGithubDetailsJson(@PathVariable("owner") String owner,
-                                                   @PathVariable("repoName") String repoName,
-                                                   @PathVariable("branch") String branch,
-                                                   HttpServletRequest request) {
-        // The wildcard end of the URL is the path
-        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        path = extractPath(path);
-
-        // Construct a GithubDetails object to search for in the database
-        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
-
-        // Get workflow
-        Workflow workflowModel = workflowService.getWorkflow(githubDetails);
-        if (workflowModel == null) {
-            throw new WorkflowNotFoundException();
-        } else {
-            return workflowModel;
-        }
     }
 
     /**
@@ -396,7 +302,7 @@ public class WorkflowController {
      * @param path The full request string path
      * @return THe Github path from the end
      */
-    private String extractPath(String path) {
+    public static String extractPath(String path) {
         int pathStartIndex = StringUtils.ordinalIndexOf(path, "/", 7);
         if (pathStartIndex > -1 && pathStartIndex < path.length() - 1) {
             return path.substring(pathStartIndex + 1).replaceAll("\\/$", "");

@@ -73,7 +73,7 @@ public class Workflow {
         RUNNING, ERROR, SUCCESS
     }
     private Status cwltoolStatus = Status.RUNNING;
-    private String cwltoolLog = "";
+    private String cwltoolLog;
     private String cwltoolVersion = "";
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
