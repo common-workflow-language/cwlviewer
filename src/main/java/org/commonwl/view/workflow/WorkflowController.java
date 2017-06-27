@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
@@ -86,6 +87,16 @@ public class WorkflowController {
     }
 
     /**
+     * List all the workflows in the database, paginated
+     * @return A list of all the workflows
+     */
+    @GetMapping(value="/workflows", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @ResponseBody
+    public Page<Workflow> listWorkflowsJson(Model model, @PageableDefault(size = 10) Pageable pageable) {
+        return workflowService.getPageOfWorkflows(pageable);
+    }
+
+    /**
      * Create a new workflow from the given github URL in the form
      * @param workflowForm The data submitted from the form
      * @param bindingResult Spring MVC Binding Result object
@@ -128,7 +139,7 @@ public class WorkflowController {
     /**
      * Create a new workflow from the given github URL
      * @param url The URL of the workflow
-     * @return JSON string with status of the workflow
+     * @return Appropriate response code and optional JSON string with message
      */
     @PostMapping(value = "/workflows", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
@@ -259,6 +270,13 @@ public class WorkflowController {
 
     }
 
+    /**
+     * Get the JSON representation of a workflow from Github details
+     * @param owner The owner of the Github repository
+     * @param repoName The name of the repository
+     * @param branch The branch of repository
+     * @return The JSON representation of the workflow
+     */
     @PostMapping(value = "/workflows/github.com/{owner}/{repoName}/tree/{branch}/**",
                  produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
