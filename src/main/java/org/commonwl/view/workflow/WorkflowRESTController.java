@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -57,8 +59,8 @@ public class WorkflowRESTController {
      * @return Appropriate response code and optional JSON string with message
      */
     @PostMapping(value = "/workflows", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Map<String, String> newWorkflowFromGithubURLJson(@RequestParam(value="url") String url,
-                                                            HttpServletResponse response) {
+    public ResponseEntity<?> newWorkflowFromGithubURLJson(@RequestParam(value="url") String url,
+                                                          HttpServletResponse response) {
 
         // Run validator which checks the github URL is valid
         WorkflowForm workflowForm = new WorkflowForm(url);
@@ -66,8 +68,9 @@ public class WorkflowRESTController {
         GithubDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, errors);
 
         if (errors.hasErrors() || githubInfo == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return Collections.singletonMap("message", "Error: " + errors.getAllErrors().get(0).getDefaultMessage());
+            Map<String, String> message = Collections.singletonMap("message", "Error: " +
+                    errors.getAllErrors().get(0).getDefaultMessage());
+            return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
         } else {
             if (githubInfo.getPath().endsWith(".cwl")) {
                 // Get workflow or create if does not exist
@@ -78,26 +81,28 @@ public class WorkflowRESTController {
                 if (workflow == null) {
                     try {
                         workflow = workflowService.createWorkflow(githubInfo);
-                        response.setStatus(HttpServletResponse.SC_ACCEPTED);
                         response.setHeader("Location", resourceLocation);
+                        return new ResponseEntity<>(workflow, HttpStatus.ACCEPTED);
                     } catch (CWLValidationException ex) {
-                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        return Collections.singletonMap("message", "Error:" + ex.getMessage());
+                        Map<String, String> message = Collections.singletonMap("message", "Error:" + ex.getMessage());
+                        return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
                     } catch (Exception ex) {
-                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        return Collections.singletonMap("message", "Error: Workflow could not be created from the provided cwl file");
+                        Map<String, String> message = Collections.singletonMap("message",
+                                "Error: Workflow could not be created from the provided cwl file");
+                        return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
                     }
                 } else {
                     // Workflow already exists and is equivalent
                     response.setStatus(HttpServletResponse.SC_SEE_OTHER);
                     response.setHeader("Location", resourceLocation);
+                    return null;
                 }
             } else {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                return Collections.singletonMap("message", "Error: URL provided was not a .cwl file");
+                Map<String, String> message = Collections.singletonMap("message",
+                        "Error: URL provided was not a .cwl file");
+                return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
             }
         }
-        return null;
     }
 
     /**
