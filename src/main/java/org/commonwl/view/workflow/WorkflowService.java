@@ -28,6 +28,7 @@ import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
 import org.eclipse.egit.github.core.RepositoryContents;
+import org.eclipse.egit.github.core.client.RequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,6 +125,21 @@ public class WorkflowService {
         // Check database for existing workflows from this repository
         Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
 
+        // Slash in branch fix
+        boolean slashesInPath = true;
+        while (workflow == null && slashesInPath) {
+            String path = githubInfo.getPath();
+            String branch = githubInfo.getBranch();
+            int firstSlash = path.indexOf("/");
+            if (firstSlash != -1) {
+                githubInfo.setBranch(branch + "/" + path.substring(0, firstSlash));
+                githubInfo.setPath(path.substring(firstSlash + 1));
+                workflow = workflowRepository.findByRetrievedFrom(githubInfo);
+            } else {
+                slashesInPath = false;
+            }
+        }
+
         // Cache update
         if (workflow != null) {
             // Delete the existing workflow if the cache has expired
@@ -183,7 +199,29 @@ public class WorkflowService {
             throws IOException, CWLValidationException {
 
         // Construct basic workflow model from cwl
-        String latestCommit = githubService.getCommitSha(githubInfo);
+        String latestCommit = null;
+        while (latestCommit == null) {
+            try {
+                latestCommit = githubService.getCommitSha(githubInfo);
+            } catch (RequestException ex) {
+                if (ex.getStatus() == 404) {
+                    // Slashes in branch fix
+                    // Commits were not found. This can occur if the branch has a /
+                    String path = githubInfo.getPath();
+                    String branch = githubInfo.getBranch();
+                    int firstSlash = path.indexOf("/");
+                    if (firstSlash != -1) {
+                        // Take part of path and append it to the branch each time
+                        githubInfo.setBranch(branch + "/" + path.substring(0, firstSlash));
+                        githubInfo.setPath(path.substring(firstSlash + 1));
+                    } else {
+                        throw ex;
+                    }
+                } else {
+                    throw ex;
+                }
+            }
+        }
         Workflow workflowModel = cwlService.parseWorkflowNative(githubInfo, latestCommit);
 
         // Set origin details
