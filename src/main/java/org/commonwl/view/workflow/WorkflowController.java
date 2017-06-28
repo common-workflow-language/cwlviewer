@@ -129,7 +129,8 @@ public class WorkflowController {
      * @param branch The branch of repository
      * @return The workflow view with the workflow as a model
      */
-    @GetMapping(value="/workflows/github.com/{owner}/{repoName}/tree/{branch}/**")
+    @GetMapping(value={"/workflows/github.com/{owner}/{repoName}/tree/{branch}/**",
+                       "/workflows/github.com/{owner}/{repoName}/blob/{branch}/**"})
     public ModelAndView getWorkflowByGithubDetails(@Value("${applicationURL}") String applicationURL,
                                                    @PathVariable("owner") String owner,
                                                    @PathVariable("repoName") String repoName,
