@@ -128,12 +128,9 @@ public class WorkflowService {
         // Slash in branch fix
         boolean slashesInPath = true;
         while (workflow == null && slashesInPath) {
-            String path = githubInfo.getPath();
-            String branch = githubInfo.getBranch();
-            int firstSlash = path.indexOf("/");
-            if (firstSlash != -1) {
-                githubInfo.setBranch(branch + "/" + path.substring(0, firstSlash));
-                githubInfo.setPath(path.substring(firstSlash + 1));
+            GithubDetails correctedForSlash = transferPathToBranch(githubInfo);
+            if (correctedForSlash != null) {
+                githubInfo = correctedForSlash;
                 workflow = workflowRepository.findByRetrievedFrom(githubInfo);
             } else {
                 slashesInPath = false;
@@ -207,13 +204,9 @@ public class WorkflowService {
                 if (ex.getStatus() == 404) {
                     // Slashes in branch fix
                     // Commits were not found. This can occur if the branch has a /
-                    String path = githubInfo.getPath();
-                    String branch = githubInfo.getBranch();
-                    int firstSlash = path.indexOf("/");
-                    if (firstSlash != -1) {
-                        // Take part of path and append it to the branch each time
-                        githubInfo.setBranch(branch + "/" + path.substring(0, firstSlash));
-                        githubInfo.setPath(path.substring(firstSlash + 1));
+                    GithubDetails correctedForSlash = transferPathToBranch(githubInfo);
+                    if (correctedForSlash != null) {
+                        githubInfo = correctedForSlash;
                     } else {
                         throw ex;
                     }
@@ -336,6 +329,28 @@ public class WorkflowService {
         } catch (Exception ex) {
             // Default to no expiry if there was an API error
             return false;
+        }
+    }
+
+    /**
+     * Transfers part of the path to the branch to fix / in branch names
+     * @param githubInfo The current Github info possibly with
+     *                   part of the branch name in the path
+     * @return A potentially corrected set of Github details,
+     *         or null if there are no slashes in the path
+     */
+    private GithubDetails transferPathToBranch(GithubDetails githubInfo) {
+        String path = githubInfo.getPath();
+        String branch = githubInfo.getBranch();
+
+        int firstSlash = path.indexOf("/");
+        if (firstSlash > 0) {
+            branch += "/" + path.substring(0, firstSlash);
+            path = path.substring(firstSlash + 1);
+            return new GithubDetails(githubInfo.getOwner(),
+                    githubInfo.getRepoName(), branch, path);
+        } else {
+            return null;
         }
     }
 }
