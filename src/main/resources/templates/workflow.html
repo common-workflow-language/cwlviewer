@@ -45,7 +45,7 @@
             </div>
             <div class="modal-body">
                 <h4 id="modalTitle">Dot File Source:</h4>
-<textarea id="dot" class="form-control" rows="15" th:field="${workflow.dotGraph}">
+<textarea id="dot" class="form-control" rows="15" th:field="${workflow.visualisationDot}">
 digraph G {
     graph [
         bgcolor="#eeeeee"
@@ -132,9 +132,9 @@ digraph G {
                 <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
             </a>
         <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
-                <span th:if="${workflow.roBundle == null}" id="ajaxRequired"></span>
-            <span th:class="${workflow.roBundle != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
-            <span th:class="${workflow.roBundle == null} ? hide : ''" id="generated">
+                <span th:if="${workflow.roBundlePath == null}" id="ajaxRequired"></span>
+            <span th:class="${workflow.roBundlePath != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
+            <span th:class="${workflow.roBundlePath == null} ? hide : ''" id="generated">
                     - <a th:href="@{'/robundle/' + ${githubURLPart}}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
                     <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>
                 </span>

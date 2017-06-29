@@ -94,7 +94,7 @@ public class ROBundleFactory {
             logger.error("Workflow model could not be found when adding RO Bundle path");
         } else {
             // Add RO Bundle to associated workflow model
-            workflow.setRoBundle(bundleLocation.toString());
+            workflow.setRoBundlePath(bundleLocation.toString());
             workflowRepository.save(workflow);
             logger.info("Finished saving Research Object Bundle");
         }

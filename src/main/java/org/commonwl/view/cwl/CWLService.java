@@ -157,7 +157,7 @@ public class CWLService {
             ModelDotWriter dotWriter = new ModelDotWriter(graphWriter);
             try {
                 dotWriter.writeGraph(workflowModel);
-                workflowModel.setDotGraph(graphWriter.toString());
+                workflowModel.setVisualisationDot(graphWriter.toString());
             } catch (IOException ex) {
                 logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
             }
@@ -390,7 +390,7 @@ public class CWLService {
         RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService, graphName);
         try {
             RDFDotWriter.writeGraph(url);
-            workflowModel.setDotGraph(graphWriter.toString());
+            workflowModel.setVisualisationDot(graphWriter.toString());
         } catch (IOException ex) {
             logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
         }

@@ -279,7 +279,7 @@ public class WorkflowController {
         if (workflow == null) {
             throw new WorkflowNotFoundException();
         }
-        File out = graphVizService.getGraph(workflow.getID() + ".svg", workflow.getDotGraph(), "svg");
+        File out = graphVizService.getGraph(workflow.getID() + ".svg", workflow.getVisualisationDot(), "svg");
         response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
         return new FileSystemResource(out);
     }
@@ -306,7 +306,7 @@ public class WorkflowController {
         if (workflow == null) {
             throw new WorkflowNotFoundException();
         }
-        File out = graphVizService.getGraph(workflow.getID() + ".png", workflow.getDotGraph(), "png");
+        File out = graphVizService.getGraph(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
         response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
         return new FileSystemResource(out);
     }
@@ -333,7 +333,7 @@ public class WorkflowController {
         if (workflow == null) {
             throw new WorkflowNotFoundException();
         }
-        File out = graphVizService.getGraph(workflow.getID() + ".dot", workflow.getDotGraph(), "xdot");
+        File out = graphVizService.getGraph(workflow.getID() + ".dot", workflow.getVisualisationDot(), "xdot");
         response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
         return new FileSystemResource(out);
     }

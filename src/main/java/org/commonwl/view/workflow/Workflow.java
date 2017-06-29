@@ -19,6 +19,8 @@
 
 package org.commonwl.view.workflow;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.github.GithubDetails;
@@ -33,6 +35,8 @@ import java.util.Map;
 /**
  * Representation of a workflow
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(value = {"id", "roBundlePath"})
 @Document
 public class Workflow {
 
@@ -45,15 +49,17 @@ public class Workflow {
     private GithubDetails retrievedFrom;
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss z")
     private Date retrievedOn;
-    private String packedWorkflowID;
 
     // The last commit from the branch at the time of fetching
     // Used for caching purposes
     private String lastCommit;
 
+    // If schema salad packed, the workflow ID
+    private String packedWorkflowID;
+
     // A String which represents the path to a RO bundle
     // Path types cannot be stored using Spring Data, unfortunately
-    private String roBundle;
+    private String roBundlePath;
 
     // Contents of the workflow
     private String label;
@@ -65,9 +71,6 @@ public class Workflow {
     // Currently only DockerRequirement is parsed for this
     private String dockerLink;
 
-    // DOT graph of the contents
-    private String dotGraph;
-
     // Cwltool run details
     public enum Status {
         RUNNING, ERROR, SUCCESS
@@ -75,6 +78,9 @@ public class Workflow {
     private Status cwltoolStatus = Status.RUNNING;
     private String cwltoolLog;
     private String cwltoolVersion = "";
+
+    // DOT graph of the contents
+    private String visualisationDot;
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
                     Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink) {
@@ -132,12 +138,12 @@ public class Workflow {
         this.steps = steps;
     }
 
-    public String getRoBundle() {
-        return roBundle;
+    public String getRoBundlePath() {
+        return roBundlePath;
     }
 
-    public void setRoBundle(String roBundle) {
-        this.roBundle = roBundle;
+    public void setRoBundlePath(String roBundlePath) {
+        this.roBundlePath = roBundlePath;
     }
 
     public GithubDetails getRetrievedFrom() {
@@ -156,20 +162,20 @@ public class Workflow {
         this.retrievedOn = retrievedOn;
     }
 
-    public String getDotGraph() {
-        return dotGraph;
-    }
-
-    public void setDotGraph(String dotGraph) {
-        this.dotGraph = dotGraph;
-    }
-
     public String getLastCommit() {
         return lastCommit;
     }
 
     public void setLastCommit(String lastCommit) {
         this.lastCommit = lastCommit;
+    }
+
+    public String getPackedWorkflowID() {
+        return packedWorkflowID;
+    }
+
+    public void setPackedWorkflowID(String packedWorkflowID) {
+        this.packedWorkflowID = packedWorkflowID;
     }
 
     public String getDockerLink() {
@@ -196,14 +202,6 @@ public class Workflow {
         this.cwltoolLog = cwltoolLog;
     }
 
-    public String getPackedWorkflowID() {
-        return packedWorkflowID;
-    }
-
-    public void setPackedWorkflowID(String packedWorkflowID) {
-        this.packedWorkflowID = packedWorkflowID;
-    }
-
     public String getCwltoolVersion() {
         return cwltoolVersion;
     }
@@ -212,11 +210,31 @@ public class Workflow {
         this.cwltoolVersion = cwltoolVersion;
     }
 
+    public String getVisualisationDot() {
+        return visualisationDot;
+    }
+
+    public void setVisualisationDot(String visualisationDot) {
+        this.visualisationDot = visualisationDot;
+    }
+
+    public String getVisualisationXdot() {
+        return "/graph/xdot/" + retrievedFrom.getURL().replace("https://", "");
+    }
+
     public String getVisualisationPng() {
         return "/graph/png/" + retrievedFrom.getURL().replace("https://", "");
     }
 
     public String getVisualisationSvg() {
         return "/graph/svg/" + retrievedFrom.getURL().replace("https://", "");
+    }
+
+    public String getROBundle() {
+        if (roBundlePath != null) {
+            return "/robundle/" + retrievedFrom.getURL().replace("https://", "");
+        } else {
+            return null;
+        }
     }
 }

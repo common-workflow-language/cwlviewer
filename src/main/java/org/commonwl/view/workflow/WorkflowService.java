@@ -168,15 +168,15 @@ public class WorkflowService {
         Workflow workflow = getWorkflow(githubDetails);
 
         // If workflow does not exist or the bundle doesn't yet
-        if (workflow == null || workflow.getRoBundle() == null) {
+        if (workflow == null || workflow.getRoBundlePath() == null) {
             throw new ROBundleNotFoundException();
         }
 
         // 404 error with retry if the file on disk does not exist
-        File bundleDownload = new File(workflow.getRoBundle());
+        File bundleDownload = new File(workflow.getRoBundlePath());
         if (!bundleDownload.exists()) {
             // Clear current RO bundle link and create a new one (async)
-            workflow.setRoBundle(null);
+            workflow.setRoBundlePath(null);
             workflowRepository.save(workflow);
             generateROBundle(workflow);
             throw new ROBundleNotFoundException();
@@ -278,7 +278,7 @@ public class WorkflowService {
      */
     private void removeWorkflow(Workflow workflow) {
         // Delete the Research Object Bundle from disk
-        File roBundle = new File(workflow.getRoBundle());
+        File roBundle = new File(workflow.getRoBundlePath());
         if (roBundle.delete()) {
             logger.debug("Deleted Research Object Bundle");
         } else {

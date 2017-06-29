@@ -64,7 +64,7 @@ public class ROBundleFactoryTest {
         // Attempt to add RO to workflow
         factory.workflowROFromGithub(Mockito.mock(GithubDetails.class));
 
-        assertEquals("test/path/to/check/for.zip", validWorkflow.getRoBundle());
+        assertEquals("test/path/to/check/for.zip", validWorkflow.getRoBundlePath());
 
     }
 
