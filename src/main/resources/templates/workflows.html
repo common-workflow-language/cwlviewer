@@ -46,10 +46,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="workflow : ${workflows}" th:with="workflowURL=@{'/workflows/github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch}}">
+                            <tr th:each="workflow : ${workflows}" th:with="githubURLPart=${workflow.retrievedFrom.getURL().replace('https://', '')}">
                                 <td>
                                     <a th:href="${workflow.retrievedFrom.path == null} ? ${workflowURL} : ${workflowURL + '/' + workflow.retrievedFrom.path}">
-                                        <img class="workflow-thumb" th:src="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" alt="workflow graph" />
+                                        <img class="workflow-thumb" th:src="@{'/graph/svg/' + ${githubURLPart}}" alt="workflow graph" />
                                     </a>
                                 </td>
                                 <td>
@@ -64,7 +64,7 @@
                                     </a>
                                     <p>Branch/Commit ID: <i th:text="${workflow.retrievedFrom.branch}">master</i></p>
                                 </td>
-                                <td><a th:href="${workflow.retrievedFrom.path == null} ? ${workflowURL} : ${workflowURL + '/' + workflow.retrievedFrom.path}"><span class="icon-view glyphicon glyphicon-chevron-right"></span></a></td>
+                                <td><a th:href="@{'/workflows/' + ${githubURLPart}}"><span class="icon-view glyphicon glyphicon-chevron-right"></span></a></td>
                             </tr>
                         </tbody>
                     </table>

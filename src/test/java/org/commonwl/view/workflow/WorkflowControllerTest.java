@@ -275,7 +275,7 @@ public class WorkflowControllerTest {
 
         // Mock service to return a bundle file and then throw ROBundleNotFoundException
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getROBundle(anyString()))
+        when(mockWorkflowService.getROBundle(anyObject()))
                 .thenReturn(roBundleFolder.newFile("bundle.zip").getAbsoluteFile())
                 .thenThrow(new ROBundleNotFoundException());
 

@@ -120,7 +120,7 @@ public class WorkflowRESTController {
                                                    HttpServletRequest request) {
         // The wildcard end of the URL is the path
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        path = WorkflowController.extractPath(path);
+        path = WorkflowController.extractPath(path, 7);
 
         // Construct a GithubDetails object to search for in the database
         GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);

@@ -159,13 +159,13 @@ public class WorkflowService {
 
     /**
      * Get the RO bundle for a Workflow, triggering re-download if it does not exist
-     * @param id The ID of the workflow
+     * @param githubDetails The origin details of the workflow
      * @return The file containing the RO bundle
      * @throws ROBundleNotFoundException If the RO bundle was not found
      */
-    public File getROBundle(String id) throws ROBundleNotFoundException {
+    public File getROBundle(GithubDetails githubDetails) throws ROBundleNotFoundException {
         // Get workflow from database
-        Workflow workflow = getWorkflow(id);
+        Workflow workflow = getWorkflow(githubDetails);
 
         // If workflow does not exist or the bundle doesn't yet
         if (workflow == null || workflow.getRoBundle() == null) {

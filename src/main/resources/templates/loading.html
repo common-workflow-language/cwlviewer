@@ -37,7 +37,7 @@
 
 <div id="workflowID" class="hide" th:text="${workflow.id}"></div>
 
-<div class="container">
+<div class="container" th:with="githubURLPart=${workflow.retrievedFrom.getURL().replace('https://', '')}">
     <div class="row">
         <div class="col-md-12 text-center" role="main" id="main">
             <h2 id="loadingHeader">Validating workflow <span th:text="${workflow.label}" id="workflowName">Workflow Name</span> with
@@ -54,7 +54,7 @@
                 <pre id="errorMsg" class="text-left">Sample Error, tool failed initialisation</pre>
             </div>
             <div class="loadingWorkflowContainer">
-                <img id="loadingWorkflow" th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" />
+                <img id="loadingWorkflow" th:src="@{'/graph/png/' + ${githubURLPart}}" />
                 <img id="loadingSpinner" alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="200" height="200" />
                 <img id="loadingSuccess" alt="success" src="../static/img/tick.svg" th:src="@{/img/tick.svg}" width="200" height="200" />
                 <img id="loadingFail" alt="fail" src="../static/img/cross.svg" th:src="@{/img/cross.svg}" width="200" height="200" />

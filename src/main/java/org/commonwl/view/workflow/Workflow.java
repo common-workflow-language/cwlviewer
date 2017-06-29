@@ -211,4 +211,12 @@ public class Workflow {
     public void setCwltoolVersion(String cwltoolVersion) {
         this.cwltoolVersion = cwltoolVersion;
     }
+
+    public String getVisualisationPng() {
+        return "/graph/png/" + retrievedFrom.getURL().replace("https://", "");
+    }
+
+    public String getVisualisationSvg() {
+        return "/graph/svg/" + retrievedFrom.getURL().replace("https://", "");
+    }
 }

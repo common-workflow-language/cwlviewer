@@ -140,7 +140,7 @@ public class WorkflowController {
 
         // The wildcard end of the URL is the path
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        path = extractPath(path);
+        path = extractPath(path, 7);
 
         // Construct a GithubDetails object to search for in the database
         GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
@@ -234,77 +234,118 @@ public class WorkflowController {
 
     /**
      * Download the Research Object Bundle for a particular workflow
-     * @param workflowID The ID of the workflow to download
+     * @param owner The owner of the Github repository
+     * @param repoName The name of the repository
+     * @param branch The branch of repository
      */
-    @RequestMapping(value = "/workflows/{workflowID}/download",
-                    method = RequestMethod.GET,
-                    produces = "application/vnd.wf4ever.robundle+zip")
+    @GetMapping(value={"/robundle/github.com/{owner}/{repoName}/tree/{branch}/**",
+                       "/robundle/github.com/{owner}/{repoName}/blob/{branch}/**"},
+                produces = "application/vnd.wf4ever.robundle+zip")
     @ResponseBody
-    public FileSystemResource downloadROBundle(@PathVariable("workflowID") String workflowID,
-                                               HttpServletResponse response) {
-        File bundleDownload = workflowService.getROBundle(workflowID);
+    public FileSystemResource downloadROBundle(@PathVariable("owner") String owner,
+                                             @PathVariable("repoName") String repoName,
+                                             @PathVariable("branch") String branch,
+                                             HttpServletRequest request,
+                                             HttpServletResponse response) throws IOException {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        path = extractPath(path, 7);
+        path = path.substring(0, path.lastIndexOf("/", path.lastIndexOf("/") - 1));
+        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
+        File bundleDownload = workflowService.getROBundle(githubDetails);
         response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
         return new FileSystemResource(bundleDownload);
     }
 
+
     /**
      * Download a generated DOT graph for a workflow as an svg
-     * @param workflowID The ID of the workflow to download the graph for
+     * @param owner The owner of the Github repository
+     * @param repoName The name of the repository
+     * @param branch The branch of repository
      */
-    @RequestMapping(value = "/workflows/{workflowID}/graph/svg",
-                    method = RequestMethod.GET,
-                    produces = "image/svg+xml")
+    @GetMapping(value={"/graph/svg/github.com/{owner}/{repoName}/tree/{branch}/**",
+                       "/graph/svg/github.com/{owner}/{repoName}/blob/{branch}/**"},
+                produces = "image/svg+xml")
     @ResponseBody
-    public FileSystemResource getGraphAsSvg(@PathVariable("workflowID") String workflowID) throws IOException {
-        Workflow workflowModel = workflowService.getWorkflow(workflowID);
-        if (workflowModel == null) {
+    public FileSystemResource getGraphAsSvg(@PathVariable("owner") String owner,
+                                            @PathVariable("repoName") String repoName,
+                                            @PathVariable("branch") String branch,
+                                            HttpServletRequest request,
+                                            HttpServletResponse response) throws IOException {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        path = extractPath(path, 8);
+        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
+        Workflow workflow = workflowService.getWorkflow(githubDetails);
+        if (workflow == null) {
             throw new WorkflowNotFoundException();
         }
-        File out = graphVizService.getGraph(workflowID + ".svg", workflowModel.getDotGraph(), "svg");
+        File out = graphVizService.getGraph(workflow.getID() + ".svg", workflow.getDotGraph(), "svg");
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
         return new FileSystemResource(out);
     }
 
     /**
      * Download a generated DOT graph for a workflow as a png
-     * @param workflowID The ID of the workflow to download the graph for
+     * @param owner The owner of the Github repository
+     * @param repoName The name of the repository
+     * @param branch The branch of repository
      */
-    @RequestMapping(value = "/workflows/{workflowID}/graph/png",
-            method = RequestMethod.GET,
-            produces = "image/png")
+    @GetMapping(value={"/graph/png/github.com/{owner}/{repoName}/tree/{branch}/**",
+                       "/graph/png/github.com/{owner}/{repoName}/blob/{branch}/**"},
+                produces = "image/png")
     @ResponseBody
-    public FileSystemResource getGraphAsPng(@PathVariable("workflowID") String workflowID) throws IOException {
-        Workflow workflowModel = workflowService.getWorkflow(workflowID);
-        if (workflowModel == null) {
+    public FileSystemResource getGraphAsPng(@PathVariable("owner") String owner,
+                                            @PathVariable("repoName") String repoName,
+                                            @PathVariable("branch") String branch,
+                                            HttpServletRequest request,
+                                            HttpServletResponse response) throws IOException {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        path = extractPath(path, 8);
+        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
+        Workflow workflow = workflowService.getWorkflow(githubDetails);
+        if (workflow == null) {
             throw new WorkflowNotFoundException();
         }
-        File out = graphVizService.getGraph(workflowID + ".png", workflowModel.getDotGraph(), "png");
+        File out = graphVizService.getGraph(workflow.getID() + ".png", workflow.getDotGraph(), "png");
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
         return new FileSystemResource(out);
     }
 
     /**
      * Download a generated DOT graph for a workflow as xdot
-     * @param workflowID The ID of the workflow to download the graph for
+     * @param owner The owner of the Github repository
+     * @param repoName The name of the repository
+     * @param branch The branch of repository
      */
-    @RequestMapping(value = "/workflows/{workflowID}/graph/xdot",
-            method = RequestMethod.GET,
-            produces = "text/vnd.graphviz")
+    @GetMapping(value={"/graph/xdot/github.com/{owner}/{repoName}/tree/{branch}/**",
+                       "/graph/xdot/github.com/{owner}/{repoName}/blob/{branch}/**"},
+                produces = "text/vnd.graphviz")
     @ResponseBody
-    public FileSystemResource getGraphAsXdot(@PathVariable("workflowID") String workflowID) throws IOException {
-        Workflow workflowModel = workflowService.getWorkflow(workflowID);
-        if (workflowModel == null) {
+    public FileSystemResource getGraphAsXdot(@PathVariable("owner") String owner,
+                                             @PathVariable("repoName") String repoName,
+                                             @PathVariable("branch") String branch,
+                                             HttpServletRequest request,
+                                             HttpServletResponse response) throws IOException {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        path = extractPath(path, 8);
+        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
+        Workflow workflow = workflowService.getWorkflow(githubDetails);
+        if (workflow == null) {
             throw new WorkflowNotFoundException();
         }
-        File out = graphVizService.getGraph(workflowID + ".dot", workflowModel.getDotGraph(), "xdot");
+        File out = graphVizService.getGraph(workflow.getID() + ".dot", workflow.getDotGraph(), "xdot");
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
         return new FileSystemResource(out);
     }
 
     /**
      * Extract the Github path from the end of a full request string
      * @param path The full request string path
+     * @param startSlashNum The ordinal slash index of the start of the path
      * @return THe Github path from the end
      */
-    public static String extractPath(String path) {
-        int pathStartIndex = StringUtils.ordinalIndexOf(path, "/", 7);
+    public static String extractPath(String path, int startSlashNum) {
+        int pathStartIndex = StringUtils.ordinalIndexOf(path, "/", startSlashNum);
         if (pathStartIndex > -1 && pathStartIndex < path.length() - 1) {
             return path.substring(pathStartIndex + 1).replaceAll("\\/$", "");
         } else {
