@@ -90,7 +90,7 @@ public class WorkflowService {
      * @return The resulting page of the workflow entries
      */
     public Page<Workflow> searchPageOfWorkflows(String searchString, Pageable pageable) {
-        return workflowRepository.findByCwltoolStatusAndLabelContainingOrDocContaining(Workflow.Status.SUCCESS, searchString, searchString, pageable);
+        return workflowRepository.findByLabelContainingOrDocContaining(searchString, pageable);
     }
 
     /**
