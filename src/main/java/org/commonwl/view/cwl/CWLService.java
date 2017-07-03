@@ -28,7 +28,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.commonwl.view.docker.DockerService;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
@@ -184,6 +187,9 @@ public class CWLService {
                                              String packedWorkflowID) throws CWLValidationException {
 
         // Get RDF representation from cwltool
+        String graphName = String.format("github.com/%s/%s/%s/%s", githubInfo.getOwner(),
+                githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
+
         String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
                 githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
         if (packedWorkflowID != null) {
@@ -192,21 +198,31 @@ public class CWLService {
             }
             url += packedWorkflowID;
         }
-        String rdf = cwlTool.getRDF(url);
 
-        // Create a workflow model from RDF representation
-        final Model model = ModelFactory.createDefaultModel();
-        model.read(new ByteArrayInputStream(rdf.getBytes()), null, "TURTLE");
+        if (!rdfService.graphExists(graphName)) {
+            String rdf = cwlTool.getRDF(url);
 
-        // Store the model
-        String graphName = String.format("github.com/%s/%s/%s/%s", githubInfo.getOwner(),
-                githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
-        rdfService.storeModel(graphName, model);
+            // Create a workflow model from RDF representation
+            Model model = ModelFactory.createDefaultModel();
+            model.read(new ByteArrayInputStream(rdf.getBytes()), null, "TURTLE");
+
+            // Store the model
+            rdfService.storeModel(graphName, model);
+        }
 
         // Base workflow details
-        Resource workflow = model.getResource(url);
-        String label = rdfService.getLabel(workflow);
-        String doc = rdfService.getDoc(workflow);
+        String label = null;
+        String doc = null;
+        ResultSet labelAndDoc = rdfService.getLabelAndDoc(graphName, url);
+        if (labelAndDoc.hasNext()) {
+            QuerySolution labelAndDocSoln = labelAndDoc.nextSolution();
+            if (labelAndDocSoln.contains("label")) {
+                label = labelAndDocSoln.get("label").toString();
+            }
+            if (labelAndDocSoln.contains("doc")) {
+                doc = labelAndDocSoln.get("doc").toString();
+            }
+        }
 
         // Inputs
         Map<String, CWLElement> wfInputs = new HashMap<>();

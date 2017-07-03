@@ -19,11 +19,8 @@
 
 package org.commonwl.view.cwl;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.vocabulary.RDFS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -64,29 +61,39 @@ public class RDFService {
     }
 
     /**
-     * Get the doc string for a workflow resource
-     * @param wfResource RDF resource of the workflow
-     * @return The doc string
+     * Check if a graph exists within the triple store
+     * @param graphName The name of the graph
+     * @return Whether the graph exists
      */
-    public String getDoc(Resource wfResource) {
-        if (wfResource.hasProperty(RDFS.comment)) {
-            return wfResource.getProperty(RDFS.comment).toString();
-        } else {
-            return null;
+    public boolean graphExists(String graphName) {
+        ParameterizedSparqlString graphQuery = new ParameterizedSparqlString();
+        graphQuery.setCommandText("ASK WHERE { GRAPH ?graphName { ?s ?p ?o } }");
+        graphQuery.setIri("graphName", rdfService + graphName);
+        Query query = QueryFactory.create(graphQuery.toString());
+        try (QueryExecution qexec = QueryExecutionFactory.createServiceRequest(rdfService, query)) {
+            return qexec.execAsk();
         }
     }
 
     /**
-     * Get the label string for a workflow resource
-     * @param wfResource RDF resource of the workflow
-     * @return The label string
+     * Get the label and doc strings for a workflow resource
+     * @param graphName The graph containing the model
+     * @param workflowURI The URI of the workflow
+     * @return Result set with label and doc strings
      */
-    public String getLabel(Resource wfResource) {
-        if (wfResource.hasProperty(RDFS.label)) {
-            return wfResource.getProperty(RDFS.label).toString();
-        } else {
-            return FilenameUtils.getName(wfResource.getURI());
-        }
+    public ResultSet getLabelAndDoc(String graphName, String workflowURI) {
+        ParameterizedSparqlString labelQuery = new ParameterizedSparqlString();
+        labelQuery.setCommandText(queryCtx +
+                "SELECT ?label ?doc\n" +
+                "WHERE {\n" +
+                "  GRAPH ?graphName {" +
+                "    OPTIONAL { ?wf sld:label|rdfs:label ?label }\n" +
+                "    OPTIONAL { ?wf sld:doc|rdfs:comment ?doc }\n" +
+                "  }" +
+                "}");
+        labelQuery.setIri("wf", workflowURI);
+        labelQuery.setIri("graphName", rdfService + graphName);
+        return runQuery(labelQuery);
     }
 
     /**

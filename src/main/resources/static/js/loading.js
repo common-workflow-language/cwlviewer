@@ -62,10 +62,10 @@ require(['jquery'],
                     console.log(response);
                     switch (response) {
                         case "RUNNING":
-                            // Retry in 5 seconds
+                            // Retry in 3 seconds
                             setTimeout(function () {
                                 checkForDone();
-                            }, 5000);
+                            }, 3000);
                             break;
                         case "SUCCESS":
                             handleSuccess();
@@ -79,7 +79,7 @@ require(['jquery'],
                     // Retry in 5 seconds
                     setTimeout(function () {
                         checkForDone();
-                    }, 5000);
+                    }, 3000);
                 }
             });
         }
