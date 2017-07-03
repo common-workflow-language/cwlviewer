@@ -54,6 +54,17 @@ public class WorkflowRESTController {
     }
 
     /**
+     * Search all workflows for a string in the label or doc
+     * @return A list of all the workflows
+     */
+    @GetMapping(value="/workflows", params="search", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Page<Workflow> searchWorkflowsJson(Model model,
+                                              @PageableDefault(size = 10) Pageable pageable,
+                                              @RequestParam(value = "search") String search) {
+        return workflowService.searchPageOfWorkflows(search, pageable);
+    }
+
+    /**
      * Create a new workflow from the given github URL
      * @param url The URL of the workflow
      * @return Appropriate response code and optional JSON string with message
