@@ -83,6 +83,22 @@ public class WorkflowController {
     }
 
     /**
+     * Search all the workflows in the database, paginated
+     * @param model The model for the page
+     * @param pageable Pagination for the list of workflows
+     * @return The workflows view
+     */
+    @GetMapping(value="/workflows", params="search")
+    public String searchWorkflows(Model model,
+                                  @PageableDefault(size = 10) Pageable pageable,
+                                  @RequestParam(value = "search") String search) {
+        model.addAttribute("workflows", workflowService.searchPageOfWorkflows(search, pageable));
+        model.addAttribute("pages", pageable);
+        model.addAttribute("search", search);
+        return "workflows";
+    }
+
+    /**
      * Create a new workflow from the given github URL in the form
      * @param workflowForm The data submitted from the form
      * @param bindingResult Spring MVC Binding Result object

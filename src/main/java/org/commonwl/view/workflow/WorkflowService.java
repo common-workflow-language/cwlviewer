@@ -84,6 +84,16 @@ public class WorkflowService {
     }
 
     /**
+     * Gets a page of all workflows from the database
+     * @param searchString The string to search for
+     * @param pageable The details of the page to be requested
+     * @return The resulting page of the workflow entries
+     */
+    public Page<Workflow> searchPageOfWorkflows(String searchString, Pageable pageable) {
+        return workflowRepository.findByCwltoolStatusAndLabelContainingOrDocContaining(Workflow.Status.SUCCESS, searchString, searchString, pageable);
+    }
+
+    /**
      * Get a workflow from the database by its ID
      * @param id The ID of the workflow
      * @return The model for the workflow

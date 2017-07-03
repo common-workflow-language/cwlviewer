@@ -36,6 +36,19 @@
                     <h1>Explore Workflows</h1>
                     <p>View already parsed workflows here or <a href="/" alt="homepage">click here to add your own</a></p>
 
+                    <form action="/workflows" method="GET">
+                        <div class="input-group">
+                            <input type="text" name="search" th:value="${search}" class="form-control" placeholder="Search in label or doc..." />
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button">Search</button>
+                            </span>
+                        </div>
+                    </form>
+
+                    <div th:unless="${#strings.isEmpty(search)}">
+                        <h3>Showing results for "<span th:text="${search}">query</span>" <a href="/workflows">(Show all)</a></h3>
+                    </div>
+
                     <table class="table table-striped">
                         <thead>
                             <tr>

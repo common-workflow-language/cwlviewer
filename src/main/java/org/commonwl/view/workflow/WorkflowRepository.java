@@ -42,6 +42,15 @@ public interface WorkflowRepository extends PagingAndSortingRepository<Workflow,
      * @param pageable The details of the page to be retrieved
      * @return The requested page of workflows
      */
-    Page<Workflow>findByCwltoolStatusOrderByRetrievedOnDesc(Workflow.Status status, Pageable pageable);
+    Page<Workflow> findByCwltoolStatusOrderByRetrievedOnDesc(Workflow.Status status, Pageable pageable);
 
+
+    /**
+     * Finds workflows where a string is within the label or doc
+     * @param status The status of the workflows to be retrieved
+     * @param label The value to search for within the label
+     * @param doc The value to search for within the doc
+     * @param pageable The details of the page to be retrieved
+     */
+    Page<Workflow> findByCwltoolStatusAndLabelContainingOrDocContaining(Workflow.Status status, String label, String doc, Pageable pageable);
 }
