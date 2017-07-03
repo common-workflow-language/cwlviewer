@@ -218,6 +218,9 @@ public class Workflow {
         this.visualisationDot = visualisationDot;
     }
 
+    // The following are here for Jackson message converter for the REST API
+    // Include links to related resources
+
     public String getVisualisationXdot() {
         return "/graph/xdot/" + retrievedFrom.getURL().replace("https://", "");
     }

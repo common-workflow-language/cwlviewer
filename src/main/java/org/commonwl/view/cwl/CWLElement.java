@@ -19,12 +19,15 @@
 
 package org.commonwl.view.cwl;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Represents the input/output of a workflow/tool
  */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CWLElement {
 
     private String label;

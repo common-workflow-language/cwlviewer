@@ -249,7 +249,6 @@ public class WorkflowController {
                                              HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 7);
-        path = path.substring(0, path.lastIndexOf("/", path.lastIndexOf("/") - 1));
         GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
         File bundleDownload = workflowService.getROBundle(githubDetails);
         response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
