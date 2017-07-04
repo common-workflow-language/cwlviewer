@@ -71,12 +71,6 @@ public class Workflow {
     // Currently only DockerRequirement is parsed for this
     private String dockerLink;
 
-    // Cwltool run details
-    public enum Status {
-        RUNNING, ERROR, SUCCESS
-    }
-    private Status cwltoolStatus = Status.RUNNING;
-    private String cwltoolLog;
     private String cwltoolVersion = "";
 
     // DOT graph of the contents
@@ -184,22 +178,6 @@ public class Workflow {
 
     public void setDockerLink(String dockerLink) {
         this.dockerLink = dockerLink;
-    }
-
-    public Status getCwltoolStatus() {
-        return cwltoolStatus;
-    }
-
-    public void setCwltoolStatus(Status cwltoolStatus) {
-        this.cwltoolStatus = cwltoolStatus;
-    }
-
-    public String getCwltoolLog() {
-        return cwltoolLog;
-    }
-
-    public void setCwltoolLog(String cwltoolLog) {
-        this.cwltoolLog = cwltoolLog;
     }
 
     public String getCwltoolVersion() {

@@ -21,6 +21,7 @@ package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
+import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
@@ -52,6 +53,7 @@ public class WorkflowService {
     private final GitHubService githubService;
     private final CWLService cwlService;
     private final WorkflowRepository workflowRepository;
+    private final QueuedWorkflowRepository queuedWorkflowRepository;
     private final ROBundleFactory ROBundleFactory;
     private final GraphVizService graphVizService;
     private final CWLToolRunner cwlToolRunner;
@@ -61,6 +63,7 @@ public class WorkflowService {
     public WorkflowService(GitHubService githubService,
                            CWLService cwlService,
                            WorkflowRepository workflowRepository,
+                           QueuedWorkflowRepository queuedWorkflowRepository,
                            ROBundleFactory ROBundleFactory,
                            GraphVizService graphVizService,
                            CWLToolRunner cwlToolRunner,
@@ -68,6 +71,7 @@ public class WorkflowService {
         this.githubService = githubService;
         this.cwlService = cwlService;
         this.workflowRepository = workflowRepository;
+        this.queuedWorkflowRepository = queuedWorkflowRepository;
         this.ROBundleFactory = ROBundleFactory;
         this.graphVizService = graphVizService;
         this.cwlToolRunner = cwlToolRunner;
@@ -80,7 +84,7 @@ public class WorkflowService {
      * @return The resulting page of the workflow entries
      */
     public Page<Workflow> getPageOfWorkflows(Pageable pageable) {
-        return workflowRepository.findByCwltoolStatusOrderByRetrievedOnDesc(Workflow.Status.SUCCESS, pageable);
+        return workflowRepository.findAllByOrderByRetrievedOnDesc(pageable);
     }
 
     /**
@@ -90,7 +94,7 @@ public class WorkflowService {
      * @return The resulting page of the workflow entries
      */
     public Page<Workflow> searchPageOfWorkflows(String searchString, Pageable pageable) {
-        return workflowRepository.findByLabelContainingOrDocContaining(searchString, pageable);
+        return workflowRepository.findByLabelContainingOrDocContaining(searchString, searchString, pageable);
     }
 
     /**
@@ -100,6 +104,15 @@ public class WorkflowService {
      */
     public Workflow getWorkflow(String id) {
         return workflowRepository.findOne(id);
+    }
+
+    /**
+     * Get a queued workflow from the database by its ID
+     * @param id The ID of the queued workflow
+     * @return The model for the queued workflow
+     */
+    public QueuedWorkflow getQueuedWorkflow(String id) {
+        return queuedWorkflowRepository.findOne(id);
     }
 
     /**
@@ -124,6 +137,29 @@ public class WorkflowService {
             }
         }
         return workflowsInDir;
+    }
+
+    /**
+     * Get a queued workflow from the database
+     * @param githubInfo Github information for the workflow
+     * @return The queued workflow model
+     */
+    public QueuedWorkflow getQueuedWorkflow(GithubDetails githubInfo) {
+        QueuedWorkflow queued = queuedWorkflowRepository.findByRetrievedFrom(githubInfo);
+
+        // Slash in branch fix
+        boolean slashesInPath = true;
+        while (queued == null && slashesInPath) {
+            GithubDetails correctedForSlash = transferPathToBranch(githubInfo);
+            if (correctedForSlash != null) {
+                githubInfo = correctedForSlash;
+                queued = queuedWorkflowRepository.findByRetrievedFrom(githubInfo);
+            } else {
+                slashesInPath = false;
+            }
+        }
+
+        return queued;
     }
 
     /**
@@ -155,7 +191,7 @@ public class WorkflowService {
 
                 // Add the new workflow if it exists
                 try {
-                    workflow = createWorkflow(workflow.getRetrievedFrom());
+                    createQueuedWorkflow(workflow.getRetrievedFrom());
                 } catch (Exception e) {
                     // Add back the old workflow if it is broken now
                     logger.error("Could not parse updated workflow " + workflow.getID());
@@ -196,13 +232,13 @@ public class WorkflowService {
     }
 
     /**
-     * Builds a new workflow from Github
+     * Builds a new queued workflow from Github
      * @param githubInfo Github information for the workflow
-     * @return The constructed model for the Workflow
+     * @return A queued workflow model
      * @throws IOException Github errors
      * @throws CWLValidationException cwltool errors
      */
-    public Workflow createWorkflow(GithubDetails githubInfo)
+    public QueuedWorkflow createQueuedWorkflow(GithubDetails githubInfo)
             throws IOException, CWLValidationException {
 
         // Construct basic workflow model from cwl
@@ -225,46 +261,44 @@ public class WorkflowService {
                 }
             }
         }
-        Workflow workflowModel = cwlService.parseWorkflowNative(githubInfo, latestCommit);
+        Workflow basicModel = cwlService.parseWorkflowNative(githubInfo, latestCommit);
 
         // Set origin details
-        workflowModel.setRetrievedOn(new Date());
-        workflowModel.setRetrievedFrom(githubInfo);
-        workflowModel.setLastCommit(latestCommit);
+        basicModel.setRetrievedOn(new Date());
+        basicModel.setRetrievedFrom(githubInfo);
+        basicModel.setLastCommit(latestCommit);
+
+        // Save a queued workflow to database
+        QueuedWorkflow queuedWorkflow = new QueuedWorkflow();
+        queuedWorkflow.setTempRepresentation(basicModel);
+        queuedWorkflowRepository.save(queuedWorkflow);
 
         // ASYNC OPERATIONS
         // Parse with cwltool and update model
         try {
-            cwlToolRunner.updateModelWithCwltool(githubInfo, latestCommit,
-                    workflowModel.getPackedWorkflowID());
+            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
         } catch (Exception e) {
             logger.error("Could not update workflow with cwltool", e);
         }
 
         // Create a new research object bundle for the workflow
-        generateROBundle(workflowModel);
+        generateROBundle(basicModel);
         // END ASYNC
 
-        // Save to database
-        workflowRepository.save(workflowModel);
-
         // Return this model to be displayed
-        return workflowModel;
-
+        return queuedWorkflow;
     }
 
     /**
      * Update a workflow by running cwltool
-     * @param workflowModel The old workflow model, possibly incomplete
-     * @param githubInfo The details of the github repository
+     * @param queuedWorkflow The queue item to
      */
-    public void updateWorkflow(Workflow workflowModel, GithubDetails githubInfo) {
-        workflowModel.setCwltoolStatus(Workflow.Status.RUNNING);
-        workflowRepository.save(workflowModel);
+    public void retryCwltool(QueuedWorkflow queuedWorkflow) {
+        queuedWorkflow.setMessage(null);
+        queuedWorkflow.setCwltoolStatus(CWLToolStatus.RUNNING);
+        queuedWorkflowRepository.save(queuedWorkflow);
         try {
-            String latestCommit = githubService.getCommitSha(githubInfo);
-            cwlToolRunner.updateModelWithCwltool(githubInfo, latestCommit,
-                    workflowModel.getPackedWorkflowID());
+            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
         } catch (Exception e) {
             logger.error("Could not update workflow with cwltool", e);
         }

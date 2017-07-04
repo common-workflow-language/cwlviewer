@@ -55,28 +55,24 @@ require(['jquery'],
         function checkForDone() {
             $.ajax({
                 type: 'GET',
-                url: '/workflows/' + $('#workflowID').text() + '/cwlstatus',
-                dataType: "text",
+                url: '/queue/' + $('#workflowID').text(),
+                dataType: "json",
                 cache: false,
                 success: function(response) {
                     console.log(response);
-                    switch (response) {
-                        case "RUNNING":
-                            // Retry in 3 seconds
-                            setTimeout(function () {
-                                checkForDone();
-                            }, 3000);
-                            break;
-                        case "SUCCESS":
-                            handleSuccess();
-                            break;
-                        default:
-                            handleFail(response);
-
+                    if (response.cwltoolStatus == "RUNNING") {
+                        // Retry in 3 seconds
+                        setTimeout(function () {
+                            checkForDone();
+                        }, 3000);
+                    } else if (response.cwltoolStatus == "ERROR") {
+                        handleFail(response.message);
+                    } else {
+                        handleSuccess();
                     }
                 },
                 error: function(response) {
-                    // Retry in 5 seconds
+                    // Retry in 3 seconds
                     setTimeout(function () {
                         checkForDone();
                     }, 3000);

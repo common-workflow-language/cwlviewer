@@ -19,8 +19,9 @@
 
 package org.commonwl.view.cwl;
 
-import org.commonwl.view.github.GithubDetails;
-import org.commonwl.view.graphviz.GraphVizService;
+import org.commonwl.view.github.GitHubService;
+import org.commonwl.view.workflow.QueuedWorkflow;
+import org.commonwl.view.workflow.QueuedWorkflowRepository;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * Replace existing workflow with the one given by cwltool
@@ -42,68 +44,57 @@ public class CWLToolRunner {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final WorkflowRepository workflowRepository;
+    private final QueuedWorkflowRepository queuedWorkflowRepository;
     private final CWLService cwlService;
-    private final GraphVizService graphVizService;
+    private final GitHubService githubService;
     private final String cwlToolVersion;
 
     @Autowired
     public CWLToolRunner(WorkflowRepository workflowRepository,
+                         QueuedWorkflowRepository queuedWorkflowRepository,
                          CWLService cwlService,
                          CWLTool cwlTool,
-                         GraphVizService graphVizService) {
+                         GitHubService githubService) {
         this.workflowRepository = workflowRepository;
+        this.queuedWorkflowRepository = queuedWorkflowRepository;
         this.cwlService = cwlService;
-        this.graphVizService = graphVizService;
+        this.githubService = githubService;
         this.cwlToolVersion = cwlTool.getVersion();
     }
 
     @Async
-    public void updateModelWithCwltool(GithubDetails githubInfo,
-                                       String latestCommit,
-                                       String packedWorkflowID)
+    public void createWorkflowFromQueued(QueuedWorkflow queuedWorkflow)
             throws IOException, InterruptedException {
 
-        Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
-
-        // Chance that this thread could be done before workflow model is saved
-        int attempts = 5;
-        while (attempts > 0 && workflow == null) {
-            // Delay this thread by 0.5s and try again until success or too many attempts
-            Thread.sleep(1000L);
-            workflow = workflowRepository.findByRetrievedFrom(githubInfo);
-            attempts--;
-        }
+        Workflow tempWorkflow = queuedWorkflow.getTempRepresentation();
 
         // Parse using cwltool and replace in database
         try {
-
+            String commitSha = githubService.getCommitSha(tempWorkflow.getRetrievedFrom());
             Workflow newWorkflow = cwlService.parseWorkflowWithCwltool(
-                    githubInfo, latestCommit, packedWorkflowID);
+                    tempWorkflow.getRetrievedFrom(), commitSha,
+                    tempWorkflow.getPackedWorkflowID());
 
-            workflowRepository.delete(workflow);
-            graphVizService.deleteCache(workflow.getID());
-
-            newWorkflow.setId(workflow.getID());
-            newWorkflow.setRetrievedOn(workflow.getRetrievedOn());
-            newWorkflow.setRetrievedFrom(githubInfo);
-            newWorkflow.setLastCommit(latestCommit);
-            newWorkflow.setCwltoolStatus(Workflow.Status.SUCCESS);
+            // Success
+            newWorkflow.setRetrievedFrom(tempWorkflow.getRetrievedFrom());
+            newWorkflow.setRetrievedOn(new Date());
+            newWorkflow.setLastCommit(commitSha);
             newWorkflow.setCwltoolVersion(cwlToolVersion);
-
             workflowRepository.save(newWorkflow);
-
+            queuedWorkflow.setCwltoolStatus(CWLToolStatus.SUCCESS);
+            queuedWorkflowRepository.save(queuedWorkflow);
         } catch (CWLValidationException ex) {
             logger.error(ex.getMessage(), ex);
-            workflow.setCwltoolStatus(Workflow.Status.ERROR);
-            workflow.setCwltoolLog(ex.getMessage());
-            workflowRepository.save(workflow);
+            queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
+            queuedWorkflow.setMessage(ex.getMessage());
+            queuedWorkflowRepository.save(queuedWorkflow);
         } catch (Exception ex) {
             logger.error("Unexpected error", ex);
-            workflow.setCwltoolStatus(Workflow.Status.ERROR);
-            workflow.setCwltoolLog("Whoops! Cwltool ran successfully, but an unexpected " +
+            queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
+            queuedWorkflow.setMessage("Whoops! Cwltool ran successfully, but an unexpected " +
                     "error occurred in CWLViewer!\n" +
                     "Help us by reporting it on Gitter or a Github issue\n");
-            workflowRepository.save(workflow);
+            queuedWorkflowRepository.save(queuedWorkflow);
         }
 
     }

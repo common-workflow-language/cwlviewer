@@ -24,9 +24,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@commonwl" />
-    <meta name="twitter:title" th:content="${'CWL Workflow: ' + workflow.label}" />
-    <meta name="twitter:description" th:if="${workflow.doc != null}" th:content="${workflow.doc}" />
-    <meta name="twitter:image" th:content="${appURL + '/workflows/' + workflow.id + '/graph/png'}" />
+    <meta name="twitter:title" th:content="${'CWL Workflow: ' + queued.tempRepresentation.label}" />
+    <meta name="twitter:description" th:if="${queued.tempRepresentation.doc != null}" th:content="${queued.tempRepresentation.doc}" />
+    <meta name="twitter:image" th:content="${appURL + '/workflows/' + queued.tempRepresentation.id + '/graph/png'}" />
     <title>Common Workflow Language Viewer</title>
     <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170517.css}" href="../static/css/main-20170517.css" />
@@ -35,26 +35,26 @@
 
 <nav th:replace="fragments/header :: navbar"></nav>
 
-<div id="workflowID" class="hide" th:text="${workflow.id}"></div>
+<div id="workflowID" class="hide" th:text="${queued.id}"></div>
 
-<div class="container" th:with="githubURLPart=${workflow.retrievedFrom.getURL().replace('https://', '')}">
+<div class="container" th:with="githubURLPart=${queued.tempRepresentation.retrievedFrom.getURL().replace('https://', '')}">
     <div class="row">
         <div class="col-md-12 text-center" role="main" id="main">
-            <h2 id="loadingHeader">Validating workflow <span th:text="${workflow.label}" id="workflowName">Workflow Name</span> with
+            <h2 id="loadingHeader">Validating workflow <span th:text="${queued.tempRepresentation.label}" id="workflowName">Workflow Name</span> with
                 <a href="https://github.com/common-workflow-language/cwltool" rel="noopener" target="_blank">cwltool</a>...</h2>
             <p id="loadingOverview">
                 Consists of
-                <span th:text="${workflow.inputs.size()}">2</span> input<span th:if="${workflow.inputs.size() != 1}">s</span>,
-                <span th:text="${workflow.outputs.size()}">4</span> output<span th:if="${workflow.outputs.size() != 1}">s</span> and
-                <span th:text="${workflow.steps.size()}">6</span> step<span th:if="${workflow.steps.size() != 1}">s</span>
+                <span th:text="${queued.tempRepresentation.inputs.size()}">2</span> input<span th:if="${queued.tempRepresentation.inputs.size() != 1}">s</span>,
+                <span th:text="${queued.tempRepresentation.outputs.size()}">4</span> output<span th:if="${queued.tempRepresentation.outputs.size() != 1}">s</span> and
+                <span th:text="${queued.tempRepresentation.steps.size()}">6</span> step<span th:if="${queued.tempRepresentation.steps.size() != 1}">s</span>
                 (excluding subworkflows)
             </p>
             <div id="cwltooldetails" class="alert alert-danger">
-                <p><strong>Error:</strong> cwltool version <span th:text="${workflow.cwltoolVersion}">versionhere</span> failed to run on this workflow:</p>
+                <p><strong>Error:</strong> cwltool version <span th:text="${queued.cwltoolVersion}">versionhere</span> failed to run on this workflow:</p>
                 <pre id="errorMsg" class="text-left">Sample Error, tool failed initialisation</pre>
             </div>
             <div class="loadingWorkflowContainer">
-                <img id="loadingWorkflow" th:src="@{'/graph/png/' + ${githubURLPart}}" />
+                <img id="loadingWorkflow" th:src="@{'/queue/' + ${queued.id} + '/tempgraph.png'}" />
                 <img id="loadingSpinner" alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="200" height="200" />
                 <img id="loadingSuccess" alt="success" src="../static/img/tick.svg" th:src="@{/img/tick.svg}" width="200" height="200" />
                 <img id="loadingFail" alt="fail" src="../static/img/cross.svg" th:src="@{/img/cross.svg}" width="200" height="200" />

@@ -20,6 +20,7 @@
 package org.commonwl.view.workflow;
 
 import org.apache.commons.lang.StringUtils;
+import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -59,6 +60,7 @@ public class WorkflowController {
      * Autowired constructor to initialise objects used by the controller
      * @param workflowFormValidator Validator to validate the workflow form
      * @param workflowService Builds new Workflow objects
+     * @param graphVizService Generates and stores imagess
      */
     @Autowired
     public WorkflowController(WorkflowFormValidator workflowFormValidator,
@@ -119,7 +121,7 @@ public class WorkflowController {
                 Workflow workflow = workflowService.getWorkflow(githubInfo);
                 if (workflow == null) {
                     try {
-                        workflow = workflowService.createWorkflow(githubInfo);
+                        workflow = workflowService.createQueuedWorkflow(githubInfo).getTempRepresentation();
                     } catch (CWLValidationException ex) {
                         bindingResult.rejectValue("githubURL", "cwltool.validationError", ex.getMessage());
                         return new ModelAndView("index");
@@ -162,90 +164,69 @@ public class WorkflowController {
         GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
 
         // Get workflow
+        QueuedWorkflow queued = null;
         Workflow workflowModel = workflowService.getWorkflow(githubDetails);
         if (workflowModel == null) {
-            // Validation
-            WorkflowForm workflowForm = new WorkflowForm(githubDetails.getURL());
-            BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
-            workflowFormValidator.validateAndParse(workflowForm, errors);
-            if (!errors.hasErrors()) {
-                if (githubDetails.getPath().endsWith(".cwl")) {
-                    try {
-                        workflowModel = workflowService.createWorkflow(githubDetails);
-                    } catch (CWLValidationException ex) {
-                        errors.rejectValue("githubURL", "cwltool.validationError", ex.getMessage());
-                    } catch (IOException ex) {
-                        errors.rejectValue("githubURL", "githubURL.parsingError", "The workflow could not be parsed from the given URL");
-                    }
-                } else {
-                    // If this is a directory, get a list of workflows and return the view for it
-                    try {
-                        List<WorkflowOverview> workflowOverviews = workflowService.getWorkflowsFromDirectory(githubDetails);
-                        if (workflowOverviews.size() > 1) {
-                            return new ModelAndView("selectworkflow", "workflowOverviews", workflowOverviews)
-                                    .addObject("githubDetails", githubDetails);
-                        } else if (workflowOverviews.size() == 1) {
-                            return new ModelAndView("redirect:/workflows/github.com/" + githubDetails.getOwner()
-                                    + "/" + githubDetails.getRepoName() + "/tree/" + githubDetails.getBranch()
-                                    + "/" + githubDetails.getPath() + "/" + workflowOverviews.get(0).getFileName());
-                        } else {
-                            logger.error("No .cwl files were found in the given directory");
+            // Check if already queued
+            queued = workflowService.getQueuedWorkflow(githubDetails);
+            if (queued == null) {
+                // Validation
+                WorkflowForm workflowForm = new WorkflowForm(githubDetails.getURL());
+                BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
+                workflowFormValidator.validateAndParse(workflowForm, errors);
+                if (!errors.hasErrors()) {
+                    if (githubDetails.getPath().endsWith(".cwl")) {
+                        try {
+                            queued = workflowService.createQueuedWorkflow(githubDetails);
+                        } catch (CWLValidationException ex) {
+                            errors.rejectValue("githubURL", "cwltool.validationError", ex.getMessage());
+                        } catch (IOException ex) {
+                            errors.rejectValue("githubURL", "githubURL.parsingError", "The workflow could not be parsed from the given URL");
+                        }
+                    } else {
+                        // If this is a directory, get a list of workflows and return the view for it
+                        try {
+                            List<WorkflowOverview> workflowOverviews = workflowService.getWorkflowsFromDirectory(githubDetails);
+                            if (workflowOverviews.size() > 1) {
+                                return new ModelAndView("selectworkflow", "workflowOverviews", workflowOverviews)
+                                        .addObject("githubDetails", githubDetails);
+                            } else if (workflowOverviews.size() == 1) {
+                                return new ModelAndView("redirect:/workflows/github.com/" + githubDetails.getOwner()
+                                        + "/" + githubDetails.getRepoName() + "/tree/" + githubDetails.getBranch()
+                                        + "/" + githubDetails.getPath() + "/" + workflowOverviews.get(0).getFileName());
+                            } else {
+                                logger.error("No .cwl files were found in the given directory");
+                                errors.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
+                            }
+                        } catch (IOException ex) {
+                            logger.error("Contents of Github directory could not be found", ex);
                             errors.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
                         }
-                    } catch (IOException ex) {
-                        logger.error("Contents of Github directory could not be found", ex);
-                        errors.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
                     }
                 }
+                // Redirect to main page with errors if they occurred
+                if (errors.hasErrors()) {
+                    redirectAttrs.addFlashAttribute("errors", errors);
+                    return new ModelAndView("redirect:/?url=https://github.com/" +
+                            owner + "/" + repoName + "/tree/" + branch + "/" + path);
+                }
             }
-
-            // Redirect to main page with errors if they occurred
-            if (errors.hasErrors()) {
-                redirectAttrs.addFlashAttribute("errors", errors);
-                return new ModelAndView("redirect:/?url=https://github.com/" +
-                        owner + "/" + repoName + "/tree/" + branch + "/" + path);
-            }
-        }
-
-        // Retry creation if there is an error in cwltool parsing
-        if (workflowModel.getCwltoolStatus() == Workflow.Status.ERROR) {
-            workflowService.updateWorkflow(workflowModel, githubDetails);
         }
 
         // Display this model along with the view
-        String model;
-        if (workflowModel.getCwltoolStatus() == Workflow.Status.RUNNING) {
-            model = "loading";
+        ModelAndView modelAndView;
+        if (queued != null) {
+            // Retry creation if there has been an error in cwltool parsing
+            if (queued.getCwltoolStatus() == CWLToolStatus.ERROR) {
+                workflowService.retryCwltool(queued);
+            }
+            modelAndView = new ModelAndView("loading", "queued", queued);
         } else {
-            model = "workflow";
+            modelAndView = new ModelAndView("workflow", "workflow", workflowModel);
         }
-        return new ModelAndView(model, "workflow", workflowModel).addObject("appURL", applicationURL);
 
-    }
+        return modelAndView.addObject("appURL", applicationURL);
 
-    /**
-     * Checks whether cwltool has finished running on a workflow
-     * @param workflowID The workflow ID to check
-     * @return Either "RUNNING", "SUCCESS" or an error message
-     */
-    @RequestMapping(value = "/workflows/{workflowID}/cwlstatus",
-            method = RequestMethod.GET)
-    @ResponseBody
-    public String checkCwlStatus(@PathVariable("workflowID") String workflowID) {
-        Workflow workflowModel = workflowService.getWorkflow(workflowID);
-        if (workflowModel == null) {
-            throw new WorkflowNotFoundException();
-        }
-        switch (workflowModel.getCwltoolStatus()) {
-            case RUNNING:
-                return "RUNNING";
-            case SUCCESS:
-                return "SUCCESS";
-            case ERROR:
-                return workflowModel.getCwltoolLog();
-            default:
-                return "";
-        }
     }
 
     /**
@@ -352,6 +333,27 @@ public class WorkflowController {
         response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
         return new FileSystemResource(out);
     }
+
+    /**
+     * Get a temporary graph for a pending workflow
+     * @param queueID The ID in the queue
+     * @return The visualisation image
+     */
+    @GetMapping(value={"/queue/{queueID}/tempgraph.png"},
+            produces = "image/png")
+    @ResponseBody
+    public FileSystemResource getTempGraphAsPng(@PathVariable("queueID") String queueID,
+                                                HttpServletResponse response) throws IOException {
+        QueuedWorkflow queued = workflowService.getQueuedWorkflow(queueID);
+        if (queued == null) {
+            throw new WorkflowNotFoundException();
+        }
+        File out = graphVizService.getGraph(queued.getId() + ".png",
+                queued.getTempRepresentation().getVisualisationDot(), "png");
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
+        return new FileSystemResource(out);
+    }
+
 
     /**
      * Extract the Github path from the end of a full request string

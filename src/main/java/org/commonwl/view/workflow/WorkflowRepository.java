@@ -22,7 +22,6 @@ package org.commonwl.view.workflow;
 import org.commonwl.view.github.GithubDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
@@ -39,18 +38,17 @@ public interface WorkflowRepository extends PagingAndSortingRepository<Workflow,
 
     /**
      * Paged request to get workflows of a specific status
-     * @param status The status of the workflows to be retrieved
      * @param pageable The details of the page to be retrieved
      * @return The requested page of workflows
      */
-    Page<Workflow> findByCwltoolStatusOrderByRetrievedOnDesc(Workflow.Status status, Pageable pageable);
+    Page<Workflow> findAllByOrderByRetrievedOnDesc(Pageable pageable);
 
 
     /**
      * Finds successful workflows where a string is within the label or doc
-     * @param search The string to search for
+     * @param label The string to search for in the label
+     * @param doc The string to search for in the doc
      * @param pageable The details of the page to be retrieved
      */
-    @Query("{cwltoolStatus:'SUCCESS', $or: [{label: {$regex: '.*?0.*', $options: 'i'}}, {doc: {$regex: '.*?0.*', $options: 'i'}}]}")
-    Page<Workflow> findByLabelContainingOrDocContaining(String search, Pageable pageable);
+    Page<Workflow> findByLabelContainingOrDocContaining(String label, String doc, Pageable pageable);
 }

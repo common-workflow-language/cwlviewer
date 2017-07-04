@@ -211,7 +211,7 @@ public class CWLService {
         }
 
         // Base workflow details
-        String label = null;
+        String label = FilenameUtils.getName(githubInfo.getPath());
         String doc = null;
         ResultSet labelAndDoc = rdfService.getLabelAndDoc(graphName, url);
         if (labelAndDoc.hasNext()) {
