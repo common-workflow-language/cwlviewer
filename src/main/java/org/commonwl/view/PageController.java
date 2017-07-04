@@ -39,4 +39,14 @@ public class PageController {
         return "index";
     }
 
+    /**
+     * API documentation page
+     * @param model The model for the API documentation page
+     * @return The view for this page
+     */
+    @GetMapping("/apidocs")
+    public String apiDocumentation(Model model) {
+        return "apidocs";
+    }
+
 }

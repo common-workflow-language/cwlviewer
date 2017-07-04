@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>API Documentation - Common Workflow Language Viewer</title>
+        <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170517.css}" href="../static/css/main-20170517.css" />
+        <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
+    </head>
+    <body>
+
+        <nav th:replace="fragments/header :: navbar"></nav>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12" role="main" id="main">
+                    <h1>API Documentation</h1>
+                    <div class="alert alert-warning"><strong>Disclaimer:</strong> The API is still under heavy development and breaking changes to endpoints or parameters may be made</div>
+
+                    All queries require the following header to receive a JSON response:
+                    <pre>accept: application/json</pre>
+
+                    <h2>Workflow</h2>
+
+                    <h3 id="addWorkflow">Add a new Workflow</h3>
+                    <div class="alert alert-info"><strong>Note:</strong> Due to cwltool run times, the creation of workflows is done asynchronously and an intermediate <a href="#queue">queue resource</a> is used</div>
+                    <span class="method post">POST</span>
+                    <pre>/workflows</pre>
+                    <h4>Parameters</h4>
+                    <table class="table">
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>url</td>
+                            <td>String</td>
+                            <td>The Github URL to the workflow</td>
+                        </tr>
+                    </table>
+                    <h4>Input</h4>
+<pre>
+{
+    "url": "https://github.com/common-workflow-language/workflows/tree/master/workflows/compile/compile1.cwl"
+}
+</pre>
+                    <h4>Success</h4>
+<pre>
+HTTP/1.1 202 Accepted
+Location: /queue/:queueid
+</pre>
+                    <h4>Error</h4>
+                    <pre>HTTP/1.1 400 Bad Request</pre>
+
+                    <h3 id="workflowDetails">Get Workflow Details</h3>
+                    <span class="method get">GET</span>
+                    <pre>/workflows/:githubURL</pre>
+                    <h4>Parameters</h4>
+                    <table class="table">
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>path</td>
+                            <td>String</td>
+                            <td>Partial github URL to the workflow (no "https://")</td>
+                        </tr>
+                    </table>
+                    <h4>Success 200</h4>
+                    <table class="table">
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>retrievedFrom.owner</td>
+                            <td>String</td>
+                            <td>Github username or organisation name</td>
+                        </tr>
+                        <tr>
+                            <td>retrievedFrom.repoName</td>
+                            <td>String</td>
+                            <td>Github repository name</td>
+                        </tr>
+                        <tr>
+                            <td>retrievedFrom.branch</td>
+                            <td>String</td>
+                            <td>Github branch name or commit ID</td>
+                        </tr>
+                        <tr>
+                            <td>retrievedFrom.path</td>
+                            <td>String</td>
+                            <td>Path to the workflow within the repository</td>
+                        </tr>
+                        <tr>
+                            <td>retrievedFrom.url</td>
+                            <td>URL</td>
+                            <td>The full Github URL to the workflow</td>
+                        </tr>
+                        <tr>
+                            <td>retrievedOn</td>
+                            <td>Date</td>
+                            <td>The last time this workflow was updated from the branch</td>
+                        </tr>
+                        <tr>
+                            <td>lastCommit</td>
+                            <td>String</td>
+                            <td>The last commit ID on the branch</td>
+                        </tr>
+                        <tr>
+                            <td>label</td>
+                            <td>String</td>
+                            <td>The label string for the workflow from the CWL description</td>
+                        </tr>
+                        <tr>
+                            <td>doc</td>
+                            <td>String</td>
+                            <td>The doc string for the workflow from the CWL description</td>
+                        </tr>
+                        <tr>
+                            <td>inputs</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>outputs</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>steps</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>dockerLink</td>
+                            <td>String</td>
+                            <td>The URL to dockerhub or "true" if an unrecognised image is used in a docker hint or requirement</td>
+                        </tr>
+                        <tr>
+                            <td>cwltoolVersion</td>
+                            <td>String</td>
+                            <td>The version of cwltool used to parse the workflow</td>
+                        </tr>
+                        <tr>
+                            <td>visualisationDot</td>
+                            <td>String</td>
+                            <td>The DOT source used to generate the visualisation image</td>
+                        </tr>
+                        <tr>
+                            <td>visualisationXdot</td>
+                            <td>URL</td>
+                            <td>A link to the xdot source code for the visualisation image</td>
+                        </tr>
+                        <tr>
+                            <td>visualisationPng</td>
+                            <td>URL</td>
+                            <td>A link to the png format visualisation image</td>
+                        </tr>
+                        <tr>
+                            <td>visualisationSvg</td>
+                            <td>URL</td>
+                            <td>A link to the svg format visualisation image</td>
+                        </tr>
+                        <tr>
+                            <td>robundle</td>
+                            <td>URL</td>
+                            <td>A link to the <a href="http://www.researchobject.org" alt="Research Objects">Research Object</a> Bundle download</td>
+                        </tr>
+                    </table>
+                    <h5>Example URL</h5>
+                    <pre>/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl</pre>
+                    <h5>Example Response</h5>
+<pre>
+{
+    "retrievedFrom": {
+        "owner": "common-workflow-language",
+        "repoName": "workflows",
+        "branch": "master",
+        "path": "workflows/lobSTR/lobSTR-workflow.cwl",
+        "url": "https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl"
+    },
+    "retrievedOn": 1499175275743,
+    "lastCommit": "920c6be45f08e979e715a0018f22c532b024074f",
+    "label": "lobSTR-workflow.cwl",
+    "inputs": {
+        "reference": {
+            "doc": "lobSTR's bwa reference files",
+            "type": "File"
+        },
+        "rg-sample": {
+            "doc": "Use this in the read group SM tag",
+            "type": "String"
+        },
+        "p1": {
+            "doc": "list of files containing the first end of paired end reads in fasta or fastq format",
+            "type": "11a1d32ade317199b68e62aa6ce50b3e"
+        },
+        "p2": {
+            "doc": "list of files containing the second end of paired end reads in fasta or fastq format",
+            "type": "f9505470accbbaf6b9e15db2123490aa"
+        },
+        "output_prefix": {
+            "doc": "prefix for output files. will output prefix.aligned.bam and prefix.aligned.stats",
+            "type": "String"
+        },
+        "rg-lib": {
+            "doc": "Use this in the read group LB tag",
+            "type": "String"
+        },
+        "strinfo": {
+            "doc": "File containing statistics for each STR.",
+            "type": "File"
+        },
+        "noise_model": {
+            "doc": "File to read noise model parameters from (.stepmodel)",
+            "type": "File"
+        }
+    },
+    "outputs": {
+        "vcf": {
+            "type": "File"
+        },
+        "vcf_stats": {
+            "type": "File"
+        },
+        "bam_stats": {
+            "type": "File"
+        },
+        "bam": {
+            "type": "File"
+        }
+    },
+    "steps": {
+        "allelotype": {
+            "doc": "Run lobSTR allelotype classifier.",
+            "run": "allelotype.cwl",
+            "runType": "COMMANDLINETOOL"
+        },
+        "samsort": {
+            "doc": "Invoke 'samtools sort' (samtools 1.19)",
+            "run": "samtools-sort.cwl",
+            "runType": "COMMANDLINETOOL"
+        },
+        "lobSTR": {
+            "label": "lobSTR",
+            "doc": "lobSTR is a tool for profiling Short Tandem Repeats (STRs) from high throughput sequencing data.",
+            "run": "lobSTR-tool.cwl",
+            "runType": "COMMANDLINETOOL"
+        },
+        "samindex": {
+            "doc": "Invoke 'samtools index' to create a 'BAI' index (samtools 1.19)",
+            "run": "samtools-index.cwl",
+            "runType": "COMMANDLINETOOL"
+        }
+    },
+    "dockerLink": "true",
+    "cwltoolVersion": " 1.0.20170622090721",
+    "visualisationDot": "digraph workflow {\n  graph [\n    bgcolor = \"#eeeeee\"\n    color = \"black\"\n    fontsize = \"10\"\n    labeljust = \"left\"\n    clusterrank = \"local\"\n    ranksep = \"0.22\"\n    nodesep = \"0.05\"\n  ]\n  node [\n    fontname = \"Helvetica\"\n    fontsize = \"10\"\n    fontcolor = \"black\"\n    shape = \"record\"\n    height = \"0\"\n    width = \"0\"\n    color = \"black\"\n    fillcolor = \"lightgoldenrodyellow\"\n    style = \"filled\"\n  ];\n  edge [\n    fontname=\"Helvetica\"\n    fontsize=\"8\"\n    fontcolor=\"black\"\n    color=\"black\"\n    arrowsize=\"0.7\"\n  ];\n  subgraph cluster_inputs {\n    rank = \"same\";\n    style = \"dashed\";\n    label = \"Workflow Inputs\";\n    \"lobSTR-workflow.cwl#output_prefix\" [fillcolor=\"#94DDF4\",label=\"output_prefix\"];\n    \"lobSTR-workflow.cwl#reference\" [fillcolor=\"#94DDF4\",label=\"reference\"];\n    \"lobSTR-workflow.cwl#p2\" [fillcolor=\"#94DDF4\",label=\"p2\"];\n    \"lobSTR-workflow.cwl#p2\" [fillcolor=\"#94DDF4\",label=\"p2\"];\n    \"lobSTR-workflow.cwl#strinfo\" [fillcolor=\"#94DDF4\",label=\"strinfo\"];\n    \"lobSTR-workflow.cwl#p1\" [fillcolor=\"#94DDF4\",label=\"p1\"];\n    \"lobSTR-workflow.cwl#p1\" [fillcolor=\"#94DDF4\",label=\"p1\"];\n    \"lobSTR-workflow.cwl#rg-lib\" [fillcolor=\"#94DDF4\",label=\"rg-lib\"];\n    \"lobSTR-workflow.cwl#noise_model\" [fillcolor=\"#94DDF4\",label=\"noise_model\"];\n    \"lobSTR-workflow.cwl#rg-sample\" [fillcolor=\"#94DDF4\",label=\"rg-sample\"];\n  }\n  subgraph cluster_outputs {\n    rank = \"same\";\n    style = \"dashed\";\n    label = \"Workflow Outputs\";\n    \"lobSTR-workflow.cwl#bam_stats\" [fillcolor=\"#94DDF4\",label=\"bam_stats\"];\n    \"lobSTR-workflow.cwl#vcf_stats\" [fillcolor=\"#94DDF4\",label=\"vcf_stats\"];\n    \"lobSTR-workflow.cwl#vcf\" [fillcolor=\"#94DDF4\",label=\"vcf\"];\n    \"lobSTR-workflow.cwl#bam\" [fillcolor=\"#94DDF4\",label=\"bam\"];\n  }\n  \"lobSTR-workflow.cwl#allelotype\" [label=\"allelotype\"];\n  \"lobSTR-workflow.cwl#samindex\" [label=\"samindex\"];\n  \"lobSTR-workflow.cwl#samsort\" [label=\"samsort\"];\n  \"lobSTR-workflow.cwl#lobSTR\" [label=\"lobSTR\"];\n}\n",
+    "robundle": "/robundle/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl",
+    "visualisationXdot": "/graph/xdot/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl",
+    "visualisationPng": "/graph/png/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl",
+    "visualisationSvg": "/graph/svg/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl"
+}
+</pre>
+
+
+                    <h3>View Workflows</h3>
+                    <span class="method get">GET</span>
+                    <pre>/workflows</pre>
+                    <h4>Parameters</h4>
+                    <table class="table">
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>search</td>
+                            <td>String</td>
+                            <td>Optional: Limits the workflows received to those containing this string in the label or doc</td>
+                        </tr>
+                        <tr>
+                            <td>page</td>
+                            <td>Integer</td>
+                            <td>The page number to access (0 indexed, defaults to 0)</td>
+                        </tr>
+                        <tr>
+                            <td>size</td>
+                            <td>Integer</td>
+                            <td>The page size requested (defaults to 10)</td>
+                        </tr>
+                    </table>
+                    <h4>Success 200</h4>
+                    <table class="table">
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>content</td>
+                            <td>List&lt;Workflow&gt;</td>
+                            <td>The workflows returned as per <a href="#workflowDetails">Get Workflow Details</a></td>
+                        </tr>
+                        <tr>
+                            <td>last</td>
+                            <td>Boolean</td>
+                            <td>Whether this page is the last one</td>
+                        </tr>
+                        <tr>
+                            <td>totalElements</td>
+                            <td>Integer</td>
+                            <td>The total number of workflows</td>
+                        </tr>
+                        <tr>
+                            <td>totalPages</td>
+                            <td>Integer</td>
+                            <td>The total number of pages of this size</td>
+                        </tr>
+                        <tr>
+                            <td>first</td>
+                            <td>Boolean</td>
+                            <td>Whether this page is the first one</td>
+                        </tr>
+                        <tr>
+                            <td>numberOfElements</td>
+                            <td>Integer</td>
+                            <td>The number of workflows on this page</td>
+                        </tr>
+                        <tr>
+                            <td>size</td>
+                            <td>Integer</td>
+                            <td>The page size requested</td>
+                        </tr>
+                        <tr>
+                            <td>number</td>
+                            <td>Integer</td>
+                            <td>The current page number</td>
+                        </tr>
+                    </table>
+                    <h5>Example Response</h5>
+<pre>
+{
+    "content": [
+        {
+            ...
+        },
+        {
+            ...
+        }
+    ],
+    "last": true,
+    "totalElements": 2,
+    "totalPages": 1,
+    "sort": null,
+    "first": true,
+    "numberOfElements": 2,
+    "size": 10,
+    "number": 0
+}
+</pre>
+
+                    <h2 id="queue">Queue</h2>
+
+                    <h3>Check Queue Element</h3>
+                    <span class="method get">GET</span>
+                    <pre>/queue/:id</pre>
+                    <h4>Parameters</h4>
+                    <table class="table">
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>id</td>
+                            <td>String</td>
+                            <td>The ID of the queue element from the Location header of <a href="#addWorkflow">Add a new Workflow</a></td>
+                        </tr>
+                    </table>
+
+                    <h4>Pending 200</h4>
+                    <table class="table">
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>cwltoolStatus</td>
+                            <td>enum</td>
+                            <td>One of RUNNING, ERROR</td>
+                        </tr>
+                        <tr>
+                            <td>cwltoolVersion</td>
+                            <td>String</td>
+                            <td>The version of cwltool being used to parse the workflow</td>
+                        </tr>
+                        <tr>
+                            <td>message</td>
+                            <td>String</td>
+                            <td>Error message if cwltoolStatus is ERROR</td>
+                        </tr>
+                    </table>
+                    <h5>Example Responses</h5>
+<pre>
+{
+    "cwltoolStatus": "RUNNING",
+    "cwltoolVersion": "1.0.20170622090721",
+}
+</pre>
+<pre>
+{
+    "cwltoolStatus": "ERROR",
+    "cwltoolVersion": "1.0.20170622090721",
+    "message": "Tool definition failed initialization:\n('https://sparql-test.commonwl.org/schema.rdf', SSLError(SSLError(CertificateError(\"hostname 'sparql-test.commonwl.org' doesn't match either of 'biowardrobe.com', 'demo.biowardrobe.com', 'www.biowardrobe.com'\",),),))\n"
+}
+</pre>
+
+                    <h4>Finished 303</h4>
+<pre>
+HTTP/1.1 303 See Other
+Location: /workflows/:githubURL
+</pre>
+                </div>
+            </div>
+        </div>
+
+        <div th:replace="fragments/footer :: copy"></div>
+
+    </body>
+</html>

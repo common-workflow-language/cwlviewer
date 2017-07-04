@@ -212,6 +212,24 @@ pre {
     color: #c30000;
 }
 
+.method {
+    color: white;
+    border-radius: 5px 5px 0px 0px;
+    padding: 2px 5px;
+}
+.method.get {
+    background-color: green;
+}
+.method.post {
+    background-color: #4070ec;
+}
+.method.delete {
+    background-color: #ed0039;
+}
+.method.put {
+    background-color: #e5c500;
+}
+
 tr.selected, .table-hover tbody tr.selected:hover td, .table-hover tbody tr.selected:hover th {
     background-color: #b9ffbb !important;
 }
