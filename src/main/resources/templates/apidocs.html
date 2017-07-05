@@ -476,7 +476,7 @@ import requests
 import time
 import os
 
-# You define these in travis.yml as env vars or arguments
+# You can alternatively define these in travis.yml as env vars or arguments
 BASE_URL = 'https://view.commonwl.org'
 WORKFLOW_PATH = '/workflows/workflow.cwl'
 
@@ -493,7 +493,7 @@ HEADERS = {
     'accept': 'application/json'
 }
 
-# Add new workflow
+# Add new workflow with the specific commit ID of this build
 addResponse = requests.post(BASE_URL + '/workflows',
                             data={'url': workflowURL},
                             headers=HEADERS)
@@ -507,11 +507,11 @@ if addResponse.status_code == requests.codes.accepted:
                              allow_redirects=False)
     maxAttempts = 5
     while qResponse.status_code == requests.codes.ok and qResponse.json()['cwltoolStatus'] == 'RUNNING' and maxAttempts > 0:
+        time.sleep(5)
         qResponse = requests.get(BASE_URL + qLocation,
                                  headers=HEADERS,
                                  allow_redirects=False)
         maxAttempts -= 1
-        time.sleep(5)
 
     if qResponse.headers['location']:
         # Success, get the workflow
