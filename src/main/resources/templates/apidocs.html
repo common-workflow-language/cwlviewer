@@ -25,6 +25,7 @@
         <title>API Documentation - Common Workflow Language Viewer</title>
         <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170517.css}" href="../static/css/main-20170517.css" />
         <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" th:href="@{/bower_components/highlightjs/styles/github.css}" href="../static/bower_components/highlightjs/styles/default.css" />
     </head>
     <body>
 
@@ -33,11 +34,12 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-12" role="main" id="main">
-                    <h1>API Documentation</h1>
+                    <h1>REST API Documentation</h1>
                     <div class="alert alert-warning"><strong>Disclaimer:</strong> The API is still under heavy development and breaking changes to endpoints or parameters may be made</div>
 
-                    All queries require the following header to receive a JSON response:
-                    <pre>accept: application/json</pre>
+                    <p>All queries require the following header to receive a JSON response:
+                        <pre>accept: application/json</pre>
+                    </p>
 
                     <h2>Workflow</h2>
 
@@ -59,7 +61,7 @@
                         </tr>
                     </table>
                     <h4>Input</h4>
-<pre>
+<pre class="highlight json">
 {
     "url": "https://github.com/common-workflow-language/workflows/tree/master/workflows/compile/compile1.cwl"
 }
@@ -194,7 +196,7 @@ Location: /queue/:queueid
                     <h5>Example URL</h5>
                     <pre>/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl</pre>
                     <h5>Example Response</h5>
-<pre>
+<pre class="highlight json">
 {
     "retrievedFrom": {
         "owner": "common-workflow-language",
@@ -363,14 +365,14 @@ Location: /queue/:queueid
                         </tr>
                     </table>
                     <h5>Example Response</h5>
-<pre>
+<pre class="highlight json">
 {
     "content": [
         {
-            ...
+
         },
         {
-            ...
+
         }
     ],
     "last": true,
@@ -427,13 +429,13 @@ Location: /queue/:queueid
                         </tr>
                     </table>
                     <h5>Example Responses</h5>
-<pre>
+<pre class="highlight json">
 {
     "cwltoolStatus": "RUNNING",
     "cwltoolVersion": "1.0.20170622090721",
 }
 </pre>
-<pre>
+<pre class="highlight json">
 {
     "cwltoolStatus": "ERROR",
     "cwltoolVersion": "1.0.20170622090721",
@@ -446,11 +448,98 @@ Location: /queue/:queueid
 HTTP/1.1 303 See Other
 Location: /workflows/:githubURL
 </pre>
+
+                    <h2>Examples</h2>
+                    <h3>Python - Build script for <a href="https://travis-ci.org/">Travis</a></h3>
+                    <p>The API can be utilised as a build step in continuous integration such as in the following example</p>
+                    <h4>travis.yml</h4>
+                    <p>The python script can be included in the 'script' or 'after_success' areas of travis.yml depending on your usage</p>
+<pre class="highlight yaml">
+language: python
+
+python:
+  - "2.7"
+
+install:
+  - pip install requests
+
+script:
+  - ...
+
+after_success:
+  - python cwlviewer.py
+</pre>
+                    <h4>cwlviewer.py</h4>
+<pre class="highlight python">
+# Must list 'pip install requests' in travis.yml
+import requests
+import time
+import os
+
+# You define these in travis.yml as env vars or arguments
+BASE_URL = 'https://view.commonwl.org'
+WORKFLOW_PATH = '/workflows/workflow.cwl'
+
+# Travis environment variables
+TRAVIS_COMMIT = os.getenv('TRAVIS_COMMIT')
+TRAVIS_REPO_SLUG = os.getenv('TRAVIS_REPO_SLUG')
+
+# Whole workflow URL on github
+workflowURL = 'https://github.com/' + TRAVIS_REPO_SLUG + '/blob/' + TRAVIS_COMMIT + WORKFLOW_PATH
+
+# Headers
+HEADERS = {
+    'user-agent': 'my-app/0.0.1',
+    'accept': 'application/json'
+}
+
+# Add new workflow
+addResponse = requests.post(BASE_URL + '/workflows',
+                            data={'url': workflowURL},
+                            headers=HEADERS)
+
+if addResponse.status_code == requests.codes.accepted:
+    qLocation = addResponse.headers['location']
+
+    # Get the queue item until success
+    qResponse = requests.get(BASE_URL + qLocation,
+                             headers=HEADERS,
+                             allow_redirects=False)
+    maxAttempts = 5
+    while qResponse.status_code == requests.codes.ok and qResponse.json()['cwltoolStatus'] == 'RUNNING' and maxAttempts > 0:
+        qResponse = requests.get(BASE_URL + qLocation,
+                                 headers=HEADERS,
+                                 allow_redirects=False)
+        maxAttempts -= 1
+        time.sleep(5)
+
+    if qResponse.headers['location']:
+        # Success, get the workflow
+        workflowResponse = requests.get(BASE_URL + qResponse.headers['location'], headers=HEADERS)
+        if (workflowResponse.status_code == requests.codes.ok):
+            workflowJson = workflowResponse.json()
+            # Do what you want with the workflow JSON
+            # Include details in documentation files etc
+            print(BASE_URL + workflowJson['visualisationSvg'])
+            print('Verified with cwltool version ' + workflowJson['cwltoolVersion'])
+            # etc...
+        else:
+            print('Could not get returned workflow')
+    elif qJson['cwltoolStatus'] == 'ERROR':
+        # Cwltool failed to run here
+        print(qResponse.json()['message'])
+    elif maxAttempts == 0:
+        print('Timeout: Cwltool did not finish')
+
+else:
+    print('Error adding workflow')
+</pre>
                 </div>
             </div>
         </div>
 
         <div th:replace="fragments/footer :: copy"></div>
 
+        <script src="/bower_components/requirejs/require.js" data-main="/js/docs.js"></script>
     </body>
 </html>

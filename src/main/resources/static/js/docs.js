@@ -23,17 +23,19 @@
 requirejs.config({
     baseUrl: '/bower_components',
     paths: {
-        jquery: 'jquery/dist/jquery.min'
+        jquery: 'jquery/dist/jquery.min',
+        highlight: 'highlightjs/highlight.pack.min'
     }
 });
 
 /**
- * Handles suggestions on the main page
+ * Code highlighting
  */
-require(['jquery'],
-    function ($) {
-        $(".example").click(function(e) {
-            $("#githubURL").val($(this).attr("href"));
-            e.preventDefault();
+require(['jquery', 'highlight'],
+    function ($, hljs) {
+        $(document).ready(function () {
+            $('pre.highlight').each(function (i, block) {
+                hljs.highlightBlock(block);
+            });
         });
     });
