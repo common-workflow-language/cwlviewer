@@ -24,6 +24,7 @@ import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.Manifest;
 import org.apache.taverna.robundle.manifest.PathMetadata;
+import org.commonwl.view.cwl.CWLTool;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -67,7 +68,8 @@ public class ROBundleServiceTest {
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
-                "CWL Viewer", "https://view.commonwl.org", 5242880, mockGithubService, Mockito.mock(GraphVizService.class));
+                "CWL Viewer", "https://view.commonwl.org", 5242880, mockGithubService,
+                Mockito.mock(GraphVizService.class), Mockito.mock(CWLTool.class));
         Workflow lobSTRv1 = Mockito.mock(Workflow.class);
         when(lobSTRv1.getRetrievedFrom()).thenReturn(lobSTRv1Details);
         Bundle bundle = bundleService.newBundleFromGithub(lobSTRv1, lobSTRv1Details);
@@ -118,7 +120,8 @@ public class ROBundleServiceTest {
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
-                "CWL Viewer", "https://view.commonwl.org", 0, mockGithubService, Mockito.mock(GraphVizService.class));
+                "CWL Viewer", "https://view.commonwl.org", 0, mockGithubService,
+                Mockito.mock(GraphVizService.class), Mockito.mock(CWLTool.class));
         Workflow lobSTRv1 = Mockito.mock(Workflow.class);
         when(lobSTRv1.getRetrievedFrom()).thenReturn(lobSTRv1Details);
         Bundle bundle = bundleService.newBundleFromGithub(lobSTRv1, lobSTRv1Details);

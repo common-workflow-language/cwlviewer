@@ -23,10 +23,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
-import org.apache.taverna.robundle.manifest.Agent;
-import org.apache.taverna.robundle.manifest.Manifest;
-import org.apache.taverna.robundle.manifest.PathMetadata;
-import org.apache.taverna.robundle.manifest.Proxy;
+import org.apache.taverna.robundle.manifest.*;
+import org.commonwl.view.cwl.CWLTool;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -65,6 +63,7 @@ public class ROBundleService {
     // Services
     private GitHubService githubService;
     private GraphVizService graphVizService;
+    private CWLTool cwlTool;
 
     // Configuration variables
     private Agent appAgent;
@@ -90,13 +89,15 @@ public class ROBundleService {
                            @Value("${applicationURL}") String appURL,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
                            GitHubService githubService,
-                           GraphVizService graphVizService) throws URISyntaxException {
+                           GraphVizService graphVizService,
+                           CWLTool cwlTool) throws URISyntaxException {
         this.bundleStorage = bundleStorage;
         this.appAgent = new Agent(appName);
         appAgent.setUri(new URI(appURL));
         this.singleFileSizeLimit = singleFileSizeLimit;
         this.githubService = githubService;
         this.graphVizService = graphVizService;
+        this.cwlTool = cwlTool;
     }
 
     /**
@@ -123,7 +124,8 @@ public class ROBundleService {
             manifest.setRetrievedFrom(new URI(githubInfo.getURL()));
 
             // Make a directory in the RO bundle to store the files
-            Path bundleFiles = bundle.getRoot().resolve("workflow");
+            Path bundleRoot = bundle.getRoot();
+            Path bundleFiles = bundleRoot.resolve("workflow");
             Files.createDirectory(bundleFiles);
 
             // Add the files from the Github repo to this workflow
@@ -135,18 +137,27 @@ public class ROBundleService {
             manifest.setAuthoredBy(new ArrayList<>(authors));
 
             // Add visualisation images
-            Path visFolder = bundle.getRoot().resolve("visualisation");
-            Files.createDirectory(visFolder);
+            File png = graphVizService.getGraph(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
+            Files.copy(png.toPath(), bundleRoot.resolve("visualisation.png"));
+            PathMetadata pngAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.png"));
+            pngAggr.setRetrievedFrom(new URI(appAgent.getUri() + workflow.getVisualisationPng()));
 
             File svg = graphVizService.getGraph(workflow.getID() + ".svg", workflow.getVisualisationDot(), "svg");
-            File png = graphVizService.getGraph(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
-            Files.copy(svg.toPath(), visFolder.resolve("graph.svg"));
-            Files.copy(png.toPath(), visFolder.resolve("graph.png"));
-
-            PathMetadata svgAggr = bundle.getManifest().getAggregation(visFolder.resolve("graph.svg"));
-            PathMetadata pngAggr = bundle.getManifest().getAggregation(visFolder.resolve("graph.png"));
+            Files.copy(svg.toPath(), bundleRoot.resolve("visualisation.svg"));
+            PathMetadata svgAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.svg"));
             svgAggr.setRetrievedFrom(new URI(appAgent.getUri() + workflow.getVisualisationSvg()));
-            pngAggr.setRetrievedFrom(new URI(appAgent.getUri() + workflow.getVisualisationPng()));
+
+            // Add annotation files
+            GithubDetails wfDetails = workflow.getRetrievedFrom();
+            String url = "https://raw.githubusercontent.com/" + wfDetails.getOwner() + "/" +
+                    wfDetails.getRepoName() + "/" + wfDetails.getBranch() + "/" + wfDetails.getPath();
+
+            List<PathAnnotation> manifestAnnotations = new ArrayList<>();
+            addAggregation(bundle, manifestAnnotations,
+                    "merged.cwl", cwlTool.getPackedVersion(url));
+            addAggregation(bundle, manifestAnnotations,
+                    "workflow.ttl", cwlTool.getRDF(url));
+            bundle.getManifest().setAnnotations(manifestAnnotations);
 
         } catch (URISyntaxException ex) {
             logger.error("Error creating URI for RO Bundle", ex);
@@ -294,6 +305,29 @@ public class ROBundleService {
         Path bundleLocation = Files.createFile(bundleStorage.resolve(fileName));
         Bundles.closeAndSaveBundle(roBundle, bundleLocation);
         return bundleLocation;
+    }
+
+    /**
+     * Add an aggregation to the Research Object Bundle
+     * @param roBundle The bundle to add to
+     * @param fileName The file name of the aggregation
+     * @param manifestAnnotations The list of manifest aggregations
+     * @param content The identifier for the resource containing the
+     *                body of the annotation
+     * @throws IOException Errors accessing the bundle
+     */
+    private void addAggregation(Bundle roBundle,
+                                List<PathAnnotation> manifestAnnotations,
+                                String fileName,
+                                String content) throws IOException {
+        Path annotations = Bundles.getAnnotations(roBundle);
+        Path packedPath = annotations.resolve(fileName);
+        Bundles.setStringValue(packedPath, content);
+        PathAnnotation packedFile = new PathAnnotation();
+        packedFile.setContent(packedPath);
+        packedFile.setAbout(roBundle.getManifest().getId());
+        packedFile.generateAnnotationId();
+        manifestAnnotations.add(packedFile);
     }
 
 }
