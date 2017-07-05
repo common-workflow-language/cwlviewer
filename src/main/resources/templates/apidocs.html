@@ -37,6 +37,8 @@
                     <h1>REST API Documentation</h1>
                     <div class="alert alert-warning"><strong>Disclaimer:</strong> The API is still under heavy development and breaking changes to endpoints or parameters may be made</div>
 
+                    <p>If you make anything utilizing our API, please <a href="https://gitter.im/common-workflow-language/cwlviewer" alt="Gitter Chatroom" target="_blank" rel="noopener">let us know about it</a> - we would love to see!</p>
+
                     <p>All queries require the following header to receive a JSON response:
                         <pre>accept: application/json</pre>
                     </p>
@@ -525,7 +527,7 @@ if addResponse.status_code == requests.codes.accepted:
             # etc...
         else:
             print('Could not get returned workflow')
-    elif qJson['cwltoolStatus'] == 'ERROR':
+    elif qResponse.json()['cwltoolStatus'] == 'ERROR':
         # Cwltool failed to run here
         print(qResponse.json()['message'])
     elif maxAttempts == 0:
