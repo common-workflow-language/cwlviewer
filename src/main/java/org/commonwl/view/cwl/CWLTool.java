@@ -47,29 +47,17 @@ public class CWLTool {
      * @throws CWLValidationException cwltool errors
      */
     public String getRDF(String url) throws CWLValidationException {
-        try {
-            // Run cwltool --print-rdf with the URL
-            String[] command = {"cwltool", "--non-strict", "--quiet", "--print-rdf", url};
-            ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
-            Process process = cwlToolProcess.start();
+        return runCwltoolOnWorkflow("--print-rdf", url);
+    }
 
-            // Read output from the process using threads
-            StreamGobbler inputGobbler = new StreamGobbler(process.getInputStream());
-            StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream());
-            errorGobbler.start();
-            inputGobbler.start();
-
-            // Wait for process to complete
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                return inputGobbler.getContent();
-            } else {
-                throw new CWLValidationException(errorGobbler.getContent());
-            }
-        } catch (IOException|InterruptedException e) {
-            logger.error("Error running cwltool process", e);
-            throw new CWLValidationException("Error running cwltool process");
-        }
+    /**
+     * Get the packed version of a CWL workflow
+     * @param url The URL of the CWL file
+     * @return The packed version of the workflow
+     * @throws CWLValidationException cwltool errors
+     */
+    public String getPackedVersion(String url) throws CWLValidationException {
+        return runCwltoolOnWorkflow("--pack", url);
     }
 
     /**
@@ -93,12 +81,46 @@ public class CWLTool {
 
             String line;
             if ((line = br.readLine()) != null) {
-                return line.substring(line.indexOf(' '));
+                cwlToolVersion = line.substring(line.indexOf(' ') + 1);
+                return cwlToolVersion;
             } else {
                 return "<error getting cwl version>";
             }
         } catch (IOException ex) {
             return "<error getting cwl version>";
+        }
+    }
+
+    /**
+     * Runs cwltool on a workflow with a given argument
+     * @param argument The argument for cwltool
+     * @param workflowUrl The url of the workflow
+     * @return The standard output of cwltool
+     * @throws CWLValidationException Errors from cwltool
+     */
+    private String runCwltoolOnWorkflow(String argument, String workflowUrl) throws CWLValidationException {
+        try {
+            // Run command
+            String[] command = {"cwltool", "--non-strict", "--quiet", argument, workflowUrl};
+            ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
+            Process process = cwlToolProcess.start();
+
+            // Read output from the process using threads
+            StreamGobbler inputGobbler = new StreamGobbler(process.getInputStream());
+            StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream());
+            errorGobbler.start();
+            inputGobbler.start();
+
+            // Wait for process to complete
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                return inputGobbler.getContent();
+            } else {
+                throw new CWLValidationException(errorGobbler.getContent());
+            }
+        } catch (IOException|InterruptedException e) {
+            logger.error("Error running cwltool process", e);
+            throw new CWLValidationException("Error running cwltool process");
         }
     }
 
