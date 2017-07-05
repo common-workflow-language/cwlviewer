@@ -281,10 +281,6 @@ public class WorkflowService {
             logger.error("Could not update workflow with cwltool", e);
         }
 
-        // Create a new research object bundle for the workflow
-        generateROBundle(basicModel);
-        // END ASYNC
-
         // Return this model to be displayed
         return queuedWorkflow;
     }
@@ -310,7 +306,7 @@ public class WorkflowService {
      */
     private void generateROBundle(Workflow workflow) {
         try {
-            ROBundleFactory.workflowROFromGithub(workflow.getRetrievedFrom());
+            ROBundleFactory.workflowROFromGithub(workflow);
         } catch (Exception ex) {
             logger.error("Error creating RO Bundle", ex);
         }

@@ -20,6 +20,7 @@
 package org.commonwl.view.cwl;
 
 import org.commonwl.view.github.GitHubService;
+import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.workflow.QueuedWorkflow;
 import org.commonwl.view.workflow.QueuedWorkflowRepository;
 import org.commonwl.view.workflow.Workflow;
@@ -47,6 +48,7 @@ public class CWLToolRunner {
     private final QueuedWorkflowRepository queuedWorkflowRepository;
     private final CWLService cwlService;
     private final GitHubService githubService;
+    private final ROBundleFactory roBundleFactory;
     private final String cwlToolVersion;
 
     @Autowired
@@ -54,12 +56,14 @@ public class CWLToolRunner {
                          QueuedWorkflowRepository queuedWorkflowRepository,
                          CWLService cwlService,
                          CWLTool cwlTool,
-                         GitHubService githubService) {
+                         GitHubService githubService,
+                         ROBundleFactory roBundleFactory) {
         this.workflowRepository = workflowRepository;
         this.queuedWorkflowRepository = queuedWorkflowRepository;
         this.cwlService = cwlService;
         this.githubService = githubService;
         this.cwlToolVersion = cwlTool.getVersion();
+        this.roBundleFactory = roBundleFactory;
     }
 
     @Async
@@ -81,8 +85,14 @@ public class CWLToolRunner {
             newWorkflow.setLastCommit(commitSha);
             newWorkflow.setCwltoolVersion(cwlToolVersion);
             workflowRepository.save(newWorkflow);
+
+            // Generate RO bundle
+            roBundleFactory.workflowROFromGithub(newWorkflow);
+
+            // Mark success on queue
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.SUCCESS);
             queuedWorkflowRepository.save(queuedWorkflow);
+
         } catch (CWLValidationException ex) {
             logger.error(ex.getMessage(), ex);
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);

@@ -29,6 +29,8 @@ import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.apache.taverna.robundle.manifest.Proxy;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.graphviz.GraphVizService;
+import org.commonwl.view.workflow.Workflow;
 import org.eclipse.egit.github.core.CommitUser;
 import org.eclipse.egit.github.core.RepositoryCommit;
 import org.eclipse.egit.github.core.RepositoryContents;
@@ -39,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -61,6 +64,7 @@ public class ROBundleService {
 
     // Services
     private GitHubService githubService;
+    private GraphVizService graphVizService;
 
     // Configuration variables
     private Agent appAgent;
@@ -85,20 +89,23 @@ public class ROBundleService {
                            @Value("${applicationName}") String appName,
                            @Value("${applicationURL}") String appURL,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
-                           GitHubService githubService) throws URISyntaxException {
+                           GitHubService githubService,
+                           GraphVizService graphVizService) throws URISyntaxException {
         this.bundleStorage = bundleStorage;
         this.appAgent = new Agent(appName);
         appAgent.setUri(new URI(appURL));
         this.singleFileSizeLimit = singleFileSizeLimit;
         this.githubService = githubService;
+        this.graphVizService = graphVizService;
     }
 
     /**
      * Creates a new research object bundle for a workflow from a Github repository
+     * @param workflow The workflow to create the research object for
      * @param githubInfo The information to access the repository
      * @return The constructed bundle
      */
-    public Bundle newBundleFromGithub(GithubDetails githubInfo) throws IOException {
+    public Bundle newBundleFromGithub(Workflow workflow, GithubDetails githubInfo) throws IOException {
 
         // Create a new RO bundle
         Bundle bundle = Bundles.createBundle();
@@ -115,21 +122,35 @@ public class ROBundleService {
             manifest.setRetrievedOn(manifest.getCreatedOn());
             manifest.setRetrievedFrom(new URI(githubInfo.getURL()));
 
+            // Make a directory in the RO bundle to store the files
+            Path bundleFiles = bundle.getRoot().resolve("workflow");
+            Files.createDirectory(bundleFiles);
+
+            // Add the files from the Github repo to this workflow
+            List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
+            Set<HashableAgent> authors = new HashSet<>();
+            addFilesToBundle(bundle, githubInfo, repoContents, bundleFiles, authors);
+
+            // Add combined authors
+            manifest.setAuthoredBy(new ArrayList<>(authors));
+
+            // Add visualisation images
+            Path visFolder = bundle.getRoot().resolve("visualisation");
+            Files.createDirectory(visFolder);
+
+            File svg = graphVizService.getGraph(workflow.getID() + ".svg", workflow.getVisualisationDot(), "svg");
+            File png = graphVizService.getGraph(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
+            Files.copy(svg.toPath(), visFolder.resolve("graph.svg"));
+            Files.copy(png.toPath(), visFolder.resolve("graph.png"));
+
+            PathMetadata svgAggr = bundle.getManifest().getAggregation(visFolder.resolve("graph.svg"));
+            PathMetadata pngAggr = bundle.getManifest().getAggregation(visFolder.resolve("graph.png"));
+            svgAggr.setRetrievedFrom(new URI(appAgent.getUri() + workflow.getVisualisationSvg()));
+            pngAggr.setRetrievedFrom(new URI(appAgent.getUri() + workflow.getVisualisationPng()));
+
         } catch (URISyntaxException ex) {
             logger.error("Error creating URI for RO Bundle", ex);
         }
-
-        // Make a directory in the RO bundle to store the files
-        Path bundleFiles = bundle.getRoot().resolve("workflow");
-        Files.createDirectory(bundleFiles);
-
-        // Add the files from the Github repo to this workflow
-        List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
-        Set<HashableAgent> authors = new HashSet<HashableAgent>();
-        addFilesToBundle(bundle, githubInfo, repoContents, bundleFiles, authors);
-
-        // Add combined authors
-        manifest.setAuthoredBy(new ArrayList<>(authors));
 
         // Return the completed bundle
         return bundle;
@@ -248,7 +269,7 @@ public class ROBundleService {
                         }
                     }
                     authors.addAll(fileAuthors);
-                    aggregation.setAuthoredBy(new ArrayList<Agent>(fileAuthors));
+                    aggregation.setAuthoredBy(new ArrayList<>(fileAuthors));
 
                     // Set retrieved information for this file in the manifest
                     aggregation.setRetrievedFrom(rawURI);
@@ -263,7 +284,7 @@ public class ROBundleService {
     }
 
     /**
-     * Save the Research Object bundle to disk
+     * Save the Research Object Bundle to disk
      * @param roBundle The bundle to be saved
      * @return The path to the research object
      * @throws IOException Any errors in saving

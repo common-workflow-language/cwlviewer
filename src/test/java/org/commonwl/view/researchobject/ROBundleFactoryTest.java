@@ -19,7 +19,6 @@
 
 package org.commonwl.view.researchobject;
 
-import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.junit.Test;
@@ -62,7 +61,7 @@ public class ROBundleFactoryTest {
         ROBundleFactory factory = new ROBundleFactory(mockROBundleService, mockRepository);
 
         // Attempt to add RO to workflow
-        factory.workflowROFromGithub(Mockito.mock(GithubDetails.class));
+        factory.workflowROFromGithub(Mockito.mock(Workflow.class));
 
         assertEquals("test/path/to/check/for.zip", validWorkflow.getRoBundlePath());
 
