@@ -73,6 +73,12 @@
 HTTP/1.1 202 Accepted
 Location: /queue/:queueid
 </pre>
+                    <h4>Already Exists</h4>
+<pre>
+HTTP/1.1 303 See Other
+Location: /workflows/:githubURL
+</pre>
+
                     <h4>Error</h4>
                     <pre>HTTP/1.1 400 Bad Request</pre>
 
