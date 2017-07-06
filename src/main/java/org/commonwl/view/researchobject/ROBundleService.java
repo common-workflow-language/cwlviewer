@@ -45,6 +45,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -158,6 +159,12 @@ public class ROBundleService {
             addAggregation(bundle, manifestAnnotations,
                     "workflow.ttl", cwlTool.getRDF(url));
             bundle.getManifest().setAnnotations(manifestAnnotations);
+
+            // Git2prov history
+            List<Path> history = new ArrayList<>();
+            history.add(Paths.get("http://git2prov.org/git2prov?giturl=https://github.com/" + githubInfo.getOwner()
+                    + "/" + githubInfo.getRepoName() + "&serialization=PROV-JSON"));
+            bundle.getManifest().setHistory(history);
 
         } catch (URISyntaxException ex) {
             logger.error("Error creating URI for RO Bundle", ex);
