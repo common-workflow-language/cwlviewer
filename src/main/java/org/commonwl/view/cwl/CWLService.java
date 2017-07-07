@@ -234,35 +234,37 @@ public class CWLService {
             CWLElement wfInput = new CWLElement();
 
             // Array types
-            StmtIterator itr = input.get("type").asResource().listProperties();
-            if (itr.hasNext()) {
-                while (itr.hasNext()) {
-                    Statement complexType = itr.nextStatement();
-                    if (complexType.getPredicate().toString()
-                            .equals("https://w3id.org/cwl/salad#items")) {
-                        if (wfInputs.containsKey(inputName)
-                                && wfInputs.get(inputName).getType().equals("?")) {
-                            wfInput.setType(typeURIToString(complexType.getObject().toString()) + "[]?");
-                        } else {
-                            wfInput.setType(typeURIToString(complexType.getObject().toString()) + "[]");
+            if (input.contains("type")) {
+                StmtIterator itr = input.get("type").asResource().listProperties();
+                if (itr.hasNext()) {
+                    while (itr.hasNext()) {
+                        Statement complexType = itr.nextStatement();
+                        if (complexType.getPredicate().toString()
+                                .equals("https://w3id.org/cwl/salad#items")) {
+                            if (wfInputs.containsKey(inputName)
+                                    && wfInputs.get(inputName).getType().equals("?")) {
+                                wfInput.setType(typeURIToString(complexType.getObject().toString()) + "[]?");
+                            } else {
+                                wfInput.setType(typeURIToString(complexType.getObject().toString()) + "[]");
+                            }
                         }
                     }
-                }
-            } else {
-                // Optional types
-                if (input.get("type").toString().equals("https://w3id.org/cwl/salad#null")) {
-                    if (wfInputs.containsKey(inputName)) {
-                        CWLElement inputInMap = wfInputs.get(inputName);
-                        inputInMap.setType(inputInMap.getType() + "?");
-                    } else {
-                        wfInput.setType("?");
-                    }
-                } else if (wfInput.getType() != null && wfInput.getType().equals("?")
-                        && !wfInput.getType().endsWith("[]")) {
-                    wfInput.setType(typeURIToString(input.get("type").toString()) + "?");
                 } else {
-                    // Standard type
-                    wfInput.setType(typeURIToString(input.get("type").toString()));
+                    // Optional types
+                    if (input.get("type").toString().equals("https://w3id.org/cwl/salad#null")) {
+                        if (wfInputs.containsKey(inputName)) {
+                            CWLElement inputInMap = wfInputs.get(inputName);
+                            inputInMap.setType(inputInMap.getType() + "?");
+                        } else {
+                            wfInput.setType("?");
+                        }
+                    } else if (wfInput.getType() != null && wfInput.getType().equals("?")
+                            && !wfInput.getType().endsWith("[]")) {
+                        wfInput.setType(typeURIToString(input.get("type").toString()) + "?");
+                    } else {
+                        // Standard type
+                        wfInput.setType(typeURIToString(input.get("type").toString()));
+                    }
                 }
             }
 
@@ -285,35 +287,37 @@ public class CWLService {
             String outputName = rdfService.lastURIPart(output.get("name").toString());
 
             // Array types
-            StmtIterator itr = output.get("type").asResource().listProperties();
-            if (itr.hasNext()) {
-                while (itr.hasNext()) {
-                    Statement complexType = itr.nextStatement();
-                    if (complexType.getPredicate().toString()
-                            .equals("https://w3id.org/cwl/salad#items")) {
-                        if (wfOutputs.containsKey(outputName)
-                                && wfOutputs.get(outputName).getType().equals("?")) {
-                            wfOutput.setType(typeURIToString(complexType.getObject().toString()) + "[]?");
-                        } else {
-                            wfOutput.setType(typeURIToString(complexType.getObject().toString()) + "[]");
+            if (output.contains("type")) {
+                StmtIterator itr = output.get("type").asResource().listProperties();
+                if (itr.hasNext()) {
+                    while (itr.hasNext()) {
+                        Statement complexType = itr.nextStatement();
+                        if (complexType.getPredicate().toString()
+                                .equals("https://w3id.org/cwl/salad#items")) {
+                            if (wfOutputs.containsKey(outputName)
+                                    && wfOutputs.get(outputName).getType().equals("?")) {
+                                wfOutput.setType(typeURIToString(complexType.getObject().toString()) + "[]?");
+                            } else {
+                                wfOutput.setType(typeURIToString(complexType.getObject().toString()) + "[]");
+                            }
                         }
                     }
-                }
-            } else {
-                // Standard types
-                if (wfOutput.getType() != null && wfOutput.getType().equals("?")) {
-                    wfOutput.setType(typeURIToString(output.get("type").toString()) + "?");
                 } else {
-                    wfOutput.setType(typeURIToString(output.get("type").toString()));
-                }
-
-                // Optional types
-                if (output.get("type").toString().equals("https://w3id.org/cwl/salad#null")) {
-                    if (wfOutputs.containsKey(outputName)) {
-                        CWLElement outputInMap = wfOutputs.get(outputName);
-                        outputInMap.setType(outputInMap.getType() + "?");
+                    // Standard types
+                    if (wfOutput.getType() != null && wfOutput.getType().equals("?")) {
+                        wfOutput.setType(typeURIToString(output.get("type").toString()) + "?");
                     } else {
-                        wfOutput.setType("?");
+                        wfOutput.setType(typeURIToString(output.get("type").toString()));
+                    }
+
+                    // Optional types
+                    if (output.get("type").toString().equals("https://w3id.org/cwl/salad#null")) {
+                        if (wfOutputs.containsKey(outputName)) {
+                            CWLElement outputInMap = wfOutputs.get(outputName);
+                            outputInMap.setType(outputInMap.getType() + "?");
+                        } else {
+                            wfOutput.setType("?");
+                        }
                     }
                 }
             }
