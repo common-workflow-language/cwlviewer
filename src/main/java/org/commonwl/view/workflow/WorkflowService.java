@@ -225,11 +225,13 @@ public class WorkflowService {
      */
     private void removeWorkflow(Workflow workflow) {
         // Delete the Research Object Bundle from disk
-        File roBundle = new File(workflow.getRoBundle());
-        if (roBundle.delete()) {
-            logger.debug("Deleted Research Object Bundle");
-        } else {
-            logger.debug("Failed to delete Research Object Bundle");
+        if (workflow.getRoBundle() != null) {
+            File roBundle = new File(workflow.getRoBundle());
+            if (roBundle.delete()) {
+                logger.debug("Deleted Research Object Bundle");
+            } else {
+                logger.debug("Failed to delete Research Object Bundle");
+            }
         }
 
         // Delete cached graphviz images if they exist
