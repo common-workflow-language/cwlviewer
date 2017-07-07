@@ -45,8 +45,8 @@
             <p id="loadingOverview">
                 Consists of
                 <span th:text="${queued.tempRepresentation.inputs.size()}">2</span> input<span th:if="${queued.tempRepresentation.inputs.size() != 1}">s</span>,
-                <span th:text="${queued.tempRepresentation.outputs.size()}">4</span> output<span th:if="${queued.tempRepresentation.outputs.size() != 1}">s</span> and
-                <span th:text="${queued.tempRepresentation.steps.size()}">6</span> step<span th:if="${queued.tempRepresentation.steps.size() != 1}">s</span>
+                <span th:text="${queued.tempRepresentation.steps.size()}">4</span> step<span th:if="${queued.tempRepresentation.steps.size() != 1}">s</span> and
+                <span th:text="${queued.tempRepresentation.outputs.size()}">6</span> output<span th:if="${queued.tempRepresentation.outputs.size() != 1}">s</span>
                 (excluding subworkflows)
             </p>
             <div id="cwltooldetails" class="alert alert-danger">

@@ -159,7 +159,7 @@ public class RDFDotWriter extends DotWriter {
 
         // Write links between steps
         ResultSet stepLinks = rdfService.getStepLinks(graphName, workflowUri);
-        int defaultCount = 0;
+        Map<String, String> defaults = new HashMap<>();
         while (stepLinks.hasNext()) {
             QuerySolution stepLink = stepLinks.nextSolution();
             if (stepLink.contains("src")) {
@@ -168,8 +168,7 @@ public class RDFDotWriter extends DotWriter {
                 String destID = nodeIDFromUri(stepLink.get("dest").toString());
                 writeLine("  \"" + sourceID + "\" -> \"" + destID + "\";");
             } else if (stepLink.contains("default")) {
-                // Default values
-                defaultCount++;
+                // Collect default values
                 String defaultVal = rdfService.formatDefault(stepLink.get("default").toString());
                 String destID = rdfService.lastURIPart(stepLink.get("dest").toString());
                 String label;
@@ -182,11 +181,25 @@ public class RDFDotWriter extends DotWriter {
                 } else {
                     label = "[Complex Object]";
                 }
-                writeLine("  \"default" + defaultCount + "\" -> \"" + destID + "\";");
-                writeLine("  \"default" + defaultCount + "\" [label=\"" + label + "\", fillcolor=\"#D5AEFC\"];");
+
+                String dest = stepLink.get("dest").toString();
+                String inputName = dest.substring(dest.lastIndexOf("/") + 1);
+                if (defaults.containsKey(destID)) {
+                    String currentLabel = defaults.get(destID);
+                    defaults.put(destID, currentLabel + "\\n" + inputName + ": " + label);
+                } else {
+                    defaults.put(destID, inputName + ": " + label);
+                }
             }
         }
 
+        // Write defaults
+        int defaultCount = 1;
+        for (Map.Entry<String, String> entry : defaults.entrySet()) {
+            writeLine("  \"default" + defaultCount + "\" -> \"" + entry.getKey() + "\";");
+            writeLine("  \"default" + defaultCount + "\" [label=\"" + entry.getValue() + "\", fillcolor=\"#D5AEFC\"];");
+            defaultCount++;
+        }
     }
 
     /**
