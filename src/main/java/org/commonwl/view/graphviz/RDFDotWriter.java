@@ -159,7 +159,7 @@ public class RDFDotWriter extends DotWriter {
 
         // Write links between steps
         ResultSet stepLinks = rdfService.getStepLinks(graphName, workflowUri);
-        Map<String, String> defaults = new HashMap<>();
+        Map<String, Map<String, String>> defaults = new HashMap<>();
         while (stepLinks.hasNext()) {
             QuerySolution stepLink = stepLinks.nextSolution();
             if (stepLink.contains("src")) {
@@ -185,19 +185,33 @@ public class RDFDotWriter extends DotWriter {
                 String dest = stepLink.get("dest").toString();
                 String inputName = dest.substring(dest.lastIndexOf("/") + 1);
                 if (defaults.containsKey(destID)) {
-                    String currentLabel = defaults.get(destID);
-                    defaults.put(destID, currentLabel + "\\n" + inputName + ": " + label);
+                    // Default exists
+                    Map<String, String> currentDefault = defaults.get(destID);
+                    if (currentDefault.containsKey(inputName)) {
+                        String currentLabel = currentDefault.get(inputName);
+                        currentDefault.put(inputName, currentLabel + ", " + label);
+                    } else {
+                        currentDefault.put(inputName, label);
+                    }
                 } else {
-                    defaults.put(destID, inputName + ": " + label);
+                    // Create a new default if it doesn't exist
+                    Map<String, String> newDefault = new HashMap<>();
+                    newDefault.put(inputName, label);
+                    defaults.put(destID, newDefault);
                 }
             }
         }
 
         // Write defaults
         int defaultCount = 1;
-        for (Map.Entry<String, String> entry : defaults.entrySet()) {
-            writeLine("  \"default" + defaultCount + "\" -> \"" + entry.getKey() + "\";");
-            writeLine("  \"default" + defaultCount + "\" [label=\"" + entry.getValue() + "\", fillcolor=\"#D5AEFC\"];");
+        for (Map.Entry<String, Map<String, String>> defaultVal : defaults.entrySet()) {
+            String fullLabel = "";
+            for (Map.Entry<String, String> input : defaultVal.getValue().entrySet()) {
+                fullLabel += input.getKey() + ": " + input.getValue() + "\\n";
+            }
+            writeLine("  \"default" + defaultCount + "\" -> \"" + defaultVal.getKey() + "\";");
+            writeLine("  \"default" + defaultCount + "\" [label=\"" + fullLabel
+                    + "\", fillcolor=\"#D5AEFC\"];");
             defaultCount++;
         }
     }
