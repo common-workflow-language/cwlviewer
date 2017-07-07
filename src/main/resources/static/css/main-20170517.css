@@ -37,7 +37,7 @@ pre {
     max-width: 100%;
 }
 
-#loadingWorkflowContainer {
+.loadingWorkflowContainer {
     position: relative;
     min-height: 220px;
 }
