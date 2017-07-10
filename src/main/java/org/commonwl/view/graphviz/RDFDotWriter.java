@@ -160,13 +160,16 @@ public class RDFDotWriter extends DotWriter {
         // Write links between steps
         ResultSet stepLinks = rdfService.getStepLinks(graphName, workflowUri);
         Map<String, Map<String, String>> defaults = new HashMap<>();
+        int defaultCount = 1;
         while (stepLinks.hasNext()) {
             QuerySolution stepLink = stepLinks.nextSolution();
             if (stepLink.contains("src")) {
                 // Normal link from step
                 String sourceID = nodeIDFromUri(stepLink.get("src").toString());
-                String destID = nodeIDFromUri(stepLink.get("dest").toString());
-                writeLine("  \"" + sourceID + "\" -> \"" + destID + "\";");
+                String dest = stepLink.get("dest").toString();
+                String destID = nodeIDFromUri(dest);
+                String destInput = dest.substring(dest.replaceAll("#", "/").lastIndexOf("/") + 1);
+                writeLine("  \"" + sourceID + "\" -> \"" + destID + "\" [label=\"" + destInput + "\"];");
             } else if (stepLink.contains("default")) {
                 // Collect default values
                 String destID = rdfService.lastURIPart(stepLink.get("dest").toString());
@@ -183,35 +186,14 @@ public class RDFDotWriter extends DotWriter {
 
                 String dest = stepLink.get("dest").toString();
                 String inputName = dest.substring(dest.lastIndexOf("/") + 1);
-                if (defaults.containsKey(destID)) {
-                    // Default exists
-                    Map<String, String> currentDefault = defaults.get(destID);
-                    if (currentDefault.containsKey(inputName)) {
-                        String currentLabel = currentDefault.get(inputName);
-                        currentDefault.put(inputName, currentLabel + ", " + label);
-                    } else {
-                        currentDefault.put(inputName, label);
-                    }
-                } else {
-                    // Create a new default if it doesn't exist
-                    Map<String, String> newDefault = new HashMap<>();
-                    newDefault.put(inputName, label);
-                    defaults.put(destID, newDefault);
-                }
-            }
-        }
 
-        // Write defaults
-        int defaultCount = 1;
-        for (Map.Entry<String, Map<String, String>> defaultVal : defaults.entrySet()) {
-            String fullLabel = "";
-            for (Map.Entry<String, String> input : defaultVal.getValue().entrySet()) {
-                fullLabel += input.getKey() + ": " + input.getValue() + "\\n";
+                // Write default
+                writeLine("  \"default" + defaultCount + "\" -> \"" + destID + "\" "
+                        + "[label=\"" + inputName + "\"];");
+                writeLine("  \"default" + defaultCount + "\" [label=\"" + label
+                        + "\", fillcolor=\"#D5AEFC\"];");
+                defaultCount++;
             }
-            writeLine("  \"default" + defaultCount + "\" -> \"" + defaultVal.getKey() + "\";");
-            writeLine("  \"default" + defaultCount + "\" [label=\"" + fullLabel
-                    + "\", fillcolor=\"#D5AEFC\"];");
-            defaultCount++;
         }
     }
 
