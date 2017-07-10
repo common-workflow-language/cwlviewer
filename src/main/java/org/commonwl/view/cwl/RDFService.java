@@ -176,28 +176,44 @@ public class RDFService {
      * Get links between steps for the workflow in the model
      * @param graphName The graph containing the model
      * @param workflowURI URI of the workflow
-     * @return The result set of steps
+     * @return The result set of step links
      */
     public ResultSet getStepLinks(String graphName, String workflowURI) {
-        ParameterizedSparqlString stepQuery = new ParameterizedSparqlString();
-        stepQuery.setCommandText(queryCtx +
+        ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
+        linkQuery.setCommandText(queryCtx +
                 "SELECT ?src ?dest ?default\n" +
                 "WHERE {\n" +
                 "  GRAPH ?graphName {" +
-                "    {\n" +
-                "        ?wf rdf:type cwl:Workflow .\n" +
-                "        ?wf cwl:outputs ?dest .\n" +
-                "        ?dest cwl:outputSource ?src\n" +
-                "    } UNION {\n" +
-                "        ?wf Workflow:steps ?step .\n" +
-                "        ?step cwl:in ?dest .\n" +
-                "        { ?dest cwl:source ?src } UNION { ?dest cwl:default ?default }\n" +
-                "    }\n" +
+                "    ?wf Workflow:steps ?step .\n" +
+                "    ?step cwl:in ?dest .\n" +
+                "    { ?dest cwl:source ?src } UNION { ?dest cwl:default ?default }\n" +
                 "  }" +
                 "}");
-        stepQuery.setIri("wf", workflowURI);
-        stepQuery.setIri("graphName", rdfService + graphName);
-        return runQuery(stepQuery);
+        linkQuery.setIri("wf", workflowURI);
+        linkQuery.setIri("graphName", rdfService + graphName);
+        return runQuery(linkQuery);
+    }
+
+    /**
+     * Get links between steps and outputs for the workflow in the model
+     * @param graphName The graph containing the model
+     * @param workflowURI URI of the workflow
+     * @return The result set of steps
+     */
+    public ResultSet getOutputLinks(String graphName, String workflowURI) {
+        ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
+        linkQuery.setCommandText(queryCtx +
+                "SELECT ?src ?dest\n" +
+                "WHERE {\n" +
+                "  GRAPH ?graphName {" +
+                "    ?wf rdf:type cwl:Workflow .\n" +
+                "    ?wf cwl:outputs ?dest .\n" +
+                "    ?dest cwl:outputSource ?src\n" +
+                "  }" +
+                "}");
+        linkQuery.setIri("wf", workflowURI);
+        linkQuery.setIri("graphName", rdfService + graphName);
+        return runQuery(linkQuery);
     }
 
     /**

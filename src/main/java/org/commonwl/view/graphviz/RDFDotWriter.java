@@ -156,10 +156,8 @@ public class RDFDotWriter extends DotWriter {
      * @throws IOException Any errors in writing which may have occurredn
      */
     private void writeStepLinks(String workflowUri) throws IOException {
-
         // Write links between steps
         ResultSet stepLinks = rdfService.getStepLinks(graphName, workflowUri);
-        Map<String, Map<String, String>> defaults = new HashMap<>();
         int defaultCount = 1;
         while (stepLinks.hasNext()) {
             QuerySolution stepLink = stepLinks.nextSolution();
@@ -175,7 +173,7 @@ public class RDFDotWriter extends DotWriter {
                 String destID = rdfService.lastURIPart(stepLink.get("dest").toString());
                 String label;
                 if (stepLink.get("default").isLiteral()) {
-                    label = rdfService.formatDefault(stepLink.get("default").toString());;
+                    label = rdfService.formatDefault(stepLink.get("default").toString());
                 } else if (stepLink.get("default").isURIResource()) {
                     Path workflowPath = Paths.get(FilenameUtils.getPath(workflowUri));
                     Path resourcePath = Paths.get(stepLink.get("default").toString());
@@ -184,16 +182,24 @@ public class RDFDotWriter extends DotWriter {
                     label = "[Complex Object]";
                 }
 
+                // Write default
                 String dest = stepLink.get("dest").toString();
                 String inputName = dest.substring(dest.lastIndexOf("/") + 1);
-
-                // Write default
                 writeLine("  \"default" + defaultCount + "\" -> \"" + destID + "\" "
                         + "[label=\"" + inputName + "\"];");
                 writeLine("  \"default" + defaultCount + "\" [label=\"" + label
                         + "\", fillcolor=\"#D5AEFC\"];");
                 defaultCount++;
             }
+        }
+
+        // Write links between steps and outputs
+        ResultSet outputLinks = rdfService.getOutputLinks(graphName, workflowUri);
+        while (outputLinks.hasNext()) {
+            QuerySolution outputLink = outputLinks.nextSolution();
+            String sourceID = nodeIDFromUri(outputLink.get("src").toString());
+            String destID = nodeIDFromUri(outputLink.get("dest").toString());
+            writeLine("  \"" + sourceID + "\" -> \"" + destID + "\";");
         }
     }
 
