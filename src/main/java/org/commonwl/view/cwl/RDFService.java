@@ -251,7 +251,7 @@ public class RDFService {
         if (lastCaret != -1) {
             return defaultVal.substring(0, lastCaret);
         }
-        return defaultVal;
+        return "\\\"" + defaultVal + "\\\"";
     }
 
     /**

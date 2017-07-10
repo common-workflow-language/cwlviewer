@@ -169,14 +169,13 @@ public class RDFDotWriter extends DotWriter {
                 writeLine("  \"" + sourceID + "\" -> \"" + destID + "\";");
             } else if (stepLink.contains("default")) {
                 // Collect default values
-                String defaultVal = rdfService.formatDefault(stepLink.get("default").toString());
                 String destID = rdfService.lastURIPart(stepLink.get("dest").toString());
                 String label;
                 if (stepLink.get("default").isLiteral()) {
-                    label = "\\\"" + defaultVal + "\\\"";
+                    label = rdfService.formatDefault(stepLink.get("default").toString());;
                 } else if (stepLink.get("default").isURIResource()) {
                     Path workflowPath = Paths.get(FilenameUtils.getPath(workflowUri));
-                    Path resourcePath = Paths.get(defaultVal);
+                    Path resourcePath = Paths.get(stepLink.get("default").toString());
                     label = workflowPath.relativize(resourcePath).toString();
                 } else {
                     label = "[Complex Object]";
