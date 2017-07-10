@@ -40,7 +40,7 @@ public class RDFDotWriter extends DotWriter {
     private RDFService rdfService;
     private Map<String, String> subworkflows = new HashMap<>();
 
-    public RDFDotWriter(Writer writer, RDFService rdfService, String graphName) {
+    public RDFDotWriter(Writer writer, RDFService rdfService, String graphName, String baseUrl) {
         super(writer);
         this.rdfService = rdfService;
         this.graphName = graphName;
@@ -77,7 +77,7 @@ public class RDFDotWriter extends DotWriter {
         ResultSet inputs = rdfService.getInputs(graphName, workflowUri);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
-            writeInputOutput(input);
+            writeInputOutput(workflowUri, input);
         }
 
         // End subgraph
@@ -100,7 +100,7 @@ public class RDFDotWriter extends DotWriter {
         ResultSet outputs = rdfService.getOutputs(graphName, workflowUri);
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
-            writeInputOutput(output);
+            writeInputOutput(workflowUri, output);
         }
 
         // End subgraph
@@ -119,7 +119,7 @@ public class RDFDotWriter extends DotWriter {
         Set<String> addedSteps = new HashSet<>();
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
-            String stepName = rdfService.lastURIPart(step.get("step").toString());
+            String stepName = rdfService.lastURIPart(workflowUri, step.get("step").toString());
 
             // Only write each step once
             if (!addedSteps.contains(stepName)) {
@@ -163,14 +163,14 @@ public class RDFDotWriter extends DotWriter {
             QuerySolution stepLink = stepLinks.nextSolution();
             if (stepLink.contains("src")) {
                 // Normal link from step
-                String sourceID = nodeIDFromUri(stepLink.get("src").toString());
+                String sourceID = nodeIDFromUri(workflowUri, stepLink.get("src").toString());
                 String dest = stepLink.get("dest").toString();
-                String destID = nodeIDFromUri(dest);
+                String destID = nodeIDFromUri(workflowUri, dest);
                 String destInput = dest.substring(dest.replaceAll("#", "/").lastIndexOf("/") + 1);
                 writeLine("  \"" + sourceID + "\" -> \"" + destID + "\" [label=\"" + destInput + "\"];");
             } else if (stepLink.contains("default")) {
                 // Collect default values
-                String destID = rdfService.lastURIPart(stepLink.get("dest").toString());
+                String destID = rdfService.lastURIPart(workflowUri, stepLink.get("dest").toString());
                 String label;
                 if (stepLink.get("default").isLiteral()) {
                     label = rdfService.formatDefault(stepLink.get("default").toString());
@@ -197,20 +197,21 @@ public class RDFDotWriter extends DotWriter {
         ResultSet outputLinks = rdfService.getOutputLinks(graphName, workflowUri);
         while (outputLinks.hasNext()) {
             QuerySolution outputLink = outputLinks.nextSolution();
-            String sourceID = nodeIDFromUri(outputLink.get("src").toString());
-            String destID = nodeIDFromUri(outputLink.get("dest").toString());
+            String sourceID = nodeIDFromUri(workflowUri, outputLink.get("src").toString());
+            String destID = nodeIDFromUri(workflowUri, outputLink.get("dest").toString());
             writeLine("  \"" + sourceID + "\" -> \"" + destID + "\";");
         }
     }
 
     /**
      * Get a node ID from a URI, with ID handling for subworkflows
+     * @param workflowUri The URI of the workflow in the model
      * @param uri The URI of the step
      * @return A string in the format filename#stepID
      */
-    private String nodeIDFromUri(String uri) {
+    private String nodeIDFromUri(String workflowUri, String uri) {
 
-        String nodeID = rdfService.lastURIPart(uri);
+        String nodeID = rdfService.lastURIPart(workflowUri, uri);
         if (subworkflows.containsKey(nodeID)) {
             int slashAfterHashIndex = uri.indexOf('/', uri.lastIndexOf('#'));
             if (slashAfterHashIndex != -1) {
@@ -245,10 +246,11 @@ public class RDFDotWriter extends DotWriter {
 
     /**
      * Writes a single input or output to the Writer
+     * @param workflowUri The URI of the workflow in the model
      * @param inputOutput The input or output
      * @throws IOException Any errors in writing which may have occurred
      */
-    private void writeInputOutput(QuerySolution inputOutput) throws IOException {
+    private void writeInputOutput(String workflowUri, QuerySolution inputOutput) throws IOException {
         // List of options for this node
         List<String> nodeOptions = new ArrayList<>();
         nodeOptions.add("fillcolor=\"#94DDF4\"");
@@ -263,7 +265,7 @@ public class RDFDotWriter extends DotWriter {
         nodeOptions.add("label=\"" + label + "\"");
 
         // Write the line for the node
-        String inputOutputName = rdfService.lastURIPart(inputOutput.get("name").toString());
+        String inputOutputName = rdfService.lastURIPart(workflowUri, inputOutput.get("name").toString());
         writeLine("    \"" + inputOutputName + "\" [" + String.join(",", nodeOptions) + "];");
     }
 

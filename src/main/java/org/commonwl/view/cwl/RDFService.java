@@ -241,18 +241,16 @@ public class RDFService {
 
     /**
      * Gets the last part (final slash) from a full URI
+     * @param baseUrl the URL of the workflow
      * @param uri The URI
      * @return The step ID
      */
-    public String lastURIPart(String uri) {
-        int lastSlash = uri.lastIndexOf('/');
-        if (lastSlash != -1) {
-            String strippedUri = uri.substring(lastSlash + 1);
-            if (!strippedUri.contains("#")) {
-                int secondToLastSlash = uri.lastIndexOf('/', lastSlash - 1);
-                return uri.substring(secondToLastSlash + 1, lastSlash);
-            }
-            return strippedUri;
+    public String lastURIPart(String baseUrl, String uri) {
+        uri = uri.replace(baseUrl, "");
+        uri = uri.replace("#", "/");
+        uri = uri.substring(1);
+        if (uri.indexOf("/") > 0) {
+            return uri.substring(0, uri.indexOf("/"));
         }
         return uri;
     }
@@ -294,7 +292,12 @@ public class RDFService {
      * @return The second part of the name, just the step
      */
     public String labelFromName(String name) {
-        return name.substring(name.indexOf('#') + 1);
+        name = name.substring(name.indexOf('#') + 1);
+        int slashIndex = name.indexOf("/");
+        if (slashIndex > 0) {
+            name = name.substring(slashIndex + 1);
+        }
+        return name;
     }
 
     /**

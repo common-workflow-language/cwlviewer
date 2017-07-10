@@ -229,7 +229,7 @@ public class CWLService {
         ResultSet inputs = rdfService.getInputs(graphName, url);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
-            String inputName = rdfService.lastURIPart(input.get("name").toString());
+            String inputName = rdfService.lastURIPart(url, input.get("name").toString());
 
             CWLElement wfInput = new CWLElement();
 
@@ -284,7 +284,7 @@ public class CWLService {
             QuerySolution output = outputs.nextSolution();
             CWLElement wfOutput = new CWLElement();
 
-            String outputName = rdfService.lastURIPart(output.get("name").toString());
+            String outputName = rdfService.lastURIPart(url, output.get("name").toString());
 
             // Array types
             if (output.contains("type")) {
@@ -323,7 +323,7 @@ public class CWLService {
             }
 
             if (output.contains("src")) {
-                wfOutput.addSourceID(rdfService.lastURIPart(
+                wfOutput.addSourceID(rdfService.lastURIPart(url,
                         output.get("src").toString()));
             }
             if (output.contains("label")) {
@@ -341,12 +341,12 @@ public class CWLService {
         ResultSet steps = rdfService.getSteps(graphName, url);
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
-            String uri = rdfService.lastURIPart(step.get("step").toString());
+            String uri = rdfService.lastURIPart(url, step.get("step").toString());
             if (wfSteps.containsKey(uri)) {
                 // Already got step details, add extra source ID
                 if (step.contains("src")) {
                     CWLElement src = new CWLElement();
-                    src.addSourceID(rdfService.lastURIPart(step.get("src").toString()));
+                    src.addSourceID(rdfService.lastURIPart(url, step.get("src").toString()));
                     wfSteps.get(uri).getSources().put(
                             step.get("stepinput").toString(), src);
                 } else if (step.contains("default")) {
@@ -366,16 +366,16 @@ public class CWLService {
 
                 if (step.contains("src")) {
                     CWLElement src = new CWLElement();
-                    src.addSourceID(rdfService.lastURIPart(step.get("src").toString()));
+                    src.addSourceID(rdfService.lastURIPart(url, step.get("src").toString()));
                     Map<String, CWLElement> srcList = new HashMap<>();
-                    srcList.put(rdfService.lastURIPart(
+                    srcList.put(rdfService.lastURIPart(url,
                             step.get("stepinput").toString()), src);
                     wfStep.setSources(srcList);
                 } else if (step.contains("default")) {
                     CWLElement src = new CWLElement();
                     src.setDefaultVal(rdfService.formatDefault(step.get("default").toString()));
                     Map<String, CWLElement> srcList = new HashMap<>();
-                    srcList.put(rdfService.lastURIPart(
+                    srcList.put(rdfService.lastURIPart(url,
                             step.get("stepinput").toString()), src);
                     wfStep.setSources(srcList);
                 }
@@ -407,7 +407,7 @@ public class CWLService {
 
         // Generate DOT graph
         StringWriter graphWriter = new StringWriter();
-        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService, graphName);
+        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService, graphName, url);
         try {
             RDFDotWriter.writeGraph(url);
             workflowModel.setVisualisationDot(graphWriter.toString());
