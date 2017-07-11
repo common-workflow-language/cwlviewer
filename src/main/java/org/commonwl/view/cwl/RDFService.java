@@ -240,12 +240,12 @@ public class RDFService {
     }
 
     /**
-     * Gets the last part (final slash) from a full URI
+     * Gets the step name from a full URI
      * @param baseUrl the URL of the workflow
      * @param uri The URI
      * @return The step ID
      */
-    public String lastURIPart(String baseUrl, String uri) {
+    public String stepNameFromURI(String baseUrl, String uri) {
         uri = uri.replace(baseUrl, "");
         uri = uri.replace("#", "/");
         uri = uri.substring(1);

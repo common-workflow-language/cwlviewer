@@ -119,7 +119,7 @@ public class RDFDotWriter extends DotWriter {
         Set<String> addedSteps = new HashSet<>();
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
-            String stepName = rdfService.lastURIPart(workflowUri, step.get("step").toString());
+            String stepName = rdfService.stepNameFromURI(workflowUri, step.get("step").toString());
 
             // Only write each step once
             if (!addedSteps.contains(stepName)) {
@@ -170,7 +170,7 @@ public class RDFDotWriter extends DotWriter {
                 writeLine("  \"" + sourceID + "\" -> \"" + destID + "\" [label=\"" + destInput + "\"];");
             } else if (stepLink.contains("default")) {
                 // Collect default values
-                String destID = rdfService.lastURIPart(workflowUri, stepLink.get("dest").toString());
+                String destID = rdfService.stepNameFromURI(workflowUri, stepLink.get("dest").toString());
                 String label;
                 if (stepLink.get("default").isLiteral()) {
                     label = rdfService.formatDefault(stepLink.get("default").toString());
@@ -211,7 +211,7 @@ public class RDFDotWriter extends DotWriter {
      */
     private String nodeIDFromUri(String workflowUri, String uri) {
 
-        String nodeID = rdfService.lastURIPart(workflowUri, uri);
+        String nodeID = rdfService.stepNameFromURI(workflowUri, uri);
         if (subworkflows.containsKey(nodeID)) {
             int slashAfterHashIndex = uri.indexOf('/', uri.lastIndexOf('#'));
             if (slashAfterHashIndex != -1) {
@@ -265,7 +265,7 @@ public class RDFDotWriter extends DotWriter {
         nodeOptions.add("label=\"" + label + "\"");
 
         // Write the line for the node
-        String inputOutputName = rdfService.lastURIPart(workflowUri, inputOutput.get("name").toString());
+        String inputOutputName = rdfService.stepNameFromURI(workflowUri, inputOutput.get("name").toString());
         writeLine("    \"" + inputOutputName + "\" [" + String.join(",", nodeOptions) + "];");
     }
 
