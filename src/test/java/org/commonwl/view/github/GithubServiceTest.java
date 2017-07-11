@@ -32,7 +32,6 @@ import static org.junit.Assert.assertNotNull;
 @SpringBootTest
 public class GithubServiceTest {
 
-
     /**
      * Create a service to test
      */

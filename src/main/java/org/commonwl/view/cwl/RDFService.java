@@ -46,7 +46,7 @@ public class RDFService {
      * @param rdfService The SPARQL endpoint from configuration
      */
     @Autowired
-    public void RDFService(@Value("${sparql.endpoint}") String rdfService) {
+    public RDFService(@Value("${sparql.endpoint}") String rdfService) {
         this.rdfService = rdfService;
     }
 

@@ -19,7 +19,6 @@
 
 package org.commonwl.view.cwl;
 
-import org.apache.commons.io.FileUtils;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.workflow.Workflow;
@@ -27,19 +26,33 @@ import org.commonwl.view.workflow.WorkflowOverview;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class CWLServiceTest {
+
+    /**
+     * RDFService for testing
+     */
+    @Autowired
+    private RDFService rdfService;
 
     /**
      * Used for expected IOExceptions for filesize limits
@@ -59,7 +72,7 @@ public class CWLServiceTest {
 
         // Test cwl service
         CWLService cwlService = new CWLService(mockGithubService,
-                new RDFService(), new CWLTool(), 5242880);
+                rdfService, new CWLTool(), 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails lobSTRDraft3Details = new GithubDetails("common-workflow-language",
@@ -82,7 +95,7 @@ public class CWLServiceTest {
 
         // Test cwl service
         CWLService cwlService = new CWLService(mockGithubService,
-                new RDFService(), new CWLTool(), 5242880);
+                rdfService, new CWLTool(), 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language",
@@ -90,6 +103,39 @@ public class CWLServiceTest {
         Workflow lobSTRv1 = cwlService.parseWorkflowNative(lobSTRv1Details, "933bf2a1a1cce32d88f88f136275535da9df0954");
 
         testLobSTRWorkflow(lobSTRv1, true);
+
+    }
+
+    /**
+     * Test parsing of a workflow using cwltool
+     */
+    @Test
+    public void parseWorkflowWithCwltool() throws Exception {
+
+        // Mock CWLTool
+        CWLTool mockCwlTool = Mockito.mock(CWLTool.class);
+        File packedWorkflowRdf = new File("src/test/resources/cwl/make_to_cwl/dna.ttl");
+        when(mockCwlTool.getRDF(anyString()))
+                .thenReturn(readFileToString(packedWorkflowRdf));
+
+        // CWLService to test
+        CWLService cwlService = new CWLService(Mockito.mock(GitHubService.class),
+                rdfService, mockCwlTool, 5242880);
+
+        GithubDetails githubInfo = new GithubDetails("common-workflow-language",
+                "workflows", "549c973ccc01781595ce562dea4cedc6c9540fe0",
+                "workflows/make-to-cwl/dna.cwl");
+
+        // Parse the workflow
+        Workflow workflow = cwlService.parseWorkflowWithCwltool(githubInfo, "master", "main");
+
+        // Check basic information
+        assertNotNull(workflow);
+        assertEquals(1, workflow.getInputs().size());
+        assertEquals(1, workflow.getOutputs().size());
+        assertEquals(3, workflow.getSteps().size());
+        File expectedDotCode = new File("src/test/resources/cwl/make_to_cwl/visualisation.dot");
+        assertEquals(readFileToString(expectedDotCode), workflow.getVisualisationDot());
 
     }
 
@@ -103,11 +149,11 @@ public class CWLServiceTest {
         GitHubService mockGithubService = Mockito.mock(GitHubService.class);
         File workflowFile = new File("src/test/resources/cwl/hello/hello.cwl");
         when(mockGithubService.downloadFile(anyObject()))
-                .thenReturn(FileUtils.readFileToString(workflowFile));
+                .thenReturn(readFileToString(workflowFile));
 
         // Test cwl service
         CWLService cwlService = new CWLService(mockGithubService,
-                new RDFService(), Mockito.mock(CWLTool.class), 5242880);
+                rdfService, Mockito.mock(CWLTool.class), 5242880);
 
         // Run workflow overview
         GithubDetails helloDetails = new GithubDetails("common-workflow-language",
@@ -132,7 +178,7 @@ public class CWLServiceTest {
         GitHubService mockGithubService = Mockito.mock(GitHubService.class);
         File workflowFile = new File("src/test/resources/cwl/hello/hello.cwl");
         when(mockGithubService.downloadFile(anyObject()))
-                .thenReturn(FileUtils.readFileToString(workflowFile));
+                .thenReturn(readFileToString(workflowFile));
 
         // Test cwl service with 0 filesize limit
         CWLService cwlService = new CWLService(mockGithubService,
@@ -205,7 +251,7 @@ public class CWLServiceTest {
                 GithubDetails details = (GithubDetails) args[0];
                 File workflowFile = new File(resourcesFolder
                         + details.getPath().replace(originalFolder, ""));
-                return FileUtils.readFileToString(workflowFile);
+                return readFileToString(workflowFile);
             }
         };
         when(mockGithubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
