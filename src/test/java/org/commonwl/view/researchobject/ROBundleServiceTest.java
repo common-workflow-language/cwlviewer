@@ -71,6 +71,13 @@ public class ROBundleServiceTest {
                 .thenReturn(new File("src/test/resources/graphviz/testVis.png"))
                 .thenReturn(new File("src/test/resources/graphviz/testVis.svg"));
 
+        // Mock CWLTool
+        CWLTool mockCwlTool = Mockito.mock(CWLTool.class);
+        when(mockCwlTool.getPackedVersion(anyString()))
+                .thenReturn("cwlVersion: v1.0");
+        when(mockCwlTool.getRDF(anyString()))
+                .thenReturn("@prefix cwl: <https://w3id.org/cwl/cwl#> .");
+
         // Workflow details
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR/lobSTR-workflow.cwl");
@@ -85,7 +92,7 @@ public class ROBundleServiceTest {
         // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 5242880, mockGithubService,
-                mockGraphvizService, new CWLTool());
+                mockGraphvizService, mockCwlTool);
         Bundle bundle = bundleService.newBundleFromGithub(lobSTRv1, lobSTRv1RODetails);
         Path bundleRoot = bundle.getRoot().resolve("workflow");
 
@@ -136,6 +143,13 @@ public class ROBundleServiceTest {
                 .thenReturn(new File("src/test/resources/graphviz/testVis.png"))
                 .thenReturn(new File("src/test/resources/graphviz/testVis.svg"));
 
+        // Mock CWLTool
+        CWLTool mockCwlTool = Mockito.mock(CWLTool.class);
+        when(mockCwlTool.getPackedVersion(anyString()))
+                .thenReturn("cwlVersion: v1.0");
+        when(mockCwlTool.getRDF(anyString()))
+                .thenReturn("@prefix cwl: <https://w3id.org/cwl/cwl#> .");
+
         // Workflow details
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR/lobSTR-workflow.cwl");
@@ -150,7 +164,7 @@ public class ROBundleServiceTest {
         // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 0, mockGithubService,
-                mockGraphvizService, new CWLTool());
+                mockGraphvizService, mockCwlTool);
         Bundle bundle = bundleService.newBundleFromGithub(lobSTRv1, lobSTRv1RODetails);
 
         Manifest manifest = bundle.getManifest();
