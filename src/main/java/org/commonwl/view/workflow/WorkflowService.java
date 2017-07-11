@@ -192,6 +192,7 @@ public class WorkflowService {
                 // Add the new workflow if it exists
                 try {
                     createQueuedWorkflow(workflow.getRetrievedFrom());
+                    workflow = null;
                 } catch (Exception e) {
                     // Add back the old workflow if it is broken now
                     logger.error("Could not parse updated workflow " + workflow.getID());

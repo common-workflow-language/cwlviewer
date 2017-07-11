@@ -40,7 +40,7 @@ digraph workflow {
     "output" [fillcolor="#94DDF4",label="Single Output";];
   }
   "default1";
-  "step2" [fillcolor="#F3CEA1"];
+  "step2";
   "step1";
   "step2" -> "output";
   "step1" -> "step2";
@@ -49,4 +49,9 @@ digraph workflow {
   "input2" -> "step1";
   "default1" [label="examplefile.jar", fillcolor="#D5AEFC"]
   "default1" -> "step1";
+
+  // Invisible links to force outputs to be at lowest rank
+  "default1" -> "output" [style=invis];
+  "step2" -> "output" [style=invis];
+  "step1" -> "output" [style=invis];
 }

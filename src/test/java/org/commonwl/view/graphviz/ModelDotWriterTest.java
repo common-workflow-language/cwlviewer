@@ -19,6 +19,7 @@
 
 package org.commonwl.view.graphviz;
 
+import org.apache.commons.io.FileUtils;
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLProcess;
 import org.commonwl.view.cwl.CWLStep;
@@ -26,10 +27,14 @@ import org.commonwl.view.workflow.Workflow;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DotWriterTest {
+import static org.junit.Assert.assertEquals;
+
+public class ModelDotWriterTest {
 
     private Workflow testWorkflow;
 
@@ -93,15 +98,15 @@ public class DotWriterTest {
      */
     @Test
     public void writeGraph() throws Exception {
-/*
+
         StringWriter dotSource = new StringWriter();
-        RDFDotWriter dotWriter = new RDFDotWriter(dotSource);
+        ModelDotWriter dotWriter = new ModelDotWriter(dotSource);
 
         dotWriter.writeGraph(testWorkflow);
 
         File expectedDot = new File("src/test/resources/graphviz/testWorkflow.dot");
         assertEquals(FileUtils.readFileToString(expectedDot), dotSource.toString());
-*/
+
     }
 
 }

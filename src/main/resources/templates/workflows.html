@@ -61,7 +61,7 @@
                         <tbody>
                             <tr th:each="workflow : ${workflows}" th:with="githubURLPart=${workflow.retrievedFrom.getURL().replace('https://', '')}">
                                 <td>
-                                    <a th:href="${workflow.retrievedFrom.path == null} ? ${workflowURL} : ${workflowURL + '/' + workflow.retrievedFrom.path}">
+                                    <a th:href="@{${workflow.retrievedFrom.getURL()}}">
                                         <img class="workflow-thumb" th:src="@{'/graph/svg/' + ${githubURLPart}}" alt="workflow graph" />
                                     </a>
                                 </td>

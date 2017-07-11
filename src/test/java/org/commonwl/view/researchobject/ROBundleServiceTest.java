@@ -45,6 +45,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class ROBundleServiceTest {
@@ -64,15 +65,28 @@ public class ROBundleServiceTest {
         // Get mock Github service
         GitHubService mockGithubService = getMock();
 
-        // Create new RO bundle
+        // Mock Graphviz service
+        GraphVizService mockGraphvizService = Mockito.mock(GraphVizService.class);
+        when(mockGraphvizService.getGraph(anyString(), anyString(), anyString()))
+                .thenReturn(new File("src/test/resources/graphviz/testVis.png"))
+                .thenReturn(new File("src/test/resources/graphviz/testVis.svg"));
+
+        // Workflow details
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language", "workflows",
+                "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR/lobSTR-workflow.cwl");
+        Workflow lobSTRv1 = Mockito.mock(Workflow.class);
+        when(lobSTRv1.getID()).thenReturn("testID");
+        when(lobSTRv1.getRetrievedFrom()).thenReturn(lobSTRv1Details);
+
+        // RO details
+        GithubDetails lobSTRv1RODetails = new GithubDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
+
+        // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 5242880, mockGithubService,
-                Mockito.mock(GraphVizService.class), Mockito.mock(CWLTool.class));
-        Workflow lobSTRv1 = Mockito.mock(Workflow.class);
-        when(lobSTRv1.getRetrievedFrom()).thenReturn(lobSTRv1Details);
-        Bundle bundle = bundleService.newBundleFromGithub(lobSTRv1, lobSTRv1Details);
+                mockGraphvizService, new CWLTool());
+        Bundle bundle = bundleService.newBundleFromGithub(lobSTRv1, lobSTRv1RODetails);
         Path bundleRoot = bundle.getRoot().resolve("workflow");
 
         // Check bundle exists
@@ -83,7 +97,7 @@ public class ROBundleServiceTest {
         assertEquals("CWL Viewer", manifest.getCreatedBy().getName());
         assertEquals("https://view.commonwl.org", manifest.getCreatedBy().getUri().toString());
         assertEquals("Mark Robinson", manifest.getAuthoredBy().get(0).getName());
-        assertEquals(12, manifest.getAggregates().size());
+        assertEquals(14, manifest.getAggregates().size());
 
         // Check cwl aggregation information
         PathMetadata cwlAggregate = manifest.getAggregation(
@@ -116,20 +130,33 @@ public class ROBundleServiceTest {
         // Get mock Github service
         GitHubService mockGithubService = getMock();
 
-        // Create new RO bundle where all files are external
+        // Mock Graphviz service
+        GraphVizService mockGraphvizService = Mockito.mock(GraphVizService.class);
+        when(mockGraphvizService.getGraph(anyString(), anyString(), anyString()))
+                .thenReturn(new File("src/test/resources/graphviz/testVis.png"))
+                .thenReturn(new File("src/test/resources/graphviz/testVis.svg"));
+
+        // Workflow details
         GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language", "workflows",
+                "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR/lobSTR-workflow.cwl");
+        Workflow lobSTRv1 = Mockito.mock(Workflow.class);
+        when(lobSTRv1.getID()).thenReturn("testID");
+        when(lobSTRv1.getRetrievedFrom()).thenReturn(lobSTRv1Details);
+
+        // RO details
+        GithubDetails lobSTRv1RODetails = new GithubDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
+
+        // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 0, mockGithubService,
-                Mockito.mock(GraphVizService.class), Mockito.mock(CWLTool.class));
-        Workflow lobSTRv1 = Mockito.mock(Workflow.class);
-        when(lobSTRv1.getRetrievedFrom()).thenReturn(lobSTRv1Details);
-        Bundle bundle = bundleService.newBundleFromGithub(lobSTRv1, lobSTRv1Details);
+                mockGraphvizService, new CWLTool());
+        Bundle bundle = bundleService.newBundleFromGithub(lobSTRv1, lobSTRv1RODetails);
 
         Manifest manifest = bundle.getManifest();
 
         // Check files are externally linked in the aggregate
-        assertEquals(12, manifest.getAggregates().size());
+        assertEquals(14, manifest.getAggregates().size());
 
         PathMetadata urlAggregate = manifest.getAggregation(
                 new URI("https://raw.githubusercontent.com/common-workflow-language/workflows/" +

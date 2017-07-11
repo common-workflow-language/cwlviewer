@@ -80,7 +80,7 @@ public class ROBundleService {
      * @param bundleStorage The configured storage location for bundles
      * @param appName The name of the application from properties, for attribution
      * @param appURL The URL of the application from properties, for attribution
-     * @param singleFileSizeLimit The file size limit for the RO bundle
+     * @param singleFileSizeLimit The file size limit for each file in the RO bundle
      * @param githubService The service for handling Github functionality
      * @throws URISyntaxException Error in creating URI for appURL
      */
@@ -104,7 +104,6 @@ public class ROBundleService {
     /**
      * Creates a new research object bundle for a workflow from a Github repository
      * @param workflow The workflow to create the research object for
-     * @param githubInfo The information to access the repository
      * @return The constructed bundle
      */
     public Bundle newBundleFromGithub(Workflow workflow, GithubDetails githubInfo) throws IOException {

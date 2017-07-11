@@ -407,7 +407,7 @@ public class CWLService {
 
         // Generate DOT graph
         StringWriter graphWriter = new StringWriter();
-        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService, graphName, url);
+        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService, graphName);
         try {
             RDFDotWriter.writeGraph(url);
             workflowModel.setVisualisationDot(graphWriter.toString());

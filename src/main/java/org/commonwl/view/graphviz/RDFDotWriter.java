@@ -40,7 +40,7 @@ public class RDFDotWriter extends DotWriter {
     private RDFService rdfService;
     private Map<String, String> subworkflows = new HashMap<>();
 
-    public RDFDotWriter(Writer writer, RDFService rdfService, String graphName, String baseUrl) {
+    public RDFDotWriter(Writer writer, RDFService rdfService, String graphName) {
         super(writer);
         this.rdfService = rdfService;
         this.graphName = graphName;
