@@ -23,6 +23,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.Manifest;
+import org.apache.taverna.robundle.manifest.PathAnnotation;
 import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.commonwl.view.cwl.CWLTool;
 import org.commonwl.view.github.GitHubService;
@@ -115,6 +116,24 @@ public class ROBundleServiceTest {
         assertNull(cwlAggregate.getAuthoredBy().get(0).getOrcid());
         assertEquals("text/x-yaml", cwlAggregate.getMediatype());
         assertEquals("https://w3id.org/cwl/v1.0", cwlAggregate.getConformsTo().toString());
+
+        // Check visualisations exist as aggregates
+        PathMetadata pngAggregate = manifest.getAggregation(bundleRoot.resolve("visualisation.png"));
+        assertEquals("image/png", pngAggregate.getMediatype());
+        PathMetadata svgAggregate = manifest.getAggregation(bundleRoot.resolve("visualisation.svg"));
+        assertEquals("image/svg+xml", svgAggregate.getMediatype());
+
+        // Check RDF and packed workflows exist as annotations
+        List<PathAnnotation> annotations = manifest.getAnnotations();
+        assertEquals(2, annotations.size());
+        assertEquals(new URI("annotations/merged.cwl"), annotations.get(0).getContent());
+        assertEquals(new URI("annotations/workflow.ttl"), annotations.get(1).getContent());
+
+        // Check git2prov link is in the history
+        List<Path> history = manifest.getHistory();
+        assertEquals(1, history.size());
+        assertEquals("http:/git2prov.org/git2prov?giturl=https:/github.com/common-workflow-language/workflows&serialization=PROV-JSON",
+                history.get(0).toString());
 
         // Save and check it exists in the temporary folder
         bundleService.saveToFile(bundle);
