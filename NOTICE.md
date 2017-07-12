@@ -170,4 +170,12 @@ https://github.com/ariutta/svg-pan-zoom
 
 [BSD 2-clause license](src/main/resources/static/bower_components/svg-pan-zoom/LICENSE)
 
------------
+----------
+
+# highlight.js
+bower_components/highlightjs
+https://highlightjs.org/
+
+[BSD 3-clause license](src/main/resources/static/bower_components/highlightjs/LICENSE)
+
+
