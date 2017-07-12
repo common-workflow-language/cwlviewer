@@ -100,8 +100,13 @@ public class WorkflowRESTController {
         GithubDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, errors);
 
         if (errors.hasErrors() || githubInfo == null) {
-            Map<String, String> message = Collections.singletonMap("message", "Error: " +
-                    errors.getAllErrors().get(0).getDefaultMessage());
+            String error;
+            if (errors.hasErrors()) {
+                error = errors.getAllErrors().get(0).getDefaultMessage();
+            } else {
+                error = "Could not parse workflow details from URL";
+            }
+            Map<String, String> message = Collections.singletonMap("message", "Error: " + error);
             return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
         } else {
             if (githubInfo.getPath().endsWith(".cwl")) {

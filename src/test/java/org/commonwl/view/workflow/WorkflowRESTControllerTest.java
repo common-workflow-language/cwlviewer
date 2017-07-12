@@ -20,6 +20,7 @@
 package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLToolStatus;
+import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.github.GithubDetails;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,10 +32,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -43,6 +44,82 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class WorkflowRESTControllerTest {
+
+    @Test
+    public void newWorkflowFromGithubURLJson() throws Exception {
+
+        // Validator pass or fail
+        WorkflowFormValidator mockValidator = Mockito.mock(WorkflowFormValidator.class);
+        when(mockValidator.validateAndParse(anyObject(), anyObject()))
+                .thenReturn(null)
+                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/within"))
+                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/workflow.cwl"));
+
+        // The eventual accepted valid workflow
+        Workflow mockWorkflow = Mockito.mock(Workflow.class);
+        when(mockWorkflow.getRetrievedFrom())
+                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/workflow.cwl"));
+        QueuedWorkflow mockQueuedWorkflow = Mockito.mock(QueuedWorkflow.class);
+        when(mockQueuedWorkflow.getId())
+                .thenReturn("123");
+        when(mockQueuedWorkflow.getTempRepresentation())
+                .thenReturn(mockWorkflow);
+
+        // Mock workflow service returning valid workflow
+        WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
+        when(mockWorkflowService.getWorkflow(any(GithubDetails.class)))
+                .thenReturn(mockWorkflow)
+                .thenReturn(null);
+        when(mockWorkflowService.createQueuedWorkflow(anyObject()))
+                .thenThrow(new CWLValidationException("Error"))
+                .thenReturn(mockQueuedWorkflow);
+
+        // Mock controller/MVC
+        WorkflowRESTController workflowRESTController = new WorkflowRESTController(
+                mockValidator,
+                mockWorkflowService);
+
+        MockMvc mockMvc = MockMvcBuilders
+                .standaloneSetup(workflowRESTController)
+                .build();
+
+        // Error in validation
+        mockMvc.perform(post("/workflows")
+                    .param("url", "invalidurl")
+                    .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.message", is("Error: Could not parse workflow details from URL")));
+
+        // Directory URL is error
+        mockMvc.perform(post("/workflows")
+                    .param("url", "https://github.com/owner/repoName/tree/branch/path/within")
+                    .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.message", is("Error: URL provided was not a .cwl file")));
+
+        // Workflow already exists
+        mockMvc.perform(post("/workflows")
+                    .param("url", "https://github.com/owner/repoName/tree/branch/path/workflow.cwl")
+                    .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isSeeOther())
+                .andExpect(header().string("Location", is("/workflows/github.com/owner/repoName/tree/branch/path/workflow.cwl")));
+
+        // Error creating the workflow
+        mockMvc.perform(post("/workflows")
+                    .param("url", "https://github.com/owner/repoName/tree/branch/path/workflow.cwl")
+                    .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isBadRequest());
+
+        // Success
+        mockMvc.perform(post("/workflows")
+                .param("url", "https://github.com/owner/repoName/tree/branch/path/workflow.cwl")
+                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isAccepted())
+                .andExpect(header().string("Location", is("/queue/123")));
+
+    }
 
     /**
      * Get a workflow from the database and return the JSON format
