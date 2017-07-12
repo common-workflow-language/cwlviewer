@@ -319,11 +319,13 @@ public class WorkflowService {
      */
     private void removeWorkflow(Workflow workflow) {
         // Delete the Research Object Bundle from disk
-        File roBundle = new File(workflow.getRoBundlePath());
-        if (roBundle.delete()) {
-            logger.debug("Deleted Research Object Bundle");
-        } else {
-            logger.debug("Failed to delete Research Object Bundle");
+        if (workflow.getRoBundlePath() != null) {
+            File roBundle = new File(workflow.getRoBundlePath());
+            if (roBundle.delete()) {
+                logger.debug("Deleted Research Object Bundle");
+            } else {
+                logger.debug("Failed to delete Research Object Bundle");
+            }
         }
 
         // Delete cached graphviz images if they exist
@@ -331,6 +333,9 @@ public class WorkflowService {
 
         // Remove the workflow from the database
         workflowRepository.delete(workflow);
+
+        // Remove any queued repositories pointing to the workflow
+        queuedWorkflowRepository.deleteByRetrievedFrom(workflow.getRetrievedFrom());
     }
 
     /**
