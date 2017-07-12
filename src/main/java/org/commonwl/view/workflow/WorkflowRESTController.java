@@ -149,7 +149,8 @@ public class WorkflowRESTController {
      * @param branch The branch of repository
      * @return The JSON representation of the workflow
      */
-    @GetMapping(value = "/workflows/github.com/{owner}/{repoName}/tree/{branch}/**",
+    @GetMapping(value = {"/workflows/github.com/{owner}/{repoName}/tree/{branch}/**",
+                         "/workflows/github.com/{owner}/{repoName}/blob/{branch}/**"},
                 produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Workflow getWorkflowByGithubDetailsJson(@PathVariable("owner") String owner,
                                                    @PathVariable("repoName") String repoName,
