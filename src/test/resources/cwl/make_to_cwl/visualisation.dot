@@ -41,16 +41,16 @@ digraph workflow {
   "combine_sequences" [label="combine_sequences"];
   "get_sequences" [label="get_sequences"];
   "translate_sequences" [label="translate_sequences"];
-  "get_sequences" -> "combine_sequences" [label="sequences"];
   "default1" -> "combine_sequences" [label="catfilename"];
   "default1" [label="\"database.dna\"", fillcolor="#D5AEFC"];
+  "get_sequences" -> "combine_sequences" [label="sequences"];
   "rna" -> "get_sequences" [label="sequence"];
+  "default2" -> "translate_sequences" [label="filename"];
+  "default2" [label="\"database.dna\"", fillcolor="#D5AEFC"];
+  "default3" -> "translate_sequences" [label="from"];
+  "default3" [label="\"U\"", fillcolor="#D5AEFC"];
+  "default4" -> "translate_sequences" [label="to"];
+  "default4" [label="\"T\"", fillcolor="#D5AEFC"];
   "combine_sequences" -> "translate_sequences" [label="trinput"];
-  "default2" -> "translate_sequences" [label="to"];
-  "default2" [label="\"T\"", fillcolor="#D5AEFC"];
-  "default3" -> "translate_sequences" [label="filename"];
-  "default3" [label="\"database.dna\"", fillcolor="#D5AEFC"];
-  "default4" -> "translate_sequences" [label="from"];
-  "default4" [label="\"U\"", fillcolor="#D5AEFC"];
   "translate_sequences" -> "outfile";
 }

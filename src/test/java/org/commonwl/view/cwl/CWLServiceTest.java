@@ -19,10 +19,14 @@
 
 package org.commonwl.view.cwl;
 
+import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowOverview;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -30,10 +34,10 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -51,8 +55,31 @@ public class CWLServiceTest {
     /**
      * RDFService for testing
      */
-    @Autowired
     private RDFService rdfService;
+
+    @Before
+    public void setUp() throws Exception {
+        File packedWorkflowRdf = new File("src/test/resources/cwl/make_to_cwl/dna.ttl");
+        Model workflowModel = ModelFactory.createDefaultModel();
+        workflowModel.read(new ByteArrayInputStream(readFileToString(packedWorkflowRdf).getBytes()), null, "TURTLE");
+        Dataset workflowDataset = DatasetFactory.create();
+        workflowDataset.addNamedModel("http://madeup.endpoint/github.com/common-workflow-language/workflows/master/workflows/make-to-cwl/dna.cwl", workflowModel);
+
+        Answer queryRdf = new Answer<ResultSet>() {
+            @Override
+            public ResultSet answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                Query query = QueryFactory.create(args[0].toString());
+                try (QueryExecution qexec = QueryExecutionFactory.create(query, workflowDataset)) {
+                    return ResultSetFactory.copyResults(qexec.execSelect());
+                }
+            }
+        };
+
+        this.rdfService = Mockito.spy(new RDFService("http://madeup.endpoint/"));
+        Mockito.doAnswer(queryRdf).when(rdfService).runQuery(anyObject());
+        Mockito.doReturn(true).when(rdfService).graphExists(anyString());
+    }
 
     /**
      * Used for expected IOExceptions for filesize limits

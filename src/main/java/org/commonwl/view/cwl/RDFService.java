@@ -305,7 +305,7 @@ public class RDFService {
      * @param queryString The query to be run
      * @return The result set of the query
      */
-    private ResultSet runQuery(ParameterizedSparqlString queryString) {
+    ResultSet runQuery(ParameterizedSparqlString queryString) {
         Query query = QueryFactory.create(queryString.toString());
         try (QueryExecution qexec = QueryExecutionFactory.createServiceRequest(rdfService, query)) {
             return ResultSetFactory.copyResults(qexec.execSelect());
