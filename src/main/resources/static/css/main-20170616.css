@@ -21,7 +21,7 @@ body {
     padding-top: 61px;
 }
 
-pre {
+.alert > pre {
     border: 0;
     background-color: transparent;
     white-space: pre-wrap;
@@ -29,6 +29,10 @@ pre {
     white-space: -o-pre-wrap;
     word-wrap: break-word;
     color: #a94442;
+}
+
+.navbar-nav > li > a {
+    padding-top: 20px;
 }
 
 #loadingWorkflow {
