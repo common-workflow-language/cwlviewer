@@ -45,11 +45,4 @@ WORKDIR /tmp
 
 EXPOSE 8080
 
-# Expects mongodb on port 27017
-ENV SPRING_DATA_MONGODB_HOST=mongo
-ENV SPRING_DATA_MONGODB_PORT=27017
-
-# Expects a sparql server endpoint
-ENV SPARQL_ENDPOINT=http://sparql:3030/all/
-
 CMD ["/usr/bin/java", "-jar", "/usr/lib/cwlviewer.jar"]
