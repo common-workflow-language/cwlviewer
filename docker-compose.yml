@@ -10,6 +10,12 @@ services:
 #     - .:/code
     links:
      - mongo
-
+     - sparql
+    environment:
+     - SPRING_DATA_SPARQL_ENDPOINT="http://sparql:3030/all/"
+     - SPRING_DATA_MONGODB_HOST=mongo
+     - SPRING_DATA_MONGODB_PORT=27017
   mongo:
     image: mongo
+  sparql:
+    image: stain/jena-fuseki
