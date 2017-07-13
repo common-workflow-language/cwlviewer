@@ -1,21 +1,27 @@
 version: '2'
 services:
   spring:
-    image: commonworkflowlanguage/cwlviewer
+    # To run from this source code instead of Docker hub,
+    # disable "image:"" and enable "build:" below
+    image: commonworkflowlanguage/cwlviewer    
     #build: .
     ports:
      - "8080:8080"
-# TODO:
-#    volumes:
-#     - .:/code
     links:
      - mongo
      - sparql
     environment:
-     - SPRING_DATA_SPARQL_ENDPOINT="http://sparql:3030/all/"
+     - SPARQL_ENDPOINT=http://sparql:3030/cwlviewer/
      - SPRING_DATA_MONGODB_HOST=mongo
      - SPRING_DATA_MONGODB_PORT=27017
   mongo:
     image: mongo
   sparql:
+## For debugging, expose the Fuseki port by enabling:
+#    ports:
+#     - "3030:3030"
+## To find the admin password, try:
+##   docker-compose exec sparql grep admin /fuseki/shiro.ini
     image: stain/jena-fuseki
+    # FIXME: --loc=/fuseki/databases/cwlviewer fails as it needs empty dir
+    command: "/jena-fuseki/fuseki-server --loc=/fuseki/databases /cwlviewer"

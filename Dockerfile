@@ -1,4 +1,4 @@
-FROM maven:3.5-jdk-8-alpine
+xFROM maven:3.5-jdk-8-alpine
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
 # Build-time metadata as defined at http://label-schema.org
@@ -50,6 +50,6 @@ ENV SPRING_DATA_MONGODB_HOST=mongo
 ENV SPRING_DATA_MONGODB_PORT=27017
 
 # Expects a sparql server endpoint
-ENV SPRING_DATA_SPARQL_ENDPOINT=http://sparql:3030/all/
+ENV SPARQL_ENDPOINT=http://sparql:3030/all/
 
 CMD ["/usr/bin/java", "-jar", "/usr/lib/cwlviewer.jar"]
