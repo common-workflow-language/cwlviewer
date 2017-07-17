@@ -198,7 +198,9 @@ digraph G {
                     <tbody>
                         <tr th:each="input : ${workflow.inputs}">
                             <td th:text="${input.key}">ID</td>
-                            <td th:text="${input.value.type}">Type</td>
+                            <td>
+                                <a th:href="@{${input.value.format}}" th:text="${input.value.type}">Type</a>
+                            </td>
                             <td th:text="${input.value.label}">Label</td>
                             <td>
                                 <p th:if="${input.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(input.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
@@ -255,7 +257,9 @@ digraph G {
                     <tbody>
                         <tr th:each="output : ${workflow.outputs}">
                             <td th:text="${output.key}">ID</td>
-                            <td th:text="${output.value.type}">Type</td>
+                            <td>
+                                <a th:href="@{${output.value.format}}" th:text="${output.value.type}" target="_blank" rel="noopener">Type</a>
+                            </td>
                             <td th:text="${output.value.label}">Label</td>
                             <td>
                                 <p th:if="${output.value.doc != null}" th:utext="${#strings.replace(#strings.escapeXml(output.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>

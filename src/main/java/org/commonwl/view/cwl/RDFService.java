@@ -105,12 +105,13 @@ public class RDFService {
     public ResultSet getInputs(String graphName, String workflowURI) {
         ParameterizedSparqlString inputsQuery = new ParameterizedSparqlString();
         inputsQuery.setCommandText(queryCtx +
-                "SELECT ?name ?type ?label ?doc\n" +
+                "SELECT ?name ?type ?format ?label ?doc\n" +
                 "WHERE {\n" +
                 "  GRAPH ?graphName {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:inputs ?name .\n" +
                 "    OPTIONAL { ?name sld:type ?type }\n" +
+                "    OPTIONAL { ?name cwl:format ?format }\n" +
                 "    OPTIONAL { ?name sld:label|rdfs:label ?label }\n" +
                 "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }\n" +
                 "  }" +
@@ -129,12 +130,13 @@ public class RDFService {
     public ResultSet getOutputs(String graphName, String workflowURI) {
         ParameterizedSparqlString outputsQuery = new ParameterizedSparqlString();
         outputsQuery.setCommandText(queryCtx +
-                "SELECT ?name ?type ?label ?doc\n" +
+                "SELECT ?name ?type ?format ?label ?doc\n" +
                 "WHERE {\n" +
                 "  GRAPH ?graphName {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:outputs ?name .\n" +
                 "    OPTIONAL { ?name sld:type ?type }\n" +
+                "    OPTIONAL { ?name cwl:format ?format }\n" +
                 "    OPTIONAL { ?name sld:label|rdfs:label ?label }\n" +
                 "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }\n" +
                 "  }" +

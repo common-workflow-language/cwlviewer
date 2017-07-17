@@ -268,6 +268,9 @@ public class CWLService {
                 }
             }
 
+            if (input.contains("format")) {
+                wfInput.setFormat(input.get("format").toString());
+            }
             if (input.contains("label")) {
                 wfInput.setLabel(input.get("label").toString());
             }
@@ -325,6 +328,9 @@ public class CWLService {
             if (output.contains("src")) {
                 wfOutput.addSourceID(rdfService.stepNameFromURI(url,
                         output.get("src").toString()));
+            }
+            if (output.contains("format")) {
+                wfOutput.setFormat(output.get("format").toString());
             }
             if (output.contains("label")) {
                 wfOutput.setLabel(output.get("label").toString());
