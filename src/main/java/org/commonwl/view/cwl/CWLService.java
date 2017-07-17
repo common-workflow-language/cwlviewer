@@ -33,6 +33,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.riot.RiotException;
 import org.commonwl.view.docker.DockerService;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
@@ -268,15 +269,7 @@ public class CWLService {
 
             if (input.contains("format")) {
                 String format = input.get("format").toString();
-                wfInput.setFormat(format);
-
-                if (!rdfService.ontPropertyExists(format)) {
-                    Model ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-                    ontModel.read(format, null, "RDF/XML");
-                    rdfService.addToOntologies(ontModel);
-                }
-                String formatLabel = rdfService.getOntLabel(format);
-                wfInput.setType(wfInput.getType() + " (" + formatLabel + " format)");
+                setFormat(wfInput, format);
             }
             if (input.contains("label")) {
                 wfInput.setLabel(input.get("label").toString());
@@ -338,15 +331,7 @@ public class CWLService {
             }
             if (output.contains("format")) {
                 String format = output.get("format").toString();
-                wfOutput.setFormat(format);
-
-                if (!rdfService.ontPropertyExists(format)) {
-                    Model ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-                    ontModel.read(format, null, "RDF/XML");
-                    rdfService.addToOntologies(ontModel);
-                }
-                String formatLabel = rdfService.getOntLabel(format);
-                wfOutput.setType(wfOutput.getType() + " (" + formatLabel + " format)");
+                setFormat(wfOutput, format);
             }
             if (output.contains("label")) {
                 wfOutput.setLabel(output.get("label").toString());
@@ -490,6 +475,26 @@ public class CWLService {
                     FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
         }
 
+    }
+
+    /**
+     * Set the format for an input or output, handling ontologies
+     * @param inputOutput The input or output CWL Element
+     * @param format The format URI
+     */
+    private void setFormat(CWLElement inputOutput, String format) {
+        inputOutput.setFormat(format);
+        try {
+            if (!rdfService.ontPropertyExists(format)) {
+                Model ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+                ontModel.read(format, null, "RDF/XML");
+                rdfService.addToOntologies(ontModel);
+            }
+            String formatLabel = rdfService.getOntLabel(format);
+            inputOutput.setType(inputOutput.getType() + " (" + formatLabel + " format)");
+        } catch (RiotException ex) {
+            inputOutput.setType(inputOutput.getType() + " (format)");
+        }
     }
 
     /**

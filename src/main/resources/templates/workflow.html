@@ -199,7 +199,7 @@ digraph G {
                         <tr th:each="input : ${workflow.inputs}">
                             <td th:text="${input.key}">ID</td>
                             <td>
-                                <a th:href="@{${input.value.format}}" th:text="${input.value.type}">Type</a>
+                                <a th:href="@{${input.value.format}}" th:text="${input.value.type}" target="_blank" rel="noopener">Type</a>
                             </td>
                             <td th:text="${input.value.label}">Label</td>
                             <td>
