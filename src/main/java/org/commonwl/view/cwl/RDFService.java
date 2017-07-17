@@ -51,6 +51,15 @@ public class RDFService {
     }
 
     /**
+     * Add to ontologies in the triple store
+     * @param model The model to be stored
+     */
+    public void addToOntologies(Model model) {
+        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(rdfService);
+        accessor.putModel("ontologies", model);
+    }
+
+    /**
      * Store a model with triples in the triple store
      * @param graphName The name of the graph to store the model in
      * @param model The model to be stored
@@ -76,38 +85,76 @@ public class RDFService {
     }
 
     /**
+     * Check if a property of the ontology exists within the triple store
+     * @param ontUri The URI of the property
+     * @return Whether the graph exists
+     */
+    public boolean ontPropertyExists(String ontUri) {
+        ParameterizedSparqlString graphQuery = new ParameterizedSparqlString();
+        graphQuery.setCommandText("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>" +
+                                  "ASK WHERE { GRAPH ?graphName { ?ont rdfs:label ?label } }");
+        graphQuery.setIri("ont", ontUri);
+        graphQuery.setIri("graphName", rdfService + "ontologies");
+        Query query = QueryFactory.create(graphQuery.toString());
+        try (QueryExecution qexec = QueryExecutionFactory.createServiceRequest(rdfService, query)) {
+            return qexec.execAsk();
+        }
+    }
+
+    /**
      * Get the label and doc strings for a workflow resource
-     * @param graphName The graph containing the model
      * @param workflowURI The URI of the workflow
      * @return Result set with label and doc strings
      */
-    public ResultSet getLabelAndDoc(String graphName, String workflowURI) {
+    public ResultSet getLabelAndDoc(String workflowURI) {
         ParameterizedSparqlString labelQuery = new ParameterizedSparqlString();
         labelQuery.setCommandText(queryCtx +
                 "SELECT ?label ?doc\n" +
                 "WHERE {\n" +
-                "  GRAPH ?graphName {" +
+                "  GRAPH ?wf {" +
                 "    OPTIONAL { ?wf sld:label|rdfs:label ?label }\n" +
                 "    OPTIONAL { ?wf sld:doc|rdfs:comment ?doc }\n" +
                 "  }" +
                 "}");
         labelQuery.setIri("wf", workflowURI);
-        labelQuery.setIri("graphName", rdfService + graphName);
         return runQuery(labelQuery);
     }
 
     /**
+     * Get the label for an ontology URL
+     * TODO: can be merged with getLabelAndDoc when cwltool namespace bug is resolved
+     * @param ontologyURI The format URI for the ontology
+     * @return Result set with label and doc strings
+     */
+    public String getOntLabel(String ontologyURI) {
+        ParameterizedSparqlString labelQuery = new ParameterizedSparqlString();
+        labelQuery.setCommandText("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>" +
+                "SELECT ?label\n" +
+                "WHERE {\n" +
+                "  GRAPH ?graphName {\n" +
+                "    ?ont rdfs:label ?label\n" +
+                "  }\n" +
+                "}\n");
+        labelQuery.setIri("ont", ontologyURI);
+        labelQuery.setIri("graphName", rdfService + "ontologies");
+        ResultSet result = runQuery(labelQuery);
+        if (result.hasNext()) {
+            return result.next().get("label").toString();
+        }
+        return null;
+    }
+
+    /**
      * Get the inputs for the workflow in the model
-     * @param graphName The graph containing the model
      * @param workflowURI URI of the workflow
      * @return The result set of inputs
      */
-    public ResultSet getInputs(String graphName, String workflowURI) {
+    public ResultSet getInputs(String workflowURI) {
         ParameterizedSparqlString inputsQuery = new ParameterizedSparqlString();
         inputsQuery.setCommandText(queryCtx +
                 "SELECT ?name ?type ?format ?label ?doc\n" +
                 "WHERE {\n" +
-                "  GRAPH ?graphName {" +
+                "  GRAPH ?wf {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:inputs ?name .\n" +
                 "    OPTIONAL { ?name sld:type ?type }\n" +
@@ -117,22 +164,20 @@ public class RDFService {
                 "  }" +
                 "}");
         inputsQuery.setIri("wf", workflowURI);
-        inputsQuery.setIri("graphName", rdfService + graphName);
         return runQuery(inputsQuery);
     }
 
     /**
      * Get the outputs for the workflow in the model
-     * @param graphName The graph containing the model
      * @param workflowURI URI of the workflow
      * @return The result set of outputs
      */
-    public ResultSet getOutputs(String graphName, String workflowURI) {
+    public ResultSet getOutputs(String workflowURI) {
         ParameterizedSparqlString outputsQuery = new ParameterizedSparqlString();
         outputsQuery.setCommandText(queryCtx +
                 "SELECT ?name ?type ?format ?label ?doc\n" +
                 "WHERE {\n" +
-                "  GRAPH ?graphName {" +
+                "  GRAPH ?wf {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:outputs ?name .\n" +
                 "    OPTIONAL { ?name sld:type ?type }\n" +
@@ -142,17 +187,15 @@ public class RDFService {
                 "  }" +
                 "}");
         outputsQuery.setIri("wf", workflowURI);
-        outputsQuery.setIri("graphName", rdfService + graphName);
         return runQuery(outputsQuery);
     }
 
     /**
      * Get the steps for the workflow in the model
-     * @param graphName The graph containing the model
      * @param workflowURI URI of the workflow
      * @return The result set of steps
      */
-    public ResultSet getSteps(String graphName, String workflowURI) {
+    public ResultSet getSteps(String workflowURI) {
         ParameterizedSparqlString stepQuery = new ParameterizedSparqlString();
         stepQuery.setCommandText(queryCtx +
                 "SELECT ?step ?run ?runtype ?label ?doc ?stepinput ?default ?src\n" +
@@ -170,66 +213,60 @@ public class RDFService {
                 "  }" +
                 "}");
         stepQuery.setIri("wf", workflowURI);
-        stepQuery.setIri("graphName", rdfService + graphName);
         return runQuery(stepQuery);
     }
 
     /**
      * Get links between steps for the workflow in the model
-     * @param graphName The graph containing the model
      * @param workflowURI URI of the workflow
      * @return The result set of step links
      */
-    public ResultSet getStepLinks(String graphName, String workflowURI) {
+    public ResultSet getStepLinks(String workflowURI) {
         ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
         linkQuery.setCommandText(queryCtx +
                 "SELECT ?src ?dest ?default\n" +
                 "WHERE {\n" +
-                "  GRAPH ?graphName {" +
+                "  GRAPH ?wf {" +
                 "    ?wf Workflow:steps ?step .\n" +
                 "    ?step cwl:in ?dest .\n" +
                 "    { ?dest cwl:source ?src } UNION { ?dest cwl:default ?default }\n" +
                 "  }" +
                 "}");
         linkQuery.setIri("wf", workflowURI);
-        linkQuery.setIri("graphName", rdfService + graphName);
         return runQuery(linkQuery);
     }
 
     /**
      * Get links between steps and outputs for the workflow in the model
-     * @param graphName The graph containing the model
      * @param workflowURI URI of the workflow
      * @return The result set of steps
      */
-    public ResultSet getOutputLinks(String graphName, String workflowURI) {
+    public ResultSet getOutputLinks(String workflowURI) {
         ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
         linkQuery.setCommandText(queryCtx +
                 "SELECT ?src ?dest\n" +
                 "WHERE {\n" +
-                "  GRAPH ?graphName {" +
+                "  GRAPH ?wf {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:outputs ?dest .\n" +
                 "    ?dest cwl:outputSource ?src\n" +
                 "  }" +
                 "}");
         linkQuery.setIri("wf", workflowURI);
-        linkQuery.setIri("graphName", rdfService + graphName);
         return runQuery(linkQuery);
     }
 
     /**
      * Gets the docker requirement and pull link for a workflow
-     * @param graphName The graph containing the model
      * @param workflowURI URI of the workflow
      * @return Result set of docker hint and pull link
      */
-    public ResultSet getDockerLink(String graphName, String workflowURI) {
+    public ResultSet getDockerLink(String workflowURI) {
         ParameterizedSparqlString dockerQuery = new ParameterizedSparqlString();
         dockerQuery.setCommandText(queryCtx +
                 "SELECT ?docker ?pull\n" +
                 "WHERE {\n" +
-                "  GRAPH ?graphName {" +
+                "  GRAPH ?wf {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    { ?wf cwl:requirements ?docker } UNION { ?wf cwl:hints ?docker} .\n" +
                 "    ?docker rdf:type cwl:DockerRequirement\n" +
@@ -237,7 +274,6 @@ public class RDFService {
                 "  }" +
                 "}");
         dockerQuery.setIri("wf", workflowURI);
-        dockerQuery.setIri("graphName", rdfService + graphName);
         return runQuery(dockerQuery);
     }
 

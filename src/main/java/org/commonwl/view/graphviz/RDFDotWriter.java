@@ -36,14 +36,12 @@ import java.util.*;
  */
 public class RDFDotWriter extends DotWriter {
 
-    private String graphName;
     private RDFService rdfService;
     private Map<String, String> subworkflows = new HashMap<>();
 
-    public RDFDotWriter(Writer writer, RDFService rdfService, String graphName) {
+    public RDFDotWriter(Writer writer, RDFService rdfService) {
         super(writer);
         this.rdfService = rdfService;
-        this.graphName = graphName;
     }
 
     /**
@@ -74,7 +72,7 @@ public class RDFDotWriter extends DotWriter {
         writeLine("    label = \"Workflow Inputs\";");
 
         // Write each of the inputs as a node
-        ResultSet inputs = rdfService.getInputs(graphName, workflowUri);
+        ResultSet inputs = rdfService.getInputs(workflowUri);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
             writeInputOutput(workflowUri, input);
@@ -97,7 +95,7 @@ public class RDFDotWriter extends DotWriter {
         writeLine("    label = \"Workflow Outputs\";");
 
         // Write each of the outputs as a node
-        ResultSet outputs = rdfService.getOutputs(graphName, workflowUri);
+        ResultSet outputs = rdfService.getOutputs(workflowUri);
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
             writeInputOutput(workflowUri, output);
@@ -115,7 +113,7 @@ public class RDFDotWriter extends DotWriter {
      */
     private void writeSteps(String workflowUri, boolean subworkflow) throws IOException {
 
-        ResultSet steps = rdfService.getSteps(graphName, workflowUri);
+        ResultSet steps = rdfService.getSteps(workflowUri);
         Set<String> addedSteps = new HashSet<>();
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
@@ -157,7 +155,7 @@ public class RDFDotWriter extends DotWriter {
      */
     private void writeStepLinks(String workflowUri) throws IOException {
         // Write links between steps
-        ResultSet stepLinks = rdfService.getStepLinks(graphName, workflowUri);
+        ResultSet stepLinks = rdfService.getStepLinks(workflowUri);
         int defaultCount = 1;
         while (stepLinks.hasNext()) {
             QuerySolution stepLink = stepLinks.nextSolution();
@@ -194,7 +192,7 @@ public class RDFDotWriter extends DotWriter {
         }
 
         // Write links between steps and outputs
-        ResultSet outputLinks = rdfService.getOutputLinks(graphName, workflowUri);
+        ResultSet outputLinks = rdfService.getOutputLinks(workflowUri);
         while (outputLinks.hasNext()) {
             QuerySolution outputLink = outputLinks.nextSolution();
             String sourceID = nodeIDFromUri(workflowUri, outputLink.get("src").toString());
