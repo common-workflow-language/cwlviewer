@@ -59,7 +59,7 @@ public class WorkflowFormValidator {
         // If not null and isn't just whitespace
         if (!e.hasErrors()) {
             // Check for valid CWL file
-            GithubDetails githubInfo = githubService.detailsFromFileURL(form.getGithubURL());
+            GithubDetails githubInfo = githubService.detailsFromFileURL(form.getUrl());
             if (githubInfo != null) {
                 try {
                     // Downloads the workflow file to check for existence
@@ -67,16 +67,16 @@ public class WorkflowFormValidator {
                         return githubInfo;
                     }
                 } catch (IOException ex) {
-                    logger.error("Given URL " + form.getGithubURL() + " was not a .cwl file");
+                    logger.error("Given URL " + form.getUrl() + " was not a .cwl file");
                     e.rejectValue("githubURL", "githubURL.missingWorkflow", "Workflow was not found at the given Github URL");
                 }
             } else {
                 // Check for valid Github directory
-                githubInfo = githubService.detailsFromDirURL(form.getGithubURL());
+                githubInfo = githubService.detailsFromDirURL(form.getUrl());
                 if (githubInfo != null) {
                    return githubInfo;
                 } else {
-                    logger.error("The Github URL " + form.getGithubURL() + " is not valid");
+                    logger.error("The Github URL " + form.getUrl() + " is not valid");
                     e.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
                 }
             }

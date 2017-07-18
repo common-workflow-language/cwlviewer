@@ -21,27 +21,27 @@ package org.commonwl.view.workflow;
 
 /**
  * Represents the submission form on the main page to create a new workflow
- * Currently just contains a github URL
+ * Currently just contains a Github or Gitlab URL
  */
 public class WorkflowForm {
 
-    private String githubURL;
+    private String url;
 
     public WorkflowForm() {}
 
-    public WorkflowForm(String githubURL) {
-        if (githubURL != null) {
-            this.githubURL = trimTrailingSlashes(githubURL);
+    public WorkflowForm(String url) {
+        if (url != null) {
+            this.url = trimTrailingSlashes(url);
         }
     }
 
-    public String getGithubURL() {
-        return githubURL;
+    public String getUrl() {
+        return url;
     }
 
-    public void setGithubURL(String githubURL) {
-        if (githubURL != null) {
-            this.githubURL = trimTrailingSlashes(githubURL);
+    public void setUrl(String url) {
+        if (url != null) {
+            this.url = trimTrailingSlashes(url);
         }
     }
 

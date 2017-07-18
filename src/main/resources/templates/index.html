@@ -44,31 +44,31 @@
                     <div class="alert alert-info">
                         <p>Want to generate visualisations in build scripts or from another automated process? Find out about <a href="/apidocs" alt="API Documentation">our API</a></p>
                     </div>
+                    <div class="alert alert-grey">
+                        <strong>Don't know what to view?</strong> Try these from <i>common-workflow-language/workflows</i>:
+                        <a href="/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/compile/compile1.cwl">compile</a>,
+                        <a href="/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/make-to-cwl/dna.cwl">make-to-cwl</a>,
+                        <a href="/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl">lobSTR</a>,
+                        <a href="/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/scidap/bam-genomecov-bigwig-rna-dutp.cwl">scidap</a>
+                        or <a href="/workflows">explore the collection</a>
+                    </div>
 
                     <hr/>
 
-                    <h2>Workflow from Github URL</h2>
-                    <p>Provide a Github link to the workflow here</p>
+                    <h2>Workflow from Github/Gitlab URL</h2>
+                    <p>Provide a Github or Gitlab link to the workflow here</p>
                     <form id="add" action="#" th:action="@{/workflows}" th:object="${workflowForm}" method="POST">
                         <div class="alert alert-danger" th:if="${errors} != null and ${errors.hasErrors()}">
                             <div th:each="error : ${errors.getAllErrors()}">
                                 <strong>Error:</strong> <span th:text="${error.getDefaultMessage()}">Error message here</span>
                             </div>
                         </div>
-                        <div class="alert alert-danger" th:if="${#fields.hasErrors('githubURL')}">
-                            <strong>Error:</strong> <span th:errors="*{githubURL}">Error message here</span>
-                        </div>
-                        <div class="alert alert-grey">
-                            <strong>Don't know what to view?</strong> Try these from <i>common-workflow-language/workflows</i>:
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/compile/compile1.cwl">compile</a>,
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/make-to-cwl/dna.cwl">make-to-cwl</a>,
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl">lobSTR</a>,
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/scidap/bam-genomecov-bigwig-rna-dutp.cwl">scidap</a>
-                            or <a href="/workflows">explore the collection</a>
+                        <div class="alert alert-danger" th:if="${#fields.hasErrors('url')}">
+                            <strong>Error:</strong> <span th:errors="*{url}">Error message here</span>
                         </div>
                         <div class="input-group">
-                            <label for="githubURL" class="sr-only">Github URL</label>
-                            <input type="text" class="form-control" placeholder="Github URL" id="githubURL" name="githubURL" th:field="*{githubURL}" th:value="${formURL}" required="true" />
+                            <label for="url" class="sr-only">Github or Gitlab URL</label>
+                            <input type="text" class="form-control" placeholder="Github or Gitlab URL" id="url" name="url" th:field="*{url}" th:value="${formURL}" required="true" />
                             <span class="input-group-btn">
                                 <button class="btn btn-primary" type="submit">Parse Workflow</button>
                             </span>
@@ -85,11 +85,11 @@
                                 <strong>Error:</strong> <span th:text="${error.getDefaultMessage()}">Error message here</span>
                             </div>
                         </div>
-                        <div class="alert alert-danger" th:if="${#fields.hasErrors('githubURL')}">
-                            <strong>Error:</strong> <span th:errors="*{githubURL}">Error message here</span>
+                        <div class="alert alert-danger" th:if="${#fields.hasErrors('url')}">
+                            <strong>Error:</strong> <span th:errors="*{url}">Error message here</span>
                         </div>
                         <label for="repoURL">Repository URL</label>
-                        <input type="text" class="form-control" placeholder="Repository URL (HTTPS)" id="repoURL" name="repoURL" th:field="*{githubURL}" th:value="${formURL}" required="true" />
+                        <input type="text" class="form-control" placeholder="Repository URL (HTTPS)" id="repoURL" name="repoURL" th:field="*{url}" th:value="${formURL}" required="true" />
                         <div class="row" style="margin-top:10px;margin-bottom:10px;">
                             <div class="col-md-6">
                                 <label for="branch">Branch Name/Commit ID</label>
@@ -107,7 +107,5 @@
         </div>
 
         <div th:replace="fragments/footer :: copy"></div>
-
-        <script src="/bower_components/requirejs/require.js" data-main="/js/main.js"></script>
     </body>
 </html>
