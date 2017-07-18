@@ -63,7 +63,7 @@ public class CWLServiceTest {
         Model workflowModel = ModelFactory.createDefaultModel();
         workflowModel.read(new ByteArrayInputStream(readFileToString(packedWorkflowRdf).getBytes()), null, "TURTLE");
         Dataset workflowDataset = DatasetFactory.create();
-        workflowDataset.addNamedModel("http://madeup.endpoint/github.com/common-workflow-language/workflows/master/workflows/make-to-cwl/dna.cwl", workflowModel);
+        workflowDataset.addNamedModel("https://cdn.rawgit.com/common-workflow-language/workflows/master/workflows/make-to-cwl/dna.cwl#main", workflowModel);
 
         Answer queryRdf = new Answer<ResultSet>() {
             @Override
