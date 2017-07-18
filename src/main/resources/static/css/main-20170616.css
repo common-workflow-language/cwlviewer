@@ -86,6 +86,12 @@ body {
     padding-left: 45px;
 }
 
+#repoURL {
+    background: url("/img/gitlogo.png") no-repeat scroll 4px 1px;
+    background-size: 30px 30px;
+    padding-left: 45px;
+}
+
 #githubLogo {
     margin-right: 5px;
 }
