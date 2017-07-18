@@ -56,7 +56,7 @@ public class RDFService {
      */
     public void addToOntologies(Model model) {
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(rdfService);
-        accessor.putModel("ontologies", model);
+        accessor.add("ontologies", model);
     }
 
     /**
