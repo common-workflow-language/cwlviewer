@@ -26,12 +26,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.riot.RiotException;
 import org.commonwl.view.docker.DockerService;
 import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.github.GithubDetails;
@@ -187,9 +189,6 @@ public class CWLService {
                                              String packedWorkflowID) throws CWLValidationException {
 
         // Get RDF representation from cwltool
-        String graphName = String.format("github.com/%s/%s/%s/%s", githubInfo.getOwner(),
-                githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
-
         String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
                 githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
         if (packedWorkflowID != null) {
@@ -199,7 +198,7 @@ public class CWLService {
             url += packedWorkflowID;
         }
 
-        if (!rdfService.graphExists(graphName)) {
+        if (!rdfService.graphExists(url)) {
             String rdf = cwlTool.getRDF(url);
 
             // Create a workflow model from RDF representation
@@ -207,13 +206,13 @@ public class CWLService {
             model.read(new ByteArrayInputStream(rdf.getBytes()), null, "TURTLE");
 
             // Store the model
-            rdfService.storeModel(graphName, model);
+            rdfService.storeModel(url, model);
         }
 
         // Base workflow details
         String label = FilenameUtils.getName(githubInfo.getPath());
         String doc = null;
-        ResultSet labelAndDoc = rdfService.getLabelAndDoc(graphName, url);
+        ResultSet labelAndDoc = rdfService.getLabelAndDoc(url);
         if (labelAndDoc.hasNext()) {
             QuerySolution labelAndDocSoln = labelAndDoc.nextSolution();
             if (labelAndDocSoln.contains("label")) {
@@ -226,7 +225,7 @@ public class CWLService {
 
         // Inputs
         Map<String, CWLElement> wfInputs = new HashMap<>();
-        ResultSet inputs = rdfService.getInputs(graphName, url);
+        ResultSet inputs = rdfService.getInputs(url);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
             String inputName = rdfService.stepNameFromURI(url, input.get("name").toString());
@@ -268,6 +267,10 @@ public class CWLService {
                 }
             }
 
+            if (input.contains("format")) {
+                String format = input.get("format").toString();
+                setFormat(wfInput, format);
+            }
             if (input.contains("label")) {
                 wfInput.setLabel(input.get("label").toString());
             }
@@ -279,7 +282,7 @@ public class CWLService {
 
         // Outputs
         Map<String, CWLElement> wfOutputs = new HashMap<>();
-        ResultSet outputs = rdfService.getOutputs(graphName, url);
+        ResultSet outputs = rdfService.getOutputs(url);
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
             CWLElement wfOutput = new CWLElement();
@@ -326,6 +329,10 @@ public class CWLService {
                 wfOutput.addSourceID(rdfService.stepNameFromURI(url,
                         output.get("src").toString()));
             }
+            if (output.contains("format")) {
+                String format = output.get("format").toString();
+                setFormat(wfOutput, format);
+            }
             if (output.contains("label")) {
                 wfOutput.setLabel(output.get("label").toString());
             }
@@ -338,7 +345,7 @@ public class CWLService {
 
         // Steps
         Map<String, CWLStep> wfSteps = new HashMap<>();
-        ResultSet steps = rdfService.getSteps(graphName, url);
+        ResultSet steps = rdfService.getSteps(url);
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
             String uri = rdfService.stepNameFromURI(url, step.get("step").toString());
@@ -390,7 +397,7 @@ public class CWLService {
         }
 
         // Docker link
-        ResultSet dockerResult = rdfService.getDockerLink(graphName, url);
+        ResultSet dockerResult = rdfService.getDockerLink(url);
         String dockerLink = null;
         if (dockerResult.hasNext()) {
             QuerySolution docker = dockerResult.nextSolution();
@@ -407,7 +414,7 @@ public class CWLService {
 
         // Generate DOT graph
         StringWriter graphWriter = new StringWriter();
-        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService, graphName);
+        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService);
         try {
             RDFDotWriter.writeGraph(url);
             workflowModel.setVisualisationDot(graphWriter.toString());
@@ -468,6 +475,26 @@ public class CWLService {
                     FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
         }
 
+    }
+
+    /**
+     * Set the format for an input or output, handling ontologies
+     * @param inputOutput The input or output CWL Element
+     * @param format The format URI
+     */
+    private void setFormat(CWLElement inputOutput, String format) {
+        inputOutput.setFormat(format);
+        try {
+            if (!rdfService.ontPropertyExists(format)) {
+                Model ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+                ontModel.read(format, null, "RDF/XML");
+                rdfService.addToOntologies(ontModel);
+            }
+            String formatLabel = rdfService.getOntLabel(format);
+            inputOutput.setType(inputOutput.getType() + " (" + formatLabel + " format)");
+        } catch (RiotException ex) {
+            inputOutput.setType(inputOutput.getType() + " (format)");
+        }
     }
 
     /**

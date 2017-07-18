@@ -33,6 +33,7 @@ public class CWLElement {
     private String label;
     private String doc;
     private String type;
+    private String format;
     private List<String> sourceID;
     private String defaultVal;
 
@@ -62,6 +63,22 @@ public class CWLElement {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    public List<String> getSourceID() {
+        return sourceID;
+    }
+
+    public void setSourceID(List<String> sourceID) {
+        this.sourceID = sourceID;
     }
 
     public List<String> getSourceIDs() {

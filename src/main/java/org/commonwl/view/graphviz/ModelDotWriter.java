@@ -144,10 +144,12 @@ public class ModelDotWriter extends DotWriter {
         // Workaround to force outputs to lowest ranking, see #104
         writeLine("");
         writeLine("  // Invisible links to force outputs to be at lowest rank");
-        for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
-            writeLine("  \"" + step.getKey() + "\" -> \"" +
-                    workflow.getOutputs().keySet().iterator().next() +
-                    "\" [style=invis];");
+        if (workflow.getOutputs().size() > 0) {
+            for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
+                writeLine("  \"" + step.getKey() + "\" -> \"" +
+                        workflow.getOutputs().keySet().iterator().next() +
+                        "\" [style=invis];");
+            }
         }
 
     }

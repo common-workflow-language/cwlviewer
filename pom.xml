@@ -93,9 +93,14 @@
             <artifactId>jackson-core</artifactId>
             <version>2.9.0.pr4</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-core</artifactId>
+            <version>3.3.0</version>
+        </dependency>
     </dependencies>
 
-	<build>
+    <build>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
