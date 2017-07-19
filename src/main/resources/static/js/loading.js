@@ -23,7 +23,7 @@
 requirejs.config({
     baseUrl: '/bower_components',
     paths: {
-        jquery: 'jquery/dist/jquery.min',
+        jquery: 'jquery/dist/jquery.min'
     }
 });
 
