@@ -33,7 +33,7 @@ requirejs.config({
 require(['jquery'],
     function ($) {
         $(".example").click(function(e) {
-            $("#url").val($(this).attr("href"));
+            $("#url").val($(this).attr("href")).trigger("change");
             e.preventDefault();
         });
     });
