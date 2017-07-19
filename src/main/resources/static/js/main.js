@@ -63,10 +63,13 @@ require(['jquery'],
         /**
          * Clear warnings when fields change
          */
-        $("input").keyup(function() {
-            var field = $(this);
-            field.parent().removeClass("has-error");
-            field.next().text("");
+        $("input").keyup(function(e) {
+            // Fix for enter key being detected as a change
+            if (e.keyCode != 13) {
+                var field = $(this);
+                field.parent().removeClass("has-error");
+                field.next().text("");
+            }
         });
 
         /**
