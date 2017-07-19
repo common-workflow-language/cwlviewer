@@ -39,25 +39,70 @@ require(['jquery'],
     });
 
 /**
- * Validation for URL
+ * Validation for form
  */
 require(['jquery'],
     function ($) {
-        $('#url').on('input', function() {
-            var generalPattern = "\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
-            var githubPattern = "^https?:\\/\\/github\\.com" + generalPattern;
-            var gitlabPattern = "^https?:\\/\\/gitlab\\.com" + generalPattern;
-            var gitPattern = "((git|ssh|http(s)?)|(git@[\\w\\.]+))(:(//)?)([\\w\\.@\\:/\\-~]+)(\\.git)(/)?";
+        var generalPattern = "\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
+        var githubPattern = new RegExp("^https?:\\/\\/github\\.com" + generalPattern);
+        var gitlabPattern = new RegExp("^https?:\\/\\/gitlab\\.com" + generalPattern);
+        var gitPattern = new RegExp("((git|ssh|http(s)?)|(git@[\\w\\.]+))(:(//)?)([\\w\\.@\\:/\\-~]+)(\\.git)(/)?");
 
-            var input = $(this).text();
-            if (input.search(githubPattern) > 0 || input.search(gitlabPattern) > 0) {
-                $("#extraInputs").fadeOut();
-                $(this).closest(".form-group").addClass("has-success");
-            } else if (input.search(gitPattern) > 0) {
+        /**
+         * Show extra details in form if generic git repository
+         */
+        $("#url").on('change keyup paste', function () {
+            var input = $(this).val();
+            if (gitPattern.test(input)) {
                 $("#extraInputs").fadeIn();
+            } else {
+                $("#extraInputs").fadeOut();
             }
-
-            //$(this).closest(".form-group").addClass("has-warning");
-            //$(".validateMessage").text("Git repository URL must be HTTP or HTTPS");
         });
+
+        /**
+         * Clear warnings when fields change
+         */
+        $("input").keyup(function() {
+            var field = $(this);
+            field.parent().removeClass("has-error");
+            field.next().text("");
+        });
+
+        /**
+         * Validate form before submit
+         */
+        $('#add').submit(function() {
+            var pathPattern = new RegExp("^\\/?(\\w+\\/)*\\w+\\.cwl$");
+            var input = $("#url").val();
+            if (gitPattern.test(input)) {
+                var success = true;
+                if (!$("#branch").val()) {
+                    addWarning("branch", "You must provide a branch name for the workflow");
+                    success = false;
+                }
+                if (!$("#path").val()) {
+                    addWarning("path", "You must provide a path to the workflow");
+                    success = false;
+                } else if (!pathPattern.test($("#path").val())) {
+                    addWarning("path", "Must be a valid path from the root to a .cwl workflow");
+                    success = false;
+                }
+                return success;
+            } else if (!githubPattern.test(input) && !gitlabPattern.test(input)) {
+                addWarning("url", "Must be a URL to a workflow on Gitlab or Github, or a Git repository URL");
+                return false;
+            }
+        });
+
+        /**
+         * Adds warning state and message to the a field
+         * @param id The ID of the field
+         * @param message The message to be displayed on the form element
+         */
+        function addWarning(id, message) {
+            var field = $("#" + id);
+            field.parent().addClass("has-error");
+            field.next().text(message);
+        }
     });
