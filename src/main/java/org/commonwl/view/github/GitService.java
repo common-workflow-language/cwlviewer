@@ -21,13 +21,14 @@ package org.commonwl.view.github;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Ref;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.util.Map;
+import java.nio.file.Path;
 
 import static java.util.Collections.singleton;
+import static org.apache.jena.ext.com.google.common.io.Files.createTempDir;
 
 /**
  * Handles Git related functionality
@@ -35,31 +36,29 @@ import static java.util.Collections.singleton;
 @Service
 public class GitService {
 
-    /**
-     * Gets a map of commits and their references from a remote repository
-     * @param gitDetails
-     * @return
-     * @throws GitAPIException
-     */
-    public Map<String, Ref> getCommits(GitDetails gitDetails) throws GitAPIException {
-        return Git.lsRemoteRepository()
-                .setHeads(true)
-                .setTags(true)
-                .setRemote(gitDetails.getRepoUrl())
-                .callAsMap();
+    // Location to check out git repositories into
+    private Path gitStorage;
+
+    // Whether submodules are also cloned
+    private boolean cloneSubmodules;
+
+    @Autowired
+    public GitService(@Value("${gitStorage}") Path gitStorage,
+                      @Value("${gitAPI.cloneSubmodules}") boolean cloneSubmodules) {
+        this.gitStorage = gitStorage;
+        this.cloneSubmodules = cloneSubmodules;
     }
 
     /**
      * Clone a repository into a local directory
      * @param gitDetails The details of the Git repository
-     * @param dest The destination folder for the clone
      */
-    public Git cloneRepository(GitDetails gitDetails, File dest)
+    public Git cloneRepository(GitDetails gitDetails)
             throws GitAPIException {
         return Git.cloneRepository()
-                .setCloneSubmodules(true)
+                .setCloneSubmodules(cloneSubmodules)
                 .setURI(gitDetails.getRepoUrl())
-                .setDirectory(dest)
+                .setDirectory(createTempDir())
                 .setBranchesToClone(singleton("refs/heads/" + gitDetails.getBranch()))
                 .setBranch("refs/heads/" + gitDetails.getBranch())
                 .call();

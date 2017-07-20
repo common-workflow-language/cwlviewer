@@ -19,38 +19,30 @@
 
 package org.commonwl.view.researchobject;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
-import org.apache.taverna.robundle.manifest.*;
+import org.apache.taverna.robundle.manifest.Agent;
+import org.apache.taverna.robundle.manifest.Manifest;
+import org.apache.taverna.robundle.manifest.PathAnnotation;
 import org.commonwl.view.cwl.CWLTool;
 import org.commonwl.view.github.GitDetails;
 import org.commonwl.view.github.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
-import org.eclipse.egit.github.core.CommitUser;
-import org.eclipse.egit.github.core.RepositoryCommit;
-import org.eclipse.egit.github.core.RepositoryContents;
-import org.eclipse.egit.github.core.User;
+import org.eclipse.jgit.api.Git;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -102,16 +94,16 @@ public class ROBundleService {
     }
 
     /**
-     * Creates a new research object bundle for a workflow from a Github repository
+     * Creates a new research object bundle for a workflow from a Git repository
      * @param workflow The workflow to create the research object for
      * @return The constructed bundle
      */
-    public Bundle newBundleFromGithub(Workflow workflow, GitDetails githubInfo) throws IOException {
+    public Bundle createBundle(Workflow workflow, GitDetails gitInfo) throws IOException {
 
         // Create a new RO bundle
         Bundle bundle = Bundles.createBundle();
         Manifest manifest = bundle.getManifest();
-
+/*
         // Simplified attribution for RO bundle
         try {
             // Tool attribution in createdBy
@@ -121,7 +113,7 @@ public class ROBundleService {
             // TODO: Make this importedBy/On/From
             manifest.setRetrievedBy(appAgent);
             manifest.setRetrievedOn(manifest.getCreatedOn());
-            manifest.setRetrievedFrom(new URI(githubInfo.getUrl()));
+            manifest.setRetrievedFrom(new URI(gitInfo.getUrl()));
 
             // Make a directory in the RO bundle to store the files
             Path bundleRoot = bundle.getRoot();
@@ -129,9 +121,9 @@ public class ROBundleService {
             Files.createDirectory(bundleFiles);
 
             // Add the files from the Github repo to this workflow
-            List<RepositoryContents> repoContents = githubService.getContents(githubInfo);
             Set<HashableAgent> authors = new HashSet<>();
-            addFilesToBundle(bundle, githubInfo, repoContents, bundleFiles, authors);
+            Git gitRepo = Git.open(new File(workflow.getGitRepoPath()));
+            addFilesToBundle(bundle, gitInfo, gitRepo, bundleFiles, authors);
 
             // Add combined authors
             manifest.setAuthoredBy(new ArrayList<>(authors));
@@ -161,13 +153,13 @@ public class ROBundleService {
 
             // Git2prov history
             List<Path> history = new ArrayList<>();
-            history.add(Paths.get("http://git2prov.org/git2prov?giturl=https://github.com/" + githubInfo.getOwner()
-                    + "/" + githubInfo.getRepoName() + "&serialization=PROV-JSON"));
+            history.add(Paths.get("http://git2prov.org/git2prov?giturl=" +
+                    gitInfo.getRepoUrl() + "&serialization=PROV-JSON"));
             bundle.getManifest().setHistory(history);
 
         } catch (URISyntaxException ex) {
             logger.error("Error creating URI for RO Bundle", ex);
-        }
+        }*/
 
         // Return the completed bundle
         return bundle;
@@ -177,23 +169,20 @@ public class ROBundleService {
     /**
      * Add files to this bundle from a list of Github repository contents
      * @param bundle The RO bundle to add files/directories to
-     * @param githubInfo The information used to access the repository
-     * @param repoContents The contents of the Github repository
+     * @param gitInfo The information used to access the repository
+     * @param gitRepo The Git repository
      * @param path The path in the Research Object to add the files
      */
-    private void addFilesToBundle(Bundle bundle, GitDetails githubInfo,
-                                  List<RepositoryContents> repoContents, Path path,
+    private void addFilesToBundle(Bundle bundle, GitDetails gitInfo,
+                                  Git gitRepo, Path path,
                                   Set<HashableAgent> authors) throws IOException {
-
-        // Loop through repo contents and add them
-        for (RepositoryContents repoContent : repoContents) {
-
-            // Parse subdirectories if they exist
-            if (repoContent.getType().equals(GitService.TYPE_DIR)) {
+        /*File[] files = gitRepo.getRepository().getDirectory().listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
 
                 // Get the contents of the subdirectory
-                GitDetails githubSubdir = new GitDetails(githubInfo.getOwner(),
-                        githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+                GitDetails githubSubdir = new GitDetails(gitInfo.getOwner(),
+                        gitInfo.getRepoName(), gitInfo.getBranch(), repoContent.getPath());
                 List<RepositoryContents> subdirectory = githubService.getContents(githubSubdir);
 
                 // Create a new folder in the RO for it
@@ -201,15 +190,13 @@ public class ROBundleService {
                 Files.createDirectory(subdirPath);
 
                 // Add the files in the subdirectory to this new folder
-                addFilesToBundle(bundle, githubInfo, subdirectory, subdirPath, authors);
+                addFilesToBundle(bundle, gitInfo, subdirectory, subdirPath, authors);
 
-                // Otherwise this is a file so add to the bundle
-            } else if (repoContent.getType().equals(GitService.TYPE_FILE)) {
-
+            } else {
                 try {
                     // Raw URI of the bundle
-                    GitDetails githubFile = new GitDetails(githubInfo.getOwner(),
-                            githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
+                    GitDetails githubFile = new GitDetails(gitInfo.getOwner(),
+                            gitInfo.getRepoName(), gitInfo.getBranch(), repoContent.getPath());
 
                     // Where to store the new file in bundle
                     Path bundleFilePath = path.resolve(repoContent.getName());
@@ -297,7 +284,7 @@ public class ROBundleService {
                     logger.error("Error creating URI for RO Bundle", ex);
                 }
             }
-        }
+        }*/
     }
 
     /**

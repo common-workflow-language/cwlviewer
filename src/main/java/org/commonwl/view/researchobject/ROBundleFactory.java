@@ -57,7 +57,7 @@ public class ROBundleFactory {
     }
 
     /**
-     * Creates a new Workflow Research Object Bundle from a Github URL
+     * Creates a new Workflow Research Object Bundle from Git details
      * and saves it to a file
      * @param workflow The workflow to generate a RO bundle for
      * @throws IOException Any API errors which may have occurred
@@ -69,11 +69,11 @@ public class ROBundleFactory {
 
         // Get the whole containing folder, not just the workflow itself
         GitDetails githubInfo = workflow.getRetrievedFrom();
-        GitDetails roDetails = new GitDetails(githubInfo.getOwner(), githubInfo.getRepoName(),
-                githubInfo.getBranch(), FilenameUtils.getPath(githubInfo.getPath()));
+        GitDetails roDetails = new GitDetails(githubInfo.getRepoUrl(), githubInfo.getBranch(),
+                FilenameUtils.getPath(githubInfo.getPath()), githubInfo.getType());
 
         // Create a new Research Object Bundle with Github contents
-        Bundle bundle = roBundleService.newBundleFromGithub(workflow, roDetails);
+        Bundle bundle = roBundleService.createBundle(workflow, roDetails);
 
         // Save the bundle to the storage location in properties
         Path bundleLocation = roBundleService.saveToFile(bundle);

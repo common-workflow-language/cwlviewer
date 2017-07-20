@@ -25,6 +25,7 @@ import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.github.GitDetails;
 import org.commonwl.view.github.GitType;
 import org.commonwl.view.graphviz.GraphVizService;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,10 +123,10 @@ public class WorkflowController {
                 try {
                     workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
                 } catch (CWLValidationException ex) {
-                    bindingResult.rejectValue("githubURL", "cwltool.validationError", ex.getMessage());
+                    bindingResult.rejectValue("url", "cwltool.validationError", ex.getMessage());
                     return new ModelAndView("index");
                 } catch (Exception ex) {
-                    bindingResult.rejectValue("githubURL", "githubURL.parsingError");
+                    bindingResult.rejectValue("url", "githubURL.parsingError");
                     logger.error(ex.getMessage(), ex);
                     return new ModelAndView("index");
                 }
@@ -175,10 +176,12 @@ public class WorkflowController {
                 if (!errors.hasErrors()) {
                     try {
                         queued = workflowService.createQueuedWorkflow(gitDetails);
+                    } catch (GitAPIException ex) {
+                        errors.rejectValue("url", "git.retrievalError", ex.getMessage());
                     } catch (CWLValidationException ex) {
-                        errors.rejectValue("githubURL", "cwltool.validationError", ex.getMessage());
+                        errors.rejectValue("url", "cwltool.validationError", ex.getMessage());
                     } catch (IOException ex) {
-                        errors.rejectValue("githubURL", "githubURL.parsingError", "The workflow could not be parsed from the given URL");
+                        errors.rejectValue("url", "githubURL.parsingError", "The workflow could not be parsed from the given URL");
                     }
                 }
                 // Redirect to main page with errors if they occurred

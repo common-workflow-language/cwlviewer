@@ -21,6 +21,7 @@ package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.github.GitType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,9 +98,9 @@ public class WorkflowRESTController {
         // Run validator which checks the github URL is valid
         WorkflowForm workflowForm = new WorkflowForm(url);
         BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
-        GitDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, errors);
+        GitDetails gitInfo = workflowFormValidator.validateAndParse(workflowForm, errors);
 
-        if (errors.hasErrors() || githubInfo == null) {
+        if (errors.hasErrors() || gitInfo == null) {
             String error;
             if (errors.hasErrors()) {
                 error = errors.getAllErrors().get(0).getDefaultMessage();
@@ -109,40 +110,31 @@ public class WorkflowRESTController {
             Map<String, String> message = Collections.singletonMap("message", "Error: " + error);
             return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
         } else {
-            if (githubInfo.getPath().endsWith(".cwl")) {
-                // Get workflow or create if does not exist
-                Workflow workflow = workflowService.getWorkflow(githubInfo);
-                if (workflow == null) {
-                    // Check if already queued
-                    QueuedWorkflow queued = workflowService.getQueuedWorkflow(githubInfo);
-                    if (queued == null) {
-                        try {
-                            queued = workflowService.createQueuedWorkflow(githubInfo);
-                        } catch (CWLValidationException ex) {
-                            Map<String, String> message = Collections.singletonMap("message", "Error:" + ex.getMessage());
-                            return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
-                        } catch (Exception ex) {
-                            Map<String, String> message = Collections.singletonMap("message",
-                                    "Error: Workflow could not be created from the provided cwl file");
-                            return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
-                        }
+            // Get workflow or create if does not exist
+            Workflow workflow = workflowService.getWorkflow(gitInfo);
+            if (workflow == null) {
+                // Check if already queued
+                QueuedWorkflow queued = workflowService.getQueuedWorkflow(gitInfo);
+                if (queued == null) {
+                    try {
+                        queued = workflowService.createQueuedWorkflow(gitInfo);
+                    } catch (CWLValidationException ex) {
+                        Map<String, String> message = Collections.singletonMap("message", "Error:" + ex.getMessage());
+                        return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
+                    } catch (Exception ex) {
+                        Map<String, String> message = Collections.singletonMap("message",
+                                "Error: Workflow could not be created from the provided cwl file");
+                        return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
                     }
-                    response.setHeader("Location", "/queue/" + queued.getId());
-                    response.setStatus(HttpServletResponse.SC_ACCEPTED);
-                    return null;
-                } else {
-                    // Workflow already exists and is equivalent
-                    response.setStatus(HttpServletResponse.SC_SEE_OTHER);
-                    String resourceLocation = "/workflows/github.com/" + githubInfo.getOwner()
-                            + "/" + githubInfo.getRepoName() + "/tree/" + githubInfo.getBranch()
-                            + "/" + githubInfo.getPath();
-                    response.setHeader("Location", resourceLocation);
-                    return null;
                 }
+                response.setHeader("Location", "/queue/" + queued.getId());
+                response.setStatus(HttpServletResponse.SC_ACCEPTED);
+                return null;
             } else {
-                Map<String, String> message = Collections.singletonMap("message",
-                        "Error: URL provided was not a .cwl file");
-                return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
+                // Workflow already exists and is equivalent
+                response.setStatus(HttpServletResponse.SC_SEE_OTHER);
+                response.setHeader("Location", gitInfo.getInternalUrl());
+                return null;
             }
         }
     }
@@ -166,7 +158,8 @@ public class WorkflowRESTController {
         path = WorkflowController.extractPath(path, 7);
 
         // Construct a GitDetails object to search for in the database
-        GitDetails gitDetails = new GitDetails(owner, repoName, branch, path);
+        GitDetails gitDetails = new GitDetails("https://github.com/" + owner + "/" +
+                repoName + ".git", branch, path, GitType.GITHUB);
 
         // Get workflow
         Workflow workflowModel = workflowService.getWorkflow(gitDetails);
@@ -192,10 +185,8 @@ public class WorkflowRESTController {
         }
 
         if (queuedWorkflow.getCwltoolStatus() == SUCCESS) {
-            GitDetails githubInfo = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
-            String resourceLocation = "/workflows/github.com/" + githubInfo.getOwner()
-                    + "/" + githubInfo.getRepoName() + "/tree/" + githubInfo.getBranch()
-                    + "/" + githubInfo.getPath();
+            GitDetails gitInfo = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
+            String resourceLocation = gitInfo.getInternalUrl();
             response.setHeader("Location", resourceLocation);
             response.setStatus(HttpServletResponse.SC_SEE_OTHER);
         }

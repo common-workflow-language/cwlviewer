@@ -31,7 +31,7 @@
     <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170616.css}" href="../static/css/main-20170616.css" />
 </head>
-<body th:with="githubURLPart=${workflow.retrievedFrom.getURL().replace('https://', '')}">
+<body th:with="githubURLPart=${workflow.retrievedFrom.getUrl().replace('https://', '')}">
 
 <nav th:replace="fragments/header :: navbar"></nav>
 
@@ -128,7 +128,7 @@ digraph G {
             <p th:text="${workflow.doc}">Workflow Doc</p>
         </div>
         <div class="col-md-6">
-            <a th:href="@{${workflow.retrievedFrom.getURL()}}" href="#" rel="noopener" target="_blank">
+            <a th:href="@{${workflow.retrievedFrom.getUrl()}}" href="#" rel="noopener" target="_blank">
                 <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
             </a>
         <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>

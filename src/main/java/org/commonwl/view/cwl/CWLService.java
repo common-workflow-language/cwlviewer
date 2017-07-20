@@ -35,12 +35,10 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RiotException;
 import org.commonwl.view.docker.DockerService;
-import org.commonwl.view.github.GitDetails;
 import org.commonwl.view.github.GitService;
 import org.commonwl.view.graphviz.ModelDotWriter;
 import org.commonwl.view.graphviz.RDFDotWriter;
 import org.commonwl.view.workflow.Workflow;
-import org.commonwl.view.workflow.WorkflowOverview;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -178,18 +176,15 @@ public class CWLService {
 
     /**
      * Create a workflow model from cwltool rdf output
-     * @param githubInfo The Github repository information
-     * @param latestCommit The latest commit ID
+     * @param workflowFile The workflow file to run cwltool on
      * @param packedWorkflowID The workflow ID if the file has multiple objects
      * @return The constructed workflow object
      */
-    public Workflow parseWorkflowWithCwltool(GitDetails githubInfo,
-                                             String latestCommit,
+    public Workflow parseWorkflowWithCwltool(File workflowFile,
                                              String packedWorkflowID) throws CWLValidationException {
 
         // Get RDF representation from cwltool
-        String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
-                githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
+        String url = workflowFile.toPath().toAbsolutePath().toString();
         if (packedWorkflowID != null) {
             if (packedWorkflowID.charAt(0) != '#') {
                 url += "#";
@@ -209,7 +204,7 @@ public class CWLService {
         }
 
         // Base workflow details
-        String label = FilenameUtils.getName(githubInfo.getPath());
+        String label = FilenameUtils.getName(url);
         String doc = null;
         ResultSet labelAndDoc = rdfService.getLabelAndDoc(url);
         if (labelAndDoc.hasNext()) {
@@ -422,57 +417,6 @@ public class CWLService {
         }
 
         return workflowModel;
-
-    }
-
-    /**
-     * Get an overview of a workflow
-     * @param githubInfo The details to access the workflow
-     * @return A constructed WorkflowOverview of the workflow
-     * @throws IOException Any API errors which may have occurred
-     */
-    public WorkflowOverview getWorkflowOverview(GitDetails githubInfo) throws IOException {
-
-        // Get the content of this file from Github
-        String fileContent = githubService.downloadFile(githubInfo);
-        int fileSizeBytes = fileContent.getBytes("UTF-8").length;
-
-        // Check file size limit before parsing
-        if (fileSizeBytes <= singleFileSizeLimit) {
-
-            // Parse file as yaml
-            JsonNode cwlFile = yamlStringToJson(fileContent);
-
-            // If the CWL file is packed there can be multiple workflows in a file
-            if (cwlFile.has(DOC_GRAPH)) {
-                // Packed CWL, find the first subelement which is a workflow and take it
-                for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
-                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
-                        cwlFile = jsonNode;
-                    }
-                }
-            }
-
-            // Can only make an overview if this is a workflow
-            if (extractProcess(cwlFile) == CWLProcess.WORKFLOW) {
-                // Use filename for label if there is no defined one
-                String path = FilenameUtils.getName(githubInfo.getPath());
-                String label = extractLabel(cwlFile);
-                if (label == null) {
-                    label = path;
-                }
-
-                // Return the constructed overview
-                return new WorkflowOverview(path, label, extractDoc(cwlFile));
-
-            } else {
-                return null;
-            }
-        } else {
-            throw new IOException("File '" + githubInfo.getPath() +  "' is over singleFileSizeLimit - " +
-                    FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +
-                    FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
-        }
 
     }
 

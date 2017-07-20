@@ -5,12 +5,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.springframework.data.annotation.Id;
 
-import java.io.File;
-
 /**
  * A workflow pending completion of cwltool
  */
-@JsonIgnoreProperties(value = {"id", "tempRepresentation", "gitRepoFolder"})
+@JsonIgnoreProperties(value = {"id", "tempRepresentation"})
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class QueuedWorkflow {
 
@@ -20,9 +18,6 @@ public class QueuedWorkflow {
 
     // Very barebones workflow to build loading thumbnail and overview
     private Workflow tempRepresentation;
-
-    // Directory in which the git repository is held while processing
-    private File gitRepoFolder;
 
     // Cwltool details
     private CWLToolStatus cwltoolStatus = CWLToolStatus.RUNNING;
@@ -39,14 +34,6 @@ public class QueuedWorkflow {
 
     public void setTempRepresentation(Workflow tempRepresentation) {
         this.tempRepresentation = tempRepresentation;
-    }
-
-    public File getGitRepoFolder() {
-        return gitRepoFolder;
-    }
-
-    public void setGitRepoFolder(File gitRepoFolder) {
-        this.gitRepoFolder = gitRepoFolder;
     }
 
     public CWLToolStatus getCwltoolStatus() {

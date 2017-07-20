@@ -32,6 +32,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
@@ -67,22 +68,21 @@ public class CWLToolRunner {
     }
 
     @Async
-    public void createWorkflowFromQueued(QueuedWorkflow queuedWorkflow)
+    public void createWorkflowFromQueued(QueuedWorkflow queuedWorkflow, File workflowFile)
             throws IOException, InterruptedException {
 
         Workflow tempWorkflow = queuedWorkflow.getTempRepresentation();
 
         // Parse using cwltool and replace in database
         try {
-            String commitSha = githubService.getCommitSha(tempWorkflow.getRetrievedFrom());
             Workflow newWorkflow = cwlService.parseWorkflowWithCwltool(
-                    tempWorkflow.getRetrievedFrom(), commitSha,
+                    workflowFile,
                     tempWorkflow.getPackedWorkflowID());
 
             // Success
             newWorkflow.setRetrievedFrom(tempWorkflow.getRetrievedFrom());
             newWorkflow.setRetrievedOn(new Date());
-            newWorkflow.setLastCommit(commitSha);
+            newWorkflow.setLastCommit(tempWorkflow.getLastCommit());
             newWorkflow.setCwltoolVersion(cwlToolVersion);
             workflowRepository.save(newWorkflow);
 

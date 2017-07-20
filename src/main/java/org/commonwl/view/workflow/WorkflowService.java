@@ -42,7 +42,6 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Calendar;
 import java.util.Date;
 
 @Service
@@ -219,15 +218,11 @@ public class WorkflowService {
     public QueuedWorkflow createQueuedWorkflow(GitDetails gitInfo)
             throws GitAPIException, CWLValidationException, IOException {
 
-        QueuedWorkflow queuedWorkflow = new QueuedWorkflow();
-
         // Clone repository to temporary folder
-        File localPath = File.createTempFile(gitInfo.getRepoUrl() + ":" + gitInfo.getBranch(), "");
-        queuedWorkflow.setGitRepoFolder(localPath);
         Git repo = null;
         while (repo == null) {
             try {
-                repo = gitService.cloneRepository(gitInfo, localPath);
+                repo = gitService.cloneRepository(gitInfo);
             } catch (RefNotFoundException ex) {
                 // Attempt slashes in branch fix
                 GitDetails correctedForSlash = transferPathToBranch(gitInfo);
@@ -238,6 +233,7 @@ public class WorkflowService {
                 }
             }
         }
+        File localPath = repo.getRepository().getDirectory();
         String latestCommit = repo.getRepository().findRef("HEAD").getObjectId().getName();
 
         Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
@@ -246,21 +242,24 @@ public class WorkflowService {
             throw new CWLValidationException("Given workflow path did not resolve to a location within the repository");
         }
 
-        Workflow basicModel = cwlService.parseWorkflowNative(new File(pathToWorkflowFile.toString()));
+        File workflowFile = new File(pathToWorkflowFile.toString());
+        Workflow basicModel = cwlService.parseWorkflowNative(workflowFile);
 
         // Set origin details
         basicModel.setRetrievedOn(new Date());
         basicModel.setRetrievedFrom(gitInfo);
         basicModel.setLastCommit(latestCommit);
+        basicModel.setGitRepoPath(localPath.toString());
 
         // Save the queued workflow to database
+        QueuedWorkflow queuedWorkflow = new QueuedWorkflow();
         queuedWorkflow.setTempRepresentation(basicModel);
         queuedWorkflowRepository.save(queuedWorkflow);
 
         // ASYNC OPERATIONS
         // Parse with cwltool and update model
         try {
-            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
+            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, workflowFile);
         } catch (Exception e) {
             logger.error("Could not update workflow with cwltool", e);
         }
@@ -270,8 +269,8 @@ public class WorkflowService {
     }
 
     /**
-     * Update a workflow by running cwltool
-     * @param queuedWorkflow The queue item to
+     * Retry the running of cwltool to create a new workflow
+     * @param queuedWorkflow The workflow to use to update
      */
     public void retryCwltool(QueuedWorkflow queuedWorkflow) {
         queuedWorkflow.setMessage(null);
@@ -327,7 +326,7 @@ public class WorkflowService {
      * @return Whether or not there are new commits
      */
     private boolean cacheExpired(Workflow workflow) {
-        try {
+        /*try {
             // Calculate expiration
             Calendar expireCal = Calendar.getInstance();
             expireCal.setTime(workflow.getRetrievedOn());
@@ -358,7 +357,8 @@ public class WorkflowService {
         } catch (Exception ex) {
             // Default to no expiry if there was an API error
             return false;
-        }
+        }*/
+        return false;
     }
 
     /**
