@@ -21,8 +21,8 @@ package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.github.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.eclipse.egit.github.core.RepositoryContents;
@@ -60,7 +60,7 @@ public class WorkflowServiceTest {
     public void getWorkflowsFromDirectory() throws Exception {
 
         // Mock Github service redirecting content query to the filesystem
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
+        GitService mockGithubService = Mockito.mock(GitService.class);
         Answer contentsAnswer = new Answer<List<RepositoryContents>>() {
             @Override
             public List<RepositoryContents> answer(InvocationOnMock invocation) throws Throwable {
@@ -71,7 +71,7 @@ public class WorkflowServiceTest {
                 for (File thisFile : fileList) {
                     RepositoryContents contentsEntry = new RepositoryContents();
                     if (thisFile.isFile()) {
-                        contentsEntry.setType(GitHubService.TYPE_FILE);
+                        contentsEntry.setType(GitService.TYPE_FILE);
                         contentsEntry.setSize(100);
                         contentsEntry.setName(thisFile.getName());
                         contentsEntry.setPath("workflows/lobSTR/" + thisFile.getName());
@@ -102,7 +102,7 @@ public class WorkflowServiceTest {
 
         // Get a list of workflows from the directory
         List<WorkflowOverview> list = testWorkflowService.getWorkflowsFromDirectory(
-                Mockito.mock(GithubDetails.class));
+                Mockito.mock(GitDetails.class));
 
         // 1 workflow should be found
         assertTrue(list.size() == 2);
@@ -123,7 +123,7 @@ public class WorkflowServiceTest {
     @Test
     public void getWorkflowCacheHasExpired() throws Exception {
 
-        GithubDetails githubInfo = new GithubDetails("owner", "branch", "sha", "path");
+        GitDetails githubInfo = new GitDetails("owner", "branch", "sha", "path");
 
         Workflow oldWorkflow = new Workflow("old", "This is the expired workflow",
                 new HashMap<>(), new HashMap<>(), new HashMap<>(), null);
@@ -140,7 +140,7 @@ public class WorkflowServiceTest {
         WorkflowRepository mockWorkflowRepo = Mockito.mock(WorkflowRepository.class);
         when(mockWorkflowRepo.findByRetrievedFrom(anyObject())).thenReturn(oldWorkflow);
 
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
+        GitService mockGithubService = Mockito.mock(GitService.class);
         when(mockGithubService.getCommitSha(anyObject())).thenReturn("master");
 
         CWLService mockCWLService = Mockito.mock(CWLService.class);
@@ -182,13 +182,13 @@ public class WorkflowServiceTest {
 
         // Create service under test
         WorkflowService testWorkflowService = new WorkflowService(
-                Mockito.mock(GitHubService.class), Mockito.mock(CWLService.class),
+                Mockito.mock(GitService.class), Mockito.mock(CWLService.class),
                 mockWorkflowRepo, Mockito.mock(QueuedWorkflowRepository.class),
                 Mockito.mock(ROBundleFactory.class),
                 Mockito.mock(GraphVizService.class),
                 Mockito.mock(CWLToolRunner.class), -1);
 
-        File fetchedBundle = testWorkflowService.getROBundle(Mockito.mock(GithubDetails.class));
+        File fetchedBundle = testWorkflowService.getROBundle(Mockito.mock(GitDetails.class));
         assertEquals(roBundlePath, fetchedBundle.getAbsolutePath());
 
     }

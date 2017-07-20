@@ -22,8 +22,8 @@ package org.commonwl.view.cwl;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.github.GitService;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowOverview;
 import org.junit.Before;
@@ -94,7 +94,7 @@ public class CWLServiceTest {
     public void parseLobSTRDraft3WorkflowNative() throws Exception {
 
         // Get mock Github service
-        GitHubService mockGithubService = getMockGithubService("workflows/lobSTR/",
+        GitService mockGithubService = getMockGithubService("workflows/lobSTR/",
                 "src/test/resources/cwl/lobstr-draft3/");
 
         // Test cwl service
@@ -102,7 +102,7 @@ public class CWLServiceTest {
                 rdfService, new CWLTool(), 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
-        GithubDetails lobSTRDraft3Details = new GithubDetails("common-workflow-language",
+        GitDetails lobSTRDraft3Details = new GitDetails("common-workflow-language",
                 "workflows", null, "workflows/lobSTR/lobSTR-workflow.cwl");
         Workflow lobSTRDraft3 = cwlService.parseWorkflowNative(lobSTRDraft3Details, "920c6be45f08e979e715a0018f22c532b024074f");
 
@@ -117,7 +117,7 @@ public class CWLServiceTest {
     public void parseLobSTRv1WorkflowNative() throws Exception {
 
         // Get mock Github service
-        GitHubService mockGithubService = getMockGithubService("workflows/lobSTR/",
+        GitService mockGithubService = getMockGithubService("workflows/lobSTR/",
                 "src/test/resources/cwl/lobstr-draft3/");
 
         // Test cwl service
@@ -125,7 +125,7 @@ public class CWLServiceTest {
                 rdfService, new CWLTool(), 5242880);
 
         // Get workflow from community repo by commit ID so it will not change
-        GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language",
+        GitDetails lobSTRv1Details = new GitDetails("common-workflow-language",
                 "workflows", null, "workflows/lobSTR/lobSTR-workflow.cwl");
         Workflow lobSTRv1 = cwlService.parseWorkflowNative(lobSTRv1Details, "933bf2a1a1cce32d88f88f136275535da9df0954");
 
@@ -146,10 +146,10 @@ public class CWLServiceTest {
                 .thenReturn(readFileToString(packedWorkflowRdf));
 
         // CWLService to test
-        CWLService cwlService = new CWLService(Mockito.mock(GitHubService.class),
+        CWLService cwlService = new CWLService(Mockito.mock(GitService.class),
                 rdfService, mockCwlTool, 5242880);
 
-        GithubDetails githubInfo = new GithubDetails("common-workflow-language",
+        GitDetails githubInfo = new GitDetails("common-workflow-language",
                 "workflows", "549c973ccc01781595ce562dea4cedc6c9540fe0",
                 "workflows/make-to-cwl/dna.cwl");
 
@@ -173,7 +173,7 @@ public class CWLServiceTest {
     public void getHelloWorkflowOverview() throws Exception {
 
         // Mock githubService class
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
+        GitService mockGithubService = Mockito.mock(GitService.class);
         File workflowFile = new File("src/test/resources/cwl/hello/hello.cwl");
         when(mockGithubService.downloadFile(anyObject()))
                 .thenReturn(readFileToString(workflowFile));
@@ -183,7 +183,7 @@ public class CWLServiceTest {
                 rdfService, Mockito.mock(CWLTool.class), 5242880);
 
         // Run workflow overview
-        GithubDetails helloDetails = new GithubDetails("common-workflow-language",
+        GitDetails helloDetails = new GitDetails("common-workflow-language",
                 "workflows", "8296e92d358bb5da4dc3c6e7aabefa89726e3409", "workflows/hello/hello.cwl");
         WorkflowOverview hello = cwlService.getWorkflowOverview(helloDetails);
         assertNotNull(hello);
@@ -202,7 +202,7 @@ public class CWLServiceTest {
     public void workflowOverviewOverSingleFileSizeLimitThrowsIOException() throws Exception {
 
         // Mock githubService class
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
+        GitService mockGithubService = Mockito.mock(GitService.class);
         File workflowFile = new File("src/test/resources/cwl/hello/hello.cwl");
         when(mockGithubService.downloadFile(anyObject()))
                 .thenReturn(readFileToString(workflowFile));
@@ -212,7 +212,7 @@ public class CWLServiceTest {
                 Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 0);
 
         // Run workflow overview
-        GithubDetails helloDetails = new GithubDetails("common-workflow-language",
+        GitDetails helloDetails = new GitDetails("common-workflow-language",
                 "workflows", "8296e92d358bb5da4dc3c6e7aabefa89726e3409", "workflows/hello/hello.cwl");
 
         // Should throw IOException due to oversized files
@@ -268,14 +268,14 @@ public class CWLServiceTest {
     /**
      * Get a mock GithubService which redirects downloads to the filesystem
      */
-    private GitHubService getMockGithubService(String originalFolder,
-                                               String resourcesFolder) throws IOException {
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
+    private GitService getMockGithubService(String originalFolder,
+                                            String resourcesFolder) throws IOException {
+        GitService mockGithubService = Mockito.mock(GitService.class);
         Answer fileAnswer = new Answer<String>() {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
-                GithubDetails details = (GithubDetails) args[0];
+                GitDetails details = (GitDetails) args[0];
                 File workflowFile = new File(resourcesFolder
                         + details.getPath().replace(originalFolder, ""));
                 return readFileToString(workflowFile);

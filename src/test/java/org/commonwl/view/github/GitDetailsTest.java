@@ -23,18 +23,18 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class GithubDetailsTest {
+public class GitDetailsTest {
 
     /**
      * Branch getter, should default to "master" if null
      */
     @Test
     public void getBranch() throws Exception {
-        GithubDetails details1 = new GithubDetails("owner", "repoName", "testbranch", "path/within/workflow.cwl");
+        GitDetails details1 = new GitDetails("owner", "repoName", "testbranch", "path/within/workflow.cwl");
         assertEquals("testbranch", details1.getBranch());
 
         // Null branch should default to master
-        GithubDetails details2 = new GithubDetails("owner", "repoName", null, null);
+        GitDetails details2 = new GitDetails("owner", "repoName", null, null);
         assertEquals("master", details2.getBranch());
     }
 
@@ -43,13 +43,13 @@ public class GithubDetailsTest {
      */
     @Test
     public void getPath() throws Exception {
-        GithubDetails details1 = new GithubDetails("owner", "repoName", "branch", "subdir/");
+        GitDetails details1 = new GitDetails("owner", "repoName", "branch", "subdir/");
         assertEquals("subdir/", details1.getPath());
 
-        GithubDetails details2 = new GithubDetails("owner", "repoName", "branch", "test/directory/structure.cwl");
+        GitDetails details2 = new GitDetails("owner", "repoName", "branch", "test/directory/structure.cwl");
         assertEquals("test/directory/structure.cwl", details2.getPath());
 
-        GithubDetails details3 = new GithubDetails("owner", "repoName", null, null);
+        GitDetails details3 = new GitDetails("owner", "repoName", null, null);
         assertEquals("/", details3.getPath());
     }
 
@@ -58,12 +58,12 @@ public class GithubDetailsTest {
      */
     @Test
     public void getURL() throws Exception {
-        GithubDetails details1 = new GithubDetails("owner", "repoName", "branch", "path/within/structure.cwl");
+        GitDetails details1 = new GitDetails("owner", "repoName", "branch", "path/within/structure.cwl");
         assertEquals("https://github.com/owner/repoName/tree/branch/path/within/structure.cwl", details1.getURL());
         assertEquals("https://github.com/owner/repoName/tree/overrideBranch/path/within/structure.cwl",
                 details1.getURL("overrideBranch"));
 
-        GithubDetails details2 = new GithubDetails("owner", "repoName", "branch", null);
+        GitDetails details2 = new GitDetails("owner", "repoName", "branch", null);
         assertEquals("https://github.com/owner/repoName/tree/branch", details2.getURL());
         assertEquals("https://github.com/owner/repoName/tree/differentBranch", details2.getURL("differentBranch"));
 

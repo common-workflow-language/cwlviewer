@@ -26,8 +26,8 @@ import org.apache.taverna.robundle.manifest.Manifest;
 import org.apache.taverna.robundle.manifest.PathAnnotation;
 import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.commonwl.view.cwl.CWLTool;
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.github.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
 import org.eclipse.egit.github.core.*;
@@ -64,7 +64,7 @@ public class ROBundleServiceTest {
     public void generateAndSaveROBundle() throws Exception {
 
         // Get mock Github service
-        GitHubService mockGithubService = getMock();
+        GitService mockGithubService = getMock();
 
         // Mock Graphviz service
         GraphVizService mockGraphvizService = Mockito.mock(GraphVizService.class);
@@ -80,14 +80,14 @@ public class ROBundleServiceTest {
                 .thenReturn("@prefix cwl: <https://w3id.org/cwl/cwl#> .");
 
         // Workflow details
-        GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language", "workflows",
+        GitDetails lobSTRv1Details = new GitDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR/lobSTR-workflow.cwl");
         Workflow lobSTRv1 = Mockito.mock(Workflow.class);
         when(lobSTRv1.getID()).thenReturn("testID");
         when(lobSTRv1.getRetrievedFrom()).thenReturn(lobSTRv1Details);
 
         // RO details
-        GithubDetails lobSTRv1RODetails = new GithubDetails("common-workflow-language", "workflows",
+        GitDetails lobSTRv1RODetails = new GitDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
 
         // Create new RO bundle
@@ -154,7 +154,7 @@ public class ROBundleServiceTest {
     public void filesOverLimit() throws Exception {
 
         // Get mock Github service
-        GitHubService mockGithubService = getMock();
+        GitService mockGithubService = getMock();
 
         // Mock Graphviz service
         GraphVizService mockGraphvizService = Mockito.mock(GraphVizService.class);
@@ -170,14 +170,14 @@ public class ROBundleServiceTest {
                 .thenReturn("@prefix cwl: <https://w3id.org/cwl/cwl#> .");
 
         // Workflow details
-        GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language", "workflows",
+        GitDetails lobSTRv1Details = new GitDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR/lobSTR-workflow.cwl");
         Workflow lobSTRv1 = Mockito.mock(Workflow.class);
         when(lobSTRv1.getID()).thenReturn("testID");
         when(lobSTRv1.getRetrievedFrom()).thenReturn(lobSTRv1Details);
 
         // RO details
-        GithubDetails lobSTRv1RODetails = new GithubDetails("common-workflow-language", "workflows",
+        GitDetails lobSTRv1RODetails = new GitDetails("common-workflow-language", "workflows",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
 
         // Create new RO bundle
@@ -204,14 +204,14 @@ public class ROBundleServiceTest {
      * and providing translation from the file system to Github API returns
      * @return The constructed mock object
      */
-    private GitHubService getMock() throws Exception {
+    private GitService getMock() throws Exception {
 
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
+        GitService mockGithubService = Mockito.mock(GitService.class);
         Answer fileAnswer = new Answer<String>() {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
-                GithubDetails details = (GithubDetails) args[0];
+                GitDetails details = (GitDetails) args[0];
                 File workflowFile = new File("src/test/resources/cwl/lobstr-v1/"
                         + details.getPath().replace("workflows/lobSTR/", ""));
                 return FileUtils.readFileToString(workflowFile);
@@ -224,7 +224,7 @@ public class ROBundleServiceTest {
             @Override
             public List<RepositoryContents> answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
-                GithubDetails details = (GithubDetails) args[0];
+                GitDetails details = (GitDetails) args[0];
 
                 List<RepositoryContents> returnList = new ArrayList<>();
 
@@ -234,10 +234,10 @@ public class ROBundleServiceTest {
                     for (File thisFile : fileList) {
                         RepositoryContents contentsEntry = new RepositoryContents();
                         if (thisFile.isDirectory()) {
-                            contentsEntry.setType(GitHubService.TYPE_DIR);
+                            contentsEntry.setType(GitService.TYPE_DIR);
                             contentsEntry.setSize(0);
                         } else if (thisFile.isFile()) {
-                            contentsEntry.setType(GitHubService.TYPE_FILE);
+                            contentsEntry.setType(GitService.TYPE_FILE);
                             contentsEntry.setSize(100);
                         }
                         contentsEntry.setName(thisFile.getName());
@@ -249,7 +249,7 @@ public class ROBundleServiceTest {
                     File[] subDirFileList = new File("src/test/resources/cwl/lobstr-v1/models/").listFiles();
                     for (File thisFile : subDirFileList) {
                         RepositoryContents contentsEntry = new RepositoryContents();
-                        contentsEntry.setType(GitHubService.TYPE_FILE);
+                        contentsEntry.setType(GitService.TYPE_FILE);
                         contentsEntry.setName(thisFile.getName());
                         contentsEntry.setSize(100);
                         contentsEntry.setPath("workflows/lobSTR/models/" + thisFile.getName());

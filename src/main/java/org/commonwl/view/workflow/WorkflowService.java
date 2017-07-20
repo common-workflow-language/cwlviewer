@@ -23,13 +23,15 @@ import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.cwl.CWLValidationException;
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.github.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
 import org.eclipse.egit.github.core.RepositoryContents;
-import org.eclipse.egit.github.core.client.RequestException;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -50,7 +53,7 @@ public class WorkflowService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final GitHubService githubService;
+    private final GitService gitService;
     private final CWLService cwlService;
     private final WorkflowRepository workflowRepository;
     private final QueuedWorkflowRepository queuedWorkflowRepository;
@@ -60,7 +63,7 @@ public class WorkflowService {
     private final int cacheDays;
 
     @Autowired
-    public WorkflowService(GitHubService githubService,
+    public WorkflowService(GitService gitService,
                            CWLService cwlService,
                            WorkflowRepository workflowRepository,
                            QueuedWorkflowRepository queuedWorkflowRepository,
@@ -68,7 +71,7 @@ public class WorkflowService {
                            GraphVizService graphVizService,
                            CWLToolRunner cwlToolRunner,
                            @Value("${cacheDays}") int cacheDays) {
-        this.githubService = githubService;
+        this.gitService = gitService;
         this.cwlService = cwlService;
         this.workflowRepository = workflowRepository;
         this.queuedWorkflowRepository = queuedWorkflowRepository;
@@ -120,15 +123,15 @@ public class WorkflowService {
      * @param githubInfo Github information for the workflow
      * @return The list of workflow names
      */
-    public List<WorkflowOverview> getWorkflowsFromDirectory(GithubDetails githubInfo) throws IOException {
+    public List<WorkflowOverview> getWorkflowsFromDirectory(GitDetails githubInfo) throws IOException {
         List<WorkflowOverview> workflowsInDir = new ArrayList<>();
         for (RepositoryContents content : githubService.getContents(githubInfo)) {
             int eIndex = content.getName().lastIndexOf('.') + 1;
             if (eIndex > 0) {
                 String extension = content.getName().substring(eIndex);
                 if (extension.equals("cwl")) {
-                    GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
-                            githubInfo.getRepoName(), githubInfo.getBranch(), content.getPath());
+                    GitDetails githubFile = new GitDetails(githubInfo.getRepoUrl(),
+                            githubInfo.getBranch(), content.getPath(), githubInfo.getType());
                     WorkflowOverview overview = cwlService.getWorkflowOverview(githubFile);
                     if (overview != null) {
                         workflowsInDir.add(overview);
@@ -144,13 +147,13 @@ public class WorkflowService {
      * @param githubInfo Github information for the workflow
      * @return The queued workflow model
      */
-    public QueuedWorkflow getQueuedWorkflow(GithubDetails githubInfo) {
+    public QueuedWorkflow getQueuedWorkflow(GitDetails githubInfo) {
         QueuedWorkflow queued = queuedWorkflowRepository.findByRetrievedFrom(githubInfo);
 
         // Slash in branch fix
         boolean slashesInPath = true;
         while (queued == null && slashesInPath) {
-            GithubDetails correctedForSlash = transferPathToBranch(githubInfo);
+            GitDetails correctedForSlash = transferPathToBranch(githubInfo);
             if (correctedForSlash != null) {
                 githubInfo = correctedForSlash;
                 queued = queuedWorkflowRepository.findByRetrievedFrom(githubInfo);
@@ -164,20 +167,20 @@ public class WorkflowService {
 
     /**
      * Get a workflow from the database, refreshing it if cache has expired
-     * @param githubInfo Github information for the workflow
-     * @return The workflow model associated with githubInfo
+     * @param gitInfo Git information for the workflow
+     * @return The workflow model associated with gitInfo
      */
-    public Workflow getWorkflow(GithubDetails githubInfo) {
+    public Workflow getWorkflow(GitDetails gitInfo) {
         // Check database for existing workflows from this repository
-        Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
+        Workflow workflow = workflowRepository.findByRetrievedFrom(gitInfo);
 
         // Slash in branch fix
         boolean slashesInPath = true;
         while (workflow == null && slashesInPath) {
-            GithubDetails correctedForSlash = transferPathToBranch(githubInfo);
+            GitDetails correctedForSlash = transferPathToBranch(gitInfo);
             if (correctedForSlash != null) {
-                githubInfo = correctedForSlash;
-                workflow = workflowRepository.findByRetrievedFrom(githubInfo);
+                gitInfo = correctedForSlash;
+                workflow = workflowRepository.findByRetrievedFrom(gitInfo);
             } else {
                 slashesInPath = false;
             }
@@ -206,13 +209,13 @@ public class WorkflowService {
 
     /**
      * Get the RO bundle for a Workflow, triggering re-download if it does not exist
-     * @param githubDetails The origin details of the workflow
+     * @param gitDetails The origin details of the workflow
      * @return The file containing the RO bundle
      * @throws ROBundleNotFoundException If the RO bundle was not found
      */
-    public File getROBundle(GithubDetails githubDetails) throws ROBundleNotFoundException {
+    public File getROBundle(GitDetails gitDetails) throws ROBundleNotFoundException {
         // Get workflow from database
-        Workflow workflow = getWorkflow(githubDetails);
+        Workflow workflow = getWorkflow(gitDetails);
 
         // If workflow does not exist or the bundle doesn't yet
         if (workflow == null || workflow.getRoBundlePath() == null) {
@@ -233,44 +236,50 @@ public class WorkflowService {
     }
 
     /**
-     * Builds a new queued workflow from Github
-     * @param githubInfo Github information for the workflow
+     * Builds a new queued workflow from Git
+     * @param gitInfo Git information for the workflow
      * @return A queued workflow model
-     * @throws IOException Github errors
+     * @throws GitAPIException Git errors
      * @throws CWLValidationException cwltool errors
      */
-    public QueuedWorkflow createQueuedWorkflow(GithubDetails githubInfo)
-            throws IOException, CWLValidationException {
+    public QueuedWorkflow createQueuedWorkflow(GitDetails gitInfo)
+            throws GitAPIException, CWLValidationException {
 
-        // Construct basic workflow model from cwl
-        String latestCommit = null;
-        while (latestCommit == null) {
+        QueuedWorkflow queuedWorkflow = new QueuedWorkflow();
+
+        // Clone repository to temporary folder
+        File localPath = File.createTempFile(gitInfo.getRepoUrl() + ":" + gitInfo.getBranch(), "");
+        queuedWorkflow.setGitRepoFolder(localPath);
+        Git repo = null;
+        while (repo == null) {
             try {
-                latestCommit = githubService.getCommitSha(githubInfo);
-            } catch (RequestException ex) {
-                if (ex.getStatus() == 404) {
-                    // Slashes in branch fix
-                    // Commits were not found. This can occur if the branch has a /
-                    GithubDetails correctedForSlash = transferPathToBranch(githubInfo);
-                    if (correctedForSlash != null) {
-                        githubInfo = correctedForSlash;
-                    } else {
-                        throw ex;
-                    }
+                repo = gitService.cloneRepository(gitInfo, localPath);
+            } catch (RefNotFoundException ex) {
+                // Attempt slashes in branch fix
+                GitDetails correctedForSlash = transferPathToBranch(gitInfo);
+                if (correctedForSlash != null) {
+                    gitInfo = correctedForSlash;
                 } else {
                     throw ex;
                 }
             }
         }
-        Workflow basicModel = cwlService.parseWorkflowNative(githubInfo, latestCommit);
+        String latestCommit = repo.getRepository().findRef("HEAD").getObjectId().getName();
+
+        Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
+        // Prevent path traversal attacks
+        if (!pathToWorkflowFile.startsWith(localPath.toPath().normalize().toAbsolutePath())) {
+            throw new CWLValidationException("Given workflow path did not resolve to a location within the repository");
+        }
+
+        Workflow basicModel = cwlService.parseWorkflowNative(new File(pathToWorkflowFile.toString()));
 
         // Set origin details
         basicModel.setRetrievedOn(new Date());
-        basicModel.setRetrievedFrom(githubInfo);
+        basicModel.setRetrievedFrom(gitInfo);
         basicModel.setLastCommit(latestCommit);
 
-        // Save a queued workflow to database
-        QueuedWorkflow queuedWorkflow = new QueuedWorkflow();
+        // Save the queued workflow to database
         queuedWorkflow.setTempRepresentation(basicModel);
         queuedWorkflowRepository.save(queuedWorkflow);
 
@@ -385,7 +394,7 @@ public class WorkflowService {
      * @return A potentially corrected set of Github details,
      *         or null if there are no slashes in the path
      */
-    private GithubDetails transferPathToBranch(GithubDetails githubInfo) {
+    private GitDetails transferPathToBranch(GitDetails githubInfo) {
         String path = githubInfo.getPath();
         String branch = githubInfo.getBranch();
 
@@ -393,8 +402,8 @@ public class WorkflowService {
         if (firstSlash > 0) {
             branch += "/" + path.substring(0, firstSlash);
             path = path.substring(firstSlash + 1);
-            return new GithubDetails(githubInfo.getOwner(),
-                    githubInfo.getRepoName(), branch, path);
+            return new GitDetails(githubInfo.getRepoUrl(), branch,
+                    path, githubInfo.getType());
         } else {
             return null;
         }

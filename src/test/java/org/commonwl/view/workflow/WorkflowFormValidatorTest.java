@@ -19,8 +19,8 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.github.GitService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -50,7 +50,7 @@ public class WorkflowFormValidatorTest {
     @Before
     public void setUp() throws Exception {
         // Mock Github service which always returns non-null for downloads
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
+        GitService mockGithubService = Mockito.mock(GitService.class);
         when(mockGithubService.downloadFile(anyObject())).thenReturn("");
         when(mockGithubService.detailsFromDirURL(anyString())).thenCallRealMethod();
         when(mockGithubService.detailsFromFileURL(anyString())).thenCallRealMethod();
@@ -67,7 +67,7 @@ public class WorkflowFormValidatorTest {
         WorkflowForm dirURL = new WorkflowForm("https://github.com/common-workflow-language/cwltool/tree/master/cwltool/schemas");
 
         Errors errors = new BeanPropertyBindingResult(dirURL, "workflowForm");
-        GithubDetails details = workflowFormValidator.validateAndParse(dirURL, errors);
+        GitDetails details = workflowFormValidator.validateAndParse(dirURL, errors);
 
         assertNotNull(details);
         assertFalse(errors.hasErrors());
@@ -83,7 +83,7 @@ public class WorkflowFormValidatorTest {
         WorkflowForm fileURL = new WorkflowForm("https://github.com/nlesc-sherlock/deeplearning/blob/master/CWLworkflow/pipeline.cwl");
 
         Errors errors = new BeanPropertyBindingResult(fileURL, "workflowForm");
-        GithubDetails details = workflowFormValidator.validateAndParse(fileURL, errors);
+        GitDetails details = workflowFormValidator.validateAndParse(fileURL, errors);
 
         assertNotNull(details);
         assertFalse(errors.hasErrors());
@@ -99,7 +99,7 @@ public class WorkflowFormValidatorTest {
         WorkflowForm emptyURL = new WorkflowForm("");
 
         Errors errors = new BeanPropertyBindingResult(emptyURL, "workflowForm");
-        GithubDetails willBeNull = workflowFormValidator.validateAndParse(emptyURL, errors);
+        GitDetails willBeNull = workflowFormValidator.validateAndParse(emptyURL, errors);
 
         assertNull(willBeNull);
         assertTrue(errors.hasErrors());
@@ -115,7 +115,7 @@ public class WorkflowFormValidatorTest {
         WorkflowForm invalidURL = new WorkflowForm("https://google.com/clearly/not/github/url");
 
         Errors errors = new BeanPropertyBindingResult(invalidURL, "workflowForm");
-        GithubDetails details = workflowFormValidator.validateAndParse(invalidURL, errors);
+        GitDetails details = workflowFormValidator.validateAndParse(invalidURL, errors);
 
         assertNull(details);
         assertTrue(errors.hasErrors());
@@ -129,7 +129,7 @@ public class WorkflowFormValidatorTest {
     public void cannotDownloadFile() throws Exception {
 
         // Mock Github service which always throws an exception for downloads
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
+        GitService mockGithubService = Mockito.mock(GitService.class);
         when(mockGithubService.downloadFile(anyObject())).thenThrow(new IOException("404 Error"));
         when(mockGithubService.detailsFromDirURL(anyString())).thenCallRealMethod();
         when(mockGithubService.detailsFromFileURL(anyString())).thenCallRealMethod();
@@ -139,7 +139,7 @@ public class WorkflowFormValidatorTest {
         WorkflowForm validFileURL = new WorkflowForm("https://github.com/nlesc-sherlock/deeplearning/blob/master/CWLworkflow/pipeline.cwl");
 
         Errors errors = new BeanPropertyBindingResult(validFileURL, "workflowForm");
-        GithubDetails details = validator.validateAndParse(validFileURL, errors);
+        GitDetails details = validator.validateAndParse(validFileURL, errors);
 
         assertNull(details);
         assertTrue(errors.hasErrors());

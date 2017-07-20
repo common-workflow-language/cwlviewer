@@ -20,7 +20,7 @@
 package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLValidationException;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,7 +97,7 @@ public class WorkflowRESTController {
         // Run validator which checks the github URL is valid
         WorkflowForm workflowForm = new WorkflowForm(url);
         BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
-        GithubDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, errors);
+        GitDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, errors);
 
         if (errors.hasErrors() || githubInfo == null) {
             String error;
@@ -165,11 +165,11 @@ public class WorkflowRESTController {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = WorkflowController.extractPath(path, 7);
 
-        // Construct a GithubDetails object to search for in the database
-        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
+        // Construct a GitDetails object to search for in the database
+        GitDetails gitDetails = new GitDetails(owner, repoName, branch, path);
 
         // Get workflow
-        Workflow workflowModel = workflowService.getWorkflow(githubDetails);
+        Workflow workflowModel = workflowService.getWorkflow(gitDetails);
         if (workflowModel == null) {
             throw new WorkflowNotFoundException();
         } else {
@@ -192,7 +192,7 @@ public class WorkflowRESTController {
         }
 
         if (queuedWorkflow.getCwltoolStatus() == SUCCESS) {
-            GithubDetails githubInfo = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
+            GitDetails githubInfo = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
             String resourceLocation = "/workflows/github.com/" + githubInfo.getOwner()
                     + "/" + githubInfo.getRepoName() + "/tree/" + githubInfo.getBranch()
                     + "/" + githubInfo.getPath();

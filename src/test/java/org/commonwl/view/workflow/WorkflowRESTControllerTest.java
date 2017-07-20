@@ -21,7 +21,7 @@ package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.cwl.CWLValidationException;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -52,13 +52,13 @@ public class WorkflowRESTControllerTest {
         WorkflowFormValidator mockValidator = Mockito.mock(WorkflowFormValidator.class);
         when(mockValidator.validateAndParse(anyObject(), anyObject()))
                 .thenReturn(null)
-                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/within"))
-                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/workflow.cwl"));
+                .thenReturn(new GitDetails("owner", "repoName", "branch", "path/within"))
+                .thenReturn(new GitDetails("owner", "repoName", "branch", "path/workflow.cwl"));
 
         // The eventual accepted valid workflow
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
         when(mockWorkflow.getRetrievedFrom())
-                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/workflow.cwl"));
+                .thenReturn(new GitDetails("owner", "repoName", "branch", "path/workflow.cwl"));
         QueuedWorkflow mockQueuedWorkflow = Mockito.mock(QueuedWorkflow.class);
         when(mockQueuedWorkflow.getId())
                 .thenReturn("123");
@@ -67,7 +67,7 @@ public class WorkflowRESTControllerTest {
 
         // Mock workflow service returning valid workflow
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getWorkflow(any(GithubDetails.class)))
+        when(mockWorkflowService.getWorkflow(any(GitDetails.class)))
                 .thenReturn(mockWorkflow)
                 .thenReturn(null);
         when(mockWorkflowService.createQueuedWorkflow(anyObject()))
@@ -128,10 +128,10 @@ public class WorkflowRESTControllerTest {
     public void getWorkflowByGithubDetailsJson() throws Exception {
 
         Workflow workflow1 = new Workflow("label", "doc", null, null, null, null);
-        workflow1.setRetrievedFrom(new GithubDetails("owner", "repo", "branch", "path/to/workflow.cwl"));
+        workflow1.setRetrievedFrom(new GitDetails("owner", "repo", "branch", "path/to/workflow.cwl"));
 
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getWorkflow(any(GithubDetails.class))).thenReturn(workflow1);
+        when(mockWorkflowService.getWorkflow(any(GitDetails.class))).thenReturn(workflow1);
 
         WorkflowRESTController workflowRESTController = new WorkflowRESTController(
                 Mockito.mock(WorkflowFormValidator.class),
@@ -174,7 +174,7 @@ public class WorkflowRESTControllerTest {
         QueuedWorkflow qwfSuccess = new QueuedWorkflow();
         qwfSuccess.setCwltoolStatus(CWLToolStatus.SUCCESS);
         Workflow wfSuccess = new Workflow(null, null, null, null, null, null);
-        wfSuccess.setRetrievedFrom(new GithubDetails("owner", "repo", "branch", "path/to/workflow.cwl"));
+        wfSuccess.setRetrievedFrom(new GitDetails("owner", "repo", "branch", "path/to/workflow.cwl"));
         qwfSuccess.setTempRepresentation(wfSuccess);
 
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);

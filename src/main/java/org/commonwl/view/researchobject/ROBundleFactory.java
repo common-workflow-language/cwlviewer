@@ -21,7 +21,7 @@ package org.commonwl.view.researchobject;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.slf4j.Logger;
@@ -68,8 +68,8 @@ public class ROBundleFactory {
         logger.info("Creating Research Object Bundle");
 
         // Get the whole containing folder, not just the workflow itself
-        GithubDetails githubInfo = workflow.getRetrievedFrom();
-        GithubDetails roDetails = new GithubDetails(githubInfo.getOwner(), githubInfo.getRepoName(),
+        GitDetails githubInfo = workflow.getRetrievedFrom();
+        GitDetails roDetails = new GitDetails(githubInfo.getOwner(), githubInfo.getRepoName(),
                 githubInfo.getBranch(), FilenameUtils.getPath(githubInfo.getPath()));
 
         // Create a new Research Object Bundle with Github contents

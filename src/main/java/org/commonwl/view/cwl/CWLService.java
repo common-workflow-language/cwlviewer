@@ -35,8 +35,8 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RiotException;
 import org.commonwl.view.docker.DockerService;
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.github.GitService;
 import org.commonwl.view.graphviz.ModelDotWriter;
 import org.commonwl.view.graphviz.RDFDotWriter;
 import org.commonwl.view.workflow.Workflow;
@@ -49,11 +49,14 @@ import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+
+import static org.apache.commons.io.FileUtils.readFileToString;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
@@ -65,7 +68,7 @@ public class CWLService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // Autowired properties/services
-    private final GitHubService githubService;
+    private final GitService githubService;
     private final RDFService rdfService;
     private final CWLTool cwlTool;
     private final int singleFileSizeLimit;
@@ -101,7 +104,7 @@ public class CWLService {
      * @param singleFileSizeLimit The file size limit for single files
      */
     @Autowired
-    public CWLService(GitHubService githubService,
+    public CWLService(GitService githubService,
                       RDFService rdfService,
                       CWLTool cwlTool,
                       @Value("${singleFileSizeLimit}") int singleFileSizeLimit) {
@@ -113,21 +116,17 @@ public class CWLService {
 
     /**
      * Gets the Workflow object from internal parsing
-     * @param githubInfo The Github repository information
-     * @param latestCommit The latest commit ID
+     * @param workflowFile The workflow file to be parsed
      * @return The constructed workflow object
      */
-    public Workflow parseWorkflowNative(GithubDetails githubInfo, String latestCommit) throws IOException {
-
-        // Get the content of this file from Github
-        String fileContent = githubService.downloadFile(githubInfo, latestCommit);
-        int fileSizeBytes = fileContent.getBytes("UTF-8").length;
+    public Workflow parseWorkflowNative(File workflowFile) throws IOException {
 
         // Check file size limit before parsing
+        long fileSizeBytes = workflowFile.length();
         if (fileSizeBytes <= singleFileSizeLimit) {
 
             // Parse file as yaml
-            JsonNode cwlFile = yamlStringToJson(fileContent);
+            JsonNode cwlFile = yamlStringToJson(readFileToString(workflowFile));
 
             // If the CWL file is packed there can be multiple workflows in a file
             Map<String, JsonNode> packedFiles = new HashMap<>();
@@ -144,7 +143,7 @@ public class CWLService {
             // Use filename for label if there is no defined one
             String label = extractLabel(cwlFile);
             if (label == null) {
-                label = FilenameUtils.getName(githubInfo.getPath());
+                label = FilenameUtils.getName(workflowFile.getPath());
             }
 
             // Construct the rest of the workflow model
@@ -170,7 +169,7 @@ public class CWLService {
             return workflowModel;
 
         } else {
-            throw new IOException("File '" + githubInfo.getPath() +  "' is over singleFileSizeLimit - " +
+            throw new IOException("File '" + workflowFile.getName() +  "' is over singleFileSizeLimit - " +
                     FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +
                     FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
         }
@@ -184,7 +183,7 @@ public class CWLService {
      * @param packedWorkflowID The workflow ID if the file has multiple objects
      * @return The constructed workflow object
      */
-    public Workflow parseWorkflowWithCwltool(GithubDetails githubInfo,
+    public Workflow parseWorkflowWithCwltool(GitDetails githubInfo,
                                              String latestCommit,
                                              String packedWorkflowID) throws CWLValidationException {
 
@@ -432,7 +431,7 @@ public class CWLService {
      * @return A constructed WorkflowOverview of the workflow
      * @throws IOException Any API errors which may have occurred
      */
-    public WorkflowOverview getWorkflowOverview(GithubDetails githubInfo) throws IOException {
+    public WorkflowOverview getWorkflowOverview(GitDetails githubInfo) throws IOException {
 
         // Get the content of this file from Github
         String fileContent = githubService.downloadFile(githubInfo);

@@ -19,7 +19,7 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -34,7 +34,7 @@ public interface WorkflowRepository extends PagingAndSortingRepository<Workflow,
      * @param retrievedFrom Details of where the workflow is from
      * @return The workflow model
      */
-    Workflow findByRetrievedFrom(GithubDetails retrievedFrom);
+    Workflow findByRetrievedFrom(GitDetails retrievedFrom);
 
     /**
      * Paged request to get workflows of a specific status

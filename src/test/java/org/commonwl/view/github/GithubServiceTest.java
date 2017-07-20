@@ -36,7 +36,7 @@ public class GithubServiceTest {
      * Create a service to test
      */
     @Autowired
-    private GitHubService githubService;
+    private GitService githubService;
 
     /**
      * Details can be extracted from a full Github CWL file URL
@@ -44,7 +44,7 @@ public class GithubServiceTest {
     @Test
     public void detailsFromFileURLFull() throws Exception {
 
-        GithubDetails details = githubService.detailsFromFileURL("https://github.com/nlesc-sherlock/deeplearning/blob/master/CWLworkflow/pipeline.cwl");
+        GitDetails details = githubService.detailsFromFileURL("https://github.com/nlesc-sherlock/deeplearning/blob/master/CWLworkflow/pipeline.cwl");
         assertNotNull(details);
         assertEquals("nlesc-sherlock", details.getOwner());
         assertEquals("deeplearning", details.getRepoName());
@@ -59,7 +59,7 @@ public class GithubServiceTest {
     @Test
     public void detailsFromFileURLAtBase() throws Exception {
 
-        GithubDetails details = githubService.detailsFromFileURL("https://github.com/genome/arvados_trial/blob/master/pipeline.cwl");
+        GitDetails details = githubService.detailsFromFileURL("https://github.com/genome/arvados_trial/blob/master/pipeline.cwl");
         assertNotNull(details);
         assertEquals("genome", details.getOwner());
         assertEquals("arvados_trial", details.getRepoName());
@@ -74,7 +74,7 @@ public class GithubServiceTest {
     @Test
     public void detailsFromDirURLFull() throws Exception {
 
-        GithubDetails details = githubService.detailsFromDirURL("https://github.com/common-workflow-language/workflows/tree/visu/workflows/compile");
+        GitDetails details = githubService.detailsFromDirURL("https://github.com/common-workflow-language/workflows/tree/visu/workflows/compile");
         assertNotNull(details);
         assertEquals("common-workflow-language", details.getOwner());
         assertEquals("workflows", details.getRepoName());
@@ -89,7 +89,7 @@ public class GithubServiceTest {
     @Test
     public void detailsFromDirURLNoPath() throws Exception {
 
-        GithubDetails details = githubService.detailsFromDirURL("https://github.com/OBF/GSoC/tree/d46ce365f1a10c4c4d6b0caed51c6f64b84c2f63");
+        GitDetails details = githubService.detailsFromDirURL("https://github.com/OBF/GSoC/tree/d46ce365f1a10c4c4d6b0caed51c6f64b84c2f63");
         assertNotNull(details);
         assertEquals("OBF", details.getOwner());
         assertEquals("GSoC", details.getRepoName());
@@ -104,7 +104,7 @@ public class GithubServiceTest {
     @Test
     public void detailsFromDirURLNoBranchPath() throws Exception {
 
-        GithubDetails details = githubService.detailsFromDirURL("https://github.com/common-workflow-language/cwlviewer");
+        GitDetails details = githubService.detailsFromDirURL("https://github.com/common-workflow-language/cwlviewer");
         assertNotNull(details);
         assertEquals("common-workflow-language", details.getOwner());
         assertEquals("cwlviewer", details.getRepoName());

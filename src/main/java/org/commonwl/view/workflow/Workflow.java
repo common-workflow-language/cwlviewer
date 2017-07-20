@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLStep;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -46,7 +46,7 @@ public class Workflow {
 
     // Metadata
     @Indexed(unique = true)
-    private GithubDetails retrievedFrom;
+    private GitDetails retrievedFrom;
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss z")
     private Date retrievedOn;
 
@@ -140,11 +140,11 @@ public class Workflow {
         this.roBundlePath = roBundlePath;
     }
 
-    public GithubDetails getRetrievedFrom() {
+    public GitDetails getRetrievedFrom() {
         return retrievedFrom;
     }
 
-    public void setRetrievedFrom(GithubDetails retrievedFrom) {
+    public void setRetrievedFrom(GitDetails retrievedFrom) {
         this.retrievedFrom = retrievedFrom;
     }
 
@@ -200,20 +200,20 @@ public class Workflow {
     // Include links to related resources
 
     public String getVisualisationXdot() {
-        return "/graph/xdot/" + retrievedFrom.getURL().replace("https://", "");
+        return "/graph/xdot/" + retrievedFrom.getUrl().replace("https://", "");
     }
 
     public String getVisualisationPng() {
-        return "/graph/png/" + retrievedFrom.getURL().replace("https://", "");
+        return "/graph/png/" + retrievedFrom.getUrl().replace("https://", "");
     }
 
     public String getVisualisationSvg() {
-        return "/graph/svg/" + retrievedFrom.getURL().replace("https://", "");
+        return "/graph/svg/" + retrievedFrom.getUrl().replace("https://", "");
     }
 
     public String getROBundle() {
         if (roBundlePath != null) {
-            return "/robundle/" + retrievedFrom.getURL().replace("https://", "");
+            return "/robundle/" + retrievedFrom.getUrl().replace("https://", "");
         } else {
             return null;
         }

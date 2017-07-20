@@ -25,8 +25,8 @@ import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.*;
 import org.commonwl.view.cwl.CWLTool;
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.github.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
 import org.eclipse.egit.github.core.CommitUser;
@@ -62,7 +62,7 @@ public class ROBundleService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // Services
-    private GitHubService githubService;
+    private GitService githubService;
     private GraphVizService graphVizService;
     private CWLTool cwlTool;
 
@@ -89,7 +89,7 @@ public class ROBundleService {
                            @Value("${applicationName}") String appName,
                            @Value("${applicationURL}") String appURL,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
-                           GitHubService githubService,
+                           GitService githubService,
                            GraphVizService graphVizService,
                            CWLTool cwlTool) throws URISyntaxException {
         this.bundleStorage = bundleStorage;
@@ -106,7 +106,7 @@ public class ROBundleService {
      * @param workflow The workflow to create the research object for
      * @return The constructed bundle
      */
-    public Bundle newBundleFromGithub(Workflow workflow, GithubDetails githubInfo) throws IOException {
+    public Bundle newBundleFromGithub(Workflow workflow, GitDetails githubInfo) throws IOException {
 
         // Create a new RO bundle
         Bundle bundle = Bundles.createBundle();
@@ -121,7 +121,7 @@ public class ROBundleService {
             // TODO: Make this importedBy/On/From
             manifest.setRetrievedBy(appAgent);
             manifest.setRetrievedOn(manifest.getCreatedOn());
-            manifest.setRetrievedFrom(new URI(githubInfo.getURL()));
+            manifest.setRetrievedFrom(new URI(githubInfo.getUrl()));
 
             // Make a directory in the RO bundle to store the files
             Path bundleRoot = bundle.getRoot();
@@ -148,7 +148,7 @@ public class ROBundleService {
             svgAggr.setRetrievedFrom(new URI(appAgent.getUri() + workflow.getVisualisationSvg()));
 
             // Add annotation files
-            GithubDetails wfDetails = workflow.getRetrievedFrom();
+            GitDetails wfDetails = workflow.getRetrievedFrom();
             String url = "https://raw.githubusercontent.com/" + wfDetails.getOwner() + "/" +
                     wfDetails.getRepoName() + "/" + wfDetails.getBranch() + "/" + wfDetails.getPath();
 
@@ -181,7 +181,7 @@ public class ROBundleService {
      * @param repoContents The contents of the Github repository
      * @param path The path in the Research Object to add the files
      */
-    private void addFilesToBundle(Bundle bundle, GithubDetails githubInfo,
+    private void addFilesToBundle(Bundle bundle, GitDetails githubInfo,
                                   List<RepositoryContents> repoContents, Path path,
                                   Set<HashableAgent> authors) throws IOException {
 
@@ -189,10 +189,10 @@ public class ROBundleService {
         for (RepositoryContents repoContent : repoContents) {
 
             // Parse subdirectories if they exist
-            if (repoContent.getType().equals(GitHubService.TYPE_DIR)) {
+            if (repoContent.getType().equals(GitService.TYPE_DIR)) {
 
                 // Get the contents of the subdirectory
-                GithubDetails githubSubdir = new GithubDetails(githubInfo.getOwner(),
+                GitDetails githubSubdir = new GitDetails(githubInfo.getOwner(),
                         githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
                 List<RepositoryContents> subdirectory = githubService.getContents(githubSubdir);
 
@@ -204,11 +204,11 @@ public class ROBundleService {
                 addFilesToBundle(bundle, githubInfo, subdirectory, subdirPath, authors);
 
                 // Otherwise this is a file so add to the bundle
-            } else if (repoContent.getType().equals(GitHubService.TYPE_FILE)) {
+            } else if (repoContent.getType().equals(GitService.TYPE_FILE)) {
 
                 try {
                     // Raw URI of the bundle
-                    GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
+                    GitDetails githubFile = new GitDetails(githubInfo.getOwner(),
                             githubInfo.getRepoName(), githubInfo.getBranch(), repoContent.getPath());
 
                     // Where to store the new file in bundle

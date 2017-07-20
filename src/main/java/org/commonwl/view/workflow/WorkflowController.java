@@ -22,7 +22,8 @@ package org.commonwl.view.workflow;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.cwl.CWLValidationException;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.github.GitType;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +46,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 @Controller
 public class WorkflowController {
@@ -101,7 +101,7 @@ public class WorkflowController {
     }
 
     /**
-     * Create a new workflow from the given github URL in the form
+     * Create a new workflow from the given URL in the form
      * @param workflowForm The data submitted from the form
      * @param bindingResult Spring MVC Binding Result object
      * @return The workflow view with new workflow as a model
@@ -110,33 +110,30 @@ public class WorkflowController {
     public ModelAndView newWorkflowFromGithubURL(@Valid WorkflowForm workflowForm, BindingResult bindingResult) {
 
         // Run validator which checks the github URL is valid
-        GithubDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, bindingResult);
+        GitDetails gitInfo = workflowFormValidator.validateAndParse(workflowForm, bindingResult);
 
-        if (bindingResult.hasErrors() || githubInfo == null) {
+        if (bindingResult.hasErrors() || gitInfo == null) {
             // Go back to index if there are validation errors
             return new ModelAndView("index");
         } else {
-            if (githubInfo.getPath().endsWith(".cwl")) {
-                // Get workflow or create if does not exist
-                Workflow workflow = workflowService.getWorkflow(githubInfo);
-                if (workflow == null) {
-                    try {
-                        workflow = workflowService.createQueuedWorkflow(githubInfo).getTempRepresentation();
-                    } catch (CWLValidationException ex) {
-                        bindingResult.rejectValue("githubURL", "cwltool.validationError", ex.getMessage());
-                        return new ModelAndView("index");
-                    } catch (Exception ex) {
-                        bindingResult.rejectValue("githubURL", "githubURL.parsingError");
-                        logger.error(ex.getMessage(), ex);
-                        return new ModelAndView("index");
-                    }
+            // Get workflow or create if does not exist
+            Workflow workflow = workflowService.getWorkflow(gitInfo);
+            if (workflow == null) {
+                try {
+                    workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
+                } catch (CWLValidationException ex) {
+                    bindingResult.rejectValue("githubURL", "cwltool.validationError", ex.getMessage());
+                    return new ModelAndView("index");
+                } catch (Exception ex) {
+                    bindingResult.rejectValue("githubURL", "githubURL.parsingError");
+                    logger.error(ex.getMessage(), ex);
+                    return new ModelAndView("index");
                 }
-                githubInfo = workflow.getRetrievedFrom();
             }
-            // Redirect to the workflow or choice of files
-            return new ModelAndView("redirect:/workflows/github.com/" + githubInfo.getOwner()
-                    + "/" + githubInfo.getRepoName() + "/tree/" + githubInfo.getBranch()
-                    + "/" + githubInfo.getPath());
+            gitInfo = workflow.getRetrievedFrom();
+
+            // Redirect to the workflow
+            return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
         }
     }
 
@@ -160,55 +157,34 @@ public class WorkflowController {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 7);
 
-        // Construct a GithubDetails object to search for in the database
-        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
+        // Construct a GitDetails object to search for in the database
+        GitDetails gitDetails = new GitDetails("https://github.com/" + owner + "/" +
+                repoName + ".git", branch, path, GitType.GITHUB);
 
         // Get workflow
         QueuedWorkflow queued = null;
-        Workflow workflowModel = workflowService.getWorkflow(githubDetails);
+        Workflow workflowModel = workflowService.getWorkflow(gitDetails);
         if (workflowModel == null) {
             // Check if already queued
-            queued = workflowService.getQueuedWorkflow(githubDetails);
+            queued = workflowService.getQueuedWorkflow(gitDetails);
             if (queued == null) {
                 // Validation
-                WorkflowForm workflowForm = new WorkflowForm(githubDetails.getURL());
+                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl());
                 BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
                 workflowFormValidator.validateAndParse(workflowForm, errors);
                 if (!errors.hasErrors()) {
-                    if (githubDetails.getPath().endsWith(".cwl")) {
-                        try {
-                            queued = workflowService.createQueuedWorkflow(githubDetails);
-                        } catch (CWLValidationException ex) {
-                            errors.rejectValue("githubURL", "cwltool.validationError", ex.getMessage());
-                        } catch (IOException ex) {
-                            errors.rejectValue("githubURL", "githubURL.parsingError", "The workflow could not be parsed from the given URL");
-                        }
-                    } else {
-                        // If this is a directory, get a list of workflows and return the view for it
-                        try {
-                            List<WorkflowOverview> workflowOverviews = workflowService.getWorkflowsFromDirectory(githubDetails);
-                            if (workflowOverviews.size() > 1) {
-                                return new ModelAndView("selectworkflow", "workflowOverviews", workflowOverviews)
-                                        .addObject("githubDetails", githubDetails);
-                            } else if (workflowOverviews.size() == 1) {
-                                return new ModelAndView("redirect:/workflows/github.com/" + githubDetails.getOwner()
-                                        + "/" + githubDetails.getRepoName() + "/tree/" + githubDetails.getBranch()
-                                        + "/" + githubDetails.getPath() + "/" + workflowOverviews.get(0).getFileName());
-                            } else {
-                                logger.error("No .cwl files were found in the given directory");
-                                errors.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
-                            }
-                        } catch (IOException ex) {
-                            logger.error("Contents of Github directory could not be found", ex);
-                            errors.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
-                        }
+                    try {
+                        queued = workflowService.createQueuedWorkflow(gitDetails);
+                    } catch (CWLValidationException ex) {
+                        errors.rejectValue("githubURL", "cwltool.validationError", ex.getMessage());
+                    } catch (IOException ex) {
+                        errors.rejectValue("githubURL", "githubURL.parsingError", "The workflow could not be parsed from the given URL");
                     }
                 }
                 // Redirect to main page with errors if they occurred
                 if (errors.hasErrors()) {
                     redirectAttrs.addFlashAttribute("errors", errors);
-                    return new ModelAndView("redirect:/?url=https://github.com/" +
-                            owner + "/" + repoName + "/tree/" + branch + "/" + path);
+                    return new ModelAndView("redirect:/?url=" + gitDetails.getUrl());
                 }
             }
         }
@@ -246,15 +222,16 @@ public class WorkflowController {
                                              HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 7);
-        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
-        File bundleDownload = workflowService.getROBundle(githubDetails);
+        GitDetails gitDetails = new GitDetails("https://github.com/" + owner + "/" +
+                repoName + ".git", branch, path, GitType.GITHUB);
+        File bundleDownload = workflowService.getROBundle(gitDetails);
         response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
         return new FileSystemResource(bundleDownload);
     }
 
 
     /**
-     * Download a generated DOT graph for a workflow as an svg
+     * Download a generated graph for a workflow as an svg
      * @param owner The owner of the Github repository
      * @param repoName The name of the repository
      * @param branch The branch of repository
@@ -270,8 +247,9 @@ public class WorkflowController {
                                             HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
-        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
-        Workflow workflow = workflowService.getWorkflow(githubDetails);
+        GitDetails gitDetails = new GitDetails("https://github.com/" + owner + "/" +
+                repoName + ".git", branch, path, GitType.GITHUB);
+        Workflow workflow = workflowService.getWorkflow(gitDetails);
         if (workflow == null) {
             throw new WorkflowNotFoundException();
         }
@@ -297,8 +275,9 @@ public class WorkflowController {
                                             HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
-        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
-        Workflow workflow = workflowService.getWorkflow(githubDetails);
+        GitDetails gitDetails = new GitDetails("https://github.com/" + owner + "/" +
+                repoName + ".git", branch, path, GitType.GITHUB);
+        Workflow workflow = workflowService.getWorkflow(gitDetails);
         if (workflow == null) {
             throw new WorkflowNotFoundException();
         }
@@ -324,8 +303,9 @@ public class WorkflowController {
                                              HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
-        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
-        Workflow workflow = workflowService.getWorkflow(githubDetails);
+        GitDetails gitDetails = new GitDetails("https://github.com/" + owner + "/" +
+                repoName + ".git", branch, path, GitType.GITHUB);
+        Workflow workflow = workflowService.getWorkflow(gitDetails);
         if (workflow == null) {
             throw new WorkflowNotFoundException();
         }

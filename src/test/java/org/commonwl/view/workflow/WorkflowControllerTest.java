@@ -20,7 +20,7 @@
 package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLValidationException;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.github.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
 import org.junit.Rule;
@@ -104,13 +104,13 @@ public class WorkflowControllerTest {
         WorkflowFormValidator mockValidator = Mockito.mock(WorkflowFormValidator.class);
         when(mockValidator.validateAndParse(anyObject(), anyObject()))
                 .thenReturn(null)
-                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/within"))
-                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/workflow.cwl"));
+                .thenReturn(new GitDetails("owner", "repoName", "branch", "path/within"))
+                .thenReturn(new GitDetails("owner", "repoName", "branch", "path/workflow.cwl"));
 
         // The eventual accepted valid workflow
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
         when(mockWorkflow.getRetrievedFrom())
-                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/workflow.cwl"));
+                .thenReturn(new GitDetails("owner", "repoName", "branch", "path/workflow.cwl"));
         QueuedWorkflow mockQueuedWorkflow = Mockito.mock(QueuedWorkflow.class);
         when(mockQueuedWorkflow.getTempRepresentation())
                 .thenReturn(mockWorkflow);
@@ -167,7 +167,7 @@ public class WorkflowControllerTest {
 
         // Mock service
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getWorkflow(Matchers.<GithubDetails>anyObject()))
+        when(mockWorkflowService.getWorkflow(Matchers.<GitDetails>anyObject()))
                 .thenReturn(mockWorkflow)
                 .thenReturn(null);
         when(mockWorkflowService.createQueuedWorkflow(anyObject()))
@@ -311,7 +311,7 @@ public class WorkflowControllerTest {
         // Mock service to return mock workflow
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getWorkflow(Mockito.any(GithubDetails.class)))
+        when(mockWorkflowService.getWorkflow(Mockito.any(GitDetails.class)))
                 .thenReturn(mockWorkflow)
                 .thenReturn(null)
                 .thenReturn(mockWorkflow)
