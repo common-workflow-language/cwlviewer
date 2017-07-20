@@ -36,11 +36,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -200,73 +195,6 @@ public class WorkflowControllerTest {
                 .andExpect(status().isFound())
                 .andExpect(flash().attributeExists("errors"))
                 .andExpect(redirectedUrl("/?url=https://github.com/owner/reponame/tree/branch/path/within/badworkflow.cwl"));
-
-    }
-
-    /**
-     * Displaying directories of workflows
-     */
-    @Test
-    public void directDirectoryURL() throws Exception {
-
-        // Workflow overviews for testing
-        WorkflowOverview overview1 = new WorkflowOverview("workflow1.cwl", "label1", "doc1");
-        WorkflowOverview overview2 = new WorkflowOverview("workflow2.cwl", "label2", "doc2");
-
-        // Mock service to return these overviews
-        WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getWorkflowsFromDirectory(anyObject()))
-                .thenReturn(new ArrayList<>())
-                .thenReturn(new ArrayList<>(Arrays.asList(overview1)))
-                .thenReturn(new ArrayList<>(Arrays.asList(overview1, overview2)))
-                .thenReturn(new ArrayList<>(Arrays.asList(overview1, overview2)))
-                .thenThrow(new IOException("Error getting contents"));
-
-        // Mock controller/MVC
-        WorkflowController workflowController = new WorkflowController(
-                Mockito.mock(WorkflowFormValidator.class),
-                mockWorkflowService,
-                Mockito.mock(GraphVizService.class));
-        MockMvc mockMvc = MockMvcBuilders
-                .standaloneSetup(workflowController)
-                .build();
-
-        // No workflows in directory, redirect with errors
-        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within"))
-                .andExpect(status().isFound())
-                .andExpect(flash().attributeExists("errors"))
-                .andExpect(redirectedUrl("/?url=https://github.com/owner/reponame/tree/branch/path/within"));
-
-        // 1 workflow in directory, redirect to it
-        mockMvc.perform(get("/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/workflow1.cwl"));
-
-        // Multiple workflows in directory, show list
-        mockMvc.perform(get("/workflows/github.com/common-workflow-language/workflows/tree/visu/workflows/scidap"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("selectworkflow"))
-                .andExpect(model().attribute("githubDetails", allOf(
-                        hasProperty("owner", is("common-workflow-language")),
-                        hasProperty("repoName", is("workflows")),
-                        hasProperty("branch", is("visu")),
-                        hasProperty("path", is("workflows/scidap"))
-                )))
-                .andExpect(model().attribute("workflowOverviews",
-                        containsInAnyOrder(overview1, overview2)));
-
-        // Workflows at the base of a repository
-        mockMvc.perform(get("/workflows/github.com/genome/arvados_trial/tree/master"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("selectworkflow"))
-                .andExpect(model().attribute("githubDetails",
-                        hasProperty("path", is("/"))));
-
-        // Error getting contents of Github directory, redirect with errors
-        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within"))
-                .andExpect(status().isFound())
-                .andExpect(flash().attributeExists("errors"))
-                .andExpect(redirectedUrl("/?url=https://github.com/owner/reponame/tree/branch/path/within"));
 
     }
 

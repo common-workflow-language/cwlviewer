@@ -28,7 +28,6 @@ import org.commonwl.view.github.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
-import org.eclipse.egit.github.core.RepositoryContents;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
@@ -43,10 +42,8 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 @Service
 public class WorkflowService {
@@ -116,30 +113,6 @@ public class WorkflowService {
      */
     public QueuedWorkflow getQueuedWorkflow(String id) {
         return queuedWorkflowRepository.findOne(id);
-    }
-
-    /**
-     * Get a list of workflows from a directory in Github
-     * @param githubInfo Github information for the workflow
-     * @return The list of workflow names
-     */
-    public List<WorkflowOverview> getWorkflowsFromDirectory(GitDetails githubInfo) throws IOException {
-        List<WorkflowOverview> workflowsInDir = new ArrayList<>();
-        for (RepositoryContents content : githubService.getContents(githubInfo)) {
-            int eIndex = content.getName().lastIndexOf('.') + 1;
-            if (eIndex > 0) {
-                String extension = content.getName().substring(eIndex);
-                if (extension.equals("cwl")) {
-                    GitDetails githubFile = new GitDetails(githubInfo.getRepoUrl(),
-                            githubInfo.getBranch(), content.getPath(), githubInfo.getType());
-                    WorkflowOverview overview = cwlService.getWorkflowOverview(githubFile);
-                    if (overview != null) {
-                        workflowsInDir.add(overview);
-                    }
-                }
-            }
-        }
-        return workflowsInDir;
     }
 
     /**
@@ -241,9 +214,10 @@ public class WorkflowService {
      * @return A queued workflow model
      * @throws GitAPIException Git errors
      * @throws CWLValidationException cwltool errors
+     * @throws IOException Other file handling exceptions
      */
     public QueuedWorkflow createQueuedWorkflow(GitDetails gitInfo)
-            throws GitAPIException, CWLValidationException {
+            throws GitAPIException, CWLValidationException, IOException {
 
         QueuedWorkflow queuedWorkflow = new QueuedWorkflow();
 

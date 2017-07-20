@@ -25,22 +25,16 @@ import org.commonwl.view.github.GitDetails;
 import org.commonwl.view.github.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleFactory;
-import org.eclipse.egit.github.core.RepositoryContents;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -52,69 +46,6 @@ public class WorkflowServiceTest {
      */
     @Rule
     public TemporaryFolder roBundleFolder = new TemporaryFolder();
-
-    /**
-     * Getting a list of workflow overviews from a directory
-     */
-    @Test
-    public void getWorkflowsFromDirectory() throws Exception {
-
-        // Mock Github service redirecting content query to the filesystem
-        GitService mockGithubService = Mockito.mock(GitService.class);
-        Answer contentsAnswer = new Answer<List<RepositoryContents>>() {
-            @Override
-            public List<RepositoryContents> answer(InvocationOnMock invocation) throws Throwable {
-                List<RepositoryContents> returnList = new ArrayList<>();
-
-                // Add all files from lobstr-v1 directory
-                File[] fileList = new File("src/test/resources/cwl/lobstr-v1/").listFiles();
-                for (File thisFile : fileList) {
-                    RepositoryContents contentsEntry = new RepositoryContents();
-                    if (thisFile.isFile()) {
-                        contentsEntry.setType(GitService.TYPE_FILE);
-                        contentsEntry.setSize(100);
-                        contentsEntry.setName(thisFile.getName());
-                        contentsEntry.setPath("workflows/lobSTR/" + thisFile.getName());
-                        returnList.add(contentsEntry);
-                    }
-                }
-
-                return returnList;
-            }
-        };
-        when(mockGithubService.getContents(anyObject())).thenAnswer(contentsAnswer);
-
-        // Mock CWL service which returns simple overview once simulating 1 workflow found
-        CWLService mockCWLService = Mockito.mock(CWLService.class);
-        when(mockCWLService.getWorkflowOverview(anyObject()))
-                .thenReturn(new WorkflowOverview("workflow.cwl", "label", "doc"))
-                .thenReturn(new WorkflowOverview("workflow2.cwl", "label2", "doc2"))
-                .thenReturn(null);
-
-        // Create service under test
-        WorkflowService testWorkflowService = new WorkflowService(
-                mockGithubService, mockCWLService,
-                Mockito.mock(WorkflowRepository.class),
-                Mockito.mock(QueuedWorkflowRepository.class),
-                Mockito.mock(ROBundleFactory.class),
-                Mockito.mock(GraphVizService.class),
-                Mockito.mock(CWLToolRunner.class), 1);
-
-        // Get a list of workflows from the directory
-        List<WorkflowOverview> list = testWorkflowService.getWorkflowsFromDirectory(
-                Mockito.mock(GitDetails.class));
-
-        // 1 workflow should be found
-        assertTrue(list.size() == 2);
-        assertEquals("workflow.cwl", list.get(0).getFileName());
-        assertEquals("label", list.get(0).getLabel());
-        assertEquals("doc", list.get(0).getDoc());
-
-        assertEquals("workflow2.cwl", list.get(1).getFileName());
-        assertEquals("label2", list.get(1).getLabel());
-        assertEquals("doc2", list.get(1).getDoc());
-
-    }
 
     /**
      * Getting a workflow when cache has expired
