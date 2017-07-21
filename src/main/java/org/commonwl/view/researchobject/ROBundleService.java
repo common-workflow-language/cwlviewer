@@ -19,18 +19,19 @@
 
 package org.commonwl.view.researchobject;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
-import org.apache.taverna.robundle.manifest.Agent;
-import org.apache.taverna.robundle.manifest.Manifest;
-import org.apache.taverna.robundle.manifest.PathAnnotation;
-import org.apache.taverna.robundle.manifest.PathMetadata;
+import org.apache.taverna.robundle.manifest.*;
 import org.commonwl.view.cwl.CWLTool;
 import org.commonwl.view.github.GitDetails;
 import org.commonwl.view.github.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +49,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.apache.commons.io.FileUtils.readFileToString;
 
 /**
  * Service handling Research Object Bundles
@@ -122,13 +126,14 @@ public class ROBundleService {
 
             // Make a directory in the RO bundle to store the files
             Path bundleRoot = bundle.getRoot();
-            Path bundleFiles = bundleRoot.resolve("workflow");
-            Files.createDirectory(bundleFiles);
+            Path bundlePath = bundleRoot.resolve("workflow");
+            Files.createDirectory(bundlePath);
 
             // Add the files from the Github repo to this workflow
             Set<HashableAgent> authors = new HashSet<>();
             Git gitRepo = Git.open(new File(workflow.getGitRepoPath()));
-            addFilesToBundle(bundle, gitInfo, gitRepo, bundleFiles, authors);
+            Path gitPath = gitRepo.getRepository().getDirectory().toPath();
+            addFilesToBundle(bundle, bundlePath, gitRepo, gitPath, authors);
 
             // Add combined authors
             manifest.setAuthoredBy(new ArrayList<>(authors));
@@ -177,42 +182,32 @@ public class ROBundleService {
     /**
      * Add files to this bundle from a list of Github repository contents
      * @param bundle The RO bundle to add files/directories to
-     * @param gitInfo The information used to access the repository
+     * @param bundlePath The current path within the RO bundle
      * @param gitRepo The Git repository
-     * @param path The path in the Research Object to add the files
+     * @param repoPath The current path within the Git repository
+     * @param authors The combined set of authors for al the files
      */
-    private void addFilesToBundle(Bundle bundle, GitDetails gitInfo,
-                                  Git gitRepo, Path path,
+    private void addFilesToBundle(Bundle bundle, Path bundlePath,
+                                  Git gitRepo, Path repoPath,
                                   Set<HashableAgent> authors) throws IOException {
-        /*File[] files = gitRepo.getRepository().getDirectory().listFiles();
+        File[] files = gitRepo.getRepository().getDirectory().listFiles();
         for (File file : files) {
             if (file.isDirectory()) {
 
-                // Get the contents of the subdirectory
-                GitDetails githubSubdir = new GitDetails(gitInfo.getOwner(),
-                        gitInfo.getRepoName(), gitInfo.getBranch(), repoContent.getPath());
-                List<RepositoryContents> subdirectory = githubService.getContents(githubSubdir);
+                // Create a new folder in the RO for this directory
+                Path newBundlePath = bundlePath.resolve(file.getName());
+                Files.createDirectory(newBundlePath);
 
-                // Create a new folder in the RO for it
-                Path subdirPath = path.resolve(repoContent.getName());
-                Files.createDirectory(subdirPath);
-
-                // Add the files in the subdirectory to this new folder
-                addFilesToBundle(bundle, gitInfo, subdirectory, subdirPath, authors);
+                // Add all files in the subdirectory to this new folder
+                addFilesToBundle(bundle, newBundlePath, gitRepo,
+                        repoPath.resolve(file.getName()), authors);
 
             } else {
                 try {
-                    // Raw URI of the bundle
-                    GitDetails githubFile = new GitDetails(gitInfo.getOwner(),
-                            gitInfo.getRepoName(), gitInfo.getBranch(), repoContent.getPath());
-
                     // Where to store the new file in bundle
-                    Path bundleFilePath = path.resolve(repoContent.getName());
+                    Path bundleFilePath = bundlePath.resolve(file.getName());
 
-                    // Get commits
-                    List<RepositoryCommit> commitsOnFile = githubService.getCommits(githubFile);
-                    String commitSha = commitsOnFile.get(0).getSha();
-
+                    // Get direct URL
                     URI rawURI = new URI("https://raw.githubusercontent.com/" + githubFile.getOwner() + "/" +
                             githubFile.getRepoName() + "/" + commitSha + "/" + githubFile.getPath());
 
@@ -221,11 +216,9 @@ public class ROBundleService {
                     PathMetadata aggregation;
 
                     // Download or externally link if oversized
-                    if (repoContent.getSize() <= singleFileSizeLimit) {
-                        // Get the content of this file from Github
-                        fileContent = githubService.downloadFile(githubFile, commitSha);
-
+                    if (file.length() <= singleFileSizeLimit) {
                         // Save file to research object bundle
+                        fileContent = readFileToString(file);
                         Bundles.setStringValue(bundleFilePath, fileContent);
 
                         // Set retrieved information for this file in the manifest
@@ -234,8 +227,8 @@ public class ROBundleService {
                         aggregation.setRetrievedBy(appAgent);
                         aggregation.setRetrievedOn(aggregation.getCreatedOn());
                     } else {
-                        logger.info("File " + repoContent.getName() + " is too large to download - " +
-                                FileUtils.byteCountToDisplaySize(repoContent.getSize()) + "/" +
+                        logger.info("File " + file.getName() + " is too large to download - " +
+                                FileUtils.byteCountToDisplaySize(file.length()) + "/" +
                                 FileUtils.byteCountToDisplaySize(singleFileSizeLimit) +
                                 ", linking externally to RO bundle");
 
@@ -243,12 +236,12 @@ public class ROBundleService {
                         aggregation = bundle.getManifest().getAggregation(rawURI);
                         Proxy bundledAs = new Proxy();
                         bundledAs.setURI();
-                        bundledAs.setFolder(path);
+                        bundledAs.setFolder(repoPath);
                         aggregation.setBundledAs(bundledAs);
                     }
 
                     // Special handling for cwl files
-                    if (FilenameUtils.getExtension(repoContent.getName()).equals("cwl")) {
+                    if (FilenameUtils.getExtension(file.getName()).equals("cwl")) {
                         // Correct mime type (no official standard for yaml)
                         aggregation.setMediatype("text/x-yaml");
 
@@ -263,23 +256,26 @@ public class ROBundleService {
 
                     // Add authors from github commits to the file
                     Set<HashableAgent> fileAuthors = new HashSet<>();
-                    for (RepositoryCommit commit : commitsOnFile) {
-                        User author = commit.getAuthor();
-                        CommitUser commitAuthor = commit.getCommit().getAuthor();
-
-                        // If there is author information for this commit in some form
-                        if (author != null || commitAuthor != null) {
+                    Iterable<RevCommit> logs = gitRepo.log()
+                            .addPath(bundlePath.toString())
+                            .call();
+                    for (RevCommit rev : logs) {
+                        PersonIdent author = rev.getAuthorIdent();
+                        PersonIdent committer = rev.getCommitterIdent();
+                        if (author != null || committer != null) {
                             // Create a new agent and add as much detail as possible
                             HashableAgent newAgent = new HashableAgent();
                             if (author != null) {
-                                newAgent.setUri(new URI(author.getHtmlUrl()));
-                            }
-                            if (commitAuthor != null) {
-                                newAgent.setName(commitAuthor.getName());
+                                newAgent.setName(author.getName());
+                                newAgent.setUri(new URI("mailto:" + author.getEmailAddress()));
+                            } else {
+                                newAgent.setName(committer.getName());
+                                newAgent.setUri(new URI("mailto:" + committer.getEmailAddress()));
                             }
                             fileAuthors.add(newAgent);
                         }
                     }
+
                     authors.addAll(fileAuthors);
                     aggregation.setAuthoredBy(new ArrayList<>(fileAuthors));
 
@@ -292,7 +288,7 @@ public class ROBundleService {
                     logger.error("Error creating URI for RO Bundle", ex);
                 }
             }
-        }*/
+        }
     }
 
     /**

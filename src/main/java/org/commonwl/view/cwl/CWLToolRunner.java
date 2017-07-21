@@ -19,7 +19,6 @@
 
 package org.commonwl.view.cwl;
 
-import org.commonwl.view.github.GitService;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.workflow.QueuedWorkflow;
 import org.commonwl.view.workflow.QueuedWorkflowRepository;
@@ -48,7 +47,6 @@ public class CWLToolRunner {
     private final WorkflowRepository workflowRepository;
     private final QueuedWorkflowRepository queuedWorkflowRepository;
     private final CWLService cwlService;
-    private final GitService githubService;
     private final ROBundleFactory roBundleFactory;
     private final String cwlToolVersion;
 
@@ -57,12 +55,10 @@ public class CWLToolRunner {
                          QueuedWorkflowRepository queuedWorkflowRepository,
                          CWLService cwlService,
                          CWLTool cwlTool,
-                         GitService githubService,
                          ROBundleFactory roBundleFactory) {
         this.workflowRepository = workflowRepository;
         this.queuedWorkflowRepository = queuedWorkflowRepository;
         this.cwlService = cwlService;
-        this.githubService = githubService;
         this.cwlToolVersion = cwlTool.getVersion();
         this.roBundleFactory = roBundleFactory;
     }
