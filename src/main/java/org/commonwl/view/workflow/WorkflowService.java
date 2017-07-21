@@ -42,6 +42,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Calendar;
 import java.util.Date;
 
 @Service
@@ -233,7 +234,7 @@ public class WorkflowService {
                 }
             }
         }
-        File localPath = repo.getRepository().getDirectory();
+        File localPath = repo.getRepository().getWorkTree();
         String latestCommit = repo.getRepository().findRef("HEAD").getObjectId().getName();
 
         Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
@@ -277,7 +278,7 @@ public class WorkflowService {
         queuedWorkflow.setCwltoolStatus(CWLToolStatus.RUNNING);
         queuedWorkflowRepository.save(queuedWorkflow);
         try {
-            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
+            //cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
         } catch (Exception e) {
             logger.error("Could not update workflow with cwltool", e);
         }
@@ -326,7 +327,7 @@ public class WorkflowService {
      * @return Whether or not there are new commits
      */
     private boolean cacheExpired(Workflow workflow) {
-        /*try {
+        try {
             // Calculate expiration
             Calendar expireCal = Calendar.getInstance();
             expireCal.setTime(workflow.getRetrievedOn());
@@ -338,7 +339,9 @@ public class WorkflowService {
                 // Cache expiry time has elapsed
                 // Check current head of the branch with the cached head
                 logger.debug("Time has expired for caching, checking commits...");
-                String currentHead = githubService.getCommitSha(workflow.getRetrievedFrom());
+                String repoPath = workflow.getGitRepoPath();
+                Git repo = Git.open(new File(repoPath));
+                String currentHead = repo.getRepository().findRef("HEAD").getObjectId().getName();
                 logger.debug("Current: " + workflow.getLastCommit() + ", HEAD: " + currentHead);
 
                 // Reset date in database if there are still no changes
@@ -357,8 +360,7 @@ public class WorkflowService {
         } catch (Exception ex) {
             // Default to no expiry if there was an API error
             return false;
-        }*/
-        return false;
+        }
     }
 
     /**

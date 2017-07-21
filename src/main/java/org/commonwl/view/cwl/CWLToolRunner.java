@@ -76,6 +76,7 @@ public class CWLToolRunner {
         // Parse using cwltool and replace in database
         try {
             Workflow newWorkflow = cwlService.parseWorkflowWithCwltool(
+                    tempWorkflow.getRetrievedFrom(),
                     workflowFile,
                     tempWorkflow.getPackedWorkflowID());
 

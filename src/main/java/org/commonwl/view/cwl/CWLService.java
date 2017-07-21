@@ -35,6 +35,7 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RiotException;
 import org.commonwl.view.docker.DockerService;
+import org.commonwl.view.github.GitDetails;
 import org.commonwl.view.github.GitService;
 import org.commonwl.view.graphviz.ModelDotWriter;
 import org.commonwl.view.graphviz.RDFDotWriter;
@@ -180,20 +181,24 @@ public class CWLService {
      * @param packedWorkflowID The workflow ID if the file has multiple objects
      * @return The constructed workflow object
      */
-    public Workflow parseWorkflowWithCwltool(File workflowFile,
+    public Workflow parseWorkflowWithCwltool(GitDetails gitDetails,
+                                             File workflowFile,
                                              String packedWorkflowID) throws CWLValidationException {
 
         // Get RDF representation from cwltool
-        String url = workflowFile.toPath().toAbsolutePath().toString();
+        String path = workflowFile.toPath().toAbsolutePath().toString();
+        String url = gitDetails.getUrl().replace("https://", "");
         if (packedWorkflowID != null) {
             if (packedWorkflowID.charAt(0) != '#') {
+                path += "#";
                 url += "#";
             }
+            path += packedWorkflowID;
             url += packedWorkflowID;
         }
 
         if (!rdfService.graphExists(url)) {
-            String rdf = cwlTool.getRDF(url);
+            String rdf = cwlTool.getRDF(path);
 
             // Create a workflow model from RDF representation
             Model model = ModelFactory.createDefaultModel();

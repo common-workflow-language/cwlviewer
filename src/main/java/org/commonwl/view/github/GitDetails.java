@@ -87,18 +87,27 @@ public class GitDetails implements Serializable {
 
     /**
      * Get the URL to the external resource representing this workflow
+     * @param branchOverride The branch to use instead of the one in this instance
      * @return The URL
      */
-    public String getUrl() {
+    public String getUrl(String branchOverride) {
         switch (this.type) {
             case GENERIC:
                 return repoUrl;
             case GITHUB:
             case GITLAB:
-                return "https://" + normaliseURL(repoUrl).replace(".git", "") + "/" + branch + "/" + path;
+                return "https://" + normaliseURL(repoUrl).replace(".git", "") + "/blob/" + branchOverride + "/" + path;
             default:
                 return null;
         }
+    }
+
+    /**
+     * Get the URL to the external resource representing this workflow
+     * @return The URL
+     */
+    public String getUrl() {
+        return getUrl(branch);
     }
 
     /**
@@ -111,7 +120,7 @@ public class GitDetails implements Serializable {
                 return "/workflows/" + normaliseURL(repoUrl) + "/" + branch + "/" + path;
             case GITHUB:
             case GITLAB:
-                return "/workflows/" + normaliseURL(repoUrl).replace(".git", "") + "/" + branch + "/" + path;
+                return "/workflows/" + normaliseURL(repoUrl).replace(".git", "") + "/blob/" + branch + "/" + path;
             default:
                 return null;
         }

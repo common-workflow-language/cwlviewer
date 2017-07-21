@@ -24,6 +24,7 @@ import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.Agent;
 import org.apache.taverna.robundle.manifest.Manifest;
 import org.apache.taverna.robundle.manifest.PathAnnotation;
+import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.commonwl.view.cwl.CWLTool;
 import org.commonwl.view.github.GitDetails;
 import org.commonwl.view.github.GitService;
@@ -36,11 +37,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -103,7 +108,7 @@ public class ROBundleService {
         // Create a new RO bundle
         Bundle bundle = Bundles.createBundle();
         Manifest manifest = bundle.getManifest();
-/*
+
         // Simplified attribution for RO bundle
         try {
             // Tool attribution in createdBy
@@ -141,15 +146,18 @@ public class ROBundleService {
 
             // Add annotation files
             GitDetails wfDetails = workflow.getRetrievedFrom();
+
+            // Run cwltool
+            /*
             String url = "https://raw.githubusercontent.com/" + wfDetails.getOwner() + "/" +
                     wfDetails.getRepoName() + "/" + wfDetails.getBranch() + "/" + wfDetails.getPath();
-
             List<PathAnnotation> manifestAnnotations = new ArrayList<>();
             addAggregation(bundle, manifestAnnotations,
                     "merged.cwl", cwlTool.getPackedVersion(url));
             addAggregation(bundle, manifestAnnotations,
                     "workflow.ttl", cwlTool.getRDF(url));
             bundle.getManifest().setAnnotations(manifestAnnotations);
+            */
 
             // Git2prov history
             List<Path> history = new ArrayList<>();
@@ -159,7 +167,7 @@ public class ROBundleService {
 
         } catch (URISyntaxException ex) {
             logger.error("Error creating URI for RO Bundle", ex);
-        }*/
+        }
 
         // Return the completed bundle
         return bundle;
