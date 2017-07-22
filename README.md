@@ -152,6 +152,7 @@ Developers and [contributors](https://github.com/common-workflow-language/cwlvie
 * **Mark Robinson** http://orcid.org/0000-0002-8184-7507 
 * Stian Soiland-Reyes http://orcid.org/0000-0001-9842-9718
 * Michael Crusoe http://orcid.org/0000-0002-2961-9670
+* Carole Goble https://orcid.org/0000-0003-1219-2137
 
 Thanks to:  
 
