@@ -35,8 +35,8 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RiotException;
 import org.commonwl.view.docker.DockerService;
-import org.commonwl.view.github.GitDetails;
-import org.commonwl.view.github.GitService;
+import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitService;
 import org.commonwl.view.graphviz.ModelDotWriter;
 import org.commonwl.view.graphviz.RDFDotWriter;
 import org.commonwl.view.workflow.Workflow;
@@ -67,7 +67,7 @@ public class CWLService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // Autowired properties/services
-    private final GitService githubService;
+    private final GitService gitService;
     private final RDFService rdfService;
     private final CWLTool cwlTool;
     private final int singleFileSizeLimit;
@@ -98,16 +98,16 @@ public class CWLService {
 
     /**
      * Constructor for the Common Workflow Language service
-     * @param githubService A service for accessing Github functionality
+     * @param gitService A service for accessing Github functionality
      * @param cwlTool Handles cwltool integration
      * @param singleFileSizeLimit The file size limit for single files
      */
     @Autowired
-    public CWLService(GitService githubService,
+    public CWLService(GitService gitService,
                       RDFService rdfService,
                       CWLTool cwlTool,
                       @Value("${singleFileSizeLimit}") int singleFileSizeLimit) {
-        this.githubService = githubService;
+        this.gitService = gitService;
         this.rdfService = rdfService;
         this.cwlTool = cwlTool;
         this.singleFileSizeLimit = singleFileSizeLimit;
@@ -420,6 +420,7 @@ public class CWLService {
         } catch (IOException ex) {
             logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
         }
+
 
         return workflowModel;
 

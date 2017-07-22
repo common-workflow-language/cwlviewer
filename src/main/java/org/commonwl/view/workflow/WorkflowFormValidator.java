@@ -19,9 +19,9 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.github.GitDetails;
-import org.commonwl.view.github.GitService;
-import org.commonwl.view.github.GitType;
+import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitService;
+import org.commonwl.view.git.GitType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

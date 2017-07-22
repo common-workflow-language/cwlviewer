@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.view.github;
+package org.commonwl.view.git;
 
 /**
  * Differentiates supported sites for the

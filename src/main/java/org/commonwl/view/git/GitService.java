@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.view.github;
+package org.commonwl.view.git;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;

@@ -1,6 +1,6 @@
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.git.GitDetails;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 

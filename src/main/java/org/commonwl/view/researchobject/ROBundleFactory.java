@@ -21,7 +21,7 @@ package org.commonwl.view.researchobject;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
-import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.slf4j.Logger;

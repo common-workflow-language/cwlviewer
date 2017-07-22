@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLStep;
-import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.git.GitDetails;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;

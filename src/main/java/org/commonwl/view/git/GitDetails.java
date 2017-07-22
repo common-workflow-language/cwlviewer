@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.commonwl.view.github;
+package org.commonwl.view.git;
 
 import java.io.Serializable;
 
@@ -96,7 +96,7 @@ public class GitDetails implements Serializable {
                 return repoUrl;
             case GITHUB:
             case GITLAB:
-                return "https://" + normaliseURL(repoUrl).replace(".git", "") + "/blob/" + branchOverride + "/" + path;
+                return "https://" + normaliseUrl(repoUrl).replace(".git", "") + "/blob/" + branchOverride + "/" + path;
             default:
                 return null;
         }
@@ -117,10 +117,29 @@ public class GitDetails implements Serializable {
     public String getInternalUrl() {
         switch (this.type) {
             case GENERIC:
-                return "/workflows/" + normaliseURL(repoUrl) + "/" + branch + "/" + path;
+                return "/workflows/" + normaliseUrl(repoUrl) + "/" + branch + "/" + path;
             case GITHUB:
             case GITLAB:
-                return "/workflows/" + normaliseURL(repoUrl).replace(".git", "") + "/blob/" + branch + "/" + path;
+                return "/workflows/" + normaliseUrl(repoUrl).replace(".git", "") + "/blob/" + branch + "/" + path;
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Get the URL directly to the resource
+     * @return The URL
+     */
+    public String getRawUrl() {
+        switch (this.type) {
+            case GENERIC:
+                return repoUrl;
+            case GITHUB:
+                return "https://raw.githubusercontent.com/" +
+                        normaliseUrl(repoUrl).replace("github.com/", "").replace(".git", "") +
+                        "/" + branch + "/" + path;
+            case GITLAB:
+                return "https://whatever/gitlab/uses";
             default:
                 return null;
         }
@@ -131,7 +150,7 @@ public class GitDetails implements Serializable {
      * @param url The URL to be normalised
      * @return The normalised URL
      */
-    private String normaliseURL(String url) {
+    private String normaliseUrl(String url) {
         return url.replace("http://", "")
                   .replace("https://", "")
                   .replace("ssh://", "")

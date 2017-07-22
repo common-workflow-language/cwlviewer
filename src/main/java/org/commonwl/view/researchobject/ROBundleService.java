@@ -25,11 +25,11 @@ import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.*;
 import org.commonwl.view.cwl.CWLTool;
-import org.commonwl.view.github.GitDetails;
-import org.commonwl.view.github.GitService;
+import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
@@ -63,7 +63,6 @@ public class ROBundleService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // Services
-    private GitService githubService;
     private GraphVizService graphVizService;
     private CWLTool cwlTool;
 
@@ -82,7 +81,6 @@ public class ROBundleService {
      * @param appName The name of the application from properties, for attribution
      * @param appURL The URL of the application from properties, for attribution
      * @param singleFileSizeLimit The file size limit for each file in the RO bundle
-     * @param githubService The service for handling Github functionality
      * @throws URISyntaxException Error in creating URI for appURL
      */
     @Autowired
@@ -90,14 +88,12 @@ public class ROBundleService {
                            @Value("${applicationName}") String appName,
                            @Value("${applicationURL}") String appURL,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
-                           GitService githubService,
                            GraphVizService graphVizService,
                            CWLTool cwlTool) throws URISyntaxException {
         this.bundleStorage = bundleStorage;
         this.appAgent = new Agent(appName);
         appAgent.setUri(new URI(appURL));
         this.singleFileSizeLimit = singleFileSizeLimit;
-        this.githubService = githubService;
         this.graphVizService = graphVizService;
         this.cwlTool = cwlTool;
     }
@@ -153,16 +149,13 @@ public class ROBundleService {
             GitDetails wfDetails = workflow.getRetrievedFrom();
 
             // Run cwltool
-            /*
-            String url = "https://raw.githubusercontent.com/" + wfDetails.getOwner() + "/" +
-                    wfDetails.getRepoName() + "/" + wfDetails.getBranch() + "/" + wfDetails.getPath();
+            String rawUrl = wfDetails.getRawUrl();
             List<PathAnnotation> manifestAnnotations = new ArrayList<>();
             addAggregation(bundle, manifestAnnotations,
-                    "merged.cwl", cwlTool.getPackedVersion(url));
+                    "merged.cwl", cwlTool.getPackedVersion(rawUrl));
             addAggregation(bundle, manifestAnnotations,
-                    "workflow.ttl", cwlTool.getRDF(url));
+                    "workflow.ttl", cwlTool.getRDF(rawUrl));
             bundle.getManifest().setAnnotations(manifestAnnotations);
-            */
 
             // Git2prov history
             List<Path> history = new ArrayList<>();
@@ -208,8 +201,7 @@ public class ROBundleService {
                     Path bundleFilePath = bundlePath.resolve(file.getName());
 
                     // Get direct URL
-                    URI rawURI = new URI("https://raw.githubusercontent.com/" + githubFile.getOwner() + "/" +
-                            githubFile.getRepoName() + "/" + commitSha + "/" + githubFile.getPath());
+                    URI rawURI = new URI("http://example.com");
 
                     // Variable to store file contents and aggregation
                     String fileContent = null;
@@ -254,30 +246,37 @@ public class ROBundleService {
                         }
                     }
 
-                    // Add authors from github commits to the file
-                    Set<HashableAgent> fileAuthors = new HashSet<>();
-                    Iterable<RevCommit> logs = gitRepo.log()
-                            .addPath(bundlePath.toString())
-                            .call();
-                    for (RevCommit rev : logs) {
-                        PersonIdent author = rev.getAuthorIdent();
-                        PersonIdent committer = rev.getCommitterIdent();
-                        if (author != null || committer != null) {
-                            // Create a new agent and add as much detail as possible
-                            HashableAgent newAgent = new HashableAgent();
-                            if (author != null) {
-                                newAgent.setName(author.getName());
-                                newAgent.setUri(new URI("mailto:" + author.getEmailAddress()));
-                            } else {
-                                newAgent.setName(committer.getName());
-                                newAgent.setUri(new URI("mailto:" + committer.getEmailAddress()));
+                    // Add authors from git commits to the file
+                    try {
+                        Set<HashableAgent> fileAuthors = new HashSet<>();
+                        Iterable<RevCommit> logs = gitRepo.log()
+                                .addPath(bundlePath.toString())
+                                .call();
+                        for (RevCommit rev : logs) {
+                            // Use author first with backup of committer
+                            PersonIdent author = rev.getAuthorIdent();
+                            if (author == null) {
+                                author = rev.getCommitterIdent();
                             }
-                            fileAuthors.add(newAgent);
+                            // Create a new agent and add as much detail as possible
+                            if (author != null) {
+                                HashableAgent newAgent = new HashableAgent();
+                                String name = author.getName();
+                                if (name != null && name.length() > 0) {
+                                    newAgent.setName(author.getName());
+                                }
+                                String email = author.getEmailAddress();
+                                if (email != null && email.length() > 0) {
+                                    newAgent.setUri(new URI("mailto:" + author.getEmailAddress()));
+                                }
+                                fileAuthors.add(newAgent);
+                            }
                         }
+                        authors.addAll(fileAuthors);
+                        aggregation.setAuthoredBy(new ArrayList<>(fileAuthors));
+                    } catch (GitAPIException ex) {
+                        logger.error("Could not get commits for file " + repoPath, ex);
                     }
-
-                    authors.addAll(fileAuthors);
-                    aggregation.setAuthoredBy(new ArrayList<>(fileAuthors));
 
                     // Set retrieved information for this file in the manifest
                     aggregation.setRetrievedFrom(rawURI);
