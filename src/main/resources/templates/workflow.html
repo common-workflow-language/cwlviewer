@@ -199,7 +199,8 @@ digraph G {
                         <tr th:each="input : ${workflow.inputs}">
                             <td th:text="${input.key}">ID</td>
                             <td>
-                                <a th:href="@{${input.value.format}}" th:text="${input.value.type}" target="_blank" rel="noopener">Type</a>
+                                <a th:if="${input.value.format != null}" th:href="@{${input.value.format}}" th:text="${input.value.type}" target="_blank" rel="noopener">Type</a>
+                                <span th:if="${input.value.format == null}" th:text="${input.value.type}"></span>
                             </td>
                             <td th:text="${input.value.label}">Label</td>
                             <td>
@@ -222,7 +223,7 @@ digraph G {
                     <th>Doc</th>
                     </thead>
                     <tbody>
-                    <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{'/workflows/github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch}}">
+                    <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{${workflow.retrievedFrom.getUrl()}}">
                         <td th:text="${step.key}">ID</td>
                         <td>
                             <div th:if="${step.value.runType != null}">
@@ -258,7 +259,8 @@ digraph G {
                         <tr th:each="output : ${workflow.outputs}">
                             <td th:text="${output.key}">ID</td>
                             <td>
-                                <a th:href="@{${output.value.format}}" th:text="${output.value.type}" target="_blank" rel="noopener">Type</a>
+                                <a th:if="${output.value.format != null}" th:href="@{${output.value.format}}" th:text="${input.value.type}" target="_blank" rel="noopener">Type</a>
+                                <span th:if="${output.value.format == null}" th:text="${output.value.type}"></span>
                             </td>
                             <td th:text="${output.value.label}">Label</td>
                             <td>

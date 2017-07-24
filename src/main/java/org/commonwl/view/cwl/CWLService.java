@@ -186,19 +186,22 @@ public class CWLService {
                                              String packedWorkflowID) throws CWLValidationException {
 
         // Get RDF representation from cwltool
-        String path = workflowFile.toPath().toAbsolutePath().toString();
         String url = gitDetails.getUrl().replace("https://", "");
+        String localPath = workflowFile.toPath().toAbsolutePath().toString();
+        String gitPath = gitDetails.getPath();
         if (packedWorkflowID != null) {
             if (packedWorkflowID.charAt(0) != '#') {
-                path += "#";
+                localPath += "#";
                 url += "#";
+                gitPath += "#";
             }
-            path += packedWorkflowID;
+            localPath += packedWorkflowID;
             url += packedWorkflowID;
+            gitPath += packedWorkflowID;
         }
 
         if (!rdfService.graphExists(url)) {
-            String rdf = cwlTool.getRDF(path);
+            String rdf = cwlTool.getRDF(localPath);
 
             // Create a workflow model from RDF representation
             Model model = ModelFactory.createDefaultModel();
@@ -211,7 +214,7 @@ public class CWLService {
         // Base workflow details
         String label = FilenameUtils.getName(url);
         String doc = null;
-        ResultSet labelAndDoc = rdfService.getLabelAndDoc(url);
+        ResultSet labelAndDoc = rdfService.getLabelAndDoc(gitPath, url);
         if (labelAndDoc.hasNext()) {
             QuerySolution labelAndDocSoln = labelAndDoc.nextSolution();
             if (labelAndDocSoln.contains("label")) {
@@ -224,10 +227,10 @@ public class CWLService {
 
         // Inputs
         Map<String, CWLElement> wfInputs = new HashMap<>();
-        ResultSet inputs = rdfService.getInputs(url);
+        ResultSet inputs = rdfService.getInputs(gitPath, url);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
-            String inputName = rdfService.stepNameFromURI(url, input.get("name").toString());
+            String inputName = rdfService.stepNameFromURI(gitPath, input.get("name").toString());
 
             CWLElement wfInput = new CWLElement();
 
@@ -281,12 +284,12 @@ public class CWLService {
 
         // Outputs
         Map<String, CWLElement> wfOutputs = new HashMap<>();
-        ResultSet outputs = rdfService.getOutputs(url);
+        ResultSet outputs = rdfService.getOutputs(gitPath, url);
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
             CWLElement wfOutput = new CWLElement();
 
-            String outputName = rdfService.stepNameFromURI(url, output.get("name").toString());
+            String outputName = rdfService.stepNameFromURI(gitPath, output.get("name").toString());
 
             // Array types
             if (output.contains("type")) {
@@ -325,7 +328,7 @@ public class CWLService {
             }
 
             if (output.contains("src")) {
-                wfOutput.addSourceID(rdfService.stepNameFromURI(url,
+                wfOutput.addSourceID(rdfService.stepNameFromURI(gitPath,
                         output.get("src").toString()));
             }
             if (output.contains("format")) {
@@ -344,15 +347,15 @@ public class CWLService {
 
         // Steps
         Map<String, CWLStep> wfSteps = new HashMap<>();
-        ResultSet steps = rdfService.getSteps(url);
+        ResultSet steps = rdfService.getSteps(gitPath, url);
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
-            String uri = rdfService.stepNameFromURI(url, step.get("step").toString());
+            String uri = rdfService.stepNameFromURI(gitPath, step.get("step").toString());
             if (wfSteps.containsKey(uri)) {
                 // Already got step details, add extra source ID
                 if (step.contains("src")) {
                     CWLElement src = new CWLElement();
-                    src.addSourceID(rdfService.stepNameFromURI(url, step.get("src").toString()));
+                    src.addSourceID(rdfService.stepNameFromURI(gitPath, step.get("src").toString()));
                     wfSteps.get(uri).getSources().put(
                             step.get("stepinput").toString(), src);
                 } else if (step.contains("default")) {
@@ -372,16 +375,16 @@ public class CWLService {
 
                 if (step.contains("src")) {
                     CWLElement src = new CWLElement();
-                    src.addSourceID(rdfService.stepNameFromURI(url, step.get("src").toString()));
+                    src.addSourceID(rdfService.stepNameFromURI(gitPath, step.get("src").toString()));
                     Map<String, CWLElement> srcList = new HashMap<>();
-                    srcList.put(rdfService.stepNameFromURI(url,
+                    srcList.put(rdfService.stepNameFromURI(gitPath,
                             step.get("stepinput").toString()), src);
                     wfStep.setSources(srcList);
                 } else if (step.contains("default")) {
                     CWLElement src = new CWLElement();
                     src.setDefaultVal(rdfService.formatDefault(step.get("default").toString()));
                     Map<String, CWLElement> srcList = new HashMap<>();
-                    srcList.put(rdfService.stepNameFromURI(url,
+                    srcList.put(rdfService.stepNameFromURI(gitPath,
                             step.get("stepinput").toString()), src);
                     wfStep.setSources(srcList);
                 }
@@ -396,7 +399,7 @@ public class CWLService {
         }
 
         // Docker link
-        ResultSet dockerResult = rdfService.getDockerLink(url);
+        ResultSet dockerResult = rdfService.getDockerLink(gitPath, url);
         String dockerLink = null;
         if (dockerResult.hasNext()) {
             QuerySolution docker = dockerResult.nextSolution();
@@ -413,7 +416,7 @@ public class CWLService {
 
         // Generate DOT graph
         StringWriter graphWriter = new StringWriter();
-        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService);
+        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService, gitPath);
         try {
             RDFDotWriter.writeGraph(url);
             workflowModel.setVisualisationDot(graphWriter.toString());

@@ -66,7 +66,7 @@ public class RDFService {
      */
     public void storeModel(String graphName, Model model) {
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(rdfService);
-        accessor.putModel(graphName, model);
+        accessor.putModel(rdfService + graphName, model);
     }
 
     /**
@@ -106,17 +106,19 @@ public class RDFService {
      * @param workflowURI The URI of the workflow
      * @return Result set with label and doc strings
      */
-    public ResultSet getLabelAndDoc(String workflowURI) {
+    public ResultSet getLabelAndDoc(String path, String workflowURI) {
         ParameterizedSparqlString labelQuery = new ParameterizedSparqlString();
         labelQuery.setCommandText(queryCtx +
                 "SELECT ?label ?doc\n" +
                 "WHERE {\n" +
-                "  GRAPH ?wf {" +
+                "  GRAPH ?graphName {" +
                 "    OPTIONAL { ?wf sld:label|rdfs:label ?label }\n" +
                 "    OPTIONAL { ?wf sld:doc|rdfs:comment ?doc }\n" +
+                "    FILTER(regex(str(?wf), ?wfFilter, \"i\" ))" +
                 "  }" +
                 "}");
-        labelQuery.setIri("wf", workflowURI);
+        labelQuery.setLiteral("wfFilter", path + "$");
+        labelQuery.setIri("graphName", rdfService + workflowURI);
         return runQuery(labelQuery);
     }
 
@@ -149,21 +151,23 @@ public class RDFService {
      * @param workflowURI URI of the workflow
      * @return The result set of inputs
      */
-    public ResultSet getInputs(String workflowURI) {
+    public ResultSet getInputs(String path, String workflowURI) {
         ParameterizedSparqlString inputsQuery = new ParameterizedSparqlString();
         inputsQuery.setCommandText(queryCtx +
                 "SELECT ?name ?type ?format ?label ?doc\n" +
                 "WHERE {\n" +
-                "  GRAPH ?wf {" +
+                "  GRAPH ?graphName {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:inputs ?name .\n" +
                 "    OPTIONAL { ?name sld:type ?type }\n" +
                 "    OPTIONAL { ?name cwl:format ?format }\n" +
                 "    OPTIONAL { ?name sld:label|rdfs:label ?label }\n" +
                 "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }\n" +
+                "    FILTER(regex(str(?wf), ?wfFilter, \"i\" ))" +
                 "  }" +
                 "}");
-        inputsQuery.setIri("wf", workflowURI);
+        inputsQuery.setLiteral("wfFilter", path + "$");
+        inputsQuery.setIri("graphName", rdfService + workflowURI);
         return runQuery(inputsQuery);
     }
 
@@ -172,21 +176,23 @@ public class RDFService {
      * @param workflowURI URI of the workflow
      * @return The result set of outputs
      */
-    public ResultSet getOutputs(String workflowURI) {
+    public ResultSet getOutputs(String path, String workflowURI) {
         ParameterizedSparqlString outputsQuery = new ParameterizedSparqlString();
         outputsQuery.setCommandText(queryCtx +
                 "SELECT ?name ?type ?format ?label ?doc\n" +
                 "WHERE {\n" +
-                "  GRAPH ?wf {" +
+                "  GRAPH ?graphName {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:outputs ?name .\n" +
                 "    OPTIONAL { ?name sld:type ?type }\n" +
                 "    OPTIONAL { ?name cwl:format ?format }\n" +
                 "    OPTIONAL { ?name sld:label|rdfs:label ?label }\n" +
                 "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }\n" +
+                "    FILTER(regex(str(?wf), ?wfFilter, \"i\" ))" +
                 "  }" +
                 "}");
-        outputsQuery.setIri("wf", workflowURI);
+        outputsQuery.setLiteral("wfFilter", path + "$");
+        outputsQuery.setIri("graphName", rdfService + workflowURI);
         return runQuery(outputsQuery);
     }
 
@@ -195,7 +201,7 @@ public class RDFService {
      * @param workflowURI URI of the workflow
      * @return The result set of steps
      */
-    public ResultSet getSteps(String workflowURI) {
+    public ResultSet getSteps(String path, String workflowURI) {
         ParameterizedSparqlString stepQuery = new ParameterizedSparqlString();
         stepQuery.setCommandText(queryCtx +
                 "SELECT ?step ?run ?runtype ?label ?doc ?stepinput ?default ?src\n" +
@@ -210,9 +216,11 @@ public class RDFService {
                 "    }\n" +
                 "    OPTIONAL { ?run sld:label|rdfs:label ?label }\n" +
                 "    OPTIONAL { ?run sld:doc|rdfs:comment ?doc }\n" +
+                "    FILTER(regex(str(?wf), ?wfFilter, \"i\" ))" +
                 "  }" +
                 "}");
-        stepQuery.setIri("wf", workflowURI);
+        stepQuery.setLiteral("wfFilter", path + "$");
+        stepQuery.setIri("graphName", rdfService + workflowURI);
         return runQuery(stepQuery);
     }
 
@@ -221,18 +229,20 @@ public class RDFService {
      * @param workflowURI URI of the workflow
      * @return The result set of step links
      */
-    public ResultSet getStepLinks(String workflowURI) {
+    public ResultSet getStepLinks(String path, String workflowURI) {
         ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
         linkQuery.setCommandText(queryCtx +
                 "SELECT ?src ?dest ?default\n" +
                 "WHERE {\n" +
-                "  GRAPH ?wf {" +
+                "  GRAPH ?graphName {" +
                 "    ?wf Workflow:steps ?step .\n" +
                 "    ?step cwl:in ?dest .\n" +
                 "    { ?dest cwl:source ?src } UNION { ?dest cwl:default ?default }\n" +
+                "    FILTER(regex(str(?wf), ?wfFilter, \"i\" ))" +
                 "  }" +
                 "}");
-        linkQuery.setIri("wf", workflowURI);
+        linkQuery.setLiteral("wfFilter", path + "$");
+        linkQuery.setIri("graphName", rdfService + workflowURI);
         return runQuery(linkQuery);
     }
 
@@ -241,18 +251,20 @@ public class RDFService {
      * @param workflowURI URI of the workflow
      * @return The result set of steps
      */
-    public ResultSet getOutputLinks(String workflowURI) {
+    public ResultSet getOutputLinks(String path, String workflowURI) {
         ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
         linkQuery.setCommandText(queryCtx +
                 "SELECT ?src ?dest\n" +
                 "WHERE {\n" +
-                "  GRAPH ?wf {" +
+                "  GRAPH ?graphName {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:outputs ?dest .\n" +
                 "    ?dest cwl:outputSource ?src\n" +
+                "    FILTER(regex(str(?wf), ?wfFilter, \"i\" ))" +
                 "  }" +
                 "}");
-        linkQuery.setIri("wf", workflowURI);
+        linkQuery.setLiteral("wfFilter", path + "$");
+        linkQuery.setIri("graphName", rdfService + workflowURI);
         return runQuery(linkQuery);
     }
 
@@ -261,19 +273,21 @@ public class RDFService {
      * @param workflowURI URI of the workflow
      * @return Result set of docker hint and pull link
      */
-    public ResultSet getDockerLink(String workflowURI) {
+    public ResultSet getDockerLink(String path, String workflowURI) {
         ParameterizedSparqlString dockerQuery = new ParameterizedSparqlString();
         dockerQuery.setCommandText(queryCtx +
                 "SELECT ?docker ?pull\n" +
                 "WHERE {\n" +
-                "  GRAPH ?wf {" +
+                "  GRAPH ?graphName {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    { ?wf cwl:requirements ?docker } UNION { ?wf cwl:hints ?docker} .\n" +
                 "    ?docker rdf:type cwl:DockerRequirement\n" +
                 "    OPTIONAL { ?docker DockerRequirement:dockerPull ?pull }\n" +
+                "    FILTER(regex(str(?wf), ?wfFilter, \"i\" ))" +
                 "  }" +
                 "}");
-        dockerQuery.setIri("wf", workflowURI);
+        dockerQuery.setLiteral("wfFilter", path + "$");
+        dockerQuery.setIri("graphName", rdfService + workflowURI);
         return runQuery(dockerQuery);
     }
 
@@ -284,6 +298,7 @@ public class RDFService {
      * @return The step ID
      */
     public String stepNameFromURI(String baseUrl, String uri) {
+        uri = uri.substring(uri.indexOf(baseUrl));
         uri = uri.replace(baseUrl, "");
         uri = uri.replace("#", "/");
         uri = uri.substring(1);
