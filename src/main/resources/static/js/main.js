@@ -108,4 +108,6 @@ require(['jquery'],
             field.parent().addClass("has-error");
             field.next().text(message);
         }
+
+        $("#url").trigger("change");
     });

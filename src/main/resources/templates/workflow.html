@@ -128,8 +128,9 @@ digraph G {
             <p th:text="${workflow.doc}">Workflow Doc</p>
         </div>
         <div class="col-md-6">
-            <a th:href="@{${workflow.retrievedFrom.getUrl()}}" href="#" rel="noopener" target="_blank">
-                <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
+            <a th:href="@{${workflow.retrievedFrom.getUrl()}}" href="#" rel="noopener" target="_blank" style="text-decoration:none;">
+                <img th:if="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
+                <img th:unless="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/gitlogo.png" th:src="@{/img/gitlogo.png}" width="30" height="30" />
             </a>
         <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
                 <span th:if="${workflow.roBundlePath == null}" id="ajaxRequired"></span>

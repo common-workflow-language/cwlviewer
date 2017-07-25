@@ -20,6 +20,8 @@
 package org.commonwl.view.git;
 
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Represents all the parameters necessary to access a file/directory with Git
@@ -29,9 +31,8 @@ public class GitDetails implements Serializable {
     private String repoUrl;
     private String branch;
     private String path;
-    private GitType type;
 
-    public GitDetails(String repoUrl, String branch, String path, GitType type) {
+    public GitDetails(String repoUrl, String branch, String path) {
         this.repoUrl = repoUrl;
 
         // Default to the master branch
@@ -48,8 +49,6 @@ public class GitDetails implements Serializable {
         } else {
             this.path = path;
         }
-
-        this.type = type;
     }
 
 
@@ -77,12 +76,28 @@ public class GitDetails implements Serializable {
         this.path = path;
     }
 
+    /**
+     * Get the type of a repository URL this object refers to
+     * @return The type for the URL
+     */
     public GitType getType() {
-        return type;
-    }
-
-    public void setType(GitType type) {
-        this.type = type;
+        try {
+            URI uri = new URI(repoUrl);
+            String domain = uri.getHost();
+            if (domain.startsWith("www.")) {
+                domain = domain.substring(4);
+            }
+            switch (domain) {
+                case "github.com":
+                    return GitType.GITHUB;
+                case "gitlab.com":
+                    return GitType.GITLAB;
+                default:
+                    return GitType.GENERIC;
+            }
+        } catch (URISyntaxException ex) {
+            return GitType.GENERIC;
+        }
     }
 
     /**
@@ -91,7 +106,7 @@ public class GitDetails implements Serializable {
      * @return The URL
      */
     public String getUrl(String branchOverride) {
-        switch (this.type) {
+        switch (getType()) {
             case GENERIC:
                 return repoUrl;
             case GITHUB:
@@ -115,7 +130,7 @@ public class GitDetails implements Serializable {
      * @return The URL
      */
     public String getInternalUrl() {
-        switch (this.type) {
+        switch (getType()) {
             case GENERIC:
                 return "/workflows/" + normaliseUrl(repoUrl) + "/" + branch + "/" + path;
             case GITHUB:
@@ -131,7 +146,7 @@ public class GitDetails implements Serializable {
      * @return The URL
      */
     public String getRawUrl() {
-        switch (this.type) {
+        switch (getType()) {
             case GENERIC:
                 return repoUrl;
             case GITHUB:

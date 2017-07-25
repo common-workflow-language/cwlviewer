@@ -21,7 +21,6 @@ package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
-import org.commonwl.view.git.GitType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,15 +140,17 @@ public class WorkflowRESTController {
 
     /**
      * Get the JSON representation of a workflow from Github details
+     * @param domain The domain of the hosting site, Github or Gitlab
      * @param owner The owner of the Github repository
      * @param repoName The name of the repository
      * @param branch The branch of repository
      * @return The JSON representation of the workflow
      */
-    @GetMapping(value = {"/workflows/github.com/{owner}/{repoName}/tree/{branch}/**",
-                         "/workflows/github.com/{owner}/{repoName}/blob/{branch}/**"},
+    @GetMapping(value = {"/workflows/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
+                         "/workflows/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
                 produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Workflow getWorkflowByGithubDetailsJson(@PathVariable("owner") String owner,
+    public Workflow getWorkflowByGithubDetailsJson(@PathVariable("domain") String domain,
+                                                   @PathVariable("owner") String owner,
                                                    @PathVariable("repoName") String repoName,
                                                    @PathVariable("branch") String branch,
                                                    HttpServletRequest request) {
@@ -158,8 +159,7 @@ public class WorkflowRESTController {
         path = WorkflowController.extractPath(path, 7);
 
         // Construct a GitDetails object to search for in the database
-        GitDetails gitDetails = new GitDetails("https://github.com/" + owner + "/" +
-                repoName + ".git", branch, path, GitType.GITHUB);
+        GitDetails gitDetails = WorkflowController.getGitDetails(domain, owner, repoName, branch, path);
 
         // Get workflow
         Workflow workflowModel = workflowService.getWorkflow(gitDetails);

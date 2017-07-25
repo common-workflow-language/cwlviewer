@@ -21,7 +21,6 @@ package org.commonwl.view.workflow;
 
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitService;
-import org.commonwl.view.git.GitType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,14 +79,14 @@ public class WorkflowFormValidator {
             Matcher m = githubCwlPattern.matcher(form.getUrl());
             if (m.find()) {
                 String repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
-                return new GitDetails(repoUrl, m.group(3), m.group(4), GitType.GITHUB);
+                return new GitDetails(repoUrl, m.group(3), m.group(4));
             }
 
             // Gitlab URL
             m = gitlabCwlPattern.matcher(form.getUrl());
             if (m.find()) {
                 String repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
-                return new GitDetails(repoUrl, m.group(3), m.group(4), GitType.GITLAB);
+                return new GitDetails(repoUrl, m.group(3), m.group(4));
             }
 
             // General Git details if didn't match the above
@@ -95,7 +94,7 @@ public class WorkflowFormValidator {
             ValidationUtils.rejectIfEmptyOrWhitespace(e, "path", "path.emptyOrWhitespace");
             m = gitRepoPattern.matcher(form.getUrl());
             if (m.find()) {
-                return new GitDetails(form.getUrl(), form.getBranch(), form.getPath(), GitType.GENERIC);
+                return new GitDetails(form.getUrl(), form.getBranch(), form.getPath());
             }
 
         }

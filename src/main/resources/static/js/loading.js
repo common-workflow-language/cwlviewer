@@ -59,7 +59,6 @@ require(['jquery'],
                 dataType: "json",
                 cache: false,
                 success: function(response) {
-                    console.log(response);
                     if (response.cwltoolStatus == "RUNNING") {
                         // Retry in 3 seconds
                         setTimeout(function () {

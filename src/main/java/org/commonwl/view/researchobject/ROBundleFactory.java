@@ -70,7 +70,7 @@ public class ROBundleFactory {
         // Get the whole containing folder, not just the workflow itself
         GitDetails githubInfo = workflow.getRetrievedFrom();
         GitDetails roDetails = new GitDetails(githubInfo.getRepoUrl(), githubInfo.getBranch(),
-                FilenameUtils.getPath(githubInfo.getPath()), githubInfo.getType());
+                FilenameUtils.getPath(githubInfo.getPath()));
 
         // Create a new Research Object Bundle with Github contents
         Bundle bundle = roBundleService.createBundle(workflow, roDetails);

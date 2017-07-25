@@ -378,8 +378,7 @@ public class WorkflowService {
         if (firstSlash > 0) {
             branch += "/" + path.substring(0, firstSlash);
             path = path.substring(firstSlash + 1);
-            return new GitDetails(githubInfo.getRepoUrl(), branch,
-                    path, githubInfo.getType());
+            return new GitDetails(githubInfo.getRepoUrl(), branch, path);
         } else {
             return null;
         }
