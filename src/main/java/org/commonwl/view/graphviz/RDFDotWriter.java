@@ -19,7 +19,6 @@
 
 package org.commonwl.view.graphviz;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.commonwl.view.cwl.CWLProcess;
@@ -175,7 +174,7 @@ public class RDFDotWriter extends DotWriter {
                 if (stepLink.get("default").isLiteral()) {
                     label = rdfService.formatDefault(stepLink.get("default").toString());
                 } else if (stepLink.get("default").isURIResource()) {
-                    Path workflowPath = Paths.get(FilenameUtils.getPath(workflowUri));
+                    Path workflowPath = Paths.get(stepLink.get("wf").toString()).getParent();
                     Path resourcePath = Paths.get(stepLink.get("default").toString());
                     label = workflowPath.relativize(resourcePath).toString();
                 } else {

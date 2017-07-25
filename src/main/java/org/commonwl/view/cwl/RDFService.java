@@ -204,7 +204,7 @@ public class RDFService {
     public ResultSet getSteps(String path, String workflowURI) {
         ParameterizedSparqlString stepQuery = new ParameterizedSparqlString();
         stepQuery.setCommandText(queryCtx +
-                "SELECT ?step ?run ?runtype ?label ?doc ?stepinput ?default ?src\n" +
+                "SELECT ?wf ?step ?run ?runtype ?label ?doc ?stepinput ?default ?src\n" +
                 "WHERE {\n" +
                 "  GRAPH ?graphName {" +
                 "    ?wf Workflow:steps ?step .\n" +
@@ -232,7 +232,7 @@ public class RDFService {
     public ResultSet getStepLinks(String path, String workflowURI) {
         ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
         linkQuery.setCommandText(queryCtx +
-                "SELECT ?src ?dest ?default\n" +
+                "SELECT ?wf ?src ?dest ?default\n" +
                 "WHERE {\n" +
                 "  GRAPH ?graphName {" +
                 "    ?wf Workflow:steps ?step .\n" +

@@ -185,7 +185,7 @@ public class CWLService {
                                              File workflowFile,
                                              String packedWorkflowID) throws CWLValidationException {
 
-        // Get RDF representation from cwltool
+        // Get paths to workflow
         String url = gitDetails.getUrl().replace("https://", "");
         String localPath = workflowFile.toPath().toAbsolutePath().toString();
         String gitPath = gitDetails.getPath();
@@ -200,6 +200,7 @@ public class CWLService {
             gitPath += packedWorkflowID;
         }
 
+        // Get RDF representation from cwltool
         if (!rdfService.graphExists(url)) {
             String rdf = cwlTool.getRDF(localPath);
 
@@ -368,7 +369,7 @@ public class CWLService {
                 // Add new step
                 CWLStep wfStep = new CWLStep();
 
-                Path workflowPath = Paths.get(FilenameUtils.getPath(url));
+                Path workflowPath = Paths.get(step.get("wf").toString()).getParent();
                 Path runPath = Paths.get(step.get("run").toString());
                 wfStep.setRun(workflowPath.relativize(runPath).toString());
                 wfStep.setRunType(rdfService.strToRuntype(step.get("runtype").toString()));
