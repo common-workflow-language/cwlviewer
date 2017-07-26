@@ -97,7 +97,7 @@ digraph G {
 </textarea>
                 <a id="download-link-dot" href="" download="workflow.dot"></a>
                 <button id="download-dot" class="btn btn-primary" type="button">Download dot File</button>
-                <a th:href="@{'/workflows/' + ${workflow.id} + '/graph/xdot'}" href="#" download="graph.dot" class="btn btn-primary" type="button">Download xdot File</a>
+                <a th:href="@{${workflow.getVisualisationXdot()}}" href="#" download="graph.dot" class="btn btn-primary" type="button">Download xdot File</a>
             </div>
         </div>
     </div>

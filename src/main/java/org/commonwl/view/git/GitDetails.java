@@ -19,6 +19,8 @@
 
 package org.commonwl.view.git;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,6 +28,7 @@ import java.net.URISyntaxException;
 /**
  * Represents all the parameters necessary to access a file/directory with Git
  */
+@JsonIgnoreProperties(value = {"internalUrl"})
 public class GitDetails implements Serializable {
 
     private String repoUrl;

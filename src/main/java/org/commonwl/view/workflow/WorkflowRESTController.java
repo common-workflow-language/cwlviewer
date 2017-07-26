@@ -149,17 +149,41 @@ public class WorkflowRESTController {
     @GetMapping(value = {"/workflows/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
                          "/workflows/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
                 produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Workflow getWorkflowByGithubDetailsJson(@PathVariable("domain") String domain,
-                                                   @PathVariable("owner") String owner,
-                                                   @PathVariable("repoName") String repoName,
-                                                   @PathVariable("branch") String branch,
-                                                   HttpServletRequest request) {
+    public Workflow getWorkflowJson(@PathVariable("domain") String domain,
+                                    @PathVariable("owner") String owner,
+                                    @PathVariable("repoName") String repoName,
+                                    @PathVariable("branch") String branch,
+                                    HttpServletRequest request) {
         // The wildcard end of the URL is the path
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = WorkflowController.extractPath(path, 7);
 
         // Construct a GitDetails object to search for in the database
         GitDetails gitDetails = WorkflowController.getGitDetails(domain, owner, repoName, branch, path);
+
+        // Get workflow
+        Workflow workflowModel = workflowService.getWorkflow(gitDetails);
+        if (workflowModel == null) {
+            throw new WorkflowNotFoundException();
+        } else {
+            return workflowModel;
+        }
+    }
+
+    /**
+     * Get JSON representation of a workflow from generic git details
+     * @param branch The branch of the repository
+     * @return The JSON representation of the workflow
+     */
+    @GetMapping(value="/workflows/**/*.git/{branch}/**",
+                produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Workflow getWorkflowJsonGeneric(@PathVariable("branch") String branch,
+                                           HttpServletRequest request) {
+        // The wildcard end of the URL is the path
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+
+        // Construct a GitDetails object to search for in the database
+        GitDetails gitDetails = WorkflowController.getGitDetails(11, path, branch);
 
         // Get workflow
         Workflow workflowModel = workflowService.getWorkflow(gitDetails);
