@@ -31,7 +31,7 @@
     <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170616.css}" href="../static/css/main-20170616.css" />
 </head>
-<body th:with="githubURLPart=${workflow.retrievedFrom.getUrl().replace('https://', '')}">
+<body>
 
 <nav th:replace="fragments/header :: navbar"></nav>
 
@@ -113,8 +113,8 @@ digraph G {
             </div>
             <div class="modal-body">
                 <span id="fullscreen-close" data-dismiss="modal" class="close glyphicon glyphicon-resize-small graphControl" data-tooltip="true" title="Close"></span>
-                <object id="graphFullscreen" th:data="@{'/graph/svg/' + ${githubURLPart}}" type="image/svg+xml">
-                    <img th:src="@{'/graph/png/' + ${githubURLPart}}" alt="fullscreen" />
+                <object id="graphFullscreen" th:data="@{${workflow.getVisualisationSvg()}}" type="image/svg+xml">
+                    <img th:src="@{${workflow.getVisualisationPng()}}" alt="fullscreen" />
                 </object>
             </div>
         </div>
@@ -136,7 +136,7 @@ digraph G {
                 <span th:if="${workflow.roBundlePath == null}" id="ajaxRequired"></span>
             <span th:class="${workflow.roBundlePath != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
             <span th:class="${workflow.roBundlePath == null} ? hide : ''" id="generated">
-                    - <a th:href="@{'/robundle/' + ${githubURLPart}}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
+                    - <a th:href="@{${workflow.getROBundle()}}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
                     <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>
                 </span>
         </div>
@@ -154,8 +154,8 @@ digraph G {
                         Download Image <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a id="download-graph" th:href="@{'/graph/svg/' + ${githubURLPart}}" download="graph.svg">As .svg</a></li>
-                        <li><a id="download-graph" th:href="@{'/graph/png/' + ${githubURLPart}}" download="graph.png">As .png</a></li>
+                        <li><a id="download-graph" th:href="@{${workflow.getVisualisationSvg()}}" download="graph.svg">As .svg</a></li>
+                        <li><a id="download-graph" th:href="@{${workflow.getVisualisationPng()}}" download="graph.png">As .png</a></li>
                     </ul>
                 </div>
             </div>
@@ -167,7 +167,7 @@ digraph G {
                 <span id="fullscreen-open" data-toggle="modal" data-target="#fullScreenGraphModal" data-tooltip="true" class="glyphicon glyphicon-resize-full graphControl" title="Expand"></span>
                 <img id="selectChildren" class="graphControl" th:src="@{/img/children-logo.svg}" src="../static/img/children-logo.svg" alt="children" data-tooltip="true" title="Select All Children" />
                 <img id="selectParents" class="graphControl" th:src="@{/img/parents-logo.svg}" src="../static/img/parents-logo.svg" alt="parents" data-tooltip="true" title="Select All Parents" />
-                <div id="graph" data-th-attr="data-svgurl=@{'/graph/svg/' + ${githubURLPart}}"></div>
+                <div id="graph" data-th-attr="data-svgurl=@{${workflow.getVisualisationSvg()}}"></div>
             </div>
             <ul class="legend">
                 <li><span class="selectednode"></span> Selected</li>

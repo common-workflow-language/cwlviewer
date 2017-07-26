@@ -80,6 +80,7 @@ public class CWLToolRunner {
             newWorkflow.setRetrievedFrom(tempWorkflow.getRetrievedFrom());
             newWorkflow.setRetrievedOn(new Date());
             newWorkflow.setLastCommit(tempWorkflow.getLastCommit());
+            newWorkflow.setGitRepoPath(tempWorkflow.getGitRepoPath());
             newWorkflow.setCwltoolVersion(cwlToolVersion);
             workflowRepository.save(newWorkflow);
 

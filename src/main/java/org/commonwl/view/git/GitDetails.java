@@ -92,6 +92,8 @@ public class GitDetails implements Serializable {
                     return GitType.GITHUB;
                 case "gitlab.com":
                     return GitType.GITLAB;
+                case "bitbucket.org":
+                    return GitType.BITBUCKET;
                 default:
                     return GitType.GENERIC;
             }
@@ -107,13 +109,15 @@ public class GitDetails implements Serializable {
      */
     public String getUrl(String branchOverride) {
         switch (getType()) {
-            case GENERIC:
-                return repoUrl;
             case GITHUB:
             case GITLAB:
-                return "https://" + normaliseUrl(repoUrl).replace(".git", "") + "/blob/" + branchOverride + "/" + path;
+                return "https://" + normaliseUrl(repoUrl).replace(".git", "")
+                        + "/blob/" + branchOverride + "/" + path;
+            case BITBUCKET:
+                return "https://" + normaliseUrl(repoUrl).replace(".git", "")
+                        + "/src/" + branchOverride + "/" + path;
             default:
-                return null;
+                return repoUrl;
         }
     }
 
@@ -131,13 +135,11 @@ public class GitDetails implements Serializable {
      */
     public String getInternalUrl() {
         switch (getType()) {
-            case GENERIC:
-                return "/workflows/" + normaliseUrl(repoUrl) + "/" + branch + "/" + path;
             case GITHUB:
             case GITLAB:
                 return "/workflows/" + normaliseUrl(repoUrl).replace(".git", "") + "/blob/" + branch + "/" + path;
             default:
-                return null;
+                return "/workflows/" + normaliseUrl(repoUrl) + "/" + branch + "/" + path;
         }
     }
 
@@ -147,16 +149,16 @@ public class GitDetails implements Serializable {
      */
     public String getRawUrl() {
         switch (getType()) {
-            case GENERIC:
-                return repoUrl;
             case GITHUB:
                 return "https://raw.githubusercontent.com/" +
                         normaliseUrl(repoUrl).replace("github.com/", "").replace(".git", "") +
                         "/" + branch + "/" + path;
             case GITLAB:
-                return "https://whatever/gitlab/uses";
+            case BITBUCKET:
+                return "https://" + normaliseUrl(repoUrl).replace(".git", "")
+                        + "/raw/" + branch + "/" + path;
             default:
-                return null;
+                return repoUrl;
         }
     }
 

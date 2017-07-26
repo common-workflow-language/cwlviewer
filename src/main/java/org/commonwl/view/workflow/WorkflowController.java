@@ -147,13 +147,13 @@ public class WorkflowController {
      */
     @GetMapping(value={"/workflows/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
                        "/workflows/{domain}.com/{owner}/{repoName}/blob/{branch}/**"})
-    public ModelAndView getWorkflowByGithubDetails(@Value("${applicationURL}") String applicationURL,
-                                                   @PathVariable("domain") String domain,
-                                                   @PathVariable("owner") String owner,
-                                                   @PathVariable("repoName") String repoName,
-                                                   @PathVariable("branch") String branch,
-                                                   HttpServletRequest request,
-                                                   RedirectAttributes redirectAttrs) {
+    public ModelAndView getWorkflowByGitSiteDetails(@Value("${applicationURL}") String applicationURL,
+                                                    @PathVariable("domain") String domain,
+                                                    @PathVariable("owner") String owner,
+                                                    @PathVariable("repoName") String repoName,
+                                                    @PathVariable("branch") String branch,
+                                                    HttpServletRequest request,
+                                                    RedirectAttributes redirectAttrs) {
 
         // The wildcard end of the URL is the path
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
@@ -163,49 +163,38 @@ public class WorkflowController {
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
 
         // Get workflow
-        QueuedWorkflow queued = null;
-        Workflow workflowModel = workflowService.getWorkflow(gitDetails);
-        if (workflowModel == null) {
-            // Check if already queued
-            queued = workflowService.getQueuedWorkflow(gitDetails);
-            if (queued == null) {
-                // Validation
-                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl());
-                BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
-                workflowFormValidator.validateAndParse(workflowForm, errors);
-                if (!errors.hasErrors()) {
-                    try {
-                        queued = workflowService.createQueuedWorkflow(gitDetails);
-                    } catch (GitAPIException ex) {
-                        errors.rejectValue("url", "git.retrievalError", ex.getMessage());
-                    } catch (CWLValidationException ex) {
-                        errors.rejectValue("url", "cwltool.validationError", ex.getMessage());
-                    } catch (IOException ex) {
-                        errors.rejectValue("url", "githubURL.parsingError", "The workflow could not be parsed from the given URL");
-                    }
-                }
-                // Redirect to main page with errors if they occurred
-                if (errors.hasErrors()) {
-                    redirectAttrs.addFlashAttribute("errors", errors);
-                    return new ModelAndView("redirect:/?url=" + gitDetails.getUrl());
-                }
-            }
-        }
-
-        // Display this model along with the view
-        ModelAndView modelAndView;
-        if (queued != null) {
-            // Retry creation if there has been an error in cwltool parsing
-            if (queued.getCwltoolStatus() == CWLToolStatus.ERROR) {
-                workflowService.retryCwltool(queued);
-            }
-            modelAndView = new ModelAndView("loading", "queued", queued);
-        } else {
-            modelAndView = new ModelAndView("workflow", "workflow", workflowModel);
-        }
-
+        ModelAndView modelAndView = getWorkflow(gitDetails, redirectAttrs);
         return modelAndView.addObject("appURL", applicationURL);
 
+    }
+
+    @GetMapping(value="/workflows/**/*.git/{branch}/**")
+    public ModelAndView getWorkflowByGitDetails(@Value("${applicationURL}") String applicationURL,
+                                                @PathVariable("branch") String branch,
+                                                HttpServletRequest request,
+                                                RedirectAttributes redirectAttrs) {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+
+        // The repository URL is the part after /workflows/ and up to and including .git
+        String repoUrl = path.substring(11);
+        int extensionIndex = repoUrl.indexOf(".git");
+        if (extensionIndex == -1) {
+            throw new WorkflowNotFoundException();
+        }
+        repoUrl = "https://" + repoUrl.substring(0, extensionIndex + 4);
+
+        // The path is after the branch
+        int slashAfterBranch = path.indexOf("/", path.indexOf(branch));
+        if (slashAfterBranch == -1 || slashAfterBranch == path.length()) {
+            throw new WorkflowNotFoundException();
+        }
+        path = path.substring(slashAfterBranch + 1);
+
+        // Construct GitDetails object for this workflow
+        GitDetails gitDetails = new GitDetails(repoUrl, branch, path);
+
+        ModelAndView modelAndView = getWorkflow(gitDetails, redirectAttrs);
+        return modelAndView.addObject("appURL", applicationURL);
     }
 
     /**
@@ -380,5 +369,54 @@ public class WorkflowController {
                 throw new WorkflowNotFoundException();
         }
         return new GitDetails(repoUrl, branch, path);
+    }
+
+    /**
+     * Get a workflow from Git Details
+     * @param gitDetails The details of the Git repository
+     * @param redirectAttrs Error attributes for redirect
+     * @return The model and view to be returned by the controller
+     */
+    private ModelAndView getWorkflow(GitDetails gitDetails, RedirectAttributes redirectAttrs) {
+        // Get workflow
+        QueuedWorkflow queued = null;
+        Workflow workflowModel = workflowService.getWorkflow(gitDetails);
+        if (workflowModel == null) {
+            // Check if already queued
+            queued = workflowService.getQueuedWorkflow(gitDetails);
+            if (queued == null) {
+                // Validation
+                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl());
+                BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
+                workflowFormValidator.validateAndParse(workflowForm, errors);
+                if (!errors.hasErrors()) {
+                    try {
+                        queued = workflowService.createQueuedWorkflow(gitDetails);
+                    } catch (GitAPIException ex) {
+                        errors.rejectValue("url", "git.retrievalError", ex.getMessage());
+                    } catch (CWLValidationException ex) {
+                        errors.rejectValue("url", "cwltool.validationError", ex.getMessage());
+                    } catch (IOException ex) {
+                        errors.rejectValue("url", "githubURL.parsingError", "The workflow could not be parsed from the given URL");
+                    }
+                }
+                // Redirect to main page with errors if they occurred
+                if (errors.hasErrors()) {
+                    redirectAttrs.addFlashAttribute("errors", errors);
+                    return new ModelAndView("redirect:/?url=" + gitDetails.getUrl());
+                }
+            }
+        }
+
+        // Display this model along with the view
+        if (queued != null) {
+            // Retry creation if there has been an error in cwltool parsing
+            if (queued.getCwltoolStatus() == CWLToolStatus.ERROR) {
+                workflowService.retryCwltool(queued);
+            }
+            return new ModelAndView("loading", "queued", queued);
+        } else {
+            return new ModelAndView("workflow", "workflow", workflowModel);
+        }
     }
 }

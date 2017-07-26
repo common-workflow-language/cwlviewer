@@ -76,7 +76,7 @@ require(['jquery'],
          * Validate form before submit
          */
         $('#add').submit(function() {
-            var pathPattern = new RegExp("^\\/?(\\w+\\/)*\\w+\\.cwl$");
+            var pathPattern = new RegExp("^\\/?([^\\/]*\\/)*[^\\/]+\\.cwl$");
             var input = $("#url").val();
             if (gitPattern.test(input)) {
                 var success = true;

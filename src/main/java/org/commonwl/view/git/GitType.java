@@ -26,5 +26,6 @@ package org.commonwl.view.git;
 public enum GitType {
     GITHUB,
     GITLAB,
+    BITBUCKET,
     GENERIC
 }
