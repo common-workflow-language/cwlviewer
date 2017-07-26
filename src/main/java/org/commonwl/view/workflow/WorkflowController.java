@@ -147,14 +147,13 @@ public class WorkflowController {
      */
     @GetMapping(value={"/workflows/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
                        "/workflows/{domain}.com/{owner}/{repoName}/blob/{branch}/**"})
-    public ModelAndView getWorkflowByGitSiteDetails(@Value("${applicationURL}") String applicationURL,
-                                                    @PathVariable("domain") String domain,
-                                                    @PathVariable("owner") String owner,
-                                                    @PathVariable("repoName") String repoName,
-                                                    @PathVariable("branch") String branch,
-                                                    HttpServletRequest request,
-                                                    RedirectAttributes redirectAttrs) {
-
+    public ModelAndView getWorkflow(@Value("${applicationURL}") String applicationURL,
+                                    @PathVariable("domain") String domain,
+                                    @PathVariable("owner") String owner,
+                                    @PathVariable("repoName") String repoName,
+                                    @PathVariable("branch") String branch,
+                                    HttpServletRequest request,
+                                    RedirectAttributes redirectAttrs) {
         // The wildcard end of the URL is the path
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 7);
@@ -165,34 +164,20 @@ public class WorkflowController {
         // Get workflow
         ModelAndView modelAndView = getWorkflow(gitDetails, redirectAttrs);
         return modelAndView.addObject("appURL", applicationURL);
-
     }
 
+    /**
+     * Display page for a workflow from a generic Git URL
+     * @param branch The branch of the repository
+     * @return The workflow view with the workflow as a model
+     */
     @GetMapping(value="/workflows/**/*.git/{branch}/**")
-    public ModelAndView getWorkflowByGitDetails(@Value("${applicationURL}") String applicationURL,
-                                                @PathVariable("branch") String branch,
-                                                HttpServletRequest request,
-                                                RedirectAttributes redirectAttrs) {
+    public ModelAndView getWorkflowGeneric(@Value("${applicationURL}") String applicationURL,
+                                           @PathVariable("branch") String branch,
+                                           HttpServletRequest request,
+                                           RedirectAttributes redirectAttrs) {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-
-        // The repository URL is the part after /workflows/ and up to and including .git
-        String repoUrl = path.substring(11);
-        int extensionIndex = repoUrl.indexOf(".git");
-        if (extensionIndex == -1) {
-            throw new WorkflowNotFoundException();
-        }
-        repoUrl = "https://" + repoUrl.substring(0, extensionIndex + 4);
-
-        // The path is after the branch
-        int slashAfterBranch = path.indexOf("/", path.indexOf(branch));
-        if (slashAfterBranch == -1 || slashAfterBranch == path.length()) {
-            throw new WorkflowNotFoundException();
-        }
-        path = path.substring(slashAfterBranch + 1);
-
-        // Construct GitDetails object for this workflow
-        GitDetails gitDetails = new GitDetails(repoUrl, branch, path);
-
+        GitDetails gitDetails = getGitDetails(11, path, branch);
         ModelAndView modelAndView = getWorkflow(gitDetails, redirectAttrs);
         return modelAndView.addObject("appURL", applicationURL);
     }
@@ -208,12 +193,12 @@ public class WorkflowController {
                        "/robundle/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
                 produces = "application/vnd.wf4ever.robundle+zip")
     @ResponseBody
-    public FileSystemResource downloadROBundle(@PathVariable("domain") String domain,
-                                               @PathVariable("owner") String owner,
-                                               @PathVariable("repoName") String repoName,
-                                               @PathVariable("branch") String branch,
-                                               HttpServletRequest request,
-                                               HttpServletResponse response) throws IOException {
+    public FileSystemResource getROBundle(@PathVariable("domain") String domain,
+                                          @PathVariable("owner") String owner,
+                                          @PathVariable("repoName") String repoName,
+                                          @PathVariable("branch") String branch,
+                                          HttpServletRequest request,
+                                          HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 7);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
@@ -222,9 +207,26 @@ public class WorkflowController {
         return new FileSystemResource(bundleDownload);
     }
 
+    /**
+     * Download the Research Object Bundle for a particular workflow
+     * @param branch The branch of repository
+     */
+    @GetMapping(value="/robundle/**/*.git/{branch}/**",
+                produces = "application/vnd.wf4ever.robundle+zip")
+    @ResponseBody
+    public FileSystemResource getROBundleGeneric(@PathVariable("branch") String branch,
+                                                 HttpServletRequest request,
+                                                 HttpServletResponse response) throws IOException {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        GitDetails gitDetails = getGitDetails(10, path, branch);
+        File bundleDownload = workflowService.getROBundle(gitDetails);
+        response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
+        return new FileSystemResource(bundleDownload);
+    }
+
 
     /**
-     * Download a generated graph for a workflow as an svg
+     * Download a generated graph for a workflow in SVG format
      * @param domain The domain of the hosting site, Github or Gitlab
      * @param owner The owner of the repository
      * @param repoName The name of the repository
@@ -232,28 +234,37 @@ public class WorkflowController {
      */
     @GetMapping(value={"/graph/svg/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
                        "/graph/svg/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
-                produces = "image/svg+xml")
+                produces="image/svg+xml")
     @ResponseBody
-    public FileSystemResource getGraphAsSvg(@PathVariable("domain") String domain,
-                                            @PathVariable("owner") String owner,
-                                            @PathVariable("repoName") String repoName,
-                                            @PathVariable("branch") String branch,
-                                            HttpServletRequest request,
-                                            HttpServletResponse response) throws IOException {
+    public FileSystemResource downloadGraphSvg(@PathVariable("domain") String domain,
+                                               @PathVariable("owner") String owner,
+                                               @PathVariable("repoName") String repoName,
+                                               @PathVariable("branch") String branch,
+                                               HttpServletRequest request,
+                                               HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
-        Workflow workflow = workflowService.getWorkflow(gitDetails);
-        if (workflow == null) {
-            throw new WorkflowNotFoundException();
-        }
-        File out = graphVizService.getGraph(workflow.getID() + ".svg", workflow.getVisualisationDot(), "svg");
-        response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
-        return new FileSystemResource(out);
+        return getGraph("svg", gitDetails, response);
     }
 
     /**
-     * Download a generated DOT graph for a workflow as a png
+     * Download a generated graph for a workflow in SVG format
+     * @param branch The branch of repository
+     */
+    @GetMapping(value="/graph/svg/**/*.git/{branch}/**",
+                produces="image/svg+xml")
+    @ResponseBody
+    public FileSystemResource downloadGraphSvgGeneric(@PathVariable("branch") String branch,
+                                                      HttpServletRequest request,
+                                                      HttpServletResponse response) throws IOException {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        GitDetails gitDetails = getGitDetails(11, path, branch);
+        return getGraph("svg", gitDetails, response);
+    }
+
+    /**
+     * Download a generated graph for a workflow in PNG format
      * @param domain The domain of the hosting site, Github or Gitlab
      * @param owner The owner of the repository
      * @param repoName The name of the repository
@@ -261,28 +272,37 @@ public class WorkflowController {
      */
     @GetMapping(value={"/graph/png/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
                        "/graph/png/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
-                produces = "image/png")
+                produces="image/png")
     @ResponseBody
-    public FileSystemResource getGraphAsPng(@PathVariable("domain") String domain,
-                                            @PathVariable("owner") String owner,
-                                            @PathVariable("repoName") String repoName,
-                                            @PathVariable("branch") String branch,
-                                            HttpServletRequest request,
-                                            HttpServletResponse response) throws IOException {
+    public FileSystemResource downloadGraphPng(@PathVariable("domain") String domain,
+                                               @PathVariable("owner") String owner,
+                                               @PathVariable("repoName") String repoName,
+                                               @PathVariable("branch") String branch,
+                                               HttpServletRequest request,
+                                               HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
-        Workflow workflow = workflowService.getWorkflow(gitDetails);
-        if (workflow == null) {
-            throw new WorkflowNotFoundException();
-        }
-        File out = graphVizService.getGraph(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
-        response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
-        return new FileSystemResource(out);
+        return getGraph("png", gitDetails, response);
     }
 
     /**
-     * Download a generated DOT graph for a workflow as xdot
+     * Download a generated graph for a workflow in PNG format
+     * @param branch The branch of repository
+     */
+    @GetMapping(value="/graph/png/**/*.git/{branch}/**",
+                produces="image/png")
+    @ResponseBody
+    public FileSystemResource downloadGraphPngGeneric(@PathVariable("branch") String branch,
+                                                      HttpServletRequest request,
+                                                      HttpServletResponse response) throws IOException {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        GitDetails gitDetails = getGitDetails(11, path, branch);
+        return getGraph("png", gitDetails, response);
+    }
+
+    /**
+     * Download a generated graph for a workflow in XDOT format
      * @param domain The domain of the hosting site, Github or Gitlab
      * @param owner The owner of the repository
      * @param repoName The name of the repository
@@ -290,24 +310,33 @@ public class WorkflowController {
      */
     @GetMapping(value={"/graph/xdot/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
                        "/graph/xdot/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
-                produces = "text/vnd.graphviz")
+                produces="text/vnd.graphviz")
     @ResponseBody
-    public FileSystemResource getGraphAsXdot(@PathVariable("domain") String domain,
-                                             @PathVariable("owner") String owner,
-                                             @PathVariable("repoName") String repoName,
-                                             @PathVariable("branch") String branch,
-                                             HttpServletRequest request,
-                                             HttpServletResponse response) throws IOException {
+    public FileSystemResource downloadGraphDot(@PathVariable("domain") String domain,
+                                               @PathVariable("owner") String owner,
+                                               @PathVariable("repoName") String repoName,
+                                               @PathVariable("branch") String branch,
+                                               HttpServletRequest request,
+                                               HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
-        Workflow workflow = workflowService.getWorkflow(gitDetails);
-        if (workflow == null) {
-            throw new WorkflowNotFoundException();
-        }
-        File out = graphVizService.getGraph(workflow.getID() + ".dot", workflow.getVisualisationDot(), "xdot");
-        response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
-        return new FileSystemResource(out);
+        return getGraph("xdot", gitDetails, response);
+    }
+
+    /**
+     * Download a generated graph for a workflow in XDOT format
+     * @param branch The branch of repository
+     */
+    @GetMapping(value="/graph/xdot/**/*.git/{branch}/**",
+                produces="text/vnd.graphviz")
+    @ResponseBody
+    public FileSystemResource downloadGraphDotGeneric(@PathVariable("branch") String branch,
+                                                      HttpServletRequest request,
+                                                      HttpServletResponse response) throws IOException {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        GitDetails gitDetails = getGitDetails(12, path, branch);
+        return getGraph("xdot", gitDetails, response);
     }
 
     /**
@@ -356,7 +385,7 @@ public class WorkflowController {
      * @return A constructed GitDetails object
      */
     public static GitDetails getGitDetails(String domain, String owner, String repoName,
-                                         String branch, String path) {
+                                           String branch, String path) {
         String repoUrl;
         switch (domain) {
             case "github":
@@ -372,7 +401,34 @@ public class WorkflowController {
     }
 
     /**
-     * Get a workflow from Git Details
+     * Constructs a GitDetails object for a generic path
+     * @param startIndex The start of the repository URL
+     * @param path The entire URL path
+     * @param branch The branch of the repository
+     * @return A constructed GitDetails object
+     */
+    public static GitDetails getGitDetails(int startIndex, String path, String branch) {
+        // The repository URL is the part after startIndex and up to and including .git
+        String repoUrl = path.substring(startIndex);
+        int extensionIndex = repoUrl.indexOf(".git");
+        if (extensionIndex == -1) {
+            throw new WorkflowNotFoundException();
+        }
+        repoUrl = "https://" + repoUrl.substring(0, extensionIndex + 4);
+
+        // The path is after the branch
+        int slashAfterBranch = path.indexOf("/", path.indexOf(branch));
+        if (slashAfterBranch == -1 || slashAfterBranch == path.length()) {
+            throw new WorkflowNotFoundException();
+        }
+        path = path.substring(slashAfterBranch + 1);
+
+        // Construct GitDetails object for this workflow
+        return new GitDetails(repoUrl, branch, path);
+    }
+
+    /**
+     * Get a workflow from Git Details, creating if it does not exist
      * @param gitDetails The details of the Git repository
      * @param redirectAttrs Error attributes for redirect
      * @return The model and view to be returned by the controller
@@ -418,5 +474,42 @@ public class WorkflowController {
         } else {
             return new ModelAndView("workflow", "workflow", workflowModel);
         }
+    }
+
+    /**
+     * Get a graph in a particular format and return it
+     * @param format The format for the graph file
+     * @param gitDetails The Git details of the workflow
+     * @param response The response object for setting content-disposition header
+     * @return A FileSystemResource representing the graph
+     * @throws WorkflowNotFoundException Error getting the workflow or format
+     */
+    private FileSystemResource getGraph(String format, GitDetails gitDetails,
+                                        HttpServletResponse response)
+            throws WorkflowNotFoundException {
+        // Determine file extension from format
+        String extension;
+        switch (format) {
+            case "svg":
+            case "png":
+                extension = format;
+                break;
+            case "xdot":
+                extension = "dot";
+                break;
+            default:
+                throw new WorkflowNotFoundException();
+        }
+
+        // Get workflow
+        Workflow workflow = workflowService.getWorkflow(gitDetails);
+        if (workflow == null) {
+            throw new WorkflowNotFoundException();
+        }
+
+        // Generate graph and serve the file
+        File out = graphVizService.getGraph(workflow.getID() + "." + extension, workflow.getVisualisationDot(), format);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph." + extension + "\"");
+        return new FileSystemResource(out);
     }
 }

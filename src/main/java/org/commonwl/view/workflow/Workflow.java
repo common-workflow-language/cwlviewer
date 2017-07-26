@@ -211,20 +211,20 @@ public class Workflow {
     // Include links to related resources
 
     public String getVisualisationXdot() {
-        return "/graph/xdot/" + retrievedFrom.getUrl().replace("https://", "");
+        return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/graph/xdot");
     }
 
     public String getVisualisationPng() {
-        return "/graph/png/" + retrievedFrom.getUrl().replace("https://", "");
+        return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/graph/png");
     }
 
     public String getVisualisationSvg() {
-        return "/graph/svg/" + retrievedFrom.getUrl().replace("https://", "");
+        return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/graph/svg");
     }
 
     public String getROBundle() {
         if (roBundlePath != null) {
-            return "/robundle/" + retrievedFrom.getUrl().replace("https://", "");
+            return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/robundle");
         } else {
             return null;
         }
