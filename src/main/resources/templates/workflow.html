@@ -260,7 +260,7 @@ digraph G {
                         <tr th:each="output : ${workflow.outputs}">
                             <td th:text="${output.key}">ID</td>
                             <td>
-                                <a th:if="${output.value.format != null}" th:href="@{${output.value.format}}" th:text="${input.value.type}" target="_blank" rel="noopener">Type</a>
+                                <a th:if="${output.value.format != null}" th:href="@{${output.value.format}}" th:text="${output.value.type}" target="_blank" rel="noopener">Type</a>
                                 <span th:if="${output.value.format == null}" th:text="${output.value.type}"></span>
                             </td>
                             <td th:text="${output.value.label}">Label</td>

@@ -114,6 +114,7 @@ public class CWLTool {
             // Wait for process to complete
             int exitCode = process.waitFor();
             if (exitCode == 0) {
+                inputGobbler.join();
                 return inputGobbler.getContent();
             } else {
                 throw new CWLValidationException(errorGobbler.getContent());
