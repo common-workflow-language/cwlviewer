@@ -213,7 +213,7 @@ public class WorkflowService {
      * @param gitInfo Git information for the workflow
      * @return A queued workflow model
      * @throws GitAPIException Git errors
-     * @throws CWLValidationException cwltool errors
+     * @throws WorkflowNotFoundException Workflow was not found within the repository
      * @throws IOException Other file handling exceptions
      */
     public QueuedWorkflow createQueuedWorkflow(GitDetails gitInfo)
@@ -240,7 +240,7 @@ public class WorkflowService {
         Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
         // Prevent path traversal attacks
         if (!pathToWorkflowFile.startsWith(localPath.toPath().normalize().toAbsolutePath())) {
-            throw new CWLValidationException("Given workflow path did not resolve to a location within the repository");
+            throw new WorkflowNotFoundException();
         }
 
         File workflowFile = new File(pathToWorkflowFile.toString());
@@ -378,7 +378,8 @@ public class WorkflowService {
         if (firstSlash > 0) {
             branch += "/" + path.substring(0, firstSlash);
             path = path.substring(firstSlash + 1);
-            return new GitDetails(githubInfo.getRepoUrl(), branch, path);
+            return new GitDetails(githubInfo.getRepoUrl(), branch,
+                    path);
         } else {
             return null;
         }

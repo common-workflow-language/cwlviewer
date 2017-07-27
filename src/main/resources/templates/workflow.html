@@ -136,7 +136,7 @@ digraph G {
                 <span th:if="${workflow.roBundlePath == null}" id="ajaxRequired"></span>
             <span th:class="${workflow.roBundlePath != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
             <span th:class="${workflow.roBundlePath == null} ? hide : ''" id="generated">
-                    - <a th:href="@{${workflow.getROBundle()}}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
+                    - <a th:href="@{${workflow.getRoBundleLink()}}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
                     <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>
                 </span>
         </div>

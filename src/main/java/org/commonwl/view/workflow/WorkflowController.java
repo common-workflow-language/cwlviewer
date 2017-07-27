@@ -21,7 +21,6 @@ package org.commonwl.view.workflow;
 
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.cwl.CWLToolStatus;
-import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -121,12 +120,14 @@ public class WorkflowController {
             if (workflow == null) {
                 try {
                     workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
-                } catch (CWLValidationException ex) {
-                    bindingResult.rejectValue("url", "cwltool.validationError", ex.getMessage());
+                } catch (GitAPIException ex) {
+                    bindingResult.rejectValue("url", "git.retrievalError");
+                    return new ModelAndView("index");
+                } catch (WorkflowNotFoundException ex) {
+                    bindingResult.rejectValue("url", "git.pathTraversal");
                     return new ModelAndView("index");
                 } catch (Exception ex) {
-                    bindingResult.rejectValue("url", "githubURL.parsingError");
-                    logger.error(ex.getMessage(), ex);
+                    bindingResult.rejectValue("url", "url.parsingError");
                     return new ModelAndView("index");
                 }
             }
@@ -449,11 +450,11 @@ public class WorkflowController {
                     try {
                         queued = workflowService.createQueuedWorkflow(gitDetails);
                     } catch (GitAPIException ex) {
-                        errors.rejectValue("url", "git.retrievalError", ex.getMessage());
-                    } catch (CWLValidationException ex) {
-                        errors.rejectValue("url", "cwltool.validationError", ex.getMessage());
+                        errors.rejectValue("url", "git.retrievalError", "The workflow could not be retrieved from the Git repository using the details given");
+                    } catch (WorkflowNotFoundException ex) {
+                        errors.rejectValue("url", "git.pathTraversal", "The path given did not resolve to a location within the repository");
                     } catch (IOException ex) {
-                        errors.rejectValue("url", "githubURL.parsingError", "The workflow could not be parsed from the given URL");
+                        errors.rejectValue("url", "url.parsingError", "The workflow could not be parsed from the given URL");
                     }
                 }
                 // Redirect to main page with errors if they occurred

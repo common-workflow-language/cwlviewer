@@ -81,7 +81,9 @@ public class CWLToolRunner {
             newWorkflow.setRetrievedOn(new Date());
             newWorkflow.setLastCommit(tempWorkflow.getLastCommit());
             newWorkflow.setGitRepoPath(tempWorkflow.getGitRepoPath());
+            newWorkflow.setPackedWorkflowID(tempWorkflow.getPackedWorkflowID());
             newWorkflow.setCwltoolVersion(cwlToolVersion);
+
             workflowRepository.save(newWorkflow);
 
             // Generate RO bundle

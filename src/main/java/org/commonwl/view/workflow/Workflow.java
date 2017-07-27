@@ -36,7 +36,7 @@ import java.util.Map;
  * Representation of a workflow
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(value = {"id", "roBundlePath", "gitRepoPath"})
+@JsonIgnoreProperties(value = {"id", "roBundlePath", "gitRepoPath", "roBundleLink"})
 @Document
 public class Workflow {
 
@@ -222,11 +222,15 @@ public class Workflow {
         return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/graph/svg");
     }
 
-    public String getROBundle() {
+    public String getRoBundle() {
         if (roBundlePath != null) {
-            return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/robundle");
+            return getRoBundleLink();
         } else {
             return null;
         }
+    }
+
+    public String getRoBundleLink() {
+        return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/robundle");
     }
 }
