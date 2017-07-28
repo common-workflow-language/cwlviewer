@@ -223,7 +223,7 @@ public class WorkflowService {
         Git repo = null;
         while (repo == null) {
             try {
-                repo = gitService.cloneRepository(gitInfo);
+                repo = gitService.getRepository(gitInfo);
             } catch (RefNotFoundException ex) {
                 // Attempt slashes in branch fix
                 GitDetails correctedForSlash = transferPathToBranch(gitInfo);
@@ -250,7 +250,6 @@ public class WorkflowService {
         basicModel.setRetrievedOn(new Date());
         basicModel.setRetrievedFrom(gitInfo);
         basicModel.setLastCommit(latestCommit);
-        basicModel.setGitRepoPath(localPath.toString());
 
         // Save the queued workflow to database
         QueuedWorkflow queuedWorkflow = new QueuedWorkflow();
@@ -327,40 +326,40 @@ public class WorkflowService {
      * @return Whether or not there are new commits
      */
     private boolean cacheExpired(Workflow workflow) {
-        try {
-            // Calculate expiration
-            Calendar expireCal = Calendar.getInstance();
-            expireCal.setTime(workflow.getRetrievedOn());
-            expireCal.add(Calendar.DATE, cacheDays);
-            Date expirationDate = expireCal.getTime();
+        // If this is a branch and not added by commit ID
+        if (!workflow.getRetrievedFrom().getBranch().equals(workflow.getLastCommit())) {
+            try {
+                // Calculate expiration
+                Calendar expireCal = Calendar.getInstance();
+                expireCal.setTime(workflow.getRetrievedOn());
+                expireCal.add(Calendar.DATE, cacheDays);
+                Date expirationDate = expireCal.getTime();
 
-            // Check cached retrievedOn date
-            if (expirationDate.before(new Date())) {
-                // Cache expiry time has elapsed
-                // Check current head of the branch with the cached head
-                logger.debug("Time has expired for caching, checking commits...");
-                String repoPath = workflow.getGitRepoPath();
-                Git repo = Git.open(new File(repoPath));
-                String currentHead = repo.getRepository().findRef("HEAD").getObjectId().getName();
-                logger.debug("Current: " + workflow.getLastCommit() + ", HEAD: " + currentHead);
+                // Check cached retrievedOn date
+                if (expirationDate.before(new Date())) {
+                    // Cache expiry time has elapsed
+                    // Check current head of the branch with the cached head
+                    logger.info("Time has expired for caching, checking commits...");
+                    Git repo = gitService.getRepository(workflow.getRetrievedFrom());
+                    String currentHead = repo.getRepository().findRef("HEAD").getObjectId().getName();
+                    logger.info("Current: " + workflow.getLastCommit() + ", HEAD: " + currentHead);
 
-                // Reset date in database if there are still no changes
-                boolean expired = !workflow.getLastCommit().equals(currentHead);
-                if (!expired) {
-                    workflow.setRetrievedOn(new Date());
-                    workflowRepository.save(workflow);
+                    // Reset date in database if there are still no changes
+                    boolean expired = !workflow.getLastCommit().equals(currentHead);
+                    if (!expired) {
+                        workflow.setRetrievedOn(new Date());
+                        workflowRepository.save(workflow);
+                    }
+
+                    // Return whether the cache has expired
+                    return expired;
                 }
-
-                // Return whether the cache has expired
-                return expired;
-            } else {
-                // Cache expiry time has not elapsed yet
-                return false;
+            } catch(Exception ex){
+                // Default to no expiry if there was an API error
+                logger.error("API Error when checking for latest commit ID for caching", ex);
             }
-        } catch (Exception ex) {
-            // Default to no expiry if there was an API error
-            return false;
         }
+        return false;
     }
 
     /**

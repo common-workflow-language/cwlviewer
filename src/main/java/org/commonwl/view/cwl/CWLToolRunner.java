@@ -72,15 +72,13 @@ public class CWLToolRunner {
         // Parse using cwltool and replace in database
         try {
             Workflow newWorkflow = cwlService.parseWorkflowWithCwltool(
-                    tempWorkflow.getRetrievedFrom(),
-                    workflowFile,
-                    tempWorkflow.getPackedWorkflowID());
+                    tempWorkflow,
+                    workflowFile);
 
             // Success
             newWorkflow.setRetrievedFrom(tempWorkflow.getRetrievedFrom());
             newWorkflow.setRetrievedOn(new Date());
             newWorkflow.setLastCommit(tempWorkflow.getLastCommit());
-            newWorkflow.setGitRepoPath(tempWorkflow.getGitRepoPath());
             newWorkflow.setPackedWorkflowID(tempWorkflow.getPackedWorkflowID());
             newWorkflow.setCwltoolVersion(cwlToolVersion);
 

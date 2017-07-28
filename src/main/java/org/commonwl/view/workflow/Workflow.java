@@ -36,7 +36,7 @@ import java.util.Map;
  * Representation of a workflow
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(value = {"id", "roBundlePath", "gitRepoPath", "roBundleLink"})
+@JsonIgnoreProperties(value = {"id", "roBundlePath", "roBundleLink"})
 @Document
 public class Workflow {
 
@@ -56,9 +56,6 @@ public class Workflow {
 
     // If schema salad packed, the workflow ID
     private String packedWorkflowID;
-
-    // Directory in which the git repository is held while processing
-    private String gitRepoPath;
 
     // A String which represents the path to a RO bundle
     // Path types cannot be stored using Spring Data, unfortunately
@@ -197,14 +194,6 @@ public class Workflow {
 
     public void setVisualisationDot(String visualisationDot) {
         this.visualisationDot = visualisationDot;
-    }
-
-    public String getGitRepoPath() {
-        return gitRepoPath;
-    }
-
-    public void setGitRepoPath(String gitRepoPath) {
-        this.gitRepoPath = gitRepoPath;
     }
 
     // The following are here for Jackson message converter for the REST API

@@ -176,17 +176,19 @@ public class CWLService {
     }
 
     /**
-     * Create a workflow model from cwltool rdf output
+     * Create a workflow model using cwltool rdf output
+     * @param basicModel The basic workflow object created thus far
      * @param workflowFile The workflow file to run cwltool on
-     * @param packedWorkflowID The workflow ID if the file has multiple objects
      * @return The constructed workflow object
      */
-    public Workflow parseWorkflowWithCwltool(GitDetails gitDetails,
-                                             File workflowFile,
-                                             String packedWorkflowID) throws CWLValidationException {
+    public Workflow parseWorkflowWithCwltool(Workflow basicModel,
+                                             File workflowFile) throws CWLValidationException {
+        GitDetails gitDetails = basicModel.getRetrievedFrom();
+        String latestCommit = basicModel.getLastCommit();
+        String packedWorkflowID = basicModel.getPackedWorkflowID();
 
         // Get paths to workflow
-        String url = gitDetails.getUrl().replace("https://", "");
+        String url = gitDetails.getUrl(latestCommit).replace("https://", "");
         String localPath = workflowFile.toPath().toAbsolutePath().toString();
         String gitPath = gitDetails.getPath();
         if (packedWorkflowID != null) {

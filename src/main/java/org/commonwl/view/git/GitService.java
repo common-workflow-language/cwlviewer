@@ -54,14 +54,15 @@ public class GitService {
     }
 
     /**
-     * Clone a repository into a local directory
+     * Gets a repository, cloning into a local directory or
      * @param gitDetails The details of the Git repository
+     * @returns The git object for the repository
      */
-    public Git cloneRepository(GitDetails gitDetails)
+    public Git getRepository(GitDetails gitDetails)
             throws GitAPIException {
         Git repo = null;
         try {
-            // Get base directory based on configuration
+            // Base dir from configuration, name from hash of repository URL
             File baseDir = new File(gitStorage.toString());
             String baseName = DigestUtils.shaHex(GitDetails.normaliseUrl(gitDetails.getRepoUrl()));
 

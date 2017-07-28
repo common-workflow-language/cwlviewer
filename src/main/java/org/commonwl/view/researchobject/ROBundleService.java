@@ -27,6 +27,7 @@ import org.apache.taverna.robundle.manifest.*;
 import org.commonwl.view.cwl.CWLTool;
 import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitService;
 import org.commonwl.view.git.GitType;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
@@ -66,6 +67,7 @@ public class ROBundleService {
 
     // Services
     private GraphVizService graphVizService;
+    private GitService gitService;
     private CWLTool cwlTool;
 
     // Configuration variables
@@ -91,12 +93,14 @@ public class ROBundleService {
                            @Value("${applicationURL}") String appURL,
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
                            GraphVizService graphVizService,
+                           GitService gitService,
                            CWLTool cwlTool) throws URISyntaxException {
         this.bundleStorage = bundleStorage;
         this.appAgent = new Agent(appName);
         appAgent.setUri(new URI(appURL));
         this.singleFileSizeLimit = singleFileSizeLimit;
         this.graphVizService = graphVizService;
+        this.gitService = gitService;
         this.cwlTool = cwlTool;
     }
 
@@ -129,7 +133,7 @@ public class ROBundleService {
 
             // Add the files from the Github repo to this workflow
             Set<HashableAgent> authors = new HashSet<>();
-            Git gitRepo = Git.open(new File(workflow.getGitRepoPath()));
+            Git gitRepo = gitService.getRepository(workflow.getRetrievedFrom());
             Path relativePath = Paths.get(FilenameUtils.getPath(gitInfo.getPath()));
             Path gitPath = gitRepo.getRepository().getWorkTree().toPath().resolve(relativePath);
             addFilesToBundle(gitInfo, bundle, bundlePath, gitRepo, gitPath, authors);
@@ -187,6 +191,8 @@ public class ROBundleService {
 
         } catch (URISyntaxException ex) {
             logger.error("Error creating URI for RO Bundle", ex);
+        } catch (GitAPIException ex) {
+            logger.error("Error getting repository to create RO Bundle", ex);
         }
 
         // Return the completed bundle
