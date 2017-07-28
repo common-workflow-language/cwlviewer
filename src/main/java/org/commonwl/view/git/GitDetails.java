@@ -170,7 +170,7 @@ public class GitDetails implements Serializable {
      * @param url The URL to be normalised
      * @return The normalised URL
      */
-    private String normaliseUrl(String url) {
+    public static String normaliseUrl(String url) {
         return url.replace("http://", "")
                   .replace("https://", "")
                   .replace("ssh://", "")

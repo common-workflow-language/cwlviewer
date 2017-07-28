@@ -19,22 +19,26 @@
 
 package org.commonwl.view.git;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
-
-import static java.util.Collections.singleton;
-import static org.apache.jena.ext.com.google.common.io.Files.createTempDir;
 
 /**
  * Handles Git related functionality
  */
 @Service
 public class GitService {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // Location to check out git repositories into
     private Path gitStorage;
@@ -55,13 +59,44 @@ public class GitService {
      */
     public Git cloneRepository(GitDetails gitDetails)
             throws GitAPIException {
-        return Git.cloneRepository()
-                .setCloneSubmodules(cloneSubmodules)
-                .setURI(gitDetails.getRepoUrl())
-                .setDirectory(createTempDir())
-                .setBranchesToClone(singleton("refs/heads/" + gitDetails.getBranch()))
-                .setBranch("refs/heads/" + gitDetails.getBranch())
-                .call();
+        Git repo = null;
+        try {
+            // Get base directory based on configuration
+            File baseDir = new File(gitStorage.toString());
+            String baseName = DigestUtils.shaHex(GitDetails.normaliseUrl(gitDetails.getRepoUrl()));
+
+            // Check if folder already exists
+            File repoDir = new File(baseDir, baseName);
+            if (repoDir.exists() && repoDir.isDirectory()) {
+                    repo = Git.open(repoDir);
+                    repo.fetch().call();
+            } else {
+                // Create a folder and clone repository into it
+                if (repoDir.mkdir()) {
+                    repo = Git.cloneRepository()
+                            .setCloneSubmodules(cloneSubmodules)
+                            .setURI(gitDetails.getRepoUrl())
+                            .setDirectory(repoDir)
+                            .setCloneAllBranches(true)
+                            .call();
+                }
+            }
+
+            // Checkout the specific branch or commit ID
+            if (repo != null) {
+                repo.checkout()
+                        .setName(gitDetails.getBranch())
+                        .call();
+                if (repo.getRepository().getFullBranch() != null) {
+                    repo.pull().call();
+                }
+            }
+        } catch (IOException ex) {
+            logger.error("Could not open existing Git repository for '"
+                    + gitDetails.getRepoUrl() + "'", ex);
+        }
+
+        return repo;
     }
 
 

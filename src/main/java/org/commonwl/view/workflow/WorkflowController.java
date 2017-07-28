@@ -122,6 +122,7 @@ public class WorkflowController {
                     workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
                 } catch (GitAPIException ex) {
                     bindingResult.rejectValue("url", "git.retrievalError");
+                    logger.error("Github API Error", ex);
                     return new ModelAndView("index");
                 } catch (WorkflowNotFoundException ex) {
                     bindingResult.rejectValue("url", "git.pathTraversal");
@@ -451,6 +452,7 @@ public class WorkflowController {
                         queued = workflowService.createQueuedWorkflow(gitDetails);
                     } catch (GitAPIException ex) {
                         errors.rejectValue("url", "git.retrievalError", "The workflow could not be retrieved from the Git repository using the details given");
+                        logger.error("Github API Error", ex);
                     } catch (WorkflowNotFoundException ex) {
                         errors.rejectValue("url", "git.pathTraversal", "The path given did not resolve to a location within the repository");
                     } catch (IOException ex) {
