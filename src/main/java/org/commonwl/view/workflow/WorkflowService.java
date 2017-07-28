@@ -277,7 +277,11 @@ public class WorkflowService {
         queuedWorkflow.setCwltoolStatus(CWLToolStatus.RUNNING);
         queuedWorkflowRepository.save(queuedWorkflow);
         try {
-            //cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
+            GitDetails gitDetails = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
+            Git repo = gitService.getRepository(gitDetails);
+            File localPath = repo.getRepository().getWorkTree();
+            Path pathToWorkflowFile = localPath.toPath().resolve(gitDetails.getPath()).normalize().toAbsolutePath();
+            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, new File(pathToWorkflowFile.toString()));
         } catch (Exception e) {
             logger.error("Could not update workflow with cwltool", e);
         }
