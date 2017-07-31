@@ -88,7 +88,8 @@ public class GitService {
                 repo.checkout()
                         .setName(gitDetails.getBranch())
                         .call();
-                if (repo.getRepository().getFullBranch() != null) {
+                String branch = repo.getRepository().getFullBranch();
+                if (branch != null && !branch.startsWith(gitDetails.getBranch())) {
                     repo.pull().call();
                 }
             }
