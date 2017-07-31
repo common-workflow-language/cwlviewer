@@ -71,6 +71,16 @@ public class PageControllerTest {
     }
 
     /**
+     * About page
+     */
+    @Test
+    public void aboutPage() throws Exception {
+        mockMvc.perform(get("/about"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("about"));
+    }
+
+    /**
      * API documentation page
      */
     @Test
