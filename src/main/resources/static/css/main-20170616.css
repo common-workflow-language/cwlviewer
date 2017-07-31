@@ -257,6 +257,10 @@ body {
 .legend .defaults { background-color: #D5AEFC; }
 .legend .selectednode { background-color: #B9FFBB; }
 
+.recommendation {
+    font-weight: bold;
+}
+
 tr.selected, .table-hover tbody tr.selected:hover td, .table-hover tbody tr.selected:hover th {
     background-color: #b9ffbb !important;
 }
