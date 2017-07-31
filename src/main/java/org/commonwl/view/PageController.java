@@ -40,6 +40,16 @@ public class PageController {
     }
 
     /**
+     * About page
+     * @param model The model for the about page
+     * @return The view for this page
+     */
+    @GetMapping("/about")
+    public String about(Model model) {
+        return "about";
+    }
+
+    /**
      * API documentation page
      * @param model The model for the API documentation page
      * @return The view for this page
