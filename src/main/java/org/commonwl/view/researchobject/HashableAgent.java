@@ -33,6 +33,14 @@ public class HashableAgent extends Agent {
     private URI orcid;
     private URI uri;
 
+    public HashableAgent() {}
+
+    public HashableAgent(String name, URI orcid, URI uri) {
+        this.name = name;
+        this.orcid = orcid;
+        this.uri = uri;
+    }
+
     @Override
     public String getName() {
         return name;

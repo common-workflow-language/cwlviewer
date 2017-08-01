@@ -20,8 +20,11 @@
 package org.commonwl.view.git;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +33,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Handles Git related functionality
@@ -111,5 +118,38 @@ public class GitService {
         return repo.getRepository().findRef("HEAD").getObjectId().getName();
     }
 
+    /**
+     * Gets a set of authors for a path in a given repository
+     * @param repo The git repository
+     * @param path The path to get commits for
+     * @return An iterable of commits
+     * @throws GitAPIException Any API errors which may occur
+     * @throws URISyntaxException Error constructing mailto link
+     */
+    public Set<HashableAgent> getAuthors(Git repo, String path) throws GitAPIException, URISyntaxException {
+        Iterable<RevCommit> logs = repo.log().addPath(path).call();
+        Set<HashableAgent> fileAuthors = new HashSet<>();
+        for (RevCommit rev : logs) {
+            // Use author first with backup of committer
+            PersonIdent author = rev.getAuthorIdent();
+            if (author == null) {
+                author = rev.getCommitterIdent();
+            }
+            // Create a new agent and add as much detail as possible
+            if (author != null) {
+                HashableAgent newAgent = new HashableAgent();
+                String name = author.getName();
+                if (name != null && name.length() > 0) {
+                    newAgent.setName(author.getName());
+                }
+                String email = author.getEmailAddress();
+                if (email != null && email.length() > 0) {
+                    newAgent.setUri(new URI("mailto:" + author.getEmailAddress()));
+                }
+                fileAuthors.add(newAgent);
+            }
+        }
+        return fileAuthors;
+    }
 
 }

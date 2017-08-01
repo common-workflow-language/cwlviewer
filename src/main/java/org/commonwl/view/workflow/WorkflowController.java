@@ -108,7 +108,7 @@ public class WorkflowController {
     @PostMapping("/workflows")
     public ModelAndView newWorkflowFromGithubURL(@Valid WorkflowForm workflowForm, BindingResult bindingResult) {
 
-        // Run validator which checks the github URL is valid
+        // Run validator which checks the git URL is valid
         GitDetails gitInfo = workflowFormValidator.validateAndParse(workflowForm, bindingResult);
 
         if (bindingResult.hasErrors() || gitInfo == null) {

@@ -30,6 +30,7 @@ import org.commonwl.view.git.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Repository;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +40,9 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyObject;
@@ -52,7 +55,11 @@ public class ROBundleServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        gitRepo = Git.open(new File("src/test/resources/lobstr-draft3"));
+        Repository mockRepo = Mockito.mock(Repository.class);
+        when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/"));
+
+        gitRepo = Mockito.mock(Git.class);
+        when(gitRepo.getRepository()).thenReturn(mockRepo);
     }
 
     /**
@@ -62,7 +69,7 @@ public class ROBundleServiceTest {
     public TemporaryFolder roBundleFolder = new TemporaryFolder();
 
     /**
-     * Generate a Research Object bundle from lobstr-v1 and check it
+     * Generate a Research Object bundle from lobstr and check it
      */
     @Test
     public void generateAndSaveROBundle() throws Exception {
@@ -70,6 +77,11 @@ public class ROBundleServiceTest {
         // Get mock Git service
         GitService mockGitService = Mockito.mock(GitService.class);
         when(mockGitService.getRepository(anyObject())).thenReturn(gitRepo);
+
+        Set<HashableAgent> authors = new HashSet<>();
+        authors.add(new HashableAgent("Mark Robinson", null, new URI("mailto:mark@example.com")));
+        when(mockGitService.getAuthors(anyObject(), anyObject()))
+                .thenReturn(authors);
 
         // Mock Graphviz service
         GraphVizService mockGraphvizService = Mockito.mock(GraphVizService.class);
@@ -93,7 +105,7 @@ public class ROBundleServiceTest {
 
         // RO details
         GitDetails lobSTRv1RODetails = new GitDetails("https://github.com/common-workflow-language/workflows.git",
-                "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
+                "933bf2a1a1cce32d88f88f136275535da9df0954", "lobstr-draft3/");
 
         // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
@@ -115,12 +127,13 @@ public class ROBundleServiceTest {
         // Check cwl aggregation information
         PathMetadata cwlAggregate = manifest.getAggregation(
                 bundleRoot.resolve("lobSTR-workflow.cwl"));
-        assertEquals("https://raw.githubusercontent.com/common-workflow-language/workflows/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/lobSTR/lobSTR-workflow.cwl",
+        assertEquals("https://raw.githubusercontent.com/common-workflow-language/workflows/933bf2a1a1cce32d88f88f136275535da9df0954/lobstr-draft3/lobSTR-workflow.cwl",
                 cwlAggregate.getRetrievedFrom().toString());
         assertEquals("Mark Robinson", cwlAggregate.getAuthoredBy().get(0).getName());
+        assertEquals("mailto:mark@example.com", cwlAggregate.getAuthoredBy().get(0).getUri().toString());
         assertNull(cwlAggregate.getAuthoredBy().get(0).getOrcid());
         assertEquals("text/x-yaml", cwlAggregate.getMediatype());
-        assertEquals("https://w3id.org/cwl/v1.0", cwlAggregate.getConformsTo().toString());
+        assertEquals("https://w3id.org/cwl/draft-3", cwlAggregate.getConformsTo().toString());
 
         // Check visualisations exist as aggregates
         PathMetadata pngAggregate = manifest.getAggregation(bundleRoot.resolve("visualisation.png"));
@@ -137,7 +150,7 @@ public class ROBundleServiceTest {
         // Check git2prov link is in the history
         List<Path> history = manifest.getHistory();
         assertEquals(1, history.size());
-        assertEquals("http:/git2prov.org/git2prov?giturl=https:/github.com/common-workflow-language/workflows&serialization=PROV-JSON",
+        assertEquals("http:/git2prov.org/git2prov?giturl=https:/github.com/common-workflow-language/workflows.git&serialization=PROV-JSON",
                 history.get(0).toString());
 
         // Save and check it exists in the temporary folder
@@ -162,6 +175,11 @@ public class ROBundleServiceTest {
         GitService mockGitService = Mockito.mock(GitService.class);
         when(mockGitService.getRepository(anyObject())).thenReturn(gitRepo);
 
+        Set<HashableAgent> authors = new HashSet<>();
+        authors.add(new HashableAgent("Mark Robinson", null, new URI("mailto:mark@example.com")));
+        when(mockGitService.getAuthors(anyObject(), anyObject()))
+                .thenReturn(authors);
+
         // Mock Graphviz service
         GraphVizService mockGraphvizService = Mockito.mock(GraphVizService.class);
         when(mockGraphvizService.getGraph(anyString(), anyString(), anyString()))
@@ -184,7 +202,7 @@ public class ROBundleServiceTest {
 
         // RO details
         GitDetails lobSTRv1RODetails = new GitDetails("https://github.com/common-workflow-language/workflows.git",
-                "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR");
+                "933bf2a1a1cce32d88f88f136275535da9df0954", "lobstr-draft3/lobSTR-workflow.cwl");
 
         // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
@@ -198,9 +216,7 @@ public class ROBundleServiceTest {
         assertEquals(14, manifest.getAggregates().size());
 
         PathMetadata urlAggregate = manifest.getAggregation(
-                new URI("https://raw.githubusercontent.com/common-workflow-language/workflows/" +
-                        "933bf2a1a1cce32d88f88f136275535da9df0954/workflows/lobSTR/models/" +
-                        "illumina_v3.pcrfree.stepmodel"));
+                new URI("https://raw.githubusercontent.com/common-workflow-language/workflows/933bf2a1a1cce32d88f88f136275535da9df0954/lobstr-draft3/lobSTR-workflow.cwl/models/illumina_v3.pcrfree.stepmodel"));
         assertEquals("Mark Robinson", urlAggregate.getAuthoredBy().get(0).getName());
 
     }

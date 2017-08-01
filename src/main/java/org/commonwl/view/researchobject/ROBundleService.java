@@ -33,8 +33,6 @@ import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.PersonIdent;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -288,30 +286,8 @@ public class ROBundleService {
 
                         // Add authors from git commits to the file
                         try {
-                            Set<HashableAgent> fileAuthors = new HashSet<>();
-                            Iterable<RevCommit> logs = gitRepo.log()
-                                    .addPath(Paths.get(gitDetails.getPath()).resolve(file.getName()).toString())
-                                    .call();
-                            for (RevCommit rev : logs) {
-                                // Use author first with backup of committer
-                                PersonIdent author = rev.getAuthorIdent();
-                                if (author == null) {
-                                    author = rev.getCommitterIdent();
-                                }
-                                // Create a new agent and add as much detail as possible
-                                if (author != null) {
-                                    HashableAgent newAgent = new HashableAgent();
-                                    String name = author.getName();
-                                    if (name != null && name.length() > 0) {
-                                        newAgent.setName(author.getName());
-                                    }
-                                    String email = author.getEmailAddress();
-                                    if (email != null && email.length() > 0) {
-                                        newAgent.setUri(new URI("mailto:" + author.getEmailAddress()));
-                                    }
-                                    fileAuthors.add(newAgent);
-                                }
-                            }
+                            Set<HashableAgent> fileAuthors = gitService.getAuthors(gitRepo,
+                                    Paths.get(gitDetails.getPath()).resolve(file.getName()).toString());
                             authors.addAll(fileAuthors);
                             aggregation.setAuthoredBy(new ArrayList<>(fileAuthors));
                         } catch (GitAPIException ex) {

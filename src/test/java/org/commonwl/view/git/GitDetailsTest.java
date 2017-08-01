@@ -17,10 +17,8 @@
  * under the License.
  */
 
-package org.commonwl.view.github;
+package org.commonwl.view.git;
 
-import org.commonwl.view.git.GitDetails;
-import org.commonwl.view.git.GitType;
 import org.junit.Test;
 
 import static org.commonwl.view.git.GitDetails.normaliseUrl;

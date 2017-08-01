@@ -94,7 +94,7 @@ public class WorkflowServiceTest {
                 Mockito.mock(CWLToolRunner.class), -1);
 
         // Will use check cache algorithm, find expired,
-        // check github and find commit IDs do not match,
+        // check git and find commit IDs do not match,
         // and thus create a new workflow + matching RO bundle
         Workflow workflow = testWorkflowService.getWorkflow(githubInfo);
 
