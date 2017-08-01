@@ -20,10 +20,8 @@
 package org.commonwl.view.workflow;
 
 import org.commonwl.view.git.GitDetails;
-import org.commonwl.view.git.GitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
@@ -52,16 +50,6 @@ public class WorkflowFormValidator {
     private static final Pattern gitRepoPattern = Pattern.compile(GIT_REPO_REGEX);
 
     /**
-     * Github API service
-     */
-    private final GitService githubService;
-
-    @Autowired
-    public WorkflowFormValidator(GitService githubService) {
-        this.githubService = githubService;
-    }
-
-    /**
      * Validates a WorkflowForm to ensure the URL is not empty and links to a cwl file
      * @param form The given WorkflowForm
      * @param e Any errors from validation
@@ -71,9 +59,6 @@ public class WorkflowFormValidator {
 
         // If not null and isn't just whitespace
         if (!e.hasErrors()) {
-
-            // Object to be returned if valid Git details are found
-            GitDetails gitDetails = null;
 
             // Github URL
             Matcher m = githubCwlPattern.matcher(form.getUrl());
@@ -92,9 +77,11 @@ public class WorkflowFormValidator {
             // General Git details if didn't match the above
             ValidationUtils.rejectIfEmptyOrWhitespace(e, "branch", "branch.emptyOrWhitespace");
             ValidationUtils.rejectIfEmptyOrWhitespace(e, "path", "path.emptyOrWhitespace");
-            m = gitRepoPattern.matcher(form.getUrl());
-            if (m.find()) {
-                return new GitDetails(form.getUrl(), form.getBranch(), form.getPath());
+            if (!e.hasErrors()) {
+                m = gitRepoPattern.matcher(form.getUrl());
+                if (m.find()) {
+                    return new GitDetails(form.getUrl(), form.getBranch(), form.getPath());
+                }
             }
 
         }

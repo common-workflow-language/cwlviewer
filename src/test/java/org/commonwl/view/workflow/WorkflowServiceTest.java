@@ -21,10 +21,12 @@ package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
-import org.commonwl.view.github.GitDetails;
-import org.commonwl.view.github.GitService;
+import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleFactory;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Repository;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -36,7 +38,6 @@ import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class WorkflowServiceTest {
@@ -54,7 +55,7 @@ public class WorkflowServiceTest {
     @Test
     public void getWorkflowCacheHasExpired() throws Exception {
 
-        GitDetails githubInfo = new GitDetails("owner", "branch", "sha", "path");
+        GitDetails githubInfo = new GitDetails("https://github.com/owner/repoName.git", "sha", "path");
 
         Workflow oldWorkflow = new Workflow("old", "This is the expired workflow",
                 new HashMap<>(), new HashMap<>(), new HashMap<>(), null);
@@ -71,15 +72,22 @@ public class WorkflowServiceTest {
         WorkflowRepository mockWorkflowRepo = Mockito.mock(WorkflowRepository.class);
         when(mockWorkflowRepo.findByRetrievedFrom(anyObject())).thenReturn(oldWorkflow);
 
-        GitService mockGithubService = Mockito.mock(GitService.class);
-        when(mockGithubService.getCommitSha(anyObject())).thenReturn("master");
-
         CWLService mockCWLService = Mockito.mock(CWLService.class);
-        when(mockCWLService.parseWorkflowNative(anyObject(), anyString())).thenReturn(updatedWorkflow);
+        when(mockCWLService.parseWorkflowNative(anyObject())).thenReturn(updatedWorkflow);
+
+        Repository mockRepo = Mockito.mock(Repository.class);
+        when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/make_to_cwl/dna.cwl"));
+
+        Git mockGitRepo = Mockito.mock(Git.class);
+        when(mockGitRepo.getRepository()).thenReturn(mockRepo);
+
+        GitService mockGitService = Mockito.mock(GitService.class);
+        when(mockGitService.getRepository(anyObject())).thenReturn(mockGitRepo);
+        when(mockGitService.getCurrentCommitID(anyObject())).thenReturn("newCommitId");
 
         // Create service under test with negative cache time (always create new workflow)
         WorkflowService testWorkflowService = new WorkflowService(
-                mockGithubService, mockCWLService,
+                mockGitService, mockCWLService,
                 mockWorkflowRepo, Mockito.mock(QueuedWorkflowRepository.class),
                 Mockito.mock(ROBundleFactory.class),
                 Mockito.mock(GraphVizService.class),
@@ -105,6 +113,9 @@ public class WorkflowServiceTest {
 
         Workflow workflow = new Workflow("Label", "Doc for the workflow",
                 new HashMap<>(), new HashMap<>(), new HashMap<>(), null);
+        workflow.setRetrievedFrom(new GitDetails("url", "commitID", "path"));
+        workflow.setLastCommit("commitID");
+
         String roBundlePath = roBundleFolder.newFile("bundle.zip").getAbsolutePath();
         workflow.setRoBundlePath(roBundlePath);
 

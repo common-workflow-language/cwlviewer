@@ -19,7 +19,7 @@
 
 package org.commonwl.view.researchobject;
 
-import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.junit.Test;

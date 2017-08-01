@@ -20,9 +20,10 @@
 package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLValidationException;
-import org.commonwl.view.github.GitDetails;
+import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -99,13 +100,13 @@ public class WorkflowControllerTest {
         WorkflowFormValidator mockValidator = Mockito.mock(WorkflowFormValidator.class);
         when(mockValidator.validateAndParse(anyObject(), anyObject()))
                 .thenReturn(null)
-                .thenReturn(new GitDetails("owner", "repoName", "branch", "path/within"))
-                .thenReturn(new GitDetails("owner", "repoName", "branch", "path/workflow.cwl"));
+                .thenReturn(new GitDetails("https://repo.url/repo.git", "branch", "path/within"))
+                .thenReturn(new GitDetails("https://repo.url/repo.git", "branch", "path/workflow.cwl"));
 
         // The eventual accepted valid workflow
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
         when(mockWorkflow.getRetrievedFrom())
-                .thenReturn(new GitDetails("owner", "repoName", "branch", "path/workflow.cwl"));
+                .thenReturn(new GitDetails("https://repo.url/repo.git", "branch", "path/workflow.cwl"));
         QueuedWorkflow mockQueuedWorkflow = Mockito.mock(QueuedWorkflow.class);
         when(mockQueuedWorkflow.getTempRepresentation())
                 .thenReturn(mockWorkflow);
@@ -127,27 +128,21 @@ public class WorkflowControllerTest {
 
         // Error in validation, go to index to show error
         mockMvc.perform(post("/workflows")
-                .param("githubURL", "invalidurl"))
+                .param("url", "invalidurl"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"));
 
-        // Valid directory URL redirect
-        mockMvc.perform(post("/workflows")
-                .param("githubURL", "https://github.com/owner/repoName/tree/branch/path/within"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/workflows/github.com/owner/repoName/tree/branch/path/within"));
-
         // Invalid workflow URL, go to index to show error
         mockMvc.perform(post("/workflows")
-                .param("githubURL", "https://github.com/owner/repoName/tree/branch/path/nonexistant.cwl"))
+                .param("url", "https://github.com/owner/repoName/tree/branch/path/nonexistant.cwl"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"));
 
         // Valid workflow URL redirect
         mockMvc.perform(post("/workflows")
-                .param("githubURL", "https://github.com/owner/repoName/tree/branch/path/workflow.cwl"))
+                .param("url", "https://repo.url/repo.git/branch/path/workflow.cwl"))
                 .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/workflows/github.com/owner/repoName/tree/branch/path/workflow.cwl"));
+                .andExpect(redirectedUrl("/workflows/repo.url/repo.git/branch/path/workflow.cwl"));
 
     }
 
@@ -167,7 +162,7 @@ public class WorkflowControllerTest {
                 .thenReturn(null);
         when(mockWorkflowService.createQueuedWorkflow(anyObject()))
                 .thenReturn(mockQueuedWorkflow)
-                .thenThrow(new CWLValidationException("Error"));
+                .thenThrow(new RefNotFoundException("A Git API Error"));
 
         // Mock controller/MVC
         WorkflowController workflowController = new WorkflowController(
@@ -192,9 +187,7 @@ public class WorkflowControllerTest {
 
         // Error creating workflow
         mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within/badworkflow.cwl"))
-                .andExpect(status().isFound())
-                .andExpect(flash().attributeExists("errors"))
-                .andExpect(redirectedUrl("/?url=https://github.com/owner/reponame/tree/branch/path/within/badworkflow.cwl"));
+                .andExpect(status().isFound());
 
     }
 

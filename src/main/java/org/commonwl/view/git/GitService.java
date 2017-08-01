@@ -101,5 +101,15 @@ public class GitService {
         return repo;
     }
 
+    /**
+     * Gets the commit ID of the HEAD for the given repository
+     * @param repo The Git repository
+     * @return The commit ID of the HEAD for the repository
+     * @throws IOException If the HEAD is detached
+     */
+    public String getCurrentCommitID(Git repo) throws IOException {
+        return repo.getRepository().findRef("HEAD").getObjectId().getName();
+    }
+
 
 }

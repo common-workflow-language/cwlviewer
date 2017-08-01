@@ -22,7 +22,6 @@ package org.commonwl.view.workflow;
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
-import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -217,7 +216,7 @@ public class WorkflowService {
      * @throws IOException Other file handling exceptions
      */
     public QueuedWorkflow createQueuedWorkflow(GitDetails gitInfo)
-            throws GitAPIException, CWLValidationException, IOException {
+            throws GitAPIException, WorkflowNotFoundException, IOException {
 
         // Clone repository to temporary folder
         Git repo = null;
@@ -235,7 +234,7 @@ public class WorkflowService {
             }
         }
         File localPath = repo.getRepository().getWorkTree();
-        String latestCommit = repo.getRepository().findRef("HEAD").getObjectId().getName();
+        String latestCommit = gitService.getCurrentCommitID(repo);
 
         Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
         // Prevent path traversal attacks
@@ -345,7 +344,7 @@ public class WorkflowService {
                     // Check current head of the branch with the cached head
                     logger.info("Time has expired for caching, checking commits...");
                     Git repo = gitService.getRepository(workflow.getRetrievedFrom());
-                    String currentHead = repo.getRepository().findRef("HEAD").getObjectId().getName();
+                    String currentHead = gitService.getCurrentCommitID(repo);
                     logger.info("Current: " + workflow.getLastCommit() + ", HEAD: " + currentHead);
 
                     // Reset date in database if there are still no changes
