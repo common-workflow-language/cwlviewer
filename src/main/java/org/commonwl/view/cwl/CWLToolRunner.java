@@ -19,11 +19,13 @@
 
 package org.commonwl.view.cwl;
 
+import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitService;
 import org.commonwl.view.researchobject.ROBundleFactory;
-import org.commonwl.view.workflow.QueuedWorkflow;
-import org.commonwl.view.workflow.QueuedWorkflowRepository;
-import org.commonwl.view.workflow.Workflow;
-import org.commonwl.view.workflow.WorkflowRepository;
+import org.commonwl.view.workflow.*;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +35,10 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Date;
+
+import static org.commonwl.view.workflow.WorkflowService.transferPathToBranch;
 
 /**
  * Replace existing workflow with the one given by cwltool
@@ -47,6 +52,7 @@ public class CWLToolRunner {
     private final WorkflowRepository workflowRepository;
     private final QueuedWorkflowRepository queuedWorkflowRepository;
     private final CWLService cwlService;
+    private final GitService gitService;
     private final ROBundleFactory roBundleFactory;
     private final String cwlToolVersion;
 
@@ -54,18 +60,87 @@ public class CWLToolRunner {
     public CWLToolRunner(WorkflowRepository workflowRepository,
                          QueuedWorkflowRepository queuedWorkflowRepository,
                          CWLService cwlService,
+                         GitService gitService,
                          CWLTool cwlTool,
                          ROBundleFactory roBundleFactory) {
         this.workflowRepository = workflowRepository;
         this.queuedWorkflowRepository = queuedWorkflowRepository;
         this.cwlService = cwlService;
+        this.gitService = gitService;
         this.cwlToolVersion = cwlTool.getVersion();
         this.roBundleFactory = roBundleFactory;
     }
 
     @Async
+    public void cloneRepoAndParse(QueuedWorkflow queuedWorkflow) {
+        GitDetails gitInfo = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
+        try {
+            // Clone repository to temporary folder
+            Git repo = null;
+            while (repo == null) {
+                try {
+                    repo = gitService.getRepository(gitInfo);
+                } catch (RefNotFoundException ex) {
+                    // Attempt slashes in branch fix
+                    GitDetails correctedForSlash = transferPathToBranch(gitInfo);
+                    if (correctedForSlash != null) {
+                        gitInfo = correctedForSlash;
+                    } else {
+                        throw ex;
+                    }
+                }
+            }
+            File localPath = repo.getRepository().getWorkTree();
+            String latestCommit = gitService.getCurrentCommitID(repo);
+
+            Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
+            // Prevent path traversal attacks
+            if (!pathToWorkflowFile.startsWith(localPath.toPath().normalize().toAbsolutePath())) {
+                throw new WorkflowNotFoundException();
+            }
+
+            File workflowFile = new File(pathToWorkflowFile.toString());
+            Workflow nativeModel = cwlService.parseWorkflowNative(workflowFile);
+
+            // Set origin details
+            nativeModel.setRetrievedOn(new Date());
+            nativeModel.setRetrievedFrom(gitInfo);
+            nativeModel.setLastCommit(latestCommit);
+
+            // Save the queued workflow to database
+            queuedWorkflow.setTempRepresentation(nativeModel);
+            queuedWorkflowRepository.save(queuedWorkflow);
+
+            // Parse with cwltool and update model
+            try {
+                createWorkflowFromQueued(queuedWorkflow, workflowFile);
+            } catch (Exception e) {
+                logger.error("Could not update workflow with cwltool", e);
+            }
+
+        } catch (GitAPIException ex) {
+            queuedWorkflow.setMessage("Git error: " + ex.getMessage());
+            queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
+        } catch (IOException ex) {
+            queuedWorkflow.setMessage("An error occurred accessing files checked " +
+                    "out from the Git repository");
+            queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
+        } catch(WorkflowNotFoundException ex) {
+            queuedWorkflow.setMessage("The given path \"" + gitInfo.getPath() +
+                    "\" did not resolve to a location within the repository");
+            queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
+        } finally {
+            queuedWorkflowRepository.save(queuedWorkflow);
+        }
+
+    }
+
+    @Async
     public void createWorkflowFromQueued(QueuedWorkflow queuedWorkflow, File workflowFile)
             throws IOException, InterruptedException {
+
+        queuedWorkflow.setCwltoolStatus(CWLToolStatus.RUNNING);
+        queuedWorkflowRepository.save(queuedWorkflow);
 
         Workflow tempWorkflow = queuedWorkflow.getTempRepresentation();
 
@@ -89,19 +164,18 @@ public class CWLToolRunner {
 
             // Mark success on queue
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.SUCCESS);
-            queuedWorkflowRepository.save(queuedWorkflow);
 
         } catch (CWLValidationException ex) {
             logger.error(ex.getMessage(), ex);
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
             queuedWorkflow.setMessage(ex.getMessage());
-            queuedWorkflowRepository.save(queuedWorkflow);
         } catch (Exception ex) {
             logger.error("Unexpected error", ex);
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
             queuedWorkflow.setMessage("Whoops! Cwltool ran successfully, but an unexpected " +
                     "error occurred in CWLViewer!\n" +
                     "Help us by reporting it on Gitter or a Github issue\n");
+        } finally {
             queuedWorkflowRepository.save(queuedWorkflow);
         }
 

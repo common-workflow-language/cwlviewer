@@ -32,6 +32,7 @@ requirejs.config({
  */
 require(['jquery'],
     function ($) {
+        var currentStatus = $("#currentStatus").text();
 
         function handleSuccess() {
             $("#loadingSpinner").hide();
@@ -59,22 +60,34 @@ require(['jquery'],
                 dataType: "json",
                 cache: false,
                 success: function(response) {
-                    if (response.cwltoolStatus == "RUNNING") {
+                    if (response.hasOwnProperty("label")) {
+                        response.cwltoolStatus = "SUCCESS"
+                    }
+                    if (response.cwltoolStatus != currentStatus) {
+                        currentStatus = response.cwltoolStatus;
+                        switch (currentStatus) {
+                            case "RUNNING":
+                                location.reload();
+                                break;
+                            case "ERROR":
+                                handleFail(response.message);
+                                break;
+                            case "SUCCESS":
+                                handleSuccess();
+                                break;
+                        }
+                    } else {
                         // Retry in 3 seconds
                         setTimeout(function () {
                             checkForDone();
-                        }, 3000);
-                    } else if (response.cwltoolStatus == "ERROR") {
-                        handleFail(response.message);
-                    } else {
-                        handleSuccess();
+                        }, 1000);
                     }
                 },
-                error: function(response) {
+                error: function() {
                     // Retry in 3 seconds
                     setTimeout(function () {
                         checkForDone();
-                    }, 3000);
+                    }, 1000);
                 }
             });
         }

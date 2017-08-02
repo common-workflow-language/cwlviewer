@@ -20,7 +20,7 @@ public class QueuedWorkflow {
     private Workflow tempRepresentation;
 
     // Cwltool details
-    private CWLToolStatus cwltoolStatus = CWLToolStatus.RUNNING;
+    private CWLToolStatus cwltoolStatus = CWLToolStatus.DOWNLOADING;
     private String cwltoolVersion = "";
     private String message;
 

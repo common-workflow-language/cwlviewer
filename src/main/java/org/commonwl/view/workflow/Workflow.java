@@ -76,6 +76,8 @@ public class Workflow {
     // DOT graph of the contents
     private String visualisationDot;
 
+    public Workflow() {}
+
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
                     Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink) {
         this.label = label;
@@ -84,6 +86,10 @@ public class Workflow {
         this.outputs = outputs;
         this.steps = steps;
         this.dockerLink = dockerLink;
+    }
+
+    public Workflow(GitDetails gitDetails) {
+        this.retrievedFrom = gitDetails;
     }
 
     public String getID() { return id; }

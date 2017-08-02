@@ -29,7 +29,6 @@ import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -218,53 +217,17 @@ public class WorkflowService {
     public QueuedWorkflow createQueuedWorkflow(GitDetails gitInfo)
             throws GitAPIException, WorkflowNotFoundException, IOException {
 
-        // Clone repository to temporary folder
-        Git repo = null;
-        while (repo == null) {
-            try {
-                repo = gitService.getRepository(gitInfo);
-            } catch (RefNotFoundException ex) {
-                // Attempt slashes in branch fix
-                GitDetails correctedForSlash = transferPathToBranch(gitInfo);
-                if (correctedForSlash != null) {
-                    gitInfo = correctedForSlash;
-                } else {
-                    throw ex;
-                }
-            }
-        }
-        File localPath = repo.getRepository().getWorkTree();
-        String latestCommit = gitService.getCurrentCommitID(repo);
-
-        Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
-        // Prevent path traversal attacks
-        if (!pathToWorkflowFile.startsWith(localPath.toPath().normalize().toAbsolutePath())) {
-            throw new WorkflowNotFoundException();
-        }
-
-        File workflowFile = new File(pathToWorkflowFile.toString());
-        Workflow basicModel = cwlService.parseWorkflowNative(workflowFile);
-
-        // Set origin details
-        basicModel.setRetrievedOn(new Date());
-        basicModel.setRetrievedFrom(gitInfo);
-        basicModel.setLastCommit(latestCommit);
-
-        // Save the queued workflow to database
+        // Create very minimal queued workflow model
         QueuedWorkflow queuedWorkflow = new QueuedWorkflow();
+        Workflow basicModel = new Workflow(gitInfo);
         queuedWorkflow.setTempRepresentation(basicModel);
         queuedWorkflowRepository.save(queuedWorkflow);
 
-        // ASYNC OPERATIONS
-        // Parse with cwltool and update model
-        try {
-            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, workflowFile);
-        } catch (Exception e) {
-            logger.error("Could not update workflow with cwltool", e);
-        }
+        // Async clone repo
+        cwlToolRunner.cloneRepoAndParse(queuedWorkflow);
 
-        // Return this model to be displayed
         return queuedWorkflow;
+
     }
 
     /**
@@ -372,7 +335,7 @@ public class WorkflowService {
      * @return A potentially corrected set of Github details,
      *         or null if there are no slashes in the path
      */
-    private GitDetails transferPathToBranch(GitDetails githubInfo) {
+    public static GitDetails transferPathToBranch(GitDetails githubInfo) {
         String path = githubInfo.getPath();
         String branch = githubInfo.getBranch();
 
