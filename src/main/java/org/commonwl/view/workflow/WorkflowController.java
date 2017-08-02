@@ -106,7 +106,7 @@ public class WorkflowController {
      * @return The workflow view with new workflow as a model
      */
     @PostMapping("/workflows")
-    public ModelAndView newWorkflowFromGithubURL(@Valid WorkflowForm workflowForm, BindingResult bindingResult) {
+    public ModelAndView createWorkflow(@Valid WorkflowForm workflowForm, BindingResult bindingResult) {
 
         // Run validator which checks the git URL is valid
         GitDetails gitInfo = workflowFormValidator.validateAndParse(workflowForm, bindingResult);
@@ -122,7 +122,7 @@ public class WorkflowController {
                     workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
                 } catch (GitAPIException ex) {
                     bindingResult.rejectValue("url", "git.retrievalError");
-                    logger.error("Github API Error", ex);
+                    logger.error("Git API Error", ex);
                     return new ModelAndView("index");
                 } catch (WorkflowNotFoundException ex) {
                     bindingResult.rejectValue("url", "git.pathTraversal");
@@ -363,10 +363,10 @@ public class WorkflowController {
 
 
     /**
-     * Extract the Github path from the end of a full request string
+     * Extract the path from the end of a full request string
      * @param path The full request string path
      * @param startSlashNum The ordinal slash index of the start of the path
-     * @return THe Github path from the end
+     * @return The path from the end
      */
     public static String extractPath(String path, int startSlashNum) {
         int pathStartIndex = StringUtils.ordinalIndexOf(path, "/", startSlashNum);
@@ -452,7 +452,7 @@ public class WorkflowController {
                         queued = workflowService.createQueuedWorkflow(gitDetails);
                     } catch (GitAPIException ex) {
                         errors.rejectValue("url", "git.retrievalError", "The workflow could not be retrieved from the Git repository using the details given");
-                        logger.error("Github API Error", ex);
+                        logger.error("Git API Error", ex);
                     } catch (WorkflowNotFoundException ex) {
                         errors.rejectValue("url", "git.pathTraversal", "The path given did not resolve to a location within the repository");
                     } catch (IOException ex) {

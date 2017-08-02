@@ -85,7 +85,7 @@ public class CWLToolRunner {
             workflowRepository.save(newWorkflow);
 
             // Generate RO bundle
-            roBundleFactory.workflowROFromGithub(newWorkflow);
+            roBundleFactory.createWorkflowRO(newWorkflow);
 
             // Mark success on queue
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.SUCCESS);

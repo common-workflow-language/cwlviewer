@@ -86,7 +86,7 @@ public class WorkflowRESTController {
     }
 
     /**
-     * Create a new workflow from the given github URL
+     * Create a new workflow from the given URL
      * @param url The URL of the workflow
      * @return Appropriate response code and optional JSON string with message
      */
@@ -139,7 +139,7 @@ public class WorkflowRESTController {
     }
 
     /**
-     * Get the JSON representation of a workflow from Github details
+     * Get the JSON representation of a workflow from Github or Gitlab details
      * @param domain The domain of the hosting site, Github or Gitlab
      * @param owner The owner of the Github repository
      * @param repoName The name of the repository

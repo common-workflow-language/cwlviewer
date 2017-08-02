@@ -63,7 +63,7 @@ public class ROBundleFactory {
      * @throws IOException Any API errors which may have occurred
      */
     @Async
-    public void workflowROFromGithub(Workflow workflow)
+    public void createWorkflowRO(Workflow workflow)
             throws IOException, InterruptedException {
         logger.info("Creating Research Object Bundle");
 
@@ -72,7 +72,7 @@ public class ROBundleFactory {
         GitDetails roDetails = new GitDetails(githubInfo.getRepoUrl(), githubInfo.getBranch(),
                 FilenameUtils.getPath(githubInfo.getPath()));
 
-        // Create a new Research Object Bundle with Github contents
+        // Create a new Research Object Bundle
         Bundle bundle = roBundleService.createBundle(workflow, roDetails);
 
         // Save the bundle to the storage location in properties

@@ -129,7 +129,7 @@ public class ROBundleService {
             Path bundlePath = bundleRoot.resolve("workflow");
             Files.createDirectory(bundlePath);
 
-            // Add the files from the Github repo to this workflow
+            // Add the files from the repo to this workflow
             Set<HashableAgent> authors = new HashSet<>();
             Git gitRepo = gitService.getRepository(workflow.getRetrievedFrom());
             Path relativePath = Paths.get(FilenameUtils.getPath(gitInfo.getPath()));
@@ -199,7 +199,7 @@ public class ROBundleService {
     }
 
     /**
-     * Add files to this bundle from a list of Github repository contents
+     * Add files to this bundle from a list of repository contents
      * @param gitDetails The Git information for the repository
      * @param bundle The RO bundle to add files/directories to
      * @param bundlePath The current path within the RO bundle

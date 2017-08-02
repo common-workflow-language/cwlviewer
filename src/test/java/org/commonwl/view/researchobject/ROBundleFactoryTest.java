@@ -63,7 +63,7 @@ public class ROBundleFactoryTest {
         ROBundleFactory factory = new ROBundleFactory(mockROBundleService, mockRepository);
 
         // Attempt to add RO to workflow
-        factory.workflowROFromGithub(validWorkflow);
+        factory.createWorkflowRO(validWorkflow);
 
         assertEquals("test/path/to/check/for.zip", validWorkflow.getRoBundlePath());
 
