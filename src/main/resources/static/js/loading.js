@@ -34,6 +34,13 @@ require(['jquery'],
     function ($) {
         var currentStatus = $("#currentStatus").text();
 
+        function addSIfPlural(label, value) {
+            if (value != 1) {
+                label += "s";
+            }
+            return label;
+        }
+
         function handleSuccess() {
             $("#loadingSpinner").hide();
             $("#loadingSuccess").show();
@@ -53,6 +60,12 @@ require(['jquery'],
             $("#errorMsg").text(error);
         }
 
+        function retryWithDelay() {
+            setTimeout(function () {
+                checkForDone();
+            }, 1000);
+        }
+
         function checkForDone() {
             $.ajax({
                 type: 'GET',
@@ -60,6 +73,7 @@ require(['jquery'],
                 dataType: "json",
                 cache: false,
                 success: function(response) {
+                    console.log(response);
                     if (response.hasOwnProperty("label")) {
                         response.cwltoolStatus = "SUCCESS"
                     }
@@ -67,7 +81,18 @@ require(['jquery'],
                         currentStatus = response.cwltoolStatus;
                         switch (currentStatus) {
                             case "RUNNING":
-                                location.reload();
+                                $("#loadingHeader").html("Validating workflow " + response.overview.label + " with " +
+                                    "<a href='https://github.com/common-workflow-language/cwltool' rel='noopener' " +
+                                    "target='_blank'>cwltool</a>...");
+                                var numInputs = response.overview.inputs;
+                                var numOutputs = response.overview.outputs;
+                                var numSteps = response.overview.steps;
+                                $("#loadingOverview").html("Consists of " + numInputs + " " + addSIfPlural("label", numInputs) +
+                                        ", " + numSteps + " " + addSIfPlural("step", numSteps) + " and " +
+                                        numOutputs + " " + addSIfPlural("output", numOutputs) + " (excluding subworkflows)");
+                                $("#loadingWarning").html("This may take several minutes with very complex workflows");
+                                $("#loadingWorkflow").attr('src', "/queue/" + $("#workflowID").text() + "/tempgraph.png");
+                                retryWithDelay()
                                 break;
                             case "ERROR":
                                 handleFail(response.message);
@@ -77,17 +102,11 @@ require(['jquery'],
                                 break;
                         }
                     } else {
-                        // Retry in 3 seconds
-                        setTimeout(function () {
-                            checkForDone();
-                        }, 1000);
+                        retryWithDelay()
                     }
                 },
                 error: function() {
-                    // Retry in 3 seconds
-                    setTimeout(function () {
-                        checkForDone();
-                    }, 1000);
+                    retryWithDelay()
                 }
             });
         }
