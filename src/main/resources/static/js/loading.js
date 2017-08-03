@@ -49,7 +49,13 @@ require(['jquery'],
         }
 
         function handleFail(error) {
-            $("#loadingHeader").html('Failed to parse ' + $("#workflowName").text() + ' with <a href="https://github.com/common-workflow-language/cwltool" rel="noopener" target="_blank">cwltool</a>');
+            if (currentStatus == 'DOWNLOADING') {
+                $("#loadingHeader").html('Failed to get the workflow from the Git repository');
+                $("#loadingError").text(error);
+            } else {
+                $("#loadingHeader").html('Failed to parse ' + $("#workflowName").text() + ' with <a href="https://github.com/common-workflow-language/cwltool" rel="noopener" target="_blank">cwltool</a>');
+                $("#errorMsg").text(error);
+            }
             $("#loadingOverview").html('<a id="cwllog" href="#">Show Details</a>');
             $("#loadingSpinner").fadeOut(function() {
                 $("#loadingFail").fadeIn();
@@ -57,7 +63,6 @@ require(['jquery'],
             $("#loadingWarning").html('<a class="btn btn-default" role="button" href="javascript:window.location.reload(true)">' +
                 '<span class="glyphicon glyphicon-refresh" aria-hidden="true"></span> Try Again' +
                 '</a>');
-            $("#errorMsg").text(error);
         }
 
         function retryWithDelay() {
@@ -73,13 +78,11 @@ require(['jquery'],
                 dataType: "json",
                 cache: false,
                 success: function(response) {
-                    console.log(response);
                     if (response.hasOwnProperty("label")) {
                         response.cwltoolStatus = "SUCCESS"
                     }
                     if (response.cwltoolStatus != currentStatus) {
-                        currentStatus = response.cwltoolStatus;
-                        switch (currentStatus) {
+                        switch (response.cwltoolStatus) {
                             case "RUNNING":
                                 $("#loadingHeader").html("Validating workflow " + response.overview.label + " with " +
                                     "<a href='https://github.com/common-workflow-language/cwltool' rel='noopener' " +
@@ -101,6 +104,7 @@ require(['jquery'],
                                 handleSuccess();
                                 break;
                         }
+                        currentStatus = response.cwltoolStatus;
                     } else {
                         retryWithDelay()
                     }

@@ -39,7 +39,7 @@
 <div id="currentStatus" class="hide" th:text="${queued.cwltoolStatus.name()}"></div>
 
 <div class="container" th:with="githubURLPart=${queued.tempRepresentation.retrievedFrom.getUrl().replace('https://', '')}">
-    <div class="row" th:if="${queued.cwltoolStatus.name() != 'DOWNLOADING'}">
+    <div class="row" th:if="${queued.cwltoolStatus.name() != 'DOWNLOADING' and queued.tempRepresentation.inputs != null}">
         <div class="col-md-12 text-center" role="main" id="main">
             <h2 id="loadingHeader">Validating workflow <span th:text="${queued.tempRepresentation.label}" id="workflowName">Workflow Name</span> with
                 <a href="https://github.com/common-workflow-language/cwltool" rel="noopener" target="_blank">cwltool</a>...</h2>
@@ -64,15 +64,15 @@
         </div>
     </div>
 
-    <div class="row" th:if="${queued.cwltoolStatus.name() == 'DOWNLOADING'}">
+    <div class="row" th:if="${queued.cwltoolStatus.name() == 'DOWNLOADING' or queued.tempRepresentation.inputs == null}">
         <div class="col-md-12 text-center" role="main" id="main">
             <h2 id="loadingHeader">Checking out Git repository...</h2>
             <p id="loadingOverview">
                 <span th:text="${queued.tempRepresentation.retrievedFrom.repoUrl}">https://github.com/owner/repo.git</span>
             </p>
             <div id="cwltooldetails" class="alert alert-danger">
-                <p><strong>Error:</strong> cwltool version <span th:text="${queued.cwltoolVersion}">versionhere</span> failed to run on this workflow:</p>
-                <pre id="errorMsg" class="text-left">Sample Error, tool failed initialisation</pre>
+                <p id="loadingError"><strong>Error:</strong> cwltool version <span th:text="${queued.cwltoolVersion}">versionhere</span> failed to run on this workflow:</p>
+                <pre id="errorMsg" class="text-left"></pre>
             </div>
             <div class="loadingWorkflowContainer">
                 <img id="loadingWorkflow" src="../static/img/gitlogo.png" th:src="@{'/img/gitlogo.png'}" />

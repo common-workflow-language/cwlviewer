@@ -471,7 +471,7 @@ public class WorkflowController {
         if (queued != null) {
             // Retry creation if there has been an error in cwltool parsing
             if (queued.getCwltoolStatus() == CWLToolStatus.ERROR) {
-                workflowService.retryCwltool(queued);
+                workflowService.retryCreate(queued);
             }
             return new ModelAndView("loading", "queued", queued);
         } else {

@@ -19,7 +19,6 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.git.GitDetails;
@@ -39,7 +38,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -49,7 +47,6 @@ public class WorkflowService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final GitService gitService;
-    private final CWLService cwlService;
     private final WorkflowRepository workflowRepository;
     private final QueuedWorkflowRepository queuedWorkflowRepository;
     private final ROBundleFactory ROBundleFactory;
@@ -59,7 +56,6 @@ public class WorkflowService {
 
     @Autowired
     public WorkflowService(GitService gitService,
-                           CWLService cwlService,
                            WorkflowRepository workflowRepository,
                            QueuedWorkflowRepository queuedWorkflowRepository,
                            ROBundleFactory ROBundleFactory,
@@ -67,7 +63,6 @@ public class WorkflowService {
                            CWLToolRunner cwlToolRunner,
                            @Value("${cacheDays}") int cacheDays) {
         this.gitService = gitService;
-        this.cwlService = cwlService;
         this.workflowRepository = workflowRepository;
         this.queuedWorkflowRepository = queuedWorkflowRepository;
         this.ROBundleFactory = ROBundleFactory;
@@ -231,22 +226,14 @@ public class WorkflowService {
     }
 
     /**
-     * Retry the running of cwltool to create a new workflow
+     * Retry the downloading and running of cwltool
      * @param queuedWorkflow The workflow to use to update
      */
-    public void retryCwltool(QueuedWorkflow queuedWorkflow) {
+    public void retryCreate(QueuedWorkflow queuedWorkflow) {
+        queuedWorkflow.setCwltoolStatus(CWLToolStatus.DOWNLOADING);
         queuedWorkflow.setMessage(null);
-        queuedWorkflow.setCwltoolStatus(CWLToolStatus.RUNNING);
         queuedWorkflowRepository.save(queuedWorkflow);
-        try {
-            GitDetails gitDetails = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
-            Git repo = gitService.getRepository(gitDetails);
-            File localPath = repo.getRepository().getWorkTree();
-            Path pathToWorkflowFile = localPath.toPath().resolve(gitDetails.getPath()).normalize().toAbsolutePath();
-            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, new File(pathToWorkflowFile.toString()));
-        } catch (Exception e) {
-            logger.error("Could not update workflow with cwltool", e);
-        }
+        cwlToolRunner.cloneRepoAndParse(queuedWorkflow);
     }
 
     /**

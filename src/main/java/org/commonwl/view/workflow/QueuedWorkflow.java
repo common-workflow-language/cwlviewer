@@ -64,7 +64,9 @@ public class QueuedWorkflow {
     }
 
     public Map<String, String> getOverview() {
-        if (tempRepresentation != null && tempRepresentation.getLabel() != null) {
+        if (tempRepresentation != null &&
+                tempRepresentation.getLabel() != null &&
+                tempRepresentation.getInputs() != null) {
             Map<String, String> overview = new HashMap<>();
             overview.put("label", tempRepresentation.getLabel());
             overview.put("inputs", Integer.toString(tempRepresentation.getInputs().size()));
