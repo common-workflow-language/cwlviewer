@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.springframework.data.annotation.Id;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * A workflow pending completion of cwltool
  */
@@ -20,7 +23,7 @@ public class QueuedWorkflow {
     private Workflow tempRepresentation;
 
     // Cwltool details
-    private CWLToolStatus cwltoolStatus = CWLToolStatus.RUNNING;
+    private CWLToolStatus cwltoolStatus = CWLToolStatus.DOWNLOADING;
     private String cwltoolVersion = "";
     private String message;
 
@@ -58,6 +61,20 @@ public class QueuedWorkflow {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Map<String, String> getOverview() {
+        if (tempRepresentation != null &&
+                tempRepresentation.getLabel() != null &&
+                tempRepresentation.getInputs() != null) {
+            Map<String, String> overview = new HashMap<>();
+            overview.put("label", tempRepresentation.getLabel());
+            overview.put("inputs", Integer.toString(tempRepresentation.getInputs().size()));
+            overview.put("steps", Integer.toString(tempRepresentation.getSteps().size()));
+            overview.put("outputs", Integer.toString(tempRepresentation.getOutputs().size()));
+            return overview;
+        }
+        return null;
     }
 
 }

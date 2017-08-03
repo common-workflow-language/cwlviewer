@@ -19,7 +19,6 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitService;
@@ -72,9 +71,6 @@ public class WorkflowServiceTest {
         WorkflowRepository mockWorkflowRepo = Mockito.mock(WorkflowRepository.class);
         when(mockWorkflowRepo.findByRetrievedFrom(anyObject())).thenReturn(oldWorkflow);
 
-        CWLService mockCWLService = Mockito.mock(CWLService.class);
-        when(mockCWLService.parseWorkflowNative(anyObject())).thenReturn(updatedWorkflow);
-
         Repository mockRepo = Mockito.mock(Repository.class);
         when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/make_to_cwl/dna.cwl"));
 
@@ -87,8 +83,7 @@ public class WorkflowServiceTest {
 
         // Create service under test with negative cache time (always create new workflow)
         WorkflowService testWorkflowService = new WorkflowService(
-                mockGitService, mockCWLService,
-                mockWorkflowRepo, Mockito.mock(QueuedWorkflowRepository.class),
+                mockGitService, mockWorkflowRepo, Mockito.mock(QueuedWorkflowRepository.class),
                 Mockito.mock(ROBundleFactory.class),
                 Mockito.mock(GraphVizService.class),
                 Mockito.mock(CWLToolRunner.class), -1);
@@ -124,7 +119,7 @@ public class WorkflowServiceTest {
 
         // Create service under test
         WorkflowService testWorkflowService = new WorkflowService(
-                Mockito.mock(GitService.class), Mockito.mock(CWLService.class),
+                Mockito.mock(GitService.class),
                 mockWorkflowRepo, Mockito.mock(QueuedWorkflowRepository.class),
                 Mockito.mock(ROBundleFactory.class),
                 Mockito.mock(GraphVizService.class),

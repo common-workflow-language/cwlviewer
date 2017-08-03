@@ -19,7 +19,6 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.git.GitDetails;
@@ -29,7 +28,6 @@ import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +38,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -50,7 +47,6 @@ public class WorkflowService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final GitService gitService;
-    private final CWLService cwlService;
     private final WorkflowRepository workflowRepository;
     private final QueuedWorkflowRepository queuedWorkflowRepository;
     private final ROBundleFactory ROBundleFactory;
@@ -60,7 +56,6 @@ public class WorkflowService {
 
     @Autowired
     public WorkflowService(GitService gitService,
-                           CWLService cwlService,
                            WorkflowRepository workflowRepository,
                            QueuedWorkflowRepository queuedWorkflowRepository,
                            ROBundleFactory ROBundleFactory,
@@ -68,7 +63,6 @@ public class WorkflowService {
                            CWLToolRunner cwlToolRunner,
                            @Value("${cacheDays}") int cacheDays) {
         this.gitService = gitService;
-        this.cwlService = cwlService;
         this.workflowRepository = workflowRepository;
         this.queuedWorkflowRepository = queuedWorkflowRepository;
         this.ROBundleFactory = ROBundleFactory;
@@ -218,72 +212,28 @@ public class WorkflowService {
     public QueuedWorkflow createQueuedWorkflow(GitDetails gitInfo)
             throws GitAPIException, WorkflowNotFoundException, IOException {
 
-        // Clone repository to temporary folder
-        Git repo = null;
-        while (repo == null) {
-            try {
-                repo = gitService.getRepository(gitInfo);
-            } catch (RefNotFoundException ex) {
-                // Attempt slashes in branch fix
-                GitDetails correctedForSlash = transferPathToBranch(gitInfo);
-                if (correctedForSlash != null) {
-                    gitInfo = correctedForSlash;
-                } else {
-                    throw ex;
-                }
-            }
-        }
-        File localPath = repo.getRepository().getWorkTree();
-        String latestCommit = gitService.getCurrentCommitID(repo);
-
-        Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
-        // Prevent path traversal attacks
-        if (!pathToWorkflowFile.startsWith(localPath.toPath().normalize().toAbsolutePath())) {
-            throw new WorkflowNotFoundException();
-        }
-
-        File workflowFile = new File(pathToWorkflowFile.toString());
-        Workflow basicModel = cwlService.parseWorkflowNative(workflowFile);
-
-        // Set origin details
-        basicModel.setRetrievedOn(new Date());
-        basicModel.setRetrievedFrom(gitInfo);
-        basicModel.setLastCommit(latestCommit);
-
-        // Save the queued workflow to database
+        // Create very minimal queued workflow model
         QueuedWorkflow queuedWorkflow = new QueuedWorkflow();
+        Workflow basicModel = new Workflow(gitInfo);
         queuedWorkflow.setTempRepresentation(basicModel);
         queuedWorkflowRepository.save(queuedWorkflow);
 
-        // ASYNC OPERATIONS
-        // Parse with cwltool and update model
-        try {
-            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, workflowFile);
-        } catch (Exception e) {
-            logger.error("Could not update workflow with cwltool", e);
-        }
+        // Async clone repo
+        cwlToolRunner.cloneRepoAndParse(queuedWorkflow);
 
-        // Return this model to be displayed
         return queuedWorkflow;
+
     }
 
     /**
-     * Retry the running of cwltool to create a new workflow
+     * Retry the downloading and running of cwltool
      * @param queuedWorkflow The workflow to use to update
      */
-    public void retryCwltool(QueuedWorkflow queuedWorkflow) {
+    public void retryCreate(QueuedWorkflow queuedWorkflow) {
+        queuedWorkflow.setCwltoolStatus(CWLToolStatus.DOWNLOADING);
         queuedWorkflow.setMessage(null);
-        queuedWorkflow.setCwltoolStatus(CWLToolStatus.RUNNING);
         queuedWorkflowRepository.save(queuedWorkflow);
-        try {
-            GitDetails gitDetails = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
-            Git repo = gitService.getRepository(gitDetails);
-            File localPath = repo.getRepository().getWorkTree();
-            Path pathToWorkflowFile = localPath.toPath().resolve(gitDetails.getPath()).normalize().toAbsolutePath();
-            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, new File(pathToWorkflowFile.toString()));
-        } catch (Exception e) {
-            logger.error("Could not update workflow with cwltool", e);
-        }
+        cwlToolRunner.cloneRepoAndParse(queuedWorkflow);
     }
 
     /**
@@ -372,7 +322,7 @@ public class WorkflowService {
      * @return A potentially corrected set of Github details,
      *         or null if there are no slashes in the path
      */
-    private GitDetails transferPathToBranch(GitDetails githubInfo) {
+    public static GitDetails transferPathToBranch(GitDetails githubInfo) {
         String path = githubInfo.getPath();
         String branch = githubInfo.getBranch();
 
