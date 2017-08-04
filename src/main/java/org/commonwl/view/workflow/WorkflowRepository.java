@@ -50,5 +50,5 @@ public interface WorkflowRepository extends PagingAndSortingRepository<Workflow,
      * @param doc The string to search for in the doc
      * @param pageable The details of the page to be retrieved
      */
-    Page<Workflow> findByLabelContainingOrDocContaining(String label, String doc, Pageable pageable);
+    Page<Workflow> findByLabelContainingOrDocContainingIgnoreCase(String label, String doc, Pageable pageable);
 }

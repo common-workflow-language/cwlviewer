@@ -25,6 +25,7 @@ import org.apache.taverna.robundle.manifest.Manifest;
 import org.apache.taverna.robundle.manifest.PathAnnotation;
 import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.commonwl.view.cwl.CWLTool;
+import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -110,7 +111,7 @@ public class ROBundleServiceTest {
         // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 5242880,
-                mockGraphvizService, mockGitService, mockCwlTool);
+                mockGraphvizService, mockGitService, Mockito.mock(RDFService.class), mockCwlTool);
         Bundle bundle = bundleService.createBundle(lobSTRv1, lobSTRv1RODetails);
         Path bundleRoot = bundle.getRoot().resolve("workflow");
 
@@ -207,7 +208,7 @@ public class ROBundleServiceTest {
         // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 0, mockGraphvizService,
-                mockGitService, mockCwlTool);
+                mockGitService, Mockito.mock(RDFService.class), mockCwlTool);
         Bundle bundle = bundleService.createBundle(lobSTRv1, lobSTRv1RODetails);
 
         Manifest manifest = bundle.getManifest();

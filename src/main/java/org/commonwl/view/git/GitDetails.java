@@ -47,11 +47,7 @@ public class GitDetails implements Serializable {
         }
 
         // Default to root path
-        if (path == null || path.isEmpty()) {
-            this.path = "/";
-        } else {
-            this.path = path;
-        }
+        setPath(path);
     }
 
 
@@ -76,7 +72,13 @@ public class GitDetails implements Serializable {
     }
 
     public void setPath(String path) {
-        this.path = path;
+        if (path == null || path.isEmpty()) {
+            this.path = "/";
+        } else if (path.startsWith("/") && path.length() > 1) {
+            this.path = path.substring(1);
+        } else {
+            this.path = path;
+        }
     }
 
     /**
