@@ -136,16 +136,15 @@
             <h2>Attribution</h2>
             <p class="recommendation">Include attribution information in your workflow and tool descriptions</p>
             <p class="recommendation_more">
-                For example, to attribute a person as the creator of a workflow or tool with name, email and
+                For example, to attribute a person as the author of a workflow or tool with name, email and
                 ORCID information, include the following statements at the top level:<br />
 <pre>
 $namespaces: { s: "http://schema.org/" }
-s:creator:
+s:author:
 - class: s:Person
   s:name: Mark Robinson
   s:email: mailto:mark@example.com
-  s:sameAs:
-  - id: http://orcid.org/0000-0002-8184-7507
+  s:id: http://orcid.org/0000-0002-8184-7507
 </pre>
                 For attributing organisations, see <a href="https://github.com/Barski-lab/ga4gh_challenge/blob/9de2f0c29ae09e31a434d6c5c969a5e3b2dbf535/biowardrobe_chipseq_se.cwl#L387">this workflow</a>
                 as an example
@@ -155,7 +154,7 @@ s:creator:
             be uniquely identified from other researchers</p>
             <p class="use">CWLViewer parses attribution information for inclusion in the Research Object Manifest from
             both the Git commit logs and from the CWL descriptions themselves when expressed in the
-            <a href="http://schema.org/creator">http://schema.org/creator</a> format as above</p>
+            <a href="http://schema.org/author">http://schema.org/author</a> format as above</p>
 
             <h2>Licensing</h2>
             <p class="recommendation">Include a <a href="https://opensource.org/licenses">OSI approved open source license</a>

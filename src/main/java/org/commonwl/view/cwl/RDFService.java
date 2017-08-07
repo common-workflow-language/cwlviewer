@@ -310,19 +310,19 @@ public class RDFService {
                 "SELECT ?email ?name ?orcid\n" +
                 "WHERE {\n" +
                 "  GRAPH ?graphName {" +
-                "    ?file s:creator ?creator .\n" +
+                "    ?file s:author|s:contributor|s:creator ?author .\n" +
                 "    {\n" +
                 "      ?creator rdf:type s:Person .\n" +
-                "      OPTIONAL { ?creator s:email ?email }\n" +
-                "      OPTIONAL { ?creator s:name ?name }\n" +
-                "      OPTIONAL { ?creator s:sameAs ?orcid }\n" +
+                "      OPTIONAL { ?author s:email ?email }\n" +
+                "      OPTIONAL { ?author s:name ?name }\n" +
+                "      OPTIONAL { ?author s:id|s:sameAs ?orcid }\n" +
                 "    } UNION {\n" +
-                "      ?creator rdf:type s:Organization .\n" +
-                "      ?creator s:department* ?dept .\n" +
+                "      ?author rdf:type s:Organization .\n" +
+                "      ?author s:department* ?dept .\n" +
                 "      ?dept s:member ?member\n" +
                 "      OPTIONAL { ?member s:email ?email }\n" +
                 "      OPTIONAL { ?member s:name ?name }\n" +
-                "      OPTIONAL { ?member s:sameAs ?orcid }\n" +
+                "      OPTIONAL { ?member s:id|s:sameAs ?orcid }\n" +
                 "    }\n" +
                 "    FILTER(regex(str(?orcid), \"^https?://orcid.org/\" ))\n" +
                 "    FILTER(regex(str(?file), ?wfFilter, \"i\" ))\n" +
