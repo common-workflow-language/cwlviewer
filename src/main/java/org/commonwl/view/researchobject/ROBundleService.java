@@ -303,7 +303,7 @@ public class ROBundleService {
                                     gitPath.toString());
 
                             if (cwl) {
-                                // Attempt to get authors from cwl description
+                                // Attempt to get authors from cwl description - takes priority
                                 ResultSet descAuthors = rdfService.getAuthors(bundlePath
                                         .resolve(file.getName()).toString().substring(10), url);
                                 if (descAuthors.hasNext()) {
@@ -318,6 +318,7 @@ public class ROBundleService {
                                     if (authorSoln.contains("orcid")) {
                                         newAuthor.setOrcid(new URI(authorSoln.get("orcid").toString()));
                                     }
+                                    fileAuthors.remove(newAuthor);
                                     fileAuthors.add(newAuthor);
                                 }
                             }

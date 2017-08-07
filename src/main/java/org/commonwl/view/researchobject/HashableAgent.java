@@ -78,18 +78,26 @@ public class HashableAgent extends Agent {
 
         HashableAgent that = (HashableAgent) o;
 
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        // ORCID is a unique identifier so if matches, the objects are equal
+        if (orcid != null && orcid.equals(that.orcid)) return true;
+
+        // If no ORCID is present but email is the name, the objects are equal
+        if (orcid == null && uri != null && uri.equals(that.uri)) return true;
+
+        // Default to checking all parameters
         if (orcid != null ? !orcid.equals(that.orcid) : that.orcid != null) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
         return uri != null ? uri.equals(that.uri) : that.uri == null;
 
     }
 
+    /**
+     * ORCID is used as hashcode to fall back to comparison if missing
+     * @return The hash code for this object
+     */
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (orcid != null ? orcid.hashCode() : 0);
-        result = 31 * result + (uri != null ? uri.hashCode() : 0);
-        return result;
+        return orcid != null ? orcid.hashCode() : 0;
     }
 
 }
