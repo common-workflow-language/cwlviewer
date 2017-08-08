@@ -23,15 +23,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.PersonIdent;
-import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,16 +53,11 @@ public class GitService {
     // Whether submodules are also cloned
     private boolean cloneSubmodules;
 
-    // File size limit for loading in bytes
-    private int singleFileSizeLimit;
-
     @Autowired
     public GitService(@Value("${gitStorage}") Path gitStorage,
-                      @Value("${gitAPI.cloneSubmodules}") boolean cloneSubmodules,
-                      @Value("${singleFileSizeLimit}") int singleFileSizeLimit) {
+                      @Value("${gitAPI.cloneSubmodules}") boolean cloneSubmodules) {
         this.gitStorage = gitStorage;
         this.cloneSubmodules = cloneSubmodules;
-        this.singleFileSizeLimit = singleFileSizeLimit;
     }
 
     /**
@@ -118,46 +106,6 @@ public class GitService {
         }
 
         return repo;
-    }
-
-    /**
-     * Get the contents of a file from the Git repository
-     * @param repository The Git repository
-     * @param refOrCommitId The branch name or commit ID as a string
-     * @return The contents of the file as a string
-     * @throws IOException Any errors in retrieving the file
-     */
-    public String getFile(Repository repository, String refOrCommitId) throws IOException {
-        String content;
-
-        // Get the ObjectID from the ref or commit ID string
-        if (!ObjectId.isId(refOrCommitId)) {
-            refOrCommitId = "refs/remotes/origin/" + refOrCommitId;
-        }
-        ObjectId commitId = repository.resolve(refOrCommitId);
-
-        // Walk over commits using defined filtering
-        try (RevWalk revWalk = new RevWalk(repository)) {
-            RevCommit commit = revWalk.parseCommit(commitId);
-            RevTree tree = commit.getTree();
-
-            // Try to find specific file in the repository
-            try (TreeWalk treeWalk = new TreeWalk(repository)) {
-                treeWalk.addTree(tree);
-                treeWalk.setRecursive(true);
-                treeWalk.setFilter(PathFilter.create("README.md"));
-                if (!treeWalk.next()) {
-                    throw new IllegalStateException("Did not find expected file");
-                }
-
-                ObjectId objectId = treeWalk.getObjectId(0);
-                ObjectLoader loader = repository.open(objectId);
-                content = new String(loader.getCachedBytes(singleFileSizeLimit));
-            }
-            revWalk.dispose();
-        }
-
-        return content;
     }
 
     /**

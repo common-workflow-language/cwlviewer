@@ -236,7 +236,14 @@ public class WorkflowService {
         File localPath = repo.getRepository().getWorkTree();
         String latestCommit = gitService.getCurrentCommitID(repo);
 
-        Workflow basicModel = cwlService.parseWorkflowNative(gitInfo);
+        Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
+        // Prevent path traversal attacks
+        if (!pathToWorkflowFile.startsWith(localPath.toPath().normalize().toAbsolutePath())) {
+            throw new WorkflowNotFoundException();
+        }
+
+        File workflowFile = new File(pathToWorkflowFile.toString());
+        Workflow basicModel = cwlService.parseWorkflowNative(workflowFile);
 
         // Set origin details
         basicModel.setRetrievedOn(new Date());
@@ -251,7 +258,7 @@ public class WorkflowService {
         // ASYNC OPERATIONS
         // Parse with cwltool and update model
         try {
-            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
+            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, workflowFile);
         } catch (Exception e) {
             logger.error("Could not update workflow with cwltool", e);
         }
