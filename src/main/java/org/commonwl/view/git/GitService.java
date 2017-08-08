@@ -39,6 +39,8 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.apache.jena.ext.com.google.common.io.Files.createTempDir;
+
 /**
  * Handles Git related functionality
  */
@@ -63,31 +65,43 @@ public class GitService {
     /**
      * Gets a repository, cloning into a local directory or
      * @param gitDetails The details of the Git repository
+     * @param reuseDir Whether the cached repository can be used
      * @returns The git object for the repository
      */
-    public Git getRepository(GitDetails gitDetails)
+    public Git getRepository(GitDetails gitDetails, boolean reuseDir)
             throws GitAPIException {
         Git repo = null;
         try {
-            // Base dir from configuration, name from hash of repository URL
-            File baseDir = new File(gitStorage.toString());
-            String baseName = DigestUtils.shaHex(GitDetails.normaliseUrl(gitDetails.getRepoUrl()));
+            if (reuseDir) {
+                // Base dir from configuration, name from hash of repository URL
+                File baseDir = new File(gitStorage.toString());
+                String baseName = DigestUtils.shaHex(GitDetails.normaliseUrl(gitDetails.getRepoUrl()));
 
-            // Check if folder already exists
-            File repoDir = new File(baseDir, baseName);
-            if (repoDir.exists() && repoDir.isDirectory()) {
+                // Check if folder already exists
+                File repoDir = new File(baseDir, baseName);
+                if (repoDir.exists() && repoDir.isDirectory()) {
                     repo = Git.open(repoDir);
                     repo.fetch().call();
-            } else {
-                // Create a folder and clone repository into it
-                if (repoDir.mkdir()) {
-                    repo = Git.cloneRepository()
-                            .setCloneSubmodules(cloneSubmodules)
-                            .setURI(gitDetails.getRepoUrl())
-                            .setDirectory(repoDir)
-                            .setCloneAllBranches(true)
-                            .call();
+                } else {
+                    // Create a folder and clone repository into it
+                    if (repoDir.mkdir()) {
+                        repo = Git.cloneRepository()
+                                .setCloneSubmodules(cloneSubmodules)
+                                .setURI(gitDetails.getRepoUrl())
+                                .setDirectory(repoDir)
+                                .setCloneAllBranches(true)
+                                .call();
+                    }
                 }
+            } else {
+                // Another thread is already using the existing folder
+                // Must create another temporary one
+                repo = Git.cloneRepository()
+                        .setCloneSubmodules(cloneSubmodules)
+                        .setURI(gitDetails.getRepoUrl())
+                        .setDirectory(createTempDir())
+                        .setCloneAllBranches(true)
+                        .call();
             }
 
             // Checkout the specific branch or commit ID
