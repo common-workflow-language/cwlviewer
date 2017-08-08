@@ -26,6 +26,7 @@ import org.apache.taverna.robundle.manifest.PathAnnotation;
 import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.commonwl.view.cwl.CWLTool;
 import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitSemaphore;
 import org.commonwl.view.git.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
@@ -45,8 +46,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.when;
 
 public class ROBundleServiceTest {
@@ -76,7 +76,7 @@ public class ROBundleServiceTest {
 
         // Get mock Git service
         GitService mockGitService = Mockito.mock(GitService.class);
-        when(mockGitService.getRepository(anyObject())).thenReturn(gitRepo);
+        when(mockGitService.getRepository(anyObject(), anyBoolean())).thenReturn(gitRepo);
 
         Set<HashableAgent> authors = new HashSet<>();
         authors.add(new HashableAgent("Mark Robinson", null, new URI("mailto:mark@example.com")));
@@ -110,7 +110,7 @@ public class ROBundleServiceTest {
         // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 5242880,
-                mockGraphvizService, mockGitService, mockCwlTool);
+                mockGraphvizService, mockGitService, Mockito.mock(GitSemaphore.class), mockCwlTool);
         Bundle bundle = bundleService.createBundle(lobSTRv1, lobSTRv1RODetails);
         Path bundleRoot = bundle.getRoot().resolve("workflow");
 
@@ -173,7 +173,7 @@ public class ROBundleServiceTest {
 
         // Get mock Git service
         GitService mockGitService = Mockito.mock(GitService.class);
-        when(mockGitService.getRepository(anyObject())).thenReturn(gitRepo);
+        when(mockGitService.getRepository(anyObject(), anyBoolean())).thenReturn(gitRepo);
 
         Set<HashableAgent> authors = new HashSet<>();
         authors.add(new HashableAgent("Mark Robinson", null, new URI("mailto:mark@example.com")));
@@ -207,7 +207,7 @@ public class ROBundleServiceTest {
         // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 0, mockGraphvizService,
-                mockGitService, mockCwlTool);
+                mockGitService, Mockito.mock(GitSemaphore.class), mockCwlTool);
         Bundle bundle = bundleService.createBundle(lobSTRv1, lobSTRv1RODetails);
 
         Manifest manifest = bundle.getManifest();
