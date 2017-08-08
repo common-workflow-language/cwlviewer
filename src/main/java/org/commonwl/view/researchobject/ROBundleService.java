@@ -27,6 +27,7 @@ import org.apache.taverna.robundle.manifest.*;
 import org.commonwl.view.cwl.CWLTool;
 import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitSemaphore;
 import org.commonwl.view.git.GitService;
 import org.commonwl.view.git.GitType;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -67,6 +68,7 @@ public class ROBundleService {
     private GraphVizService graphVizService;
     private GitService gitService;
     private CWLTool cwlTool;
+    private GitSemaphore gitSemaphore;
 
     // Configuration variables
     private Agent appAgent;
@@ -92,6 +94,7 @@ public class ROBundleService {
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
                            GraphVizService graphVizService,
                            GitService gitService,
+                           GitSemaphore gitSemaphore,
                            CWLTool cwlTool) throws URISyntaxException {
         this.bundleStorage = bundleStorage;
         this.appAgent = new Agent(appName);
@@ -99,6 +102,7 @@ public class ROBundleService {
         this.singleFileSizeLimit = singleFileSizeLimit;
         this.graphVizService = graphVizService;
         this.gitService = gitService;
+        this.gitSemaphore = gitSemaphore;
         this.cwlTool = cwlTool;
     }
 
@@ -131,10 +135,15 @@ public class ROBundleService {
 
             // Add the files from the repo to this workflow
             Set<HashableAgent> authors = new HashSet<>();
-            Git gitRepo = gitService.getRepository(workflow.getRetrievedFrom());
-            Path relativePath = Paths.get(FilenameUtils.getPath(gitInfo.getPath()));
-            Path gitPath = gitRepo.getRepository().getWorkTree().toPath().resolve(relativePath);
-            addFilesToBundle(gitInfo, bundle, bundlePath, gitRepo, gitPath, authors);
+            boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
+            try {
+                Git gitRepo = gitService.getRepository(workflow.getRetrievedFrom(), safeToAccess);
+                Path relativePath = Paths.get(FilenameUtils.getPath(gitInfo.getPath()));
+                Path gitPath = gitRepo.getRepository().getWorkTree().toPath().resolve(relativePath);
+                addFilesToBundle(gitInfo, bundle, bundlePath, gitRepo, gitPath, authors);
+            } finally {
+                gitSemaphore.release(gitInfo.getRepoUrl());
+            }
 
             // Add combined authors
             manifest.setAuthoredBy(new ArrayList<>(authors));

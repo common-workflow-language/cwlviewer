@@ -38,7 +38,7 @@ public class GitSemaphore {
      * @return Whether the resource can be accessed safely
      * (no other threads are using it)
      */
-    synchronized boolean acquire(String repoUrl) {
+    public synchronized boolean acquire(String repoUrl) {
         if (currentRepos.containsKey(repoUrl)) {
             currentRepos.put(repoUrl, currentRepos.get(repoUrl) + 1);
             return false;
@@ -52,7 +52,7 @@ public class GitSemaphore {
      * Release use of the shared resource
      * @param repoUrl The url of the repository
      */
-    synchronized void release(String repoUrl) {
+    public synchronized void release(String repoUrl) {
         if (currentRepos.containsKey(repoUrl)) {
             int threadCountUsing = currentRepos.get(repoUrl);
             if (threadCountUsing > 1) {
