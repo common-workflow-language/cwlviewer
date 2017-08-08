@@ -19,7 +19,6 @@
 
 package org.commonwl.view.graphviz;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.commonwl.view.cwl.CWLProcess;
@@ -38,10 +37,12 @@ public class RDFDotWriter extends DotWriter {
 
     private RDFService rdfService;
     private Map<String, String> subworkflows = new HashMap<>();
+    private String gitPath;
 
-    public RDFDotWriter(Writer writer, RDFService rdfService) {
+    public RDFDotWriter(Writer writer, RDFService rdfService, String gitPath) {
         super(writer);
         this.rdfService = rdfService;
+        this.gitPath = gitPath;
     }
 
     /**
@@ -72,10 +73,10 @@ public class RDFDotWriter extends DotWriter {
         writeLine("    label = \"Workflow Inputs\";");
 
         // Write each of the inputs as a node
-        ResultSet inputs = rdfService.getInputs(workflowUri);
+        ResultSet inputs = rdfService.getInputs(gitPath, workflowUri);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
-            writeInputOutput(workflowUri, input);
+            writeInputOutput(input);
         }
 
         // End subgraph
@@ -95,10 +96,10 @@ public class RDFDotWriter extends DotWriter {
         writeLine("    label = \"Workflow Outputs\";");
 
         // Write each of the outputs as a node
-        ResultSet outputs = rdfService.getOutputs(workflowUri);
+        ResultSet outputs = rdfService.getOutputs(gitPath, workflowUri);
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
-            writeInputOutput(workflowUri, output);
+            writeInputOutput(output);
         }
 
         // End subgraph
@@ -113,11 +114,11 @@ public class RDFDotWriter extends DotWriter {
      */
     private void writeSteps(String workflowUri, boolean subworkflow) throws IOException {
 
-        ResultSet steps = rdfService.getSteps(workflowUri);
+        ResultSet steps = rdfService.getSteps(gitPath, workflowUri);
         Set<String> addedSteps = new HashSet<>();
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
-            String stepName = rdfService.stepNameFromURI(workflowUri, step.get("step").toString());
+            String stepName = rdfService.stepNameFromURI(gitPath, step.get("step").toString());
 
             // Only write each step once
             if (!addedSteps.contains(stepName)) {
@@ -155,7 +156,7 @@ public class RDFDotWriter extends DotWriter {
      */
     private void writeStepLinks(String workflowUri) throws IOException {
         // Write links between steps
-        ResultSet stepLinks = rdfService.getStepLinks(workflowUri);
+        ResultSet stepLinks = rdfService.getStepLinks(gitPath, workflowUri);
         int defaultCount = 1;
         while (stepLinks.hasNext()) {
             QuerySolution stepLink = stepLinks.nextSolution();
@@ -168,12 +169,12 @@ public class RDFDotWriter extends DotWriter {
                 writeLine("  \"" + sourceID + "\" -> \"" + destID + "\" [label=\"" + destInput + "\"];");
             } else if (stepLink.contains("default")) {
                 // Collect default values
-                String destID = rdfService.stepNameFromURI(workflowUri, stepLink.get("dest").toString());
+                String destID = rdfService.stepNameFromURI(gitPath, stepLink.get("dest").toString());
                 String label;
                 if (stepLink.get("default").isLiteral()) {
                     label = rdfService.formatDefault(stepLink.get("default").toString());
                 } else if (stepLink.get("default").isURIResource()) {
-                    Path workflowPath = Paths.get(FilenameUtils.getPath(workflowUri));
+                    Path workflowPath = Paths.get(stepLink.get("wf").toString()).getParent();
                     Path resourcePath = Paths.get(stepLink.get("default").toString());
                     label = workflowPath.relativize(resourcePath).toString();
                 } else {
@@ -192,7 +193,7 @@ public class RDFDotWriter extends DotWriter {
         }
 
         // Write links between steps and outputs
-        ResultSet outputLinks = rdfService.getOutputLinks(workflowUri);
+        ResultSet outputLinks = rdfService.getOutputLinks(gitPath, workflowUri);
         while (outputLinks.hasNext()) {
             QuerySolution outputLink = outputLinks.nextSolution();
             String sourceID = nodeIDFromUri(workflowUri, outputLink.get("src").toString());
@@ -209,7 +210,7 @@ public class RDFDotWriter extends DotWriter {
      */
     private String nodeIDFromUri(String workflowUri, String uri) {
 
-        String nodeID = rdfService.stepNameFromURI(workflowUri, uri);
+        String nodeID = rdfService.stepNameFromURI(gitPath, uri);
         if (subworkflows.containsKey(nodeID)) {
             int slashAfterHashIndex = uri.indexOf('/', uri.lastIndexOf('#'));
             if (slashAfterHashIndex != -1) {
@@ -244,11 +245,10 @@ public class RDFDotWriter extends DotWriter {
 
     /**
      * Writes a single input or output to the Writer
-     * @param workflowUri The URI of the workflow in the model
      * @param inputOutput The input or output
      * @throws IOException Any errors in writing which may have occurred
      */
-    private void writeInputOutput(String workflowUri, QuerySolution inputOutput) throws IOException {
+    private void writeInputOutput(QuerySolution inputOutput) throws IOException {
         // List of options for this node
         List<String> nodeOptions = new ArrayList<>();
         nodeOptions.add("fillcolor=\"#94DDF4\"");
@@ -263,7 +263,7 @@ public class RDFDotWriter extends DotWriter {
         nodeOptions.add("label=\"" + label + "\"");
 
         // Write the line for the node
-        String inputOutputName = rdfService.stepNameFromURI(workflowUri, inputOutput.get("name").toString());
+        String inputOutputName = rdfService.stepNameFromURI(gitPath, inputOutput.get("name").toString());
         writeLine("    \"" + inputOutputName + "\" [" + String.join(",", nodeOptions) + "];");
     }
 

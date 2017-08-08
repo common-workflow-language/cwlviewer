@@ -22,14 +22,15 @@ package org.commonwl.view.workflow;
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
-import org.commonwl.view.cwl.CWLValidationException;
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitSemaphore;
+import org.commonwl.view.git.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
-import org.eclipse.egit.github.core.RepositoryContents;
-import org.eclipse.egit.github.core.client.RequestException;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,35 +41,36 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.file.Path;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 @Service
 public class WorkflowService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final GitHubService githubService;
+    private final GitService gitService;
     private final CWLService cwlService;
     private final WorkflowRepository workflowRepository;
     private final QueuedWorkflowRepository queuedWorkflowRepository;
     private final ROBundleFactory ROBundleFactory;
     private final GraphVizService graphVizService;
     private final CWLToolRunner cwlToolRunner;
+    private final GitSemaphore gitSemaphore;
     private final int cacheDays;
 
     @Autowired
-    public WorkflowService(GitHubService githubService,
+    public WorkflowService(GitService gitService,
                            CWLService cwlService,
                            WorkflowRepository workflowRepository,
                            QueuedWorkflowRepository queuedWorkflowRepository,
                            ROBundleFactory ROBundleFactory,
                            GraphVizService graphVizService,
                            CWLToolRunner cwlToolRunner,
+                           GitSemaphore gitSemaphore,
                            @Value("${cacheDays}") int cacheDays) {
-        this.githubService = githubService;
+        this.gitService = gitService;
         this.cwlService = cwlService;
         this.workflowRepository = workflowRepository;
         this.queuedWorkflowRepository = queuedWorkflowRepository;
@@ -76,6 +78,7 @@ public class WorkflowService {
         this.graphVizService = graphVizService;
         this.cwlToolRunner = cwlToolRunner;
         this.cacheDays = cacheDays;
+        this.gitSemaphore = gitSemaphore;
     }
 
     /**
@@ -116,41 +119,17 @@ public class WorkflowService {
     }
 
     /**
-     * Get a list of workflows from a directory in Github
-     * @param githubInfo Github information for the workflow
-     * @return The list of workflow names
-     */
-    public List<WorkflowOverview> getWorkflowsFromDirectory(GithubDetails githubInfo) throws IOException {
-        List<WorkflowOverview> workflowsInDir = new ArrayList<>();
-        for (RepositoryContents content : githubService.getContents(githubInfo)) {
-            int eIndex = content.getName().lastIndexOf('.') + 1;
-            if (eIndex > 0) {
-                String extension = content.getName().substring(eIndex);
-                if (extension.equals("cwl")) {
-                    GithubDetails githubFile = new GithubDetails(githubInfo.getOwner(),
-                            githubInfo.getRepoName(), githubInfo.getBranch(), content.getPath());
-                    WorkflowOverview overview = cwlService.getWorkflowOverview(githubFile);
-                    if (overview != null) {
-                        workflowsInDir.add(overview);
-                    }
-                }
-            }
-        }
-        return workflowsInDir;
-    }
-
-    /**
      * Get a queued workflow from the database
      * @param githubInfo Github information for the workflow
      * @return The queued workflow model
      */
-    public QueuedWorkflow getQueuedWorkflow(GithubDetails githubInfo) {
+    public QueuedWorkflow getQueuedWorkflow(GitDetails githubInfo) {
         QueuedWorkflow queued = queuedWorkflowRepository.findByRetrievedFrom(githubInfo);
 
         // Slash in branch fix
         boolean slashesInPath = true;
         while (queued == null && slashesInPath) {
-            GithubDetails correctedForSlash = transferPathToBranch(githubInfo);
+            GitDetails correctedForSlash = transferPathToBranch(githubInfo);
             if (correctedForSlash != null) {
                 githubInfo = correctedForSlash;
                 queued = queuedWorkflowRepository.findByRetrievedFrom(githubInfo);
@@ -164,20 +143,20 @@ public class WorkflowService {
 
     /**
      * Get a workflow from the database, refreshing it if cache has expired
-     * @param githubInfo Github information for the workflow
-     * @return The workflow model associated with githubInfo
+     * @param gitInfo Git information for the workflow
+     * @return The workflow model associated with gitInfo
      */
-    public Workflow getWorkflow(GithubDetails githubInfo) {
+    public Workflow getWorkflow(GitDetails gitInfo) {
         // Check database for existing workflows from this repository
-        Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
+        Workflow workflow = workflowRepository.findByRetrievedFrom(gitInfo);
 
         // Slash in branch fix
         boolean slashesInPath = true;
         while (workflow == null && slashesInPath) {
-            GithubDetails correctedForSlash = transferPathToBranch(githubInfo);
+            GitDetails correctedForSlash = transferPathToBranch(gitInfo);
             if (correctedForSlash != null) {
-                githubInfo = correctedForSlash;
-                workflow = workflowRepository.findByRetrievedFrom(githubInfo);
+                gitInfo = correctedForSlash;
+                workflow = workflowRepository.findByRetrievedFrom(gitInfo);
             } else {
                 slashesInPath = false;
             }
@@ -206,13 +185,13 @@ public class WorkflowService {
 
     /**
      * Get the RO bundle for a Workflow, triggering re-download if it does not exist
-     * @param githubDetails The origin details of the workflow
+     * @param gitDetails The origin details of the workflow
      * @return The file containing the RO bundle
      * @throws ROBundleNotFoundException If the RO bundle was not found
      */
-    public File getROBundle(GithubDetails githubDetails) throws ROBundleNotFoundException {
+    public File getROBundle(GitDetails gitDetails) throws ROBundleNotFoundException {
         // Get workflow from database
-        Workflow workflow = getWorkflow(githubDetails);
+        Workflow workflow = getWorkflow(gitDetails);
 
         // If workflow does not exist or the bundle doesn't yet
         if (workflow == null || workflow.getRoBundlePath() == null) {
@@ -233,53 +212,67 @@ public class WorkflowService {
     }
 
     /**
-     * Builds a new queued workflow from Github
-     * @param githubInfo Github information for the workflow
+     * Builds a new queued workflow from Git
+     * @param gitInfo Git information for the workflow
      * @return A queued workflow model
-     * @throws IOException Github errors
-     * @throws CWLValidationException cwltool errors
+     * @throws GitAPIException Git errors
+     * @throws WorkflowNotFoundException Workflow was not found within the repository
+     * @throws IOException Other file handling exceptions
      */
-    public QueuedWorkflow createQueuedWorkflow(GithubDetails githubInfo)
-            throws IOException, CWLValidationException {
+    public QueuedWorkflow createQueuedWorkflow(GitDetails gitInfo)
+            throws GitAPIException, WorkflowNotFoundException, IOException {
+        QueuedWorkflow queuedWorkflow;
 
-        // Construct basic workflow model from cwl
-        String latestCommit = null;
-        while (latestCommit == null) {
-            try {
-                latestCommit = githubService.getCommitSha(githubInfo);
-            } catch (RequestException ex) {
-                if (ex.getStatus() == 404) {
-                    // Slashes in branch fix
-                    // Commits were not found. This can occur if the branch has a /
-                    GithubDetails correctedForSlash = transferPathToBranch(githubInfo);
+        try {
+            // Clone repository to temporary folder
+            Git repo = null;
+            while (repo == null) {
+                try {
+                    boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
+                    repo = gitService.getRepository(gitInfo, safeToAccess);
+                } catch (RefNotFoundException ex) {
+                    // Attempt slashes in branch fix
+                    GitDetails correctedForSlash = transferPathToBranch(gitInfo);
                     if (correctedForSlash != null) {
-                        githubInfo = correctedForSlash;
+                        gitSemaphore.release(gitInfo.getRepoUrl());
+                        gitInfo = correctedForSlash;
                     } else {
                         throw ex;
                     }
-                } else {
-                    throw ex;
                 }
             }
-        }
-        Workflow basicModel = cwlService.parseWorkflowNative(githubInfo, latestCommit);
+            File localPath = repo.getRepository().getWorkTree();
+            String latestCommit = gitService.getCurrentCommitID(repo);
 
-        // Set origin details
-        basicModel.setRetrievedOn(new Date());
-        basicModel.setRetrievedFrom(githubInfo);
-        basicModel.setLastCommit(latestCommit);
+            Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
+            // Prevent path traversal attacks
+            if (!pathToWorkflowFile.startsWith(localPath.toPath().normalize().toAbsolutePath())) {
+                throw new WorkflowNotFoundException();
+            }
 
-        // Save a queued workflow to database
-        QueuedWorkflow queuedWorkflow = new QueuedWorkflow();
-        queuedWorkflow.setTempRepresentation(basicModel);
-        queuedWorkflowRepository.save(queuedWorkflow);
+            File workflowFile = new File(pathToWorkflowFile.toString());
+            Workflow basicModel = cwlService.parseWorkflowNative(workflowFile);
 
-        // ASYNC OPERATIONS
-        // Parse with cwltool and update model
-        try {
-            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
-        } catch (Exception e) {
-            logger.error("Could not update workflow with cwltool", e);
+            // Set origin details
+            basicModel.setRetrievedOn(new Date());
+            basicModel.setRetrievedFrom(gitInfo);
+            basicModel.setLastCommit(latestCommit);
+
+            // Save the queued workflow to database
+            queuedWorkflow = new QueuedWorkflow();
+            queuedWorkflow.setTempRepresentation(basicModel);
+            queuedWorkflowRepository.save(queuedWorkflow);
+
+            // ASYNC OPERATIONS
+            // Parse with cwltool and update model
+            try {
+                cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, workflowFile);
+            } catch (Exception e) {
+                logger.error("Could not update workflow with cwltool", e);
+            }
+
+        } finally {
+            gitSemaphore.release(gitInfo.getRepoUrl());
         }
 
         // Return this model to be displayed
@@ -287,17 +280,24 @@ public class WorkflowService {
     }
 
     /**
-     * Update a workflow by running cwltool
-     * @param queuedWorkflow The queue item to
+     * Retry the running of cwltool to create a new workflow
+     * @param queuedWorkflow The workflow to use to update
      */
     public void retryCwltool(QueuedWorkflow queuedWorkflow) {
         queuedWorkflow.setMessage(null);
         queuedWorkflow.setCwltoolStatus(CWLToolStatus.RUNNING);
         queuedWorkflowRepository.save(queuedWorkflow);
+        GitDetails gitDetails = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
+        boolean safeToAccess = gitSemaphore.acquire(gitDetails.getRepoUrl());
         try {
-            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
+            Git repo = gitService.getRepository(gitDetails, safeToAccess);
+            File localPath = repo.getRepository().getWorkTree();
+            Path pathToWorkflowFile = localPath.toPath().resolve(gitDetails.getPath()).normalize().toAbsolutePath();
+            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, new File(pathToWorkflowFile.toString()));
         } catch (Exception e) {
             logger.error("Could not update workflow with cwltool", e);
+        } finally {
+            gitSemaphore.release(gitDetails.getRepoUrl());
         }
     }
 
@@ -307,7 +307,7 @@ public class WorkflowService {
      */
     private void generateROBundle(Workflow workflow) {
         try {
-            ROBundleFactory.workflowROFromGithub(workflow);
+            ROBundleFactory.createWorkflowRO(workflow);
         } catch (Exception ex) {
             logger.error("Error creating RO Bundle", ex);
         }
@@ -344,38 +344,46 @@ public class WorkflowService {
      * @return Whether or not there are new commits
      */
     private boolean cacheExpired(Workflow workflow) {
-        try {
-            // Calculate expiration
-            Calendar expireCal = Calendar.getInstance();
-            expireCal.setTime(workflow.getRetrievedOn());
-            expireCal.add(Calendar.DATE, cacheDays);
-            Date expirationDate = expireCal.getTime();
+        // If this is a branch and not added by commit ID
+        if (!workflow.getRetrievedFrom().getBranch().equals(workflow.getLastCommit())) {
+            try {
+                // Calculate expiration
+                Calendar expireCal = Calendar.getInstance();
+                expireCal.setTime(workflow.getRetrievedOn());
+                expireCal.add(Calendar.DATE, cacheDays);
+                Date expirationDate = expireCal.getTime();
 
-            // Check cached retrievedOn date
-            if (expirationDate.before(new Date())) {
-                // Cache expiry time has elapsed
-                // Check current head of the branch with the cached head
-                logger.debug("Time has expired for caching, checking commits...");
-                String currentHead = githubService.getCommitSha(workflow.getRetrievedFrom());
-                logger.debug("Current: " + workflow.getLastCommit() + ", HEAD: " + currentHead);
+                // Check cached retrievedOn date
+                if (expirationDate.before(new Date())) {
+                    // Cache expiry time has elapsed
+                    // Check current head of the branch with the cached head
+                    logger.info("Time has expired for caching, checking commits...");
+                    String currentHead;
+                    boolean safeToAccess = gitSemaphore.acquire(workflow.getRetrievedFrom().getRepoUrl());
+                    try {
+                        Git repo = gitService.getRepository(workflow.getRetrievedFrom(), safeToAccess);
+                        currentHead = gitService.getCurrentCommitID(repo);
+                    } finally {
+                        gitSemaphore.release(workflow.getRetrievedFrom().getRepoUrl());
+                    }
+                    logger.info("Current: " + workflow.getLastCommit() + ", HEAD: " + currentHead);
 
-                // Reset date in database if there are still no changes
-                boolean expired = !workflow.getLastCommit().equals(currentHead);
-                if (!expired) {
-                    workflow.setRetrievedOn(new Date());
-                    workflowRepository.save(workflow);
+                    // Reset date in database if there are still no changes
+                    boolean expired = !workflow.getLastCommit().equals(currentHead);
+                    if (!expired) {
+                        workflow.setRetrievedOn(new Date());
+                        workflowRepository.save(workflow);
+                    }
+
+                    // Return whether the cache has expired
+                    return expired;
                 }
-
-                // Return whether the cache has expired
-                return expired;
-            } else {
-                // Cache expiry time has not elapsed yet
-                return false;
+            } catch(Exception ex){
+                // Default to no expiry if there was an API error
+                logger.error("API Error when checking for latest commit ID for caching", ex);
             }
-        } catch (Exception ex) {
-            // Default to no expiry if there was an API error
-            return false;
         }
+        return false;
     }
 
     /**
@@ -385,7 +393,7 @@ public class WorkflowService {
      * @return A potentially corrected set of Github details,
      *         or null if there are no slashes in the path
      */
-    private GithubDetails transferPathToBranch(GithubDetails githubInfo) {
+    private GitDetails transferPathToBranch(GitDetails githubInfo) {
         String path = githubInfo.getPath();
         String branch = githubInfo.getBranch();
 
@@ -393,8 +401,8 @@ public class WorkflowService {
         if (firstSlash > 0) {
             branch += "/" + path.substring(0, firstSlash);
             path = path.substring(firstSlash + 1);
-            return new GithubDetails(githubInfo.getOwner(),
-                    githubInfo.getRepoName(), branch, path);
+            return new GitDetails(githubInfo.getRepoUrl(), branch,
+                    path);
         } else {
             return null;
         }

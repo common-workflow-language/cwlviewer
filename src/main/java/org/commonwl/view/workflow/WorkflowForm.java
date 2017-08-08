@@ -21,28 +21,46 @@ package org.commonwl.view.workflow;
 
 /**
  * Represents the submission form on the main page to create a new workflow
- * Currently just contains a github URL
+ * Contains the URL and optionally branch and path (for Git repository)
  */
 public class WorkflowForm {
 
-    private String githubURL;
+    private String url;
+    private String branch;
+    private String path;
 
     public WorkflowForm() {}
 
-    public WorkflowForm(String githubURL) {
-        if (githubURL != null) {
-            this.githubURL = trimTrailingSlashes(githubURL);
+    public WorkflowForm(String url) {
+        if (url != null) {
+            this.url = trimTrailingSlashes(url);
         }
     }
 
-    public String getGithubURL() {
-        return githubURL;
+    public String getUrl() {
+        return url;
     }
 
-    public void setGithubURL(String githubURL) {
-        if (githubURL != null) {
-            this.githubURL = trimTrailingSlashes(githubURL);
+    public void setUrl(String url) {
+        if (url != null) {
+            this.url = trimTrailingSlashes(url);
         }
+    }
+
+    public String getBranch() {
+        return branch;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 
     /**

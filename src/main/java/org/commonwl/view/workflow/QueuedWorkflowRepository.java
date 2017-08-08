@@ -1,6 +1,6 @@
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.git.GitDetails;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
@@ -15,13 +15,13 @@ public interface QueuedWorkflowRepository extends PagingAndSortingRepository<Que
      * @return The queued workflow
      */
     @Query("{tempRepresentation.retrievedFrom: ?0}")
-    QueuedWorkflow findByRetrievedFrom(GithubDetails retrievedFrom);
+    QueuedWorkflow findByRetrievedFrom(GitDetails retrievedFrom);
 
     /**
      * Deletes a queued workflow based on where it was retrieved from
      * @param retrievedFrom Details of where the queued workflow is from
      */
     @Query("{tempRepresentation.retrievedFrom: ?0}")
-    void deleteByRetrievedFrom(GithubDetails retrievedFrom);
+    void deleteByRetrievedFrom(GitDetails retrievedFrom);
 
 }

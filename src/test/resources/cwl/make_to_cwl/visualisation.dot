@@ -38,19 +38,19 @@ digraph workflow {
     label = "Workflow Outputs";
     "outfile" [fillcolor="#94DDF4",label="outfile"];
   }
-  "combine_sequences" [label="combine_sequences"];
   "get_sequences" [label="get_sequences"];
+  "combine_sequences" [label="combine_sequences"];
   "translate_sequences" [label="translate_sequences"];
+  "rna" -> "get_sequences" [label="sequence"];
   "default1" -> "combine_sequences" [label="catfilename"];
   "default1" [label="\"database.dna\"", fillcolor="#D5AEFC"];
   "get_sequences" -> "combine_sequences" [label="sequences"];
-  "rna" -> "get_sequences" [label="sequence"];
-  "default2" -> "translate_sequences" [label="filename"];
-  "default2" [label="\"database.dna\"", fillcolor="#D5AEFC"];
-  "default3" -> "translate_sequences" [label="from"];
-  "default3" [label="\"U\"", fillcolor="#D5AEFC"];
+  "default2" -> "translate_sequences" [label="from"];
+  "default2" [label="\"U\"", fillcolor="#D5AEFC"];
+  "default3" -> "translate_sequences" [label="filename"];
+  "default3" [label="\"database.dna\"", fillcolor="#D5AEFC"];
+  "combine_sequences" -> "translate_sequences" [label="trinput"];
   "default4" -> "translate_sequences" [label="to"];
   "default4" [label="\"T\"", fillcolor="#D5AEFC"];
-  "combine_sequences" -> "translate_sequences" [label="trinput"];
   "translate_sequences" -> "outfile";
 }

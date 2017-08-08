@@ -20,7 +20,7 @@
 package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLValidationException;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.git.GitDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,7 +86,7 @@ public class WorkflowRESTController {
     }
 
     /**
-     * Create a new workflow from the given github URL
+     * Create a new workflow from the given URL
      * @param url The URL of the workflow
      * @return Appropriate response code and optional JSON string with message
      */
@@ -97,9 +97,9 @@ public class WorkflowRESTController {
         // Run validator which checks the github URL is valid
         WorkflowForm workflowForm = new WorkflowForm(url);
         BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
-        GithubDetails githubInfo = workflowFormValidator.validateAndParse(workflowForm, errors);
+        GitDetails gitInfo = workflowFormValidator.validateAndParse(workflowForm, errors);
 
-        if (errors.hasErrors() || githubInfo == null) {
+        if (errors.hasErrors() || gitInfo == null) {
             String error;
             if (errors.hasErrors()) {
                 error = errors.getAllErrors().get(0).getDefaultMessage();
@@ -109,67 +109,84 @@ public class WorkflowRESTController {
             Map<String, String> message = Collections.singletonMap("message", "Error: " + error);
             return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
         } else {
-            if (githubInfo.getPath().endsWith(".cwl")) {
-                // Get workflow or create if does not exist
-                Workflow workflow = workflowService.getWorkflow(githubInfo);
-                if (workflow == null) {
-                    // Check if already queued
-                    QueuedWorkflow queued = workflowService.getQueuedWorkflow(githubInfo);
-                    if (queued == null) {
-                        try {
-                            queued = workflowService.createQueuedWorkflow(githubInfo);
-                        } catch (CWLValidationException ex) {
-                            Map<String, String> message = Collections.singletonMap("message", "Error:" + ex.getMessage());
-                            return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
-                        } catch (Exception ex) {
-                            Map<String, String> message = Collections.singletonMap("message",
-                                    "Error: Workflow could not be created from the provided cwl file");
-                            return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
-                        }
+            // Get workflow or create if does not exist
+            Workflow workflow = workflowService.getWorkflow(gitInfo);
+            if (workflow == null) {
+                // Check if already queued
+                QueuedWorkflow queued = workflowService.getQueuedWorkflow(gitInfo);
+                if (queued == null) {
+                    try {
+                        queued = workflowService.createQueuedWorkflow(gitInfo);
+                    } catch (CWLValidationException ex) {
+                        Map<String, String> message = Collections.singletonMap("message", "Error:" + ex.getMessage());
+                        return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
+                    } catch (Exception ex) {
+                        Map<String, String> message = Collections.singletonMap("message",
+                                "Error: Workflow could not be created from the provided cwl file");
+                        return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
                     }
-                    response.setHeader("Location", "/queue/" + queued.getId());
-                    response.setStatus(HttpServletResponse.SC_ACCEPTED);
-                    return null;
-                } else {
-                    // Workflow already exists and is equivalent
-                    response.setStatus(HttpServletResponse.SC_SEE_OTHER);
-                    String resourceLocation = "/workflows/github.com/" + githubInfo.getOwner()
-                            + "/" + githubInfo.getRepoName() + "/tree/" + githubInfo.getBranch()
-                            + "/" + githubInfo.getPath();
-                    response.setHeader("Location", resourceLocation);
-                    return null;
                 }
+                response.setHeader("Location", "/queue/" + queued.getId());
+                response.setStatus(HttpServletResponse.SC_ACCEPTED);
+                return null;
             } else {
-                Map<String, String> message = Collections.singletonMap("message",
-                        "Error: URL provided was not a .cwl file");
-                return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
+                // Workflow already exists and is equivalent
+                response.setStatus(HttpServletResponse.SC_SEE_OTHER);
+                response.setHeader("Location", gitInfo.getInternalUrl());
+                return null;
             }
         }
     }
 
     /**
-     * Get the JSON representation of a workflow from Github details
+     * Get the JSON representation of a workflow from Github or Gitlab details
+     * @param domain The domain of the hosting site, Github or Gitlab
      * @param owner The owner of the Github repository
      * @param repoName The name of the repository
      * @param branch The branch of repository
      * @return The JSON representation of the workflow
      */
-    @GetMapping(value = {"/workflows/github.com/{owner}/{repoName}/tree/{branch}/**",
-                         "/workflows/github.com/{owner}/{repoName}/blob/{branch}/**"},
+    @GetMapping(value = {"/workflows/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
+                         "/workflows/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
                 produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Workflow getWorkflowByGithubDetailsJson(@PathVariable("owner") String owner,
-                                                   @PathVariable("repoName") String repoName,
-                                                   @PathVariable("branch") String branch,
-                                                   HttpServletRequest request) {
+    public Workflow getWorkflowJson(@PathVariable("domain") String domain,
+                                    @PathVariable("owner") String owner,
+                                    @PathVariable("repoName") String repoName,
+                                    @PathVariable("branch") String branch,
+                                    HttpServletRequest request) {
         // The wildcard end of the URL is the path
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = WorkflowController.extractPath(path, 7);
 
-        // Construct a GithubDetails object to search for in the database
-        GithubDetails githubDetails = new GithubDetails(owner, repoName, branch, path);
+        // Construct a GitDetails object to search for in the database
+        GitDetails gitDetails = WorkflowController.getGitDetails(domain, owner, repoName, branch, path);
 
         // Get workflow
-        Workflow workflowModel = workflowService.getWorkflow(githubDetails);
+        Workflow workflowModel = workflowService.getWorkflow(gitDetails);
+        if (workflowModel == null) {
+            throw new WorkflowNotFoundException();
+        } else {
+            return workflowModel;
+        }
+    }
+
+    /**
+     * Get JSON representation of a workflow from generic git details
+     * @param branch The branch of the repository
+     * @return The JSON representation of the workflow
+     */
+    @GetMapping(value="/workflows/**/*.git/{branch}/**",
+                produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Workflow getWorkflowJsonGeneric(@PathVariable("branch") String branch,
+                                           HttpServletRequest request) {
+        // The wildcard end of the URL is the path
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+
+        // Construct a GitDetails object to search for in the database
+        GitDetails gitDetails = WorkflowController.getGitDetails(11, path, branch);
+
+        // Get workflow
+        Workflow workflowModel = workflowService.getWorkflow(gitDetails);
         if (workflowModel == null) {
             throw new WorkflowNotFoundException();
         } else {
@@ -192,10 +209,8 @@ public class WorkflowRESTController {
         }
 
         if (queuedWorkflow.getCwltoolStatus() == SUCCESS) {
-            GithubDetails githubInfo = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
-            String resourceLocation = "/workflows/github.com/" + githubInfo.getOwner()
-                    + "/" + githubInfo.getRepoName() + "/tree/" + githubInfo.getBranch()
-                    + "/" + githubInfo.getPath();
+            GitDetails gitInfo = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
+            String resourceLocation = gitInfo.getInternalUrl();
             response.setHeader("Location", resourceLocation);
             response.setStatus(HttpServletResponse.SC_SEE_OTHER);
         }

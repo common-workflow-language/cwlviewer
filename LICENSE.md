@@ -199,24 +199,3 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-
----------------------------------------------------------
-
-./src/main/resources/static/img/GitHub-Mark-32px.png
-
-GITHUB®, the GITHUB® logo design, OCTOCAT® and the OCTOCAT® logo design 
-are exclusive trademarks registered in the United States by GitHub, Inc.
-
-The OCTOCAT design is the exclusive property of GitHub, Inc and has 
-been federally registered with the United States Copyright Office. 
-All rights reserved.
-
-Use rules apply: https://github.com/logos
-
----------------------------------------------------------
-
-./src/main/resources/static/img/Docker-logo.png
-
-Copyright 2013-2015 Docker, Inc. All rights reserved.
-
-Use rules apply: https://www.docker.com/brand-guidelines

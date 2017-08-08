@@ -80,13 +80,18 @@ body {
     padding-top: 20px;
 }
 
-#githubURL {
-    background: url("/img/GitHub-Mark-32px.png") no-repeat scroll 7px 4px;
-    background-size: 25px 25px;
+#url {
+    background: url("/img/gitlogo.png") no-repeat scroll 4px 1px;
+    background-size: 30px 30px;
     padding-left: 45px;
 }
 
-#githubLogo {
+#extraInputs {
+    display:none;
+    margin-top:10px;
+}
+
+#gitLogo {
     margin-right: 5px;
 }
 

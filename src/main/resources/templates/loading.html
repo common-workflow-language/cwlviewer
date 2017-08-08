@@ -37,7 +37,7 @@
 
 <div id="workflowID" class="hide" th:text="${queued.id}"></div>
 
-<div class="container" th:with="githubURLPart=${queued.tempRepresentation.retrievedFrom.getURL().replace('https://', '')}">
+<div class="container" th:with="githubURLPart=${queued.tempRepresentation.retrievedFrom.getUrl().replace('https://', '')}">
     <div class="row">
         <div class="col-md-12 text-center" role="main" id="main">
             <h2 id="loadingHeader">Validating workflow <span th:text="${queued.tempRepresentation.label}" id="workflowName">Workflow Name</span> with

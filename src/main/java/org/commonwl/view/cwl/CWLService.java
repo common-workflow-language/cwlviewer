@@ -35,12 +35,10 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RiotException;
 import org.commonwl.view.docker.DockerService;
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.ModelDotWriter;
 import org.commonwl.view.graphviz.RDFDotWriter;
 import org.commonwl.view.workflow.Workflow;
-import org.commonwl.view.workflow.WorkflowOverview;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,11 +47,14 @@ import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+
+import static org.apache.commons.io.FileUtils.readFileToString;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
@@ -65,7 +66,6 @@ public class CWLService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // Autowired properties/services
-    private final GitHubService githubService;
     private final RDFService rdfService;
     private final CWLTool cwlTool;
     private final int singleFileSizeLimit;
@@ -96,16 +96,14 @@ public class CWLService {
 
     /**
      * Constructor for the Common Workflow Language service
-     * @param githubService A service for accessing Github functionality
+     * @param rdfService A service for handling RDF queries
      * @param cwlTool Handles cwltool integration
      * @param singleFileSizeLimit The file size limit for single files
      */
     @Autowired
-    public CWLService(GitHubService githubService,
-                      RDFService rdfService,
+    public CWLService(RDFService rdfService,
                       CWLTool cwlTool,
                       @Value("${singleFileSizeLimit}") int singleFileSizeLimit) {
-        this.githubService = githubService;
         this.rdfService = rdfService;
         this.cwlTool = cwlTool;
         this.singleFileSizeLimit = singleFileSizeLimit;
@@ -113,21 +111,17 @@ public class CWLService {
 
     /**
      * Gets the Workflow object from internal parsing
-     * @param githubInfo The Github repository information
-     * @param latestCommit The latest commit ID
+     * @param workflowFile The workflow file to be parsed
      * @return The constructed workflow object
      */
-    public Workflow parseWorkflowNative(GithubDetails githubInfo, String latestCommit) throws IOException {
-
-        // Get the content of this file from Github
-        String fileContent = githubService.downloadFile(githubInfo, latestCommit);
-        int fileSizeBytes = fileContent.getBytes("UTF-8").length;
+    public Workflow parseWorkflowNative(File workflowFile) throws IOException {
 
         // Check file size limit before parsing
+        long fileSizeBytes = workflowFile.length();
         if (fileSizeBytes <= singleFileSizeLimit) {
 
             // Parse file as yaml
-            JsonNode cwlFile = yamlStringToJson(fileContent);
+            JsonNode cwlFile = yamlStringToJson(readFileToString(workflowFile));
 
             // If the CWL file is packed there can be multiple workflows in a file
             Map<String, JsonNode> packedFiles = new HashMap<>();
@@ -144,7 +138,7 @@ public class CWLService {
             // Use filename for label if there is no defined one
             String label = extractLabel(cwlFile);
             if (label == null) {
-                label = FilenameUtils.getName(githubInfo.getPath());
+                label = FilenameUtils.getName(workflowFile.getPath());
             }
 
             // Construct the rest of the workflow model
@@ -170,7 +164,7 @@ public class CWLService {
             return workflowModel;
 
         } else {
-            throw new IOException("File '" + githubInfo.getPath() +  "' is over singleFileSizeLimit - " +
+            throw new IOException("File '" + workflowFile.getName() +  "' is over singleFileSizeLimit - " +
                     FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +
                     FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
         }
@@ -178,28 +172,35 @@ public class CWLService {
     }
 
     /**
-     * Create a workflow model from cwltool rdf output
-     * @param githubInfo The Github repository information
-     * @param latestCommit The latest commit ID
-     * @param packedWorkflowID The workflow ID if the file has multiple objects
+     * Create a workflow model using cwltool rdf output
+     * @param basicModel The basic workflow object created thus far
+     * @param workflowFile The workflow file to run cwltool on
      * @return The constructed workflow object
      */
-    public Workflow parseWorkflowWithCwltool(GithubDetails githubInfo,
-                                             String latestCommit,
-                                             String packedWorkflowID) throws CWLValidationException {
+    public Workflow parseWorkflowWithCwltool(Workflow basicModel,
+                                             File workflowFile) throws CWLValidationException {
+        GitDetails gitDetails = basicModel.getRetrievedFrom();
+        String latestCommit = basicModel.getLastCommit();
+        String packedWorkflowID = basicModel.getPackedWorkflowID();
 
-        // Get RDF representation from cwltool
-        String url = String.format("https://cdn.rawgit.com/%s/%s/%s/%s", githubInfo.getOwner(),
-                githubInfo.getRepoName(), latestCommit, githubInfo.getPath());
+        // Get paths to workflow
+        String url = gitDetails.getUrl(latestCommit).replace("https://", "");
+        String localPath = workflowFile.toPath().toAbsolutePath().toString();
+        String gitPath = gitDetails.getPath();
         if (packedWorkflowID != null) {
             if (packedWorkflowID.charAt(0) != '#') {
+                localPath += "#";
                 url += "#";
+                gitPath += "#";
             }
+            localPath += packedWorkflowID;
             url += packedWorkflowID;
+            gitPath += packedWorkflowID;
         }
 
+        // Get RDF representation from cwltool
         if (!rdfService.graphExists(url)) {
-            String rdf = cwlTool.getRDF(url);
+            String rdf = cwlTool.getRDF(localPath);
 
             // Create a workflow model from RDF representation
             Model model = ModelFactory.createDefaultModel();
@@ -210,9 +211,9 @@ public class CWLService {
         }
 
         // Base workflow details
-        String label = FilenameUtils.getName(githubInfo.getPath());
+        String label = FilenameUtils.getName(url);
         String doc = null;
-        ResultSet labelAndDoc = rdfService.getLabelAndDoc(url);
+        ResultSet labelAndDoc = rdfService.getLabelAndDoc(gitPath, url);
         if (labelAndDoc.hasNext()) {
             QuerySolution labelAndDocSoln = labelAndDoc.nextSolution();
             if (labelAndDocSoln.contains("label")) {
@@ -225,10 +226,10 @@ public class CWLService {
 
         // Inputs
         Map<String, CWLElement> wfInputs = new HashMap<>();
-        ResultSet inputs = rdfService.getInputs(url);
+        ResultSet inputs = rdfService.getInputs(gitPath, url);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
-            String inputName = rdfService.stepNameFromURI(url, input.get("name").toString());
+            String inputName = rdfService.stepNameFromURI(gitPath, input.get("name").toString());
 
             CWLElement wfInput = new CWLElement();
 
@@ -282,12 +283,12 @@ public class CWLService {
 
         // Outputs
         Map<String, CWLElement> wfOutputs = new HashMap<>();
-        ResultSet outputs = rdfService.getOutputs(url);
+        ResultSet outputs = rdfService.getOutputs(gitPath, url);
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
             CWLElement wfOutput = new CWLElement();
 
-            String outputName = rdfService.stepNameFromURI(url, output.get("name").toString());
+            String outputName = rdfService.stepNameFromURI(gitPath, output.get("name").toString());
 
             // Array types
             if (output.contains("type")) {
@@ -326,7 +327,7 @@ public class CWLService {
             }
 
             if (output.contains("src")) {
-                wfOutput.addSourceID(rdfService.stepNameFromURI(url,
+                wfOutput.addSourceID(rdfService.stepNameFromURI(gitPath,
                         output.get("src").toString()));
             }
             if (output.contains("format")) {
@@ -345,15 +346,15 @@ public class CWLService {
 
         // Steps
         Map<String, CWLStep> wfSteps = new HashMap<>();
-        ResultSet steps = rdfService.getSteps(url);
+        ResultSet steps = rdfService.getSteps(gitPath, url);
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
-            String uri = rdfService.stepNameFromURI(url, step.get("step").toString());
+            String uri = rdfService.stepNameFromURI(gitPath, step.get("step").toString());
             if (wfSteps.containsKey(uri)) {
                 // Already got step details, add extra source ID
                 if (step.contains("src")) {
                     CWLElement src = new CWLElement();
-                    src.addSourceID(rdfService.stepNameFromURI(url, step.get("src").toString()));
+                    src.addSourceID(rdfService.stepNameFromURI(gitPath, step.get("src").toString()));
                     wfSteps.get(uri).getSources().put(
                             step.get("stepinput").toString(), src);
                 } else if (step.contains("default")) {
@@ -366,23 +367,23 @@ public class CWLService {
                 // Add new step
                 CWLStep wfStep = new CWLStep();
 
-                Path workflowPath = Paths.get(FilenameUtils.getPath(url));
+                Path workflowPath = Paths.get(step.get("wf").toString()).getParent();
                 Path runPath = Paths.get(step.get("run").toString());
                 wfStep.setRun(workflowPath.relativize(runPath).toString());
                 wfStep.setRunType(rdfService.strToRuntype(step.get("runtype").toString()));
 
                 if (step.contains("src")) {
                     CWLElement src = new CWLElement();
-                    src.addSourceID(rdfService.stepNameFromURI(url, step.get("src").toString()));
+                    src.addSourceID(rdfService.stepNameFromURI(gitPath, step.get("src").toString()));
                     Map<String, CWLElement> srcList = new HashMap<>();
-                    srcList.put(rdfService.stepNameFromURI(url,
+                    srcList.put(rdfService.stepNameFromURI(gitPath,
                             step.get("stepinput").toString()), src);
                     wfStep.setSources(srcList);
                 } else if (step.contains("default")) {
                     CWLElement src = new CWLElement();
                     src.setDefaultVal(rdfService.formatDefault(step.get("default").toString()));
                     Map<String, CWLElement> srcList = new HashMap<>();
-                    srcList.put(rdfService.stepNameFromURI(url,
+                    srcList.put(rdfService.stepNameFromURI(gitPath,
                             step.get("stepinput").toString()), src);
                     wfStep.setSources(srcList);
                 }
@@ -397,7 +398,7 @@ public class CWLService {
         }
 
         // Docker link
-        ResultSet dockerResult = rdfService.getDockerLink(url);
+        ResultSet dockerResult = rdfService.getDockerLink(gitPath, url);
         String dockerLink = null;
         if (dockerResult.hasNext()) {
             QuerySolution docker = dockerResult.nextSolution();
@@ -414,7 +415,7 @@ public class CWLService {
 
         // Generate DOT graph
         StringWriter graphWriter = new StringWriter();
-        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService);
+        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService, gitPath);
         try {
             RDFDotWriter.writeGraph(url);
             workflowModel.setVisualisationDot(graphWriter.toString());
@@ -422,58 +423,8 @@ public class CWLService {
             logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
         }
 
+
         return workflowModel;
-
-    }
-
-    /**
-     * Get an overview of a workflow
-     * @param githubInfo The details to access the workflow
-     * @return A constructed WorkflowOverview of the workflow
-     * @throws IOException Any API errors which may have occurred
-     */
-    public WorkflowOverview getWorkflowOverview(GithubDetails githubInfo) throws IOException {
-
-        // Get the content of this file from Github
-        String fileContent = githubService.downloadFile(githubInfo);
-        int fileSizeBytes = fileContent.getBytes("UTF-8").length;
-
-        // Check file size limit before parsing
-        if (fileSizeBytes <= singleFileSizeLimit) {
-
-            // Parse file as yaml
-            JsonNode cwlFile = yamlStringToJson(fileContent);
-
-            // If the CWL file is packed there can be multiple workflows in a file
-            if (cwlFile.has(DOC_GRAPH)) {
-                // Packed CWL, find the first subelement which is a workflow and take it
-                for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
-                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
-                        cwlFile = jsonNode;
-                    }
-                }
-            }
-
-            // Can only make an overview if this is a workflow
-            if (extractProcess(cwlFile) == CWLProcess.WORKFLOW) {
-                // Use filename for label if there is no defined one
-                String path = FilenameUtils.getName(githubInfo.getPath());
-                String label = extractLabel(cwlFile);
-                if (label == null) {
-                    label = path;
-                }
-
-                // Return the constructed overview
-                return new WorkflowOverview(path, label, extractDoc(cwlFile));
-
-            } else {
-                return null;
-            }
-        } else {
-            throw new IOException("File '" + githubInfo.getPath() +  "' is over singleFileSizeLimit - " +
-                    FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +
-                    FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
-        }
 
     }
 
@@ -491,7 +442,7 @@ public class CWLService {
                 rdfService.addToOntologies(ontModel);
             }
             String formatLabel = rdfService.getOntLabel(format);
-            inputOutput.setType(inputOutput.getType() + " (" + formatLabel + " format)");
+            inputOutput.setType(inputOutput.getType() + " (" + formatLabel + ")");
         } catch (RiotException ex) {
             inputOutput.setType(inputOutput.getType() + " (format)");
         }

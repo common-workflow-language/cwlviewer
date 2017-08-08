@@ -17,33 +17,15 @@
  * under the License.
  */
 
-package org.commonwl.view.workflow;
+package org.commonwl.view.git;
 
 /**
- * Gives an overview of a workflow
+ * Differentiates supported sites for the
+ * purposes of URL rewriting
  */
-public class WorkflowOverview {
-
-    private final String fileName;
-    private final String label;
-    private final String doc;
-
-    public WorkflowOverview(String fileName, String label, String doc) {
-        this.fileName = fileName;
-        this.label = label;
-        this.doc = doc;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public String getDoc() {
-        return doc;
-    }
-
+public enum GitType {
+    GITHUB,
+    GITLAB,
+    BITBUCKET,
+    GENERIC
 }

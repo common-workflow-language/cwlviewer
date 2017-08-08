@@ -43,7 +43,7 @@ public class StreamGobbler extends Thread {
             InputStreamReader isr = new InputStreamReader(is);
             BufferedReader br = new BufferedReader(isr);
             String line;
-            while ( (line = br.readLine()) != null) {
+            while ((line = br.readLine()) != null) {
                 content += line + lineSeparator;
             }
         } catch (IOException ex) {

@@ -19,7 +19,6 @@
 
 package org.commonwl.view.cwl;
 
-import org.commonwl.view.github.GitHubService;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.workflow.QueuedWorkflow;
 import org.commonwl.view.workflow.QueuedWorkflowRepository;
@@ -32,6 +31,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
@@ -47,7 +47,6 @@ public class CWLToolRunner {
     private final WorkflowRepository workflowRepository;
     private final QueuedWorkflowRepository queuedWorkflowRepository;
     private final CWLService cwlService;
-    private final GitHubService githubService;
     private final ROBundleFactory roBundleFactory;
     private final String cwlToolVersion;
 
@@ -56,38 +55,37 @@ public class CWLToolRunner {
                          QueuedWorkflowRepository queuedWorkflowRepository,
                          CWLService cwlService,
                          CWLTool cwlTool,
-                         GitHubService githubService,
                          ROBundleFactory roBundleFactory) {
         this.workflowRepository = workflowRepository;
         this.queuedWorkflowRepository = queuedWorkflowRepository;
         this.cwlService = cwlService;
-        this.githubService = githubService;
         this.cwlToolVersion = cwlTool.getVersion();
         this.roBundleFactory = roBundleFactory;
     }
 
     @Async
-    public void createWorkflowFromQueued(QueuedWorkflow queuedWorkflow)
+    public void createWorkflowFromQueued(QueuedWorkflow queuedWorkflow, File workflowFile)
             throws IOException, InterruptedException {
 
         Workflow tempWorkflow = queuedWorkflow.getTempRepresentation();
 
         // Parse using cwltool and replace in database
         try {
-            String commitSha = githubService.getCommitSha(tempWorkflow.getRetrievedFrom());
             Workflow newWorkflow = cwlService.parseWorkflowWithCwltool(
-                    tempWorkflow.getRetrievedFrom(), commitSha,
-                    tempWorkflow.getPackedWorkflowID());
+                    tempWorkflow,
+                    workflowFile);
 
             // Success
             newWorkflow.setRetrievedFrom(tempWorkflow.getRetrievedFrom());
             newWorkflow.setRetrievedOn(new Date());
-            newWorkflow.setLastCommit(commitSha);
+            newWorkflow.setLastCommit(tempWorkflow.getLastCommit());
+            newWorkflow.setPackedWorkflowID(tempWorkflow.getPackedWorkflowID());
             newWorkflow.setCwltoolVersion(cwlToolVersion);
+
             workflowRepository.save(newWorkflow);
 
             // Generate RO bundle
-            roBundleFactory.workflowROFromGithub(newWorkflow);
+            roBundleFactory.createWorkflowRO(newWorkflow);
 
             // Mark success on queue
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.SUCCESS);

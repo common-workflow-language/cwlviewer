@@ -67,7 +67,7 @@ public class PageControllerTest {
                 .andExpect(view().name("index"))
                 .andExpect(model().attributeExists("workflowForm"))
                 .andExpect(model().attribute("workflowForm",
-                        hasProperty("githubURL", is("https://github.com/test/default/link"))));
+                        hasProperty("url", is("https://github.com/test/default/link"))));
     }
 
     /**

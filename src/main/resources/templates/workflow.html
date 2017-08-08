@@ -31,7 +31,7 @@
     <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170616.css}" href="../static/css/main-20170616.css" />
 </head>
-<body th:with="githubURLPart=${workflow.retrievedFrom.getURL().replace('https://', '')}">
+<body>
 
 <nav th:replace="fragments/header :: navbar"></nav>
 
@@ -97,7 +97,7 @@ digraph G {
 </textarea>
                 <a id="download-link-dot" href="" download="workflow.dot"></a>
                 <button id="download-dot" class="btn btn-primary" type="button">Download dot File</button>
-                <a th:href="@{'/workflows/' + ${workflow.id} + '/graph/xdot'}" href="#" download="graph.dot" class="btn btn-primary" type="button">Download xdot File</a>
+                <a th:href="@{${workflow.getVisualisationXdot()}}" href="#" download="graph.dot" class="btn btn-primary" type="button">Download xdot File</a>
             </div>
         </div>
     </div>
@@ -113,8 +113,8 @@ digraph G {
             </div>
             <div class="modal-body">
                 <span id="fullscreen-close" data-dismiss="modal" class="close glyphicon glyphicon-resize-small graphControl" data-tooltip="true" title="Close"></span>
-                <object id="graphFullscreen" th:data="@{'/graph/svg/' + ${githubURLPart}}" type="image/svg+xml">
-                    <img th:src="@{'/graph/png/' + ${githubURLPart}}" alt="fullscreen" />
+                <object id="graphFullscreen" th:data="@{${workflow.getVisualisationSvg()}}" type="image/svg+xml">
+                    <img th:src="@{${workflow.getVisualisationPng()}}" alt="fullscreen" />
                 </object>
             </div>
         </div>
@@ -128,14 +128,15 @@ digraph G {
             <p th:text="${workflow.doc}">Workflow Doc</p>
         </div>
         <div class="col-md-6">
-            <a th:href="@{${workflow.retrievedFrom.getURL()}}" href="#" rel="noopener" target="_blank">
-                <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
+            <a th:href="@{${workflow.retrievedFrom.getUrl()}}" href="#" rel="noopener" target="_blank" style="text-decoration:none;">
+                <img th:if="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
+                <img th:unless="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/gitlogo.png" th:src="@{/img/gitlogo.png}" width="30" height="30" />
             </a>
         <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
                 <span th:if="${workflow.roBundlePath == null}" id="ajaxRequired"></span>
             <span th:class="${workflow.roBundlePath != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
             <span th:class="${workflow.roBundlePath == null} ? hide : ''" id="generated">
-                    - <a th:href="@{'/robundle/' + ${githubURLPart}}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
+                    - <a th:href="@{${workflow.getRoBundleLink()}}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
                     <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>
                 </span>
         </div>
@@ -153,8 +154,8 @@ digraph G {
                         Download Image <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a id="download-graph" th:href="@{'/graph/svg/' + ${githubURLPart}}" download="graph.svg">As .svg</a></li>
-                        <li><a id="download-graph" th:href="@{'/graph/png/' + ${githubURLPart}}" download="graph.png">As .png</a></li>
+                        <li><a id="download-graph" th:href="@{${workflow.getVisualisationSvg()}}" download="graph.svg">As .svg</a></li>
+                        <li><a id="download-graph" th:href="@{${workflow.getVisualisationPng()}}" download="graph.png">As .png</a></li>
                     </ul>
                 </div>
             </div>
@@ -166,7 +167,7 @@ digraph G {
                 <span id="fullscreen-open" data-toggle="modal" data-target="#fullScreenGraphModal" data-tooltip="true" class="glyphicon glyphicon-resize-full graphControl" title="Expand"></span>
                 <img id="selectChildren" class="graphControl" th:src="@{/img/children-logo.svg}" src="../static/img/children-logo.svg" alt="children" data-tooltip="true" title="Select All Children" />
                 <img id="selectParents" class="graphControl" th:src="@{/img/parents-logo.svg}" src="../static/img/parents-logo.svg" alt="parents" data-tooltip="true" title="Select All Parents" />
-                <div id="graph" data-th-attr="data-svgurl=@{'/graph/svg/' + ${githubURLPart}}"></div>
+                <div id="graph" data-th-attr="data-svgurl=@{${workflow.getVisualisationSvg()}}"></div>
             </div>
             <ul class="legend">
                 <li><span class="selectednode"></span> Selected</li>
@@ -199,7 +200,8 @@ digraph G {
                         <tr th:each="input : ${workflow.inputs}">
                             <td th:text="${input.key}">ID</td>
                             <td>
-                                <a th:href="@{${input.value.format}}" th:text="${input.value.type}" target="_blank" rel="noopener">Type</a>
+                                <a th:if="${input.value.format != null}" th:href="@{${input.value.format}}" th:text="${input.value.type}" target="_blank" rel="noopener">Type</a>
+                                <span th:if="${input.value.format == null}" th:text="${input.value.type}"></span>
                             </td>
                             <td th:text="${input.value.label}">Label</td>
                             <td>
@@ -222,7 +224,7 @@ digraph G {
                     <th>Doc</th>
                     </thead>
                     <tbody>
-                    <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{'/workflows/github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch}}">
+                    <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{${workflow.retrievedFrom.getUrl()}}">
                         <td th:text="${step.key}">ID</td>
                         <td>
                             <div th:if="${step.value.runType != null}">
@@ -258,7 +260,8 @@ digraph G {
                         <tr th:each="output : ${workflow.outputs}">
                             <td th:text="${output.key}">ID</td>
                             <td>
-                                <a th:href="@{${output.value.format}}" th:text="${output.value.type}" target="_blank" rel="noopener">Type</a>
+                                <a th:if="${output.value.format != null}" th:href="@{${output.value.format}}" th:text="${output.value.type}" target="_blank" rel="noopener">Type</a>
+                                <span th:if="${output.value.format == null}" th:text="${output.value.type}"></span>
                             </td>
                             <td th:text="${output.value.label}">Label</td>
                             <td>

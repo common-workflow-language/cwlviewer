@@ -22,10 +22,8 @@ package org.commonwl.view.cwl;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
-import org.commonwl.view.workflow.WorkflowOverview;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,7 +61,7 @@ public class CWLServiceTest {
         Model workflowModel = ModelFactory.createDefaultModel();
         workflowModel.read(new ByteArrayInputStream(readFileToString(packedWorkflowRdf).getBytes()), null, "TURTLE");
         Dataset workflowDataset = DatasetFactory.create();
-        workflowDataset.addNamedModel("https://cdn.rawgit.com/common-workflow-language/workflows/master/workflows/make-to-cwl/dna.cwl#main", workflowModel);
+        workflowDataset.addNamedModel("http://localhost:3030/cwlviewer/github.com/common-workflow-language/workflows/blob/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main", workflowModel);
 
         Answer queryRdf = new Answer<ResultSet>() {
             @Override
@@ -76,7 +74,7 @@ public class CWLServiceTest {
             }
         };
 
-        this.rdfService = Mockito.spy(new RDFService("http://madeup.endpoint/"));
+        this.rdfService = Mockito.spy(new RDFService("http://localhost:3030/cwlviewer/"));
         Mockito.doAnswer(queryRdf).when(rdfService).runQuery(anyObject());
         Mockito.doReturn(true).when(rdfService).graphExists(anyString());
     }
@@ -92,22 +90,10 @@ public class CWLServiceTest {
      */
     @Test
     public void parseLobSTRDraft3WorkflowNative() throws Exception {
-
-        // Get mock Github service
-        GitHubService mockGithubService = getMockGithubService("workflows/lobSTR/",
-                "src/test/resources/cwl/lobstr-draft3/");
-
-        // Test cwl service
-        CWLService cwlService = new CWLService(mockGithubService,
-                rdfService, new CWLTool(), 5242880);
-
-        // Get workflow from community repo by commit ID so it will not change
-        GithubDetails lobSTRDraft3Details = new GithubDetails("common-workflow-language",
-                "workflows", null, "workflows/lobSTR/lobSTR-workflow.cwl");
-        Workflow lobSTRDraft3 = cwlService.parseWorkflowNative(lobSTRDraft3Details, "920c6be45f08e979e715a0018f22c532b024074f");
-
+        CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 5242880);
+        Workflow lobSTRDraft3 = cwlService.parseWorkflowNative(
+                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"));
         testLobSTRWorkflow(lobSTRDraft3, true);
-
     }
 
     /**
@@ -115,22 +101,10 @@ public class CWLServiceTest {
      */
     @Test
     public void parseLobSTRv1WorkflowNative() throws Exception {
-
-        // Get mock Github service
-        GitHubService mockGithubService = getMockGithubService("workflows/lobSTR/",
-                "src/test/resources/cwl/lobstr-draft3/");
-
-        // Test cwl service
-        CWLService cwlService = new CWLService(mockGithubService,
-                rdfService, new CWLTool(), 5242880);
-
-        // Get workflow from community repo by commit ID so it will not change
-        GithubDetails lobSTRv1Details = new GithubDetails("common-workflow-language",
-                "workflows", null, "workflows/lobSTR/lobSTR-workflow.cwl");
-        Workflow lobSTRv1 = cwlService.parseWorkflowNative(lobSTRv1Details, "933bf2a1a1cce32d88f88f136275535da9df0954");
-
+        CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+        Workflow lobSTRv1 = cwlService.parseWorkflowNative(
+                new File("src/test/resources/cwl/lobstr-v1/lobSTR-workflow.cwl"));
         testLobSTRWorkflow(lobSTRv1, true);
-
     }
 
     /**
@@ -146,15 +120,18 @@ public class CWLServiceTest {
                 .thenReturn(readFileToString(packedWorkflowRdf));
 
         // CWLService to test
-        CWLService cwlService = new CWLService(Mockito.mock(GitHubService.class),
-                rdfService, mockCwlTool, 5242880);
+        CWLService cwlService = new CWLService(rdfService, mockCwlTool, 5242880);
 
-        GithubDetails githubInfo = new GithubDetails("common-workflow-language",
-                "workflows", "549c973ccc01781595ce562dea4cedc6c9540fe0",
-                "workflows/make-to-cwl/dna.cwl");
+        GitDetails gitInfo = new GitDetails("https://github.com/common-workflow-language/workflows.git",
+                "549c973ccc01781595ce562dea4cedc6c9540fe0", "workflows/make-to-cwl/dna.cwl");
+        Workflow basicModel = new Workflow(null, null, null, null, null, null);
+        basicModel.setRetrievedFrom(gitInfo);
+        basicModel.setPackedWorkflowID("main");
+        basicModel.setLastCommit("549c973ccc01781595ce562dea4cedc6c9540fe0");
 
         // Parse the workflow
-        Workflow workflow = cwlService.parseWorkflowWithCwltool(githubInfo, "master", "main");
+        Workflow workflow = cwlService.parseWorkflowWithCwltool(basicModel,
+                new File("src/test/resources/cwl/make_to_cwl/dna.cwl"));
 
         // Check basic information
         assertNotNull(workflow);
@@ -167,58 +144,18 @@ public class CWLServiceTest {
     }
 
     /**
-     * Test retrieval of a workflow overview for hello world example in cwl
+     * Test IOException is thrown when files are over limit
      */
     @Test
-    public void getHelloWorkflowOverview() throws Exception {
-
-        // Mock githubService class
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
-        File workflowFile = new File("src/test/resources/cwl/hello/hello.cwl");
-        when(mockGithubService.downloadFile(anyObject()))
-                .thenReturn(readFileToString(workflowFile));
-
-        // Test cwl service
-        CWLService cwlService = new CWLService(mockGithubService,
-                rdfService, Mockito.mock(CWLTool.class), 5242880);
-
-        // Run workflow overview
-        GithubDetails helloDetails = new GithubDetails("common-workflow-language",
-                "workflows", "8296e92d358bb5da4dc3c6e7aabefa89726e3409", "workflows/hello/hello.cwl");
-        WorkflowOverview hello = cwlService.getWorkflowOverview(helloDetails);
-        assertNotNull(hello);
-
-        // No docs for this workflow
-        assertEquals("Hello World", hello.getLabel());
-        assertEquals("Puts a message into a file using echo", hello.getDoc());
-        assertEquals("hello.cwl", hello.getFileName());
-
-    }
-
-    /**
-     * Test IOException is thrown when files are over limit with getWorkflowOverview
-     */
-    @Test
-    public void workflowOverviewOverSingleFileSizeLimitThrowsIOException() throws Exception {
-
-        // Mock githubService class
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
-        File workflowFile = new File("src/test/resources/cwl/hello/hello.cwl");
-        when(mockGithubService.downloadFile(anyObject()))
-                .thenReturn(readFileToString(workflowFile));
-
-        // Test cwl service with 0 filesize limit
-        CWLService cwlService = new CWLService(mockGithubService,
-                Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 0);
-
-        // Run workflow overview
-        GithubDetails helloDetails = new GithubDetails("common-workflow-language",
-                "workflows", "8296e92d358bb5da4dc3c6e7aabefa89726e3409", "workflows/hello/hello.cwl");
+    public void workflowOverSingleFileSizeLimitThrowsIOException() throws Exception {
 
         // Should throw IOException due to oversized files
         thrown.expect(IOException.class);
-        thrown.expectMessage("File 'workflows/hello/hello.cwl' is over singleFileSizeLimit - 672 bytes/0 bytes");
-        cwlService.getWorkflowOverview(helloDetails);
+        thrown.expectMessage("File 'lobSTR-workflow.cwl' is over singleFileSizeLimit - 2 KB/0 bytes");
+
+        CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 0);
+        cwlService.parseWorkflowNative(
+                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"));
 
     }
 
@@ -263,28 +200,6 @@ public class CWLServiceTest {
         if (!nativeParsed) {
             assertEquals(CWLProcess.COMMANDLINETOOL, steps.get("lobSTR").getRunType());
         }
-    }
-
-    /**
-     * Get a mock GithubService which redirects downloads to the filesystem
-     */
-    private GitHubService getMockGithubService(String originalFolder,
-                                               String resourcesFolder) throws IOException {
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
-        Answer fileAnswer = new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                GithubDetails details = (GithubDetails) args[0];
-                File workflowFile = new File(resourcesFolder
-                        + details.getPath().replace(originalFolder, ""));
-                return readFileToString(workflowFile);
-            }
-        };
-        when(mockGithubService.downloadFile(anyObject())).thenAnswer(fileAnswer);
-        when(mockGithubService.downloadFile(anyObject(), anyObject())).thenAnswer(fileAnswer);
-
-        return mockGithubService;
     }
 
 }
