@@ -37,7 +37,8 @@ public class RDFService {
             "PREFIX sld: <https://w3id.org/cwl/salad#>\n" +
             "PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>\n" +
             "PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>\n" +
-            "PREFIX rdfs: <rdfs:>";
+            "PREFIX rdfs: <rdfs:>\n" +
+            "PREFIX s: <http://schema.org/>";
 
     private String rdfService;
 
@@ -103,6 +104,7 @@ public class RDFService {
 
     /**
      * Get the label and doc strings for a workflow resource
+     * @param path The path within the Git repository to the workflow
      * @param workflowURI The URI of the workflow
      * @return Result set with label and doc strings
      */
@@ -112,6 +114,7 @@ public class RDFService {
                 "SELECT ?label ?doc\n" +
                 "WHERE {\n" +
                 "  GRAPH ?graphName {" +
+                "    ?wf rdf:type ?type .\n" +
                 "    OPTIONAL { ?wf sld:label|rdfs:label ?label }\n" +
                 "    OPTIONAL { ?wf sld:doc|rdfs:comment ?doc }\n" +
                 "    FILTER(regex(str(?wf), ?wfFilter, \"i\" ))" +
@@ -148,6 +151,7 @@ public class RDFService {
 
     /**
      * Get the inputs for the workflow in the model
+     * @param path The path within the Git repository to the workflow
      * @param workflowURI URI of the workflow
      * @return The result set of inputs
      */
@@ -173,6 +177,7 @@ public class RDFService {
 
     /**
      * Get the outputs for the workflow in the model
+     * @param path The path within the Git repository to the workflow
      * @param workflowURI URI of the workflow
      * @return The result set of outputs
      */
@@ -198,6 +203,7 @@ public class RDFService {
 
     /**
      * Get the steps for the workflow in the model
+     * @param path The path within the Git repository to the workflow
      * @param workflowURI URI of the workflow
      * @return The result set of steps
      */
@@ -270,6 +276,7 @@ public class RDFService {
 
     /**
      * Gets the docker requirement and pull link for a workflow
+     * @param path The path within the Git repository to the workflow
      * @param workflowURI URI of the workflow
      * @return Result set of docker hint and pull link
      */
@@ -289,6 +296,41 @@ public class RDFService {
         dockerQuery.setLiteral("wfFilter", path + "$");
         dockerQuery.setIri("graphName", rdfService + workflowURI);
         return runQuery(dockerQuery);
+    }
+
+    /**
+     * Get authors from schema.org creator fields for a file
+     * @param path The path within the Git repository to the file
+     * @param fileUri URI of the file
+     * @return The result set of step links
+     */
+    public ResultSet getAuthors(String path, String fileUri) {
+        ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
+        linkQuery.setCommandText(queryCtx +
+                "SELECT ?email ?name ?orcid\n" +
+                "WHERE {\n" +
+                "  GRAPH ?graphName {" +
+                "    ?file s:author|s:contributor|s:creator ?author .\n" +
+                "    {\n" +
+                "      ?creator rdf:type s:Person .\n" +
+                "      OPTIONAL { ?author s:email ?email }\n" +
+                "      OPTIONAL { ?author s:name ?name }\n" +
+                "      OPTIONAL { ?author s:id|s:sameAs ?orcid }\n" +
+                "    } UNION {\n" +
+                "      ?author rdf:type s:Organization .\n" +
+                "      ?author s:department* ?dept .\n" +
+                "      ?dept s:member ?member\n" +
+                "      OPTIONAL { ?member s:email ?email }\n" +
+                "      OPTIONAL { ?member s:name ?name }\n" +
+                "      OPTIONAL { ?member s:id|s:sameAs ?orcid }\n" +
+                "    }\n" +
+                "    FILTER(regex(str(?orcid), \"^https?://orcid.org/\" ))\n" +
+                "    FILTER(regex(str(?file), ?wfFilter, \"i\" ))\n" +
+                "  }" +
+                "}");
+        linkQuery.setLiteral("wfFilter", path + "$");
+        linkQuery.setIri("graphName", rdfService + fileUri);
+        return runQuery(linkQuery);
     }
 
     /**

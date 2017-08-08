@@ -97,7 +97,7 @@ public class WorkflowService {
      * @return The resulting page of the workflow entries
      */
     public Page<Workflow> searchPageOfWorkflows(String searchString, Pageable pageable) {
-        return workflowRepository.findByLabelContainingOrDocContaining(searchString, searchString, pageable);
+        return workflowRepository.findByLabelContainingOrDocContainingIgnoreCase(searchString, searchString, pageable);
     }
 
     /**

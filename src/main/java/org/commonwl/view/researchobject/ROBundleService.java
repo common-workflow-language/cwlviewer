@@ -21,11 +21,14 @@ package org.commonwl.view.researchobject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.*;
 import org.commonwl.view.cwl.CWLTool;
 import org.commonwl.view.cwl.CWLValidationException;
+import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitSemaphore;
 import org.commonwl.view.git.GitService;
@@ -67,6 +70,7 @@ public class ROBundleService {
     // Services
     private GraphVizService graphVizService;
     private GitService gitService;
+    private RDFService rdfService;
     private CWLTool cwlTool;
     private GitSemaphore gitSemaphore;
 
@@ -94,6 +98,7 @@ public class ROBundleService {
                            @Value("${singleFileSizeLimit}") int singleFileSizeLimit,
                            GraphVizService graphVizService,
                            GitService gitService,
+                           RDFService rdfService,
                            GitSemaphore gitSemaphore,
                            CWLTool cwlTool) throws URISyntaxException {
         this.bundleStorage = bundleStorage;
@@ -102,6 +107,7 @@ public class ROBundleService {
         this.singleFileSizeLimit = singleFileSizeLimit;
         this.graphVizService = graphVizService;
         this.gitService = gitService;
+        this.rdfService = rdfService;
         this.gitSemaphore = gitSemaphore;
         this.cwlTool = cwlTool;
     }
@@ -135,12 +141,13 @@ public class ROBundleService {
 
             // Add the files from the repo to this workflow
             Set<HashableAgent> authors = new HashSet<>();
+
             boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
             try {
                 Git gitRepo = gitService.getRepository(workflow.getRetrievedFrom(), safeToAccess);
                 Path relativePath = Paths.get(FilenameUtils.getPath(gitInfo.getPath()));
                 Path gitPath = gitRepo.getRepository().getWorkTree().toPath().resolve(relativePath);
-                addFilesToBundle(gitInfo, bundle, bundlePath, gitRepo, gitPath, authors);
+                addFilesToBundle(gitInfo, bundle, bundlePath, gitRepo, gitPath, authors, workflow);
             } finally {
                 gitSemaphore.release(gitInfo.getRepoUrl());
             }
@@ -217,7 +224,8 @@ public class ROBundleService {
      * @param authors The combined set of authors for al the files
      */
     private void addFilesToBundle(GitDetails gitDetails, Bundle bundle, Path bundlePath,
-                                  Git gitRepo, Path repoPath, Set<HashableAgent> authors)
+                                  Git gitRepo, Path repoPath, Set<HashableAgent> authors,
+                                  Workflow workflow)
             throws IOException {
         File[] files = repoPath.toFile().listFiles();
         for (File file : files) {
@@ -234,7 +242,7 @@ public class ROBundleService {
 
                     // Add all files in the subdirectory to this new folder
                     addFilesToBundle(subfolderGitDetails, bundle, newBundlePath, gitRepo,
-                            repoPath.resolve(file.getName()), authors);
+                            repoPath.resolve(file.getName()), authors, workflow);
 
                 } else {
                     try {
@@ -280,7 +288,8 @@ public class ROBundleService {
                         }
 
                         // Special handling for cwl files
-                        if (FilenameUtils.getExtension(file.getName()).equals("cwl")) {
+                        boolean cwl = FilenameUtils.getExtension(file.getName()).equals("cwl");
+                        if (cwl) {
                             // Correct mime type (no official standard for yaml)
                             aggregation.setMediatype("text/x-yaml");
 
@@ -293,10 +302,36 @@ public class ROBundleService {
                             }
                         }
 
-                        // Add authors from git commits to the file
                         try {
+                            Path gitPath = Paths.get(gitDetails.getPath()).resolve(file.getName());
+                            String url = workflow.getRetrievedFrom()
+                                    .getUrl(workflow.getLastCommit()).replace("https://", "");
+
+                            // Add authors from git commits to the file
                             Set<HashableAgent> fileAuthors = gitService.getAuthors(gitRepo,
-                                    Paths.get(gitDetails.getPath()).resolve(file.getName()).toString());
+                                    gitPath.toString());
+
+                            if (cwl) {
+                                // Attempt to get authors from cwl description - takes priority
+                                ResultSet descAuthors = rdfService.getAuthors(bundlePath
+                                        .resolve(file.getName()).toString().substring(10), url);
+                                if (descAuthors.hasNext()) {
+                                    QuerySolution authorSoln = descAuthors.nextSolution();
+                                    HashableAgent newAuthor = new HashableAgent();
+                                    if (authorSoln.contains("name")) {
+                                        newAuthor.setName(authorSoln.get("name").toString());
+                                    }
+                                    if (authorSoln.contains("email")) {
+                                        newAuthor.setUri(new URI(authorSoln.get("email").toString()));
+                                    }
+                                    if (authorSoln.contains("orcid")) {
+                                        newAuthor.setOrcid(new URI(authorSoln.get("orcid").toString()));
+                                    }
+                                    fileAuthors.remove(newAuthor);
+                                    fileAuthors.add(newAuthor);
+                                }
+                            }
+
                             authors.addAll(fileAuthors);
                             aggregation.setAuthoredBy(new ArrayList<>(fileAuthors));
                         } catch (GitAPIException ex) {

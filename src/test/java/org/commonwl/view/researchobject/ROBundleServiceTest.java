@@ -19,12 +19,14 @@
 
 package org.commonwl.view.researchobject;
 
+import org.apache.jena.query.ResultSet;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
 import org.apache.taverna.robundle.manifest.Manifest;
 import org.apache.taverna.robundle.manifest.PathAnnotation;
 import org.apache.taverna.robundle.manifest.PathMetadata;
 import org.commonwl.view.cwl.CWLTool;
+import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitSemaphore;
 import org.commonwl.view.git.GitService;
@@ -96,6 +98,12 @@ public class ROBundleServiceTest {
         when(mockCwlTool.getRDF(anyString()))
                 .thenReturn("@prefix cwl: <https://w3id.org/cwl/cwl#> .");
 
+        // Mock RDF Service
+        ResultSet emptyResult = Mockito.mock(ResultSet.class);
+        when(emptyResult.hasNext()).thenReturn(false);
+        RDFService mockRdfService = Mockito.mock(RDFService.class);
+        when(mockRdfService.getAuthors(anyString(), anyString())).thenReturn(emptyResult);
+
         // Workflow details
         GitDetails lobSTRv1Details = new GitDetails("https://github.com/common-workflow-language/workflows.git",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR/lobSTR-workflow.cwl");
@@ -110,7 +118,8 @@ public class ROBundleServiceTest {
         // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 5242880,
-                mockGraphvizService, mockGitService, Mockito.mock(GitSemaphore.class), mockCwlTool);
+                mockGraphvizService, mockGitService, mockRdfService,
+                Mockito.mock(GitSemaphore.class), mockCwlTool);
         Bundle bundle = bundleService.createBundle(lobSTRv1, lobSTRv1RODetails);
         Path bundleRoot = bundle.getRoot().resolve("workflow");
 
@@ -193,6 +202,12 @@ public class ROBundleServiceTest {
         when(mockCwlTool.getRDF(anyString()))
                 .thenReturn("@prefix cwl: <https://w3id.org/cwl/cwl#> .");
 
+        // Mock RDF Service
+        ResultSet emptyResult = Mockito.mock(ResultSet.class);
+        when(emptyResult.hasNext()).thenReturn(false);
+        RDFService mockRdfService = Mockito.mock(RDFService.class);
+        when(mockRdfService.getAuthors(anyString(), anyString())).thenReturn(emptyResult);
+
         // Workflow details
         GitDetails lobSTRv1Details = new GitDetails("https://github.com/common-workflow-language/workflows.git",
                 "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR/lobSTR-workflow.cwl");
@@ -207,7 +222,7 @@ public class ROBundleServiceTest {
         // Create new RO bundle
         ROBundleService bundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 0, mockGraphvizService,
-                mockGitService, Mockito.mock(GitSemaphore.class), mockCwlTool);
+                mockGitService, mockRdfService, Mockito.mock(GitSemaphore.class), mockCwlTool);
         Bundle bundle = bundleService.createBundle(lobSTRv1, lobSTRv1RODetails);
 
         Manifest manifest = bundle.getManifest();
