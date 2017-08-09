@@ -22,8 +22,11 @@ package org.commonwl.view.git;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +40,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.apache.jena.ext.com.google.common.io.Files.createTempDir;
@@ -106,7 +110,28 @@ public class GitService {
 
             // Checkout the specific branch or commit ID
             if (repo != null) {
+                System.out.println("Listing local branches:");
+                    List<Ref> call = repo.branchList().call();
+                    for (Ref ref : call) {
+                        System.out.println("Branch: " + ref + " " + ref.getName() + " " + ref.getObjectId().getName());
+                    }
+
+                    System.out.println("Now including remote branches:");
+                    call = repo.branchList().setListMode(ListBranchCommand.ListMode.ALL).call();
+                    for (Ref ref : call) {
+                        System.out.println("Branch: " + ref + " " + ref.getName() + " " + ref.getObjectId().getName());
+                    }
+
+                // Create a new local branch if it does not exist and not a commit ID
+                boolean createBranch = !ObjectId.isId(gitDetails.getBranch());
+                if (createBranch) {
+                    Ref ref = repo.getRepository().exactRef("refs/heads/" + gitDetails.getBranch());
+                    if (ref != null) {
+                        createBranch = false;
+                    }
+                }
                 repo.checkout()
+                        .setCreateBranch(createBranch)
                         .setName(gitDetails.getBranch())
                         .call();
                 String branch = repo.getRepository().getFullBranch();
