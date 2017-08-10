@@ -469,6 +469,8 @@ public class CWLService {
                 return "Float";
             case "http://www.w3.org/2001/XMLSchema#long":
                 return "Long";
+            case "https://w3id.org/cwl/cwl#Directory":
+                return "Directory";
             default:
                 return uri;
         }
