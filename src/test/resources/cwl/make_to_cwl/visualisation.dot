@@ -35,6 +35,7 @@ digraph workflow {
   subgraph cluster_outputs {
     rank = "same";
     style = "dashed";
+    labelloc = "b";
     label = "Workflow Outputs";
     "outfile" [fillcolor="#94DDF4",label="outfile"];
   }
