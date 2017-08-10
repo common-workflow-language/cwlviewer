@@ -87,8 +87,8 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
                 this.hammer.on('pinchstart pinchmove', function(ev){
                     // On pinch start remember initial zoom
                     if (ev.type === 'pinchstart') {
-                        initialScale = instance.getZoom()
-                        instance.zoom(initialScale * ev.scale)
+                        initialScale = instance.getZoom();
+                        instance.zoom(initialScale * ev.scale);
                     }
                     instance.zoom(initialScale * ev.scale)
                 });
@@ -115,6 +115,7 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
         function enablePanZoom() {
             var graph = svgPanZoom('#graph svg', {
                 zoomEnabled: true,
+                dblClickZoomEnabled: false,
                 controlIconsEnabled: true,
                 customEventsHandler: eventHandler
             });
@@ -163,7 +164,7 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
                     });
                 }, 100);
             });
-        };
+        }
     });
 
 /**
@@ -291,7 +292,7 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
 
         /**
          * Gets the corresponding table row for a graph box
-         * @param trElement The graph box element
+         * @param gbElement The graph box element
          * @return The table row(s)
          */
         function getTableRow(gbElement) {
@@ -332,6 +333,14 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
                     }
                     matchingTableRow.toggleClass("selected");
                     thisPolygon.toggleClass("selected");
+                }
+            },
+            dblclick: function() {
+                // Follow link to subworkflow if possible
+                var matchingTableRow = getTableRow(this);
+                var subworkflowLink = $(matchingTableRow).find("a.subworkflow");
+                if (subworkflowLink.length > 0) {
+                    location.href = subworkflowLink.attr("href");
                 }
             },
             mouseenter: function() {
