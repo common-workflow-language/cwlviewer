@@ -77,7 +77,7 @@ public class GitService {
             if (reuseDir) {
                 // Base dir from configuration, name from hash of repository URL
                 File baseDir = new File(gitStorage.toString());
-                String baseName = DigestUtils.shaHex(GitDetails.normaliseUrl(gitDetails.getRepoUrl()));
+                String baseName = DigestUtils.sha1Hex(GitDetails.normaliseUrl(gitDetails.getRepoUrl()));
 
                 // Check if folder already exists
                 File repoDir = new File(baseDir, baseName);

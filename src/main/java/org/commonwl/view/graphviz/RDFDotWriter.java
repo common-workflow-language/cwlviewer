@@ -93,6 +93,7 @@ public class RDFDotWriter extends DotWriter {
         writeLine("  subgraph cluster_outputs {");
         writeLine("    rank = \"same\";");
         writeLine("    style = \"dashed\";");
+        writeLine("    labelloc = \"b\";");
         writeLine("    label = \"Workflow Outputs\";");
 
         // Write each of the outputs as a node
