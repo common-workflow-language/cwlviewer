@@ -191,87 +191,93 @@ digraph G {
                 <p>There are no inputs in this workflow</p>
             </div>
             <div th:unless="${workflow.inputs.isEmpty()}">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <th>ID</th>
-                        <th>Type</th>
-                        <th>Label</th>
-                        <th>Doc</th>
-                    </thead>
-                    <tbody>
-                        <tr th:each="input : ${workflow.inputs}">
-                            <td th:text="${input.key}">ID</td>
-                            <td>
-                                <a th:if="${input.value.format != null}" th:href="@{${input.value.format}}" th:text="${input.value.type}" target="_blank" rel="noopener">Type</a>
-                                <span th:if="${input.value.format == null}" th:text="${input.value.type}"></span>
-                            </td>
-                            <td th:text="${input.value.label}">Label</td>
-                            <td>
-                                <p th:if="${input.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(input.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Label</th>
+                            <th>Doc</th>
+                        </thead>
+                        <tbody>
+                            <tr th:each="input : ${workflow.inputs}">
+                                <td th:text="${input.key}">ID</td>
+                                <td>
+                                    <a th:if="${input.value.format != null}" th:href="@{${input.value.format}}" th:text="${input.value.type}" target="_blank" rel="noopener">Type</a>
+                                    <span th:if="${input.value.format == null}" th:text="${input.value.type}"></span>
+                                </td>
+                                <td th:text="${input.value.label}">Label</td>
+                                <td>
+                                    <p th:if="${input.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(input.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <h2>Steps</h2>
             <div th:if="${workflow.steps.isEmpty()}" class="alert alert-info">
                 <p>There are no steps in this workflow</p>
             </div>
             <div th:unless="${workflow.steps.isEmpty()}">
-                <table class="table table-striped table-hover">
-                    <thead>
-                    <th>ID</th>
-                    <th>Runs</th>
-                    <th>Label</th>
-                    <th>Doc</th>
-                    </thead>
-                    <tbody>
-                    <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{${workflow.retrievedFrom.getUrl()}}">
-                        <td th:text="${step.key}">ID</td>
-                        <td>
-                            <div th:if="${step.value.runType != null}">
-                                <a th:if="${step.value.runType.name() == 'WORKFLOW'}" th:href="${step.value.run}" th:text="${step.value.run}" class="subworkflow">workflow.cwl</a>
-                                <span th:unless="${step.value.runType.name() == 'WORKFLOW'}" th:text="${step.value.run}">cmdlinetool.cwl</span>
-                                (<span th:text="${step.value.runType}">Workflow</span>)
-                            </div>
-                            <div th:if="${step.value.run != null and step.value.runType == null}">
-                                <span th:text="${step.value.run} + ' (?)'" class="notFound" data-tooltip="true" title="Not Found - Must be somewhere within this repository">workflow.cwl (?)</span>
-                            </div>
-                        </td>
-                        <td th:text="${step.value.label}">Label</td>
-                        <td>
-                            <p th:if="${step.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(step.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                        <th>ID</th>
+                        <th>Runs</th>
+                        <th>Label</th>
+                        <th>Doc</th>
+                        </thead>
+                        <tbody>
+                        <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{${workflow.retrievedFrom.getUrl()}}">
+                            <td th:text="${step.key}">ID</td>
+                            <td>
+                                <div th:if="${step.value.runType != null}">
+                                    <a th:if="${step.value.runType.name() == 'WORKFLOW'}" th:href="${step.value.run}" th:text="${step.value.run}" class="subworkflow">workflow.cwl</a>
+                                    <span th:unless="${step.value.runType.name() == 'WORKFLOW'}" th:text="${step.value.run}">cmdlinetool.cwl</span>
+                                    (<span th:text="${step.value.runType}">Workflow</span>)
+                                </div>
+                                <div th:if="${step.value.run != null and step.value.runType == null}">
+                                    <span th:text="${step.value.run} + ' (?)'" class="notFound" data-tooltip="true" title="Not Found - Must be somewhere within this repository">workflow.cwl (?)</span>
+                                </div>
+                            </td>
+                            <td th:text="${step.value.label}">Label</td>
+                            <td>
+                                <p th:if="${step.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(step.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <h2>Outputs</h2>
             <div th:if="${workflow.outputs.isEmpty()}" class="alert alert-info">
                 <p>There are no outputs in this workflow</p>
             </div>
             <div th:unless="${workflow.outputs.isEmpty()}">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <th>ID</th>
-                        <th>Type</th>
-                        <th>Label</th>
-                        <th>Doc</th>
-                    </thead>
-                    <tbody>
-                        <tr th:each="output : ${workflow.outputs}">
-                            <td th:text="${output.key}">ID</td>
-                            <td>
-                                <a th:if="${output.value.format != null}" th:href="@{${output.value.format}}" th:text="${output.value.type}" target="_blank" rel="noopener">Type</a>
-                                <span th:if="${output.value.format == null}" th:text="${output.value.type}"></span>
-                            </td>
-                            <td th:text="${output.value.label}">Label</td>
-                            <td>
-                                <p th:if="${output.value.doc != null}" th:utext="${#strings.replace(#strings.escapeXml(output.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Label</th>
+                            <th>Doc</th>
+                        </thead>
+                        <tbody>
+                            <tr th:each="output : ${workflow.outputs}">
+                                <td th:text="${output.key}">ID</td>
+                                <td>
+                                    <a th:if="${output.value.format != null}" th:href="@{${output.value.format}}" th:text="${output.value.type}" target="_blank" rel="noopener">Type</a>
+                                    <span th:if="${output.value.format == null}" th:text="${output.value.type}"></span>
+                                </td>
+                                <td th:text="${output.value.label}">Label</td>
+                                <td>
+                                    <p th:if="${output.value.doc != null}" th:utext="${#strings.replace(#strings.escapeXml(output.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
