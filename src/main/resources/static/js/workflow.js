@@ -93,6 +93,11 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
                     instance.zoom(initialScale * ev.scale)
                 });
 
+                // Handle double click
+                this.hammer.on('doubletap', function(e){
+                    goToSubworkflow(e.target.closest(".node"));
+                });
+
                 // Prevent moving the page on some devices when panning over SVG
                 options.svgElement.addEventListener('touchmove', function(e){
                     e.preventDefault();
@@ -165,86 +170,7 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
                 }, 100);
             });
         }
-    });
 
-/**
- * Handle the dot graph modal and related features
- */
-require(['jquery', 'bootstrap.modal'],
-    function ($, modal) {
-        /**
-         * DOT graph modal textarea automatically focuses when opened
-         */
-        $('#dotGraph').on('shown.bs.modal', function () {
-            $('#dot').focus();
-        });
-
-        /**
-         * DOT graph textarea focus selects all
-         */
-        $("#dot").focus(function() {
-            $(this).select();
-        });
-
-        /**
-         * Downloading of the DOT graph as a .gv file
-         */
-        $('#download-dot').click(function (event) {
-            // Generate download link src
-            var dotGraph = $("#dot").val();
-            var src = "data:text/vnd.graphviz;charset=utf-8," + encodeURIComponent(dotGraph);
-
-            // Set hidden download link href to contents and click it
-            var downloadLink = $("#download-link-dot");
-            downloadLink.attr("href", src);
-            downloadLink[0].click();
-
-            // Stop default button action
-            event.preventDefault();
-        });
-    });
-
-/**
- * Code for including the link to the Research Object Bundle download
- * without refresh once generated
- */
-require(['jquery'],
-    function ($) {
-        /**
-         * AJAX function to add download link to page if generated
-         */
-        function getDownloadLink() {
-            $.ajax({
-                type: 'HEAD',
-                url: $('#download').attr('href'),
-                dataType: "json",
-                success: function () {
-                    // Hide generating, show link
-                    $("#generating").addClass("hide");
-                    $("#generated").removeClass("hide");
-                },
-                error: function () {
-                    // Show generating, hide link
-                    $("#generated").addClass("hide");
-                    $("#generating").removeClass("hide");
-
-                    // Retry in 5 seconds if still not generated
-                    setTimeout(function () {
-                        getDownloadLink();
-                    }, 5000)
-                }
-            });
-        }
-
-        getDownloadLink();
-    });
-
-/**
- * Highlighting step in graph when table row is
- * hovered over or vice-versa
- */
-require(['jquery', 'jquery.svg', 'jquery.svgdom'],
-    function ($) {
         /**
          * endsWith function to check suffix
          */
@@ -320,6 +246,18 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
         }, "#graph");
 
         /**
+         * Follow the link to a subworkflow if one exists
+         * @param node The node of the visualisation
+         */
+        function goToSubworkflow(node) {
+            var matchingTableRow = getTableRow(node);
+            var subworkflowLink = $(matchingTableRow).find("a.subworkflow");
+            if (subworkflowLink.length > 0) {
+                location.href = subworkflowLink.attr("href");
+            }
+        }
+
+        /**
          * When a graph box is hovered over/clicked, highlight
          */
         $(document).on({
@@ -337,11 +275,7 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
             },
             dblclick: function() {
                 // Follow link to subworkflow if possible
-                var matchingTableRow = getTableRow(this);
-                var subworkflowLink = $(matchingTableRow).find("a.subworkflow");
-                if (subworkflowLink.length > 0) {
-                    location.href = subworkflowLink.attr("href");
-                }
+                goToSubworkflow(this);
             },
             mouseenter: function() {
                 getTableRow(this).addClass("hover");
@@ -420,7 +354,78 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
                 expandSelection($(this).parent(), "inList");
             });
         });
+    });
 
+/**
+ * Handle the dot graph modal and related features
+ */
+require(['jquery', 'bootstrap.modal'],
+    function ($, modal) {
+        /**
+         * DOT graph modal textarea automatically focuses when opened
+         */
+        $('#dotGraph').on('shown.bs.modal', function () {
+            $('#dot').focus();
+        });
+
+        /**
+         * DOT graph textarea focus selects all
+         */
+        $("#dot").focus(function() {
+            $(this).select();
+        });
+
+        /**
+         * Downloading of the DOT graph as a .gv file
+         */
+        $('#download-dot').click(function (event) {
+            // Generate download link src
+            var dotGraph = $("#dot").val();
+            var src = "data:text/vnd.graphviz;charset=utf-8," + encodeURIComponent(dotGraph);
+
+            // Set hidden download link href to contents and click it
+            var downloadLink = $("#download-link-dot");
+            downloadLink.attr("href", src);
+            downloadLink[0].click();
+
+            // Stop default button action
+            event.preventDefault();
+        });
+    });
+
+/**
+ * Code for including the link to the Research Object Bundle download
+ * without refresh once generated
+ */
+require(['jquery'],
+    function ($) {
+        /**
+         * AJAX function to add download link to page if generated
+         */
+        function getDownloadLink() {
+            $.ajax({
+                type: 'HEAD',
+                url: $('#download').attr('href'),
+                dataType: "json",
+                success: function () {
+                    // Hide generating, show link
+                    $("#generating").addClass("hide");
+                    $("#generated").removeClass("hide");
+                },
+                error: function () {
+                    // Show generating, hide link
+                    $("#generated").addClass("hide");
+                    $("#generating").removeClass("hide");
+
+                    // Retry in 5 seconds if still not generated
+                    setTimeout(function () {
+                        getDownloadLink();
+                    }, 5000)
+                }
+            });
+        }
+
+        getDownloadLink();
     });
 
 /**
