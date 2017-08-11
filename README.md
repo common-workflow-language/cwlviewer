@@ -3,6 +3,7 @@
 This is a work-in-progress [Spring Boot](http://projects.spring.io/spring-boot/) MVC application which fetches [Common Workflow Language](http://www.commonwl.org/) files from a Github repository and creates a page for it detailing the main workflow and its inputs, outputs and steps.
 
 [![Build Status](https://travis-ci.org/common-workflow-language/cwlviewer.svg?branch=master)](https://travis-ci.org/common-workflow-language/cwlviewer) [![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/common-workflow-language/cwlviewer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![](https://images.microbadger.com/badges/image/commonworkflowlanguage/cwlviewer.svg)](https://microbadger.com/images/commonworkflowlanguage/cwlviewer "MicroBadger commonworkflowlanguage/cwlviewer") [![Docker image commonworkflowlanguage/cwlviewer](https://images.microbadger.com/badges/version/commonworkflowlanguage/cwlviewer.svg)](https://hub.docker.com/r/commonworkflowlanguage/cwlviewer/ "Docker Hub commonworkflowlanguage/cwlviewer")
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.823534.svg)](https://doi.org/10.5281/zenodo.823534)
 
 
 
