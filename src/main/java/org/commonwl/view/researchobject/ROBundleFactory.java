@@ -21,7 +21,7 @@ package org.commonwl.view.researchobject;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.slf4j.Logger;
@@ -57,46 +57,30 @@ public class ROBundleFactory {
     }
 
     /**
-     * Creates a new Workflow Research Object Bundle from a Github URL
+     * Creates a new Workflow Research Object Bundle from Git details
      * and saves it to a file
-     * @param githubInfo Details of the Github repository
+     * @param workflow The workflow to generate a RO bundle for
      * @throws IOException Any API errors which may have occurred
      */
     @Async
-    public void workflowROFromGithub(GithubDetails githubInfo)
+    public void createWorkflowRO(Workflow workflow)
             throws IOException, InterruptedException {
         logger.info("Creating Research Object Bundle");
 
         // Get the whole containing folder, not just the workflow itself
-        GithubDetails roDetails = new GithubDetails(githubInfo.getOwner(), githubInfo.getRepoName(),
-                githubInfo.getBranch(), FilenameUtils.getPath(githubInfo.getPath()));
+        GitDetails githubInfo = workflow.getRetrievedFrom();
+        GitDetails roDetails = new GitDetails(githubInfo.getRepoUrl(), githubInfo.getBranch(),
+                FilenameUtils.getPath(githubInfo.getPath()));
 
-        // Create a new Research Object Bundle with Github contents
-        Bundle bundle = roBundleService.newBundleFromGithub(roDetails);
+        // Create a new Research Object Bundle
+        Bundle bundle = roBundleService.createBundle(workflow, roDetails);
 
         // Save the bundle to the storage location in properties
         Path bundleLocation = roBundleService.saveToFile(bundle);
 
-        // Add the path to the bundle to the bundle
-        Workflow workflow = workflowRepository.findByRetrievedFrom(githubInfo);
-
-        // Chance that this thread could be done before workflow model is saved
-        int attempts = 5;
-        while (attempts > 0 && workflow == null) {
-            // Delay this thread by 0.5s and try again until success or too many attempts
-            Thread.sleep(1000L);
-            workflow = workflowRepository.findByRetrievedFrom(githubInfo);
-            attempts--;
-        }
-
-        if (workflow == null) {
-            // If workflow is still null we can't find the workflow model
-            logger.error("Workflow model could not be found when adding RO Bundle path");
-        } else {
-            // Add RO Bundle to associated workflow model
-            workflow.setRoBundle(bundleLocation.toString());
-            workflowRepository.save(workflow);
-            logger.info("Finished saving Research Object Bundle");
-        }
+        // Add RO Bundle to associated workflow model
+        workflow.setRoBundlePath(bundleLocation.toString());
+        workflowRepository.save(workflow);
+        logger.info("Finished saving Research Object Bundle");
     }
 }

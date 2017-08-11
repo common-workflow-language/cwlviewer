@@ -1,4 +1,4 @@
-FROM maven:3.3-jdk-8-alpine
+FROM maven:3.5-jdk-8-alpine
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
 # Build-time metadata as defined at http://label-schema.org
@@ -16,7 +16,14 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
   org.label-schema.schema-version="1.0"
 
 
-RUN apk add --update graphviz ttf-freefont && rm -rf /var/cache/apk/*
+RUN apk add --update graphviz ttf-freefont py2-pip gcc python2-dev libc-dev && rm -rf /var/cache/apk/*
+
+
+#wheel needed by ruamel.yaml for some reason
+RUN pip install wheel
+RUN pip install cwltool html5lib ruamel.yaml==0.12.4
+
+RUN cwltool --version
 
 RUN mkdir /usr/share/maven/ref/repository
 
@@ -38,7 +45,4 @@ WORKDIR /tmp
 
 EXPOSE 8080
 
-# Expects mongodb on port 27017
-ENV SPRING_DATA_MONGODB_HOST=mongo
-ENV SPRING_DATA_MONGODB_PORT=27017
 CMD ["/usr/bin/java", "-jar", "/usr/lib/cwlviewer.jar"]

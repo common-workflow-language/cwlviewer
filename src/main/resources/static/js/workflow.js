@@ -87,10 +87,15 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
                 this.hammer.on('pinchstart pinchmove', function(ev){
                     // On pinch start remember initial zoom
                     if (ev.type === 'pinchstart') {
-                        initialScale = instance.getZoom()
-                        instance.zoom(initialScale * ev.scale)
+                        initialScale = instance.getZoom();
+                        instance.zoom(initialScale * ev.scale);
                     }
                     instance.zoom(initialScale * ev.scale)
+                });
+
+                // Handle double click
+                this.hammer.on('doubletap', function(e){
+                    goToSubworkflow(e.target.closest(".node"));
                 });
 
                 // Prevent moving the page on some devices when panning over SVG
@@ -115,6 +120,7 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
         function enablePanZoom() {
             var graph = svgPanZoom('#graph svg', {
                 zoomEnabled: true,
+                dblClickZoomEnabled: false,
                 controlIconsEnabled: true,
                 customEventsHandler: eventHandler
             });
@@ -163,87 +169,17 @@ require(['jquery', 'bootstrap.modal', 'svg-pan-zoom', 'hammerjs', 'jquery.svg'],
                     });
                 }, 100);
             });
-        };
-    });
-
-/**
- * Handle the dot graph modal and related features
- */
-require(['jquery', 'bootstrap.modal'],
-    function ($, modal) {
-        /**
-         * DOT graph modal textarea automatically focuses when opened
-         */
-        $('#dotGraph').on('shown.bs.modal', function () {
-            $('#dot').focus();
-        });
-
-        /**
-         * DOT graph textarea focus selects all
-         */
-        $("#dot").focus(function() {
-            $(this).select();
-        });
-
-        /**
-         * Downloading of the DOT graph as a .gv file
-         */
-        $('#download-dot').click(function (event) {
-            // Generate download link src
-            var dotGraph = $("#dot").val();
-            var src = "data:text/vnd.graphviz;charset=utf-8," + encodeURIComponent(dotGraph);
-
-            // Set hidden download link href to contents and click it
-            var downloadLink = $("#download-link-dot");
-            downloadLink.attr("href", src);
-            downloadLink[0].click();
-
-            // Stop default button action
-            event.preventDefault();
-        });
-    });
-
-/**
- * Code for including the link to the Research Object Bundle download
- * without refresh once generated
- */
-require(['jquery'],
-    function ($) {
-        /**
-         * AJAX function to add download link to page if generated
-         */
-        function getDownloadLink() {
-            $.ajax({
-                type: 'HEAD',
-                url: $('#download').attr('href'),
-                dataType: "json",
-                success: function () {
-                    // Hide generating, show link
-                    $("#generating").addClass("hide");
-                    $("#generated").removeClass("hide");
-                },
-                error: function () {
-                    // Show generating, hide link
-                    $("#generated").addClass("hide");
-                    $("#generating").removeClass("hide");
-
-                    // Retry in 5 seconds if still not generated
-                    setTimeout(function () {
-                        getDownloadLink();
-                    }, 5000)
-                }
-            });
         }
 
-        getDownloadLink();
-    });
+        /**
+         * endsWith function to check suffix
+         */
+        if (typeof String.prototype.endsWith !== 'function') {
+            String.prototype.endsWith = function(suffix) {
+                return this.indexOf(suffix, this.length - suffix.length) !== -1;
+            };
+        }
 
-/**
- * Highlighting step in graph when table row is
- * hovered over or vice-versa
- */
-require(['jquery', 'jquery.svg', 'jquery.svgdom'],
-    function ($) {
         /**
          * Gets the corresponding graph box for a table row
          * @param trElement The table row element
@@ -255,7 +191,7 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
 
             // Find corresponding graph box and return
             return $("title").filter(function() {
-                return $(this).text() == elementTitle;
+                return $(this).text().endsWith(elementTitle);
             }).siblings("polygon");
         }
 
@@ -282,7 +218,7 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
 
         /**
          * Gets the corresponding table row for a graph box
-         * @param trElement The graph box element
+         * @param gbElement The graph box element
          * @return The table row(s)
          */
         function getTableRow(gbElement) {
@@ -291,7 +227,7 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
 
             // Find corresponding table row and return
             return $("tr").filter(function() {
-                return $(this).find("td:first").html() == elementTitle;
+                return elementTitle.endsWith($(this).find("td:first").html());
             });
         }
 
@@ -310,6 +246,18 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
         }, "#graph");
 
         /**
+         * Follow the link to a subworkflow if one exists
+         * @param node The node of the visualisation
+         */
+        function goToSubworkflow(node) {
+            var matchingTableRow = getTableRow(node);
+            var subworkflowLink = $(matchingTableRow).find("a.subworkflow");
+            if (subworkflowLink.length > 0) {
+                location.href = subworkflowLink.attr("href");
+            }
+        }
+
+        /**
          * When a graph box is hovered over/clicked, highlight
          */
         $(document).on({
@@ -324,6 +272,10 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
                     matchingTableRow.toggleClass("selected");
                     thisPolygon.toggleClass("selected");
                 }
+            },
+            dblclick: function() {
+                // Follow link to subworkflow if possible
+                goToSubworkflow(this);
             },
             mouseenter: function() {
                 getTableRow(this).addClass("hover");
@@ -402,9 +354,83 @@ require(['jquery', 'jquery.svg', 'jquery.svgdom'],
                 expandSelection($(this).parent(), "inList");
             });
         });
-
     });
 
+/**
+ * Handle the dot graph modal and related features
+ */
+require(['jquery', 'bootstrap.modal'],
+    function ($, modal) {
+        /**
+         * DOT graph modal textarea automatically focuses when opened
+         */
+        $('#dotGraph').on('shown.bs.modal', function () {
+            $('#dot').focus();
+        });
+
+        /**
+         * DOT graph textarea focus selects all
+         */
+        $("#dot").focus(function() {
+            $(this).select();
+        });
+
+        /**
+         * Downloading of the DOT graph as a .gv file
+         */
+        $('#download-dot').click(function (event) {
+            // Generate download link src
+            var dotGraph = $("#dot").val();
+            var src = "data:text/vnd.graphviz;charset=utf-8," + encodeURIComponent(dotGraph);
+
+            // Set hidden download link href to contents and click it
+            var downloadLink = $("#download-link-dot");
+            downloadLink.attr("href", src);
+            downloadLink[0].click();
+
+            // Stop default button action
+            event.preventDefault();
+        });
+    });
+
+/**
+ * Code for including the link to the Research Object Bundle download
+ * without refresh once generated
+ */
+require(['jquery'],
+    function ($) {
+        /**
+         * AJAX function to add download link to page if generated
+         */
+        function getDownloadLink() {
+            $.ajax({
+                type: 'HEAD',
+                url: $('#download').attr('href'),
+                dataType: "json",
+                success: function () {
+                    // Hide generating, show link
+                    $("#generating").addClass("hide");
+                    $("#generated").removeClass("hide");
+                },
+                error: function () {
+                    // Show generating, hide link
+                    $("#generated").addClass("hide");
+                    $("#generating").removeClass("hide");
+
+                    // Retry in 5 seconds if still not generated
+                    setTimeout(function () {
+                        getDownloadLink();
+                    }, 5000)
+                }
+            });
+        }
+
+        getDownloadLink();
+    });
+
+/**
+ * Bootstrap tooltips
+ */
 require(['jquery', 'bootstrap.tooltip', 'bootstrap.dropdown'],
     function ($) {
         // Alterative notation as only a single data-toggle attribute is allowed

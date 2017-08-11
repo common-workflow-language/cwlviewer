@@ -23,8 +23,8 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Common Workflow Language Viewer</title>
-        <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170616.css}" href="../static/css/main-20170616.css" />
         <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170616.css}" href="../static/css/main-20170616.css" />
     </head>
     <body>
 
@@ -41,35 +41,49 @@
                         <a href="https://researchobject.github.io/specifications/bundle/" rel="noopener" target="_blank">
                             Research Object Bundle</a>
                         (zip file with metadata in a manifest), allowing it to be easily viewed and shared.</p>
-                    <div class="alert alert-warning">
-                        <p><strong>Caution:</strong> This viewer is currently experimental and may not work for all valid workflows</p>
+                    <div class="alert alert-info">
+                        <p>Want to make your workflows look their best in CWL Viewer? Find out about <a href="/about">CWL recommended practices</a></p>
                     </div>
 
-                    <h2>Workflow from Github URL</h2>
-                    <p>Provide a Github link to the workflow here</p>
-                    <form id="add" action="#" th:action="@{/}" th:object="${workflowForm}" method="POST">
+                    <hr/>
+
+                    <h2>Workflow URL</h2>
+                    <p>Provide a Github, Gitlab or Git repository link to the workflow here</p>
+                    <div class="alert alert-grey">
+                        <strong>Don't know what to view?</strong> Try these from <i>common-workflow-language/workflows</i>:
+                        <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/compile/compile1.cwl">compile</a>,
+                        <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/make-to-cwl/dna.cwl">make-to-cwl</a>,
+                        <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl">lobSTR</a>,
+                        <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/scidap/bam-genomecov-bigwig-rna-dutp.cwl">scidap</a>
+                        or <a href="/workflows">explore the collection</a>
+                    </div>
+                    <form id="add" action="#" th:action="@{/workflows}" th:object="${workflowForm}" method="POST">
                         <div class="alert alert-danger" th:if="${errors} != null and ${errors.hasErrors()}">
                             <div th:each="error : ${errors.getAllErrors()}">
                                 <strong>Error:</strong> <span th:text="${error.getDefaultMessage()}">Error message here</span>
                             </div>
                         </div>
-                        <div class="alert alert-danger" th:if="${#fields.hasErrors('githubURL')}">
-                            <strong>Error:</strong> <span th:errors="*{githubURL}">Error message here</span>
+                        <div class="alert alert-danger" th:if="${#fields.hasErrors('url')}">
+                            <strong>Error:</strong> <span th:errors="*{url}">Error message here</span>
                         </div>
-                        <div class="alert alert-grey">
-                            <strong>Don't know what to view?</strong> Try these from <i>common-workflow-language/workflows</i>:
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/compile/compile1.cwl">compile</a>,
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/make-to-cwl/dna.cwl">make-to-cwl</a>,
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl">lobSTR</a>,
-                            <a class="example" href="https://github.com/common-workflow-language/workflows/tree/master/workflows/scidap/bam-genomecov-bigwig-rna-dutp.cwl">scidap</a>
-                            or <a href="/workflows">explore the collection</a>
+                        <div id="urlGroup" class="form-group">
+                            <label class="control-label" for="url">URL to workflow</label>
+                            <input type="text" class="form-control" placeholder="Github, Gitlab or Git repository URL" id="url" name="url" th:field="*{url}" th:value="${formURL}" />
+                            <span class="help-block"></span>
                         </div>
-                        <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Github URL" id="githubURL" name="githubURL" th:field="*{githubURL}" th:value="${formURL}" />
-                            <span class="input-group-btn">
-                                <button class="btn btn-primary" type="submit">Parse Workflow</button>
-                            </span>
+                        <div id="extraInputs" class="row">
+                            <div class="col-md-6 form-group">
+                                <label class="control-label" for="branch">Branch Name/Commit ID</label>
+                                <input type="text" class="form-control" placeholder="Branch Name or Commit ID" name="branch" id="branch" />
+                                <span class="help-block"></span>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label class="control-label" for="path">Path to Workflow</label>
+                                <input type="text" class="form-control" placeholder="/path/to/workflow.cwl" name="path" id="path" />
+                                <span class="help-block"></span>
+                            </div>
                         </div>
+                        <button class="btn btn-primary pull-right" type="submit">Parse Workflow</button>
                     </form>
                 </div>
             </div>

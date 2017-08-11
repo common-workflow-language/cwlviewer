@@ -19,29 +19,26 @@
 
 package org.commonwl.view.workflow;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLStep;
-import org.commonwl.view.github.GithubDetails;
-import org.commonwl.view.graphviz.DotWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.commonwl.view.git.GitDetails;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Date;
 import java.util.Map;
 
 /**
  * Representation of a workflow
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(value = {"id", "roBundlePath", "roBundleLink"})
 @Document
 public class Workflow {
-
-    static private final Logger logger = LoggerFactory.getLogger(Workflow.class);
 
     // ID for database
     @Id
@@ -49,7 +46,7 @@ public class Workflow {
 
     // Metadata
     @Indexed(unique = true)
-    private GithubDetails retrievedFrom;
+    private GitDetails retrievedFrom;
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss z")
     private Date retrievedOn;
 
@@ -57,9 +54,12 @@ public class Workflow {
     // Used for caching purposes
     private String lastCommit;
 
+    // If schema salad packed, the workflow ID
+    private String packedWorkflowID;
+
     // A String which represents the path to a RO bundle
     // Path types cannot be stored using Spring Data, unfortunately
-    private String roBundle;
+    private String roBundlePath;
 
     // Contents of the workflow
     private String label;
@@ -71,8 +71,10 @@ public class Workflow {
     // Currently only DockerRequirement is parsed for this
     private String dockerLink;
 
+    private String cwltoolVersion = "";
+
     // DOT graph of the contents
-    private String dotGraph;
+    private String visualisationDot;
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
                     Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink) {
@@ -82,20 +84,6 @@ public class Workflow {
         this.outputs = outputs;
         this.steps = steps;
         this.dockerLink = dockerLink;
-    }
-
-    /**
-     * Create a DOT graph for this workflow and store it
-     */
-    public void generateDOT() {
-        StringWriter graphWriter = new StringWriter();
-        DotWriter dotWriter = new DotWriter(graphWriter);
-        try {
-            dotWriter.writeGraph(this);
-            this.dotGraph = graphWriter.toString();
-        } catch (IOException ex) {
-            logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
-        }
     }
 
     public String getID() { return id; }
@@ -144,19 +132,19 @@ public class Workflow {
         this.steps = steps;
     }
 
-    public String getRoBundle() {
-        return roBundle;
+    public String getRoBundlePath() {
+        return roBundlePath;
     }
 
-    public void setRoBundle(String roBundle) {
-        this.roBundle = roBundle;
+    public void setRoBundlePath(String roBundlePath) {
+        this.roBundlePath = roBundlePath;
     }
 
-    public GithubDetails getRetrievedFrom() {
+    public GitDetails getRetrievedFrom() {
         return retrievedFrom;
     }
 
-    public void setRetrievedFrom(GithubDetails retrievedFrom) {
+    public void setRetrievedFrom(GitDetails retrievedFrom) {
         this.retrievedFrom = retrievedFrom;
     }
 
@@ -168,14 +156,6 @@ public class Workflow {
         this.retrievedOn = retrievedOn;
     }
 
-    public String getDotGraph() {
-        return dotGraph;
-    }
-
-    public void setDotGraph(String dotGraph) {
-        this.dotGraph = dotGraph;
-    }
-
     public String getLastCommit() {
         return lastCommit;
     }
@@ -184,11 +164,62 @@ public class Workflow {
         this.lastCommit = lastCommit;
     }
 
+    public String getPackedWorkflowID() {
+        return packedWorkflowID;
+    }
+
+    public void setPackedWorkflowID(String packedWorkflowID) {
+        this.packedWorkflowID = packedWorkflowID;
+    }
+
     public String getDockerLink() {
         return dockerLink;
     }
 
     public void setDockerLink(String dockerLink) {
         this.dockerLink = dockerLink;
+    }
+
+    public String getCwltoolVersion() {
+        return cwltoolVersion;
+    }
+
+    public void setCwltoolVersion(String cwltoolVersion) {
+        this.cwltoolVersion = cwltoolVersion;
+    }
+
+    public String getVisualisationDot() {
+        return visualisationDot;
+    }
+
+    public void setVisualisationDot(String visualisationDot) {
+        this.visualisationDot = visualisationDot;
+    }
+
+    // The following are here for Jackson message converter for the REST API
+    // Include links to related resources
+
+    public String getVisualisationXdot() {
+        return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/graph/xdot");
+    }
+
+    public String getVisualisationPng() {
+        return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/graph/png");
+    }
+
+    public String getVisualisationSvg() {
+        return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/graph/svg");
+    }
+
+    public String getRoBundle() {
+        if (roBundlePath != null) {
+            return getRoBundleLink();
+        } else {
+            return null;
+        }
+    }
+
+    public String getRoBundleLink() {
+        return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/robundle");
     }
 }

@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.core.Is.is;
@@ -35,8 +36,13 @@ public class PageControllerTest {
 
     @Before
     public void setup() {
+        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
+        viewResolver.setPrefix("/src/main/resources/templates/");
+        viewResolver.setSuffix(".html");
+
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new PageController())
+                .setViewResolvers(viewResolver)
                 .build();
     }
 
@@ -61,7 +67,27 @@ public class PageControllerTest {
                 .andExpect(view().name("index"))
                 .andExpect(model().attributeExists("workflowForm"))
                 .andExpect(model().attribute("workflowForm",
-                        hasProperty("githubURL", is("https://github.com/test/default/link"))));
+                        hasProperty("url", is("https://github.com/test/default/link"))));
+    }
+
+    /**
+     * About page
+     */
+    @Test
+    public void aboutPage() throws Exception {
+        mockMvc.perform(get("/about"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("about"));
+    }
+
+    /**
+     * API documentation page
+     */
+    @Test
+    public void apiDocumentation() throws Exception {
+        mockMvc.perform(get("/apidocs"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("apidocs"));
     }
 
 }

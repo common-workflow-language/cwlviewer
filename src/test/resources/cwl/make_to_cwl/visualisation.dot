@@ -1,0 +1,57 @@
+digraph workflow {
+  graph [
+    bgcolor = "#eeeeee"
+    color = "black"
+    fontsize = "10"
+    labeljust = "left"
+    clusterrank = "local"
+    ranksep = "0.22"
+    nodesep = "0.05"
+  ]
+  node [
+    fontname = "Helvetica"
+    fontsize = "10"
+    fontcolor = "black"
+    shape = "record"
+    height = "0"
+    width = "0"
+    color = "black"
+    fillcolor = "lightgoldenrodyellow"
+    style = "filled"
+  ];
+  edge [
+    fontname="Helvetica"
+    fontsize="8"
+    fontcolor="black"
+    color="black"
+    arrowsize="0.7"
+  ];
+  subgraph cluster_inputs {
+    rank = "same";
+    style = "dashed";
+    label = "Workflow Inputs";
+    "rna" [fillcolor="#94DDF4",label="rna"];
+  }
+  subgraph cluster_outputs {
+    rank = "same";
+    style = "dashed";
+    labelloc = "b";
+    label = "Workflow Outputs";
+    "outfile" [fillcolor="#94DDF4",label="outfile"];
+  }
+  "get_sequences" [label="get_sequences"];
+  "combine_sequences" [label="combine_sequences"];
+  "translate_sequences" [label="translate_sequences"];
+  "rna" -> "get_sequences" [label="sequence"];
+  "default1" -> "combine_sequences" [label="catfilename"];
+  "default1" [label="\"database.dna\"", fillcolor="#D5AEFC"];
+  "get_sequences" -> "combine_sequences" [label="sequences"];
+  "default2" -> "translate_sequences" [label="from"];
+  "default2" [label="\"U\"", fillcolor="#D5AEFC"];
+  "default3" -> "translate_sequences" [label="filename"];
+  "default3" [label="\"database.dna\"", fillcolor="#D5AEFC"];
+  "combine_sequences" -> "translate_sequences" [label="trinput"];
+  "default4" -> "translate_sequences" [label="to"];
+  "default4" [label="\"T\"", fillcolor="#D5AEFC"];
+  "translate_sequences" -> "outfile";
+}

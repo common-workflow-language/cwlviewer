@@ -19,20 +19,12 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
-import org.junit.Before;
+import org.commonwl.view.git.GitDetails;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 
-import java.io.IOException;
-
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests the validator. Parsing is already checked in GithubServiceTest
@@ -42,50 +34,61 @@ public class WorkflowFormValidatorTest {
     /**
      * Workflow form validator to test
      */
-    private WorkflowFormValidator workflowFormValidator;
-
-    /**
-     * Set up new validator with mock Github service
-     */
-    @Before
-    public void setUp() throws Exception {
-        // Mock Github service which always returns non-null for downloads
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
-        when(mockGithubService.downloadFile(anyObject())).thenReturn("");
-        when(mockGithubService.detailsFromDirURL(anyString())).thenCallRealMethod();
-        when(mockGithubService.detailsFromFileURL(anyString())).thenCallRealMethod();
-
-        workflowFormValidator = new WorkflowFormValidator(mockGithubService);
-    }
-
-    /**
-     * Github Directory URL
-     */
-    @Test
-    public void directoryURL() throws Exception {
-
-        WorkflowForm dirURL = new WorkflowForm("https://github.com/common-workflow-language/cwltool/tree/master/cwltool/schemas");
-
-        Errors errors = new BeanPropertyBindingResult(dirURL, "workflowForm");
-        GithubDetails details = workflowFormValidator.validateAndParse(dirURL, errors);
-
-        assertNotNull(details);
-        assertFalse(errors.hasErrors());
-
-    }
+    private WorkflowFormValidator workflowFormValidator = new WorkflowFormValidator();
 
     /**
      * Github File URL
      */
     @Test
-    public void fileURL() throws Exception {
+    public void githubUrl() throws Exception {
 
-        WorkflowForm fileURL = new WorkflowForm("https://github.com/nlesc-sherlock/deeplearning/blob/master/CWLworkflow/pipeline.cwl");
-
-        Errors errors = new BeanPropertyBindingResult(fileURL, "workflowForm");
-        GithubDetails details = workflowFormValidator.validateAndParse(fileURL, errors);
+        WorkflowForm githubUrl = new WorkflowForm("https://github.com/nlesc-sherlock/deeplearning/blob/master/CWLworkflow/pipeline.cwl");
+        Errors errors = new BeanPropertyBindingResult(githubUrl, "workflowForm");
+        GitDetails details = workflowFormValidator.validateAndParse(githubUrl, errors);
 
         assertNotNull(details);
+        assertEquals("https://github.com/nlesc-sherlock/deeplearning.git", details.getRepoUrl());
+        assertEquals("master", details.getBranch());
+        assertEquals("CWLworkflow/pipeline.cwl", details.getPath());
+        assertFalse(errors.hasErrors());
+
+    }
+
+    /**
+     * Gitlab File URL
+     */
+    @Test
+    public void gitlabUrl() throws Exception {
+
+        WorkflowForm gitlabUrl = new WorkflowForm("https://gitlab.com/unduthegun/stellaris-emblem-lab/blob/cwl/textures/textures.cwl");
+        Errors errors = new BeanPropertyBindingResult(gitlabUrl, "workflowForm");
+        GitDetails details = workflowFormValidator.validateAndParse(gitlabUrl, errors);
+
+        assertNotNull(details);
+        assertEquals("https://gitlab.com/unduthegun/stellaris-emblem-lab.git", details.getRepoUrl());
+        assertEquals("cwl", details.getBranch());
+        assertEquals("textures/textures.cwl", details.getPath());
+        assertFalse(errors.hasErrors());
+
+    }
+
+    /**
+     * Generic File URL
+     */
+    @Test
+    public void genericUrl() throws Exception {
+
+        WorkflowForm genericUrl = new WorkflowForm("https://bitbucket.org/markrobinson96/workflows.git");
+        genericUrl.setBranch("branchName");
+        genericUrl.setPath("path/to/workflow.cwl");
+
+        Errors errors = new BeanPropertyBindingResult(genericUrl, "workflowForm");
+        GitDetails details = workflowFormValidator.validateAndParse(genericUrl, errors);
+
+        assertNotNull(details);
+        assertEquals("https://bitbucket.org/markrobinson96/workflows.git", details.getRepoUrl());
+        assertEquals("branchName", details.getBranch());
+        assertEquals("path/to/workflow.cwl", details.getPath());
         assertFalse(errors.hasErrors());
 
     }
@@ -99,7 +102,7 @@ public class WorkflowFormValidatorTest {
         WorkflowForm emptyURL = new WorkflowForm("");
 
         Errors errors = new BeanPropertyBindingResult(emptyURL, "workflowForm");
-        GithubDetails willBeNull = workflowFormValidator.validateAndParse(emptyURL, errors);
+        GitDetails willBeNull = workflowFormValidator.validateAndParse(emptyURL, errors);
 
         assertNull(willBeNull);
         assertTrue(errors.hasErrors());
@@ -115,7 +118,7 @@ public class WorkflowFormValidatorTest {
         WorkflowForm invalidURL = new WorkflowForm("https://google.com/clearly/not/github/url");
 
         Errors errors = new BeanPropertyBindingResult(invalidURL, "workflowForm");
-        GithubDetails details = workflowFormValidator.validateAndParse(invalidURL, errors);
+        GitDetails details = workflowFormValidator.validateAndParse(invalidURL, errors);
 
         assertNull(details);
         assertTrue(errors.hasErrors());
@@ -123,28 +126,19 @@ public class WorkflowFormValidatorTest {
     }
 
     /**
-     * Invalid URL
+     * Generic File URL without branch or path
      */
     @Test
-    public void cannotDownloadFile() throws Exception {
+    public void noBranchOrPath() throws Exception {
 
-        // Mock Github service which always throws an exception for downloads
-        GitHubService mockGithubService = Mockito.mock(GitHubService.class);
-        when(mockGithubService.downloadFile(anyObject())).thenThrow(new IOException("404 Error"));
-        when(mockGithubService.detailsFromDirURL(anyString())).thenCallRealMethod();
-        when(mockGithubService.detailsFromFileURL(anyString())).thenCallRealMethod();
+        WorkflowForm genericUrl = new WorkflowForm("https://bitbucket.org/markrobinson96/workflows.git");
 
-        WorkflowFormValidator validator = new WorkflowFormValidator(mockGithubService);
-
-        WorkflowForm validFileURL = new WorkflowForm("https://github.com/nlesc-sherlock/deeplearning/blob/master/CWLworkflow/pipeline.cwl");
-
-        Errors errors = new BeanPropertyBindingResult(validFileURL, "workflowForm");
-        GithubDetails details = validator.validateAndParse(validFileURL, errors);
+        Errors errors = new BeanPropertyBindingResult(genericUrl, "workflowForm");
+        GitDetails details = workflowFormValidator.validateAndParse(genericUrl, errors);
 
         assertNull(details);
         assertTrue(errors.hasErrors());
 
     }
-
 
 }

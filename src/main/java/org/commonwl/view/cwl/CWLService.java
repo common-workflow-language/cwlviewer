@@ -26,11 +26,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.riot.RiotException;
 import org.commonwl.view.docker.DockerService;
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.graphviz.ModelDotWriter;
+import org.commonwl.view.graphviz.RDFDotWriter;
 import org.commonwl.view.workflow.Workflow;
-import org.commonwl.view.workflow.WorkflowOverview;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,10 +46,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+
+import static org.apache.commons.io.FileUtils.readFileToString;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
@@ -53,7 +66,8 @@ public class CWLService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // Autowired properties/services
-    private final GitHubService githubService;
+    private final RDFService rdfService;
+    private final CWLTool cwlTool;
     private final int singleFileSizeLimit;
 
     // CWL specific strings
@@ -79,40 +93,35 @@ public class CWLService {
     private final String ARRAY_ITEMS = "items";
     private final String LOCATION = "location";
     private final String RUN = "run";
-    private final String REQUIREMENTS = "requirements";
-    private final String HINTS = "hints";
-    private final String DOCKER_REQUIREMENT = "DockerRequirement";
-    private final String DOCKER_PULL = "dockerPull";
 
     /**
      * Constructor for the Common Workflow Language service
-     * @param githubService A service for accessing Github functionality
+     * @param rdfService A service for handling RDF queries
+     * @param cwlTool Handles cwltool integration
      * @param singleFileSizeLimit The file size limit for single files
      */
     @Autowired
-    public CWLService(GitHubService githubService,
+    public CWLService(RDFService rdfService,
+                      CWLTool cwlTool,
                       @Value("${singleFileSizeLimit}") int singleFileSizeLimit) {
-        this.githubService = githubService;
+        this.rdfService = rdfService;
+        this.cwlTool = cwlTool;
         this.singleFileSizeLimit = singleFileSizeLimit;
     }
 
     /**
-     * Gets the Workflow object from a Github file
-     * @param githubInfo The Github repository information
-     * @param latestCommit The latest commit ID
+     * Gets the Workflow object from internal parsing
+     * @param workflowFile The workflow file to be parsed
      * @return The constructed workflow object
      */
-    public Workflow parseWorkflow(GithubDetails githubInfo, String latestCommit) throws IOException {
-
-        // Get the content of this file from Github
-        String fileContent = githubService.downloadFile(githubInfo, latestCommit);
-        int fileSizeBytes = fileContent.getBytes("UTF-8").length;
+    public Workflow parseWorkflowNative(File workflowFile) throws IOException {
 
         // Check file size limit before parsing
+        long fileSizeBytes = workflowFile.length();
         if (fileSizeBytes <= singleFileSizeLimit) {
 
             // Parse file as yaml
-            JsonNode cwlFile = yamlStringToJson(fileContent);
+            JsonNode cwlFile = yamlStringToJson(readFileToString(workflowFile));
 
             // If the CWL file is packed there can be multiple workflows in a file
             Map<String, JsonNode> packedFiles = new HashMap<>();
@@ -129,18 +138,33 @@ public class CWLService {
             // Use filename for label if there is no defined one
             String label = extractLabel(cwlFile);
             if (label == null) {
-                label = FilenameUtils.getName(githubInfo.getPath());
+                label = FilenameUtils.getName(workflowFile.getPath());
             }
 
             // Construct the rest of the workflow model
             Workflow workflowModel = new Workflow(label, extractDoc(cwlFile), getInputs(cwlFile),
-                    getOutputs(cwlFile), getSteps(cwlFile), getDockerLink(cwlFile));
-            fillStepRunTypes(workflowModel, packedFiles, githubInfo, latestCommit);
-            workflowModel.generateDOT();
+                    getOutputs(cwlFile), getSteps(cwlFile), null);
+
+            if (packedFiles.size() > 0) {
+                workflowModel.setPackedWorkflowID(cwlFile.get(ID).asText());
+            }
+
+            workflowModel.setCwltoolVersion(cwlTool.getVersion());
+
+            // Generate DOT graph
+            StringWriter graphWriter = new StringWriter();
+            ModelDotWriter dotWriter = new ModelDotWriter(graphWriter);
+            try {
+                dotWriter.writeGraph(workflowModel);
+                workflowModel.setVisualisationDot(graphWriter.toString());
+            } catch (IOException ex) {
+                logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
+            }
+
             return workflowModel;
 
         } else {
-            throw new IOException("File '" + githubInfo.getPath() +  "' is over singleFileSizeLimit - " +
+            throw new IOException("File '" + workflowFile.getName() +  "' is over singleFileSizeLimit - " +
                     FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +
                     FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
         }
@@ -148,54 +172,308 @@ public class CWLService {
     }
 
     /**
-     * Get an overview of a workflow
-     * @param githubInfo The details to access the workflow
-     * @return A constructed WorkflowOverview of the workflow
-     * @throws IOException Any API errors which may have occurred
+     * Create a workflow model using cwltool rdf output
+     * @param basicModel The basic workflow object created thus far
+     * @param workflowFile The workflow file to run cwltool on
+     * @return The constructed workflow object
      */
-    public WorkflowOverview getWorkflowOverview(GithubDetails githubInfo) throws IOException {
+    public Workflow parseWorkflowWithCwltool(Workflow basicModel,
+                                             File workflowFile) throws CWLValidationException {
+        GitDetails gitDetails = basicModel.getRetrievedFrom();
+        String latestCommit = basicModel.getLastCommit();
+        String packedWorkflowID = basicModel.getPackedWorkflowID();
 
-        // Get the content of this file from Github
-        String fileContent = githubService.downloadFile(githubInfo);
-        int fileSizeBytes = fileContent.getBytes("UTF-8").length;
+        // Get paths to workflow
+        String url = gitDetails.getUrl(latestCommit).replace("https://", "");
+        String localPath = workflowFile.toPath().toAbsolutePath().toString();
+        String gitPath = gitDetails.getPath();
+        if (packedWorkflowID != null) {
+            if (packedWorkflowID.charAt(0) != '#') {
+                localPath += "#";
+                url += "#";
+                gitPath += "#";
+            }
+            localPath += packedWorkflowID;
+            url += packedWorkflowID;
+            gitPath += packedWorkflowID;
+        }
 
-        // Check file size limit before parsing
-        if (fileSizeBytes <= singleFileSizeLimit) {
+        // Get RDF representation from cwltool
+        if (!rdfService.graphExists(url)) {
+            String rdf = cwlTool.getRDF(localPath);
 
-            // Parse file as yaml
-            JsonNode cwlFile = yamlStringToJson(fileContent);
+            // Create a workflow model from RDF representation
+            Model model = ModelFactory.createDefaultModel();
+            model.read(new ByteArrayInputStream(rdf.getBytes()), null, "TURTLE");
 
-            // If the CWL file is packed there can be multiple workflows in a file
-            if (cwlFile.has(DOC_GRAPH)) {
-                // Packed CWL, find the first subelement which is a workflow and take it
-                for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
-                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
-                        cwlFile = jsonNode;
+            // Store the model
+            rdfService.storeModel(url, model);
+        }
+
+        // Base workflow details
+        String label = FilenameUtils.getName(url);
+        String doc = null;
+        ResultSet labelAndDoc = rdfService.getLabelAndDoc(gitPath, url);
+        if (labelAndDoc.hasNext()) {
+            QuerySolution labelAndDocSoln = labelAndDoc.nextSolution();
+            if (labelAndDocSoln.contains("label")) {
+                label = labelAndDocSoln.get("label").toString();
+            }
+            if (labelAndDocSoln.contains("doc")) {
+                doc = labelAndDocSoln.get("doc").toString();
+            }
+        }
+
+        // Inputs
+        Map<String, CWLElement> wfInputs = new HashMap<>();
+        ResultSet inputs = rdfService.getInputs(gitPath, url);
+        while (inputs.hasNext()) {
+            QuerySolution input = inputs.nextSolution();
+            String inputName = rdfService.stepNameFromURI(gitPath, input.get("name").toString());
+
+            CWLElement wfInput = new CWLElement();
+
+            // Array types
+            if (input.contains("type")) {
+                StmtIterator itr = input.get("type").asResource().listProperties();
+                if (itr.hasNext()) {
+                    while (itr.hasNext()) {
+                        Statement complexType = itr.nextStatement();
+                        if (complexType.getPredicate().toString()
+                                .equals("https://w3id.org/cwl/salad#items")) {
+                            if (wfInputs.containsKey(inputName)
+                                    && wfInputs.get(inputName).getType().equals("?")) {
+                                wfInput.setType(typeURIToString(complexType.getObject().toString()) + "[]?");
+                            } else {
+                                wfInput.setType(typeURIToString(complexType.getObject().toString()) + "[]");
+                            }
+                        }
+                    }
+                } else {
+                    // Optional types
+                    if (input.get("type").toString().equals("https://w3id.org/cwl/salad#null")) {
+                        if (wfInputs.containsKey(inputName)) {
+                            CWLElement inputInMap = wfInputs.get(inputName);
+                            inputInMap.setType(inputInMap.getType() + "?");
+                        } else {
+                            wfInput.setType("?");
+                        }
+                    } else if (wfInput.getType() != null && wfInput.getType().equals("?")
+                            && !wfInput.getType().endsWith("[]")) {
+                        wfInput.setType(typeURIToString(input.get("type").toString()) + "?");
+                    } else {
+                        // Standard type
+                        wfInput.setType(typeURIToString(input.get("type").toString()));
                     }
                 }
             }
 
-            // Can only make an overview if this is a workflow
-            if (extractProcess(cwlFile) == CWLProcess.WORKFLOW) {
-                // Use filename for label if there is no defined one
-                String path = FilenameUtils.getName(githubInfo.getPath());
-                String label = extractLabel(cwlFile);
-                if (label == null) {
-                    label = path;
-                }
-
-                // Return the constructed overview
-                return new WorkflowOverview(path, label, extractDoc(cwlFile));
-
-            } else {
-                return null;
+            if (input.contains("format")) {
+                String format = input.get("format").toString();
+                setFormat(wfInput, format);
             }
-        } else {
-            throw new IOException("File '" + githubInfo.getPath() +  "' is over singleFileSizeLimit - " +
-                    FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +
-                    FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
+            if (input.contains("label")) {
+                wfInput.setLabel(input.get("label").toString());
+            }
+            if (input.contains("doc")) {
+                wfInput.setDoc(input.get("doc").toString());
+            }
+            wfInputs.put(rdfService.labelFromName(inputName), wfInput);
         }
 
+        // Outputs
+        Map<String, CWLElement> wfOutputs = new HashMap<>();
+        ResultSet outputs = rdfService.getOutputs(gitPath, url);
+        while (outputs.hasNext()) {
+            QuerySolution output = outputs.nextSolution();
+            CWLElement wfOutput = new CWLElement();
+
+            String outputName = rdfService.stepNameFromURI(gitPath, output.get("name").toString());
+
+            // Array types
+            if (output.contains("type")) {
+                StmtIterator itr = output.get("type").asResource().listProperties();
+                if (itr.hasNext()) {
+                    while (itr.hasNext()) {
+                        Statement complexType = itr.nextStatement();
+                        if (complexType.getPredicate().toString()
+                                .equals("https://w3id.org/cwl/salad#items")) {
+                            if (wfOutputs.containsKey(outputName)
+                                    && wfOutputs.get(outputName).getType().equals("?")) {
+                                wfOutput.setType(typeURIToString(complexType.getObject().toString()) + "[]?");
+                            } else {
+                                wfOutput.setType(typeURIToString(complexType.getObject().toString()) + "[]");
+                            }
+                        }
+                    }
+                } else {
+                    // Standard types
+                    if (wfOutput.getType() != null && wfOutput.getType().equals("?")) {
+                        wfOutput.setType(typeURIToString(output.get("type").toString()) + "?");
+                    } else {
+                        wfOutput.setType(typeURIToString(output.get("type").toString()));
+                    }
+
+                    // Optional types
+                    if (output.get("type").toString().equals("https://w3id.org/cwl/salad#null")) {
+                        if (wfOutputs.containsKey(outputName)) {
+                            CWLElement outputInMap = wfOutputs.get(outputName);
+                            outputInMap.setType(outputInMap.getType() + "?");
+                        } else {
+                            wfOutput.setType("?");
+                        }
+                    }
+                }
+            }
+
+            if (output.contains("src")) {
+                wfOutput.addSourceID(rdfService.stepNameFromURI(gitPath,
+                        output.get("src").toString()));
+            }
+            if (output.contains("format")) {
+                String format = output.get("format").toString();
+                setFormat(wfOutput, format);
+            }
+            if (output.contains("label")) {
+                wfOutput.setLabel(output.get("label").toString());
+            }
+            if (output.contains("doc")) {
+                wfOutput.setDoc(output.get("doc").toString());
+            }
+            wfOutputs.put(rdfService.labelFromName(outputName), wfOutput);
+        }
+
+
+        // Steps
+        Map<String, CWLStep> wfSteps = new HashMap<>();
+        ResultSet steps = rdfService.getSteps(gitPath, url);
+        while (steps.hasNext()) {
+            QuerySolution step = steps.nextSolution();
+            String uri = rdfService.stepNameFromURI(gitPath, step.get("step").toString());
+            if (wfSteps.containsKey(uri)) {
+                // Already got step details, add extra source ID
+                if (step.contains("src")) {
+                    CWLElement src = new CWLElement();
+                    src.addSourceID(rdfService.stepNameFromURI(gitPath, step.get("src").toString()));
+                    wfSteps.get(uri).getSources().put(
+                            step.get("stepinput").toString(), src);
+                } else if (step.contains("default")) {
+                    CWLElement src = new CWLElement();
+                    src.setDefaultVal(rdfService.formatDefault(step.get("default").toString()));
+                    wfSteps.get(uri).getSources().put(
+                            step.get("stepinput").toString(), src);
+                }
+            } else {
+                // Add new step
+                CWLStep wfStep = new CWLStep();
+
+                Path workflowPath = Paths.get(step.get("wf").toString()).getParent();
+                Path runPath = Paths.get(step.get("run").toString());
+                wfStep.setRun(workflowPath.relativize(runPath).toString());
+                wfStep.setRunType(rdfService.strToRuntype(step.get("runtype").toString()));
+
+                if (step.contains("src")) {
+                    CWLElement src = new CWLElement();
+                    src.addSourceID(rdfService.stepNameFromURI(gitPath, step.get("src").toString()));
+                    Map<String, CWLElement> srcList = new HashMap<>();
+                    srcList.put(rdfService.stepNameFromURI(gitPath,
+                            step.get("stepinput").toString()), src);
+                    wfStep.setSources(srcList);
+                } else if (step.contains("default")) {
+                    CWLElement src = new CWLElement();
+                    src.setDefaultVal(rdfService.formatDefault(step.get("default").toString()));
+                    Map<String, CWLElement> srcList = new HashMap<>();
+                    srcList.put(rdfService.stepNameFromURI(gitPath,
+                            step.get("stepinput").toString()), src);
+                    wfStep.setSources(srcList);
+                }
+                if (step.contains("label")) {
+                    wfStep.setLabel(step.get("label").toString());
+                }
+                if (step.contains("doc")) {
+                    wfStep.setDoc(step.get("doc").toString());
+                }
+                wfSteps.put(rdfService.labelFromName(uri), wfStep);
+            }
+        }
+
+        // Docker link
+        ResultSet dockerResult = rdfService.getDockerLink(gitPath, url);
+        String dockerLink = null;
+        if (dockerResult.hasNext()) {
+            QuerySolution docker = dockerResult.nextSolution();
+            if (docker.contains("pull")) {
+                dockerLink = DockerService.getDockerHubURL(docker.get("pull").toString());
+            } else {
+                dockerLink = "true";
+            }
+        }
+
+        // Create workflow model
+        Workflow workflowModel = new Workflow(label, doc,
+                wfInputs, wfOutputs, wfSteps, dockerLink);
+
+        // Generate DOT graph
+        StringWriter graphWriter = new StringWriter();
+        RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService, gitPath);
+        try {
+            RDFDotWriter.writeGraph(url);
+            workflowModel.setVisualisationDot(graphWriter.toString());
+        } catch (IOException ex) {
+            logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
+        }
+
+
+        return workflowModel;
+
+    }
+
+    /**
+     * Set the format for an input or output, handling ontologies
+     * @param inputOutput The input or output CWL Element
+     * @param format The format URI
+     */
+    private void setFormat(CWLElement inputOutput, String format) {
+        inputOutput.setFormat(format);
+        try {
+            if (!rdfService.ontPropertyExists(format)) {
+                Model ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+                ontModel.read(format, null, "RDF/XML");
+                rdfService.addToOntologies(ontModel);
+            }
+            String formatLabel = rdfService.getOntLabel(format);
+            inputOutput.setType(inputOutput.getType() + " (" + formatLabel + ")");
+        } catch (RiotException ex) {
+            inputOutput.setType(inputOutput.getType() + " (format)");
+        }
+    }
+
+    /**
+     * Convert RDF URI for a type to a name
+     * @param uri The URI for the type
+     * @return The human readable name for that type
+     */
+    private String typeURIToString(String uri) {
+        switch (uri) {
+            case "http://www.w3.org/2001/XMLSchema#string":
+                return "String";
+            case "https://w3id.org/cwl/cwl#File":
+                return "File";
+            case "http://www.w3.org/2001/XMLSchema#boolean":
+                return "Boolean";
+            case "http://www.w3.org/2001/XMLSchema#int":
+                return "Integer";
+            case "http://www.w3.org/2001/XMLSchema#double":
+                return "Double";
+            case "http://www.w3.org/2001/XMLSchema#float":
+                return "Float";
+            case "http://www.w3.org/2001/XMLSchema#long":
+                return "Long";
+            case "https://w3id.org/cwl/cwl#Directory":
+                return "Directory";
+            default:
+                return uri;
+        }
     }
 
     /**
@@ -210,62 +488,36 @@ public class CWLService {
     }
 
     /**
-     * Fill the step runtypes based on types of other documents
-     * @param workflow The workflow model to set runtypes for
-     * @param packedFiles A map of ID to the json document for packed files
+     * Extract the label from a node
+     * @param node The node to have the label extracted from
+     * @return The string for the label of the node
      */
-    private void fillStepRunTypes(Workflow workflow, Map<String, JsonNode> packedFiles,
-                                  GithubDetails githubInfo, String latestCommit) throws IOException {
-        Map<String, JsonNode> cache = new HashMap<>();
-        Map<String, CWLStep> steps = workflow.getSteps();
-        for (CWLStep step : steps.values()) {
-            String runParam = step.getRun();
+    private String extractLabel(JsonNode node) {
+        if (node != null && node.has(LABEL)) {
+            return node.get(LABEL).asText();
+        }
+        return null;
+    }
 
-            // Run parameter for each step in the workflow
-            if (runParam != null) {
-                JsonNode runDoc = null;
-                if (runParam.startsWith("#")) {
-                    // Packed file ID, check packed files for the process type
-                    runDoc = packedFiles.get(runParam.substring(1));
-                    step.setRunType(extractProcess(runDoc));
-                } else {
-                    // External file path
-                    // Check that it is not outside of the repository
-                    String path = "root/" + FilenameUtils.getPath(githubInfo.getPath());
-                    Path filePath = Paths.get(path);
-                    filePath = filePath.resolve(runParam).normalize();
-                    if (filePath.startsWith("root/")) {
-                        // Download the file from the repository and parse it
-                        try {
-                            path = filePath.toString().substring(5);
-                            if (cache.containsKey(runParam)) {
-                                runDoc = cache.get(runParam);
-                                step.setRunType(extractProcess(runDoc));
-                            } else {
-                                GithubDetails runFile = new GithubDetails(githubInfo.getOwner(),
-                                        githubInfo.getRepoName(), latestCommit, path);
-                                String fileContent = githubService.downloadFile(runFile);
-                                runDoc = yamlStringToJson(fileContent);
-                                step.setRunType(extractProcess(runDoc));
-                                cache.put(runParam, runDoc);
-                            }
-                        } catch (IOException ex) {
-                            logger.info("Could not find run file from CWL step", ex);
-                        }
-                    }
-                }
-
-                // Set label/doc from linked document if none exists for step
-                if (runDoc != null) {
-                    if (step.getLabel() == null) {
-                        step.setLabel(extractLabel(runDoc));
-                    }
-                    if (step.getDoc() == null) {
-                        step.setDoc(extractDoc(runDoc));
-                    }
+    /**
+     * Extract the class parameter from a node representing a document
+     * @param rootNode The root node of a cwl document
+     * @return Which process this document represents
+     */
+    private CWLProcess extractProcess(JsonNode rootNode) {
+        if (rootNode != null) {
+            if (rootNode.has(CLASS)) {
+                switch(rootNode.get(CLASS).asText()) {
+                    case WORKFLOW:
+                        return CWLProcess.WORKFLOW;
+                    case COMMANDLINETOOL:
+                        return CWLProcess.COMMANDLINETOOL;
+                    case EXPRESSIONTOOL:
+                        return CWLProcess.EXPRESSIONTOOL;
                 }
             }
         }
+        return null;
     }
 
     /**
@@ -446,69 +698,6 @@ public class CWLService {
     }
 
     /**
-     * Get the docker link from a workflow node
-     * @param node The overall workflow node
-     * @return A string with a dockerhub or image link
-     */
-    private String getDockerLink(JsonNode node) {
-        if (node != null) {
-            if (node.has(REQUIREMENTS)) {
-                String dockerLink = extractDockerLink(node.get(REQUIREMENTS));
-                if (dockerLink != null) {
-                    return extractDockerLink(node.get(REQUIREMENTS));
-                }
-            }
-            if (node.has(HINTS)) {
-                String dockerLink = extractDockerLink(node.get(HINTS));
-                if (dockerLink != null) {
-                    return extractDockerLink(node.get(HINTS));
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get the docker link from a workflow hints or requriements node
-     * @param hintReq A hints or requirements node
-     * @return A string with a dockerhub or image link
-     */
-    private String extractDockerLink(JsonNode hintReq) {
-        // ArrayNode syntax using yaml lists
-        if (hintReq.getClass() == ArrayNode.class) {
-            for (JsonNode requirement : hintReq) {
-                if (requirement.has(CLASS)
-                        && requirement.get(CLASS).asText().equals(DOCKER_REQUIREMENT)) {
-                    if (requirement.has(DOCKER_PULL)) {
-                        // Format dockerPull string as a dockerhub URL
-                        return DockerService.getDockerHubURL(requirement.get(DOCKER_PULL).asText());
-                    } else {
-                        // Indicate that the docker requirement exists, but we cannot
-                        // provide a link to dockerhub as docker pull is not used
-                        return "true";
-                    }
-                }
-            }
-            // v1.0 object syntax with requirement class as key
-        } else if (hintReq.getClass() == ObjectNode.class) {
-            // Look for DockerRequirement
-            if (hintReq.has(DOCKER_REQUIREMENT)) {
-                JsonNode dockerReq = hintReq.get(DOCKER_REQUIREMENT);
-                if (dockerReq.has(DOCKER_PULL)) {
-                    // Format dockerPull string as a dockerhub URL
-                    String dockerPull = dockerReq.get(DOCKER_PULL).asText();
-                    return DockerService.getDockerHubURL(dockerPull);
-                } else {
-                    // Indicate that the docker requirement exists, but we cannot
-                    // provide a link to dockerhub as docker pull is not used
-                    return "true";
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
      * Extract the id from a node
      * @param node The node to have the id extracted from
      * @return The string for the id of the node
@@ -520,18 +709,6 @@ public class CWLService {
                 return id.substring(1);
             }
             return id;
-        }
-        return null;
-    }
-
-    /**
-     * Extract the label from a node
-     * @param node The node to have the label extracted from
-     * @return The string for the label of the node
-     */
-    private String extractLabel(JsonNode node) {
-        if (node != null && node.has(LABEL)) {
-            return node.get(LABEL).asText();
         }
         return null;
     }
@@ -702,24 +879,4 @@ public class CWLService {
         return null;
     }
 
-    /**
-     * Extract the class parameter from a node representing a document
-     * @param rootNode The root node of a cwl document
-     * @return Which process this document represents
-     */
-    private CWLProcess extractProcess(JsonNode rootNode) {
-        if (rootNode != null) {
-            if (rootNode.has(CLASS)) {
-                switch(rootNode.get(CLASS).asText()) {
-                    case WORKFLOW:
-                        return CWLProcess.WORKFLOW;
-                    case COMMANDLINETOOL:
-                        return CWLProcess.COMMANDLINETOOL;
-                    case EXPRESSIONTOOL:
-                        return CWLProcess.EXPRESSIONTOOL;
-                }
-            }
-        }
-        return null;
-    }
 }

@@ -19,9 +19,11 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.cwl.CWLValidationException;
+import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -35,11 +37,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -103,19 +100,22 @@ public class WorkflowControllerTest {
         WorkflowFormValidator mockValidator = Mockito.mock(WorkflowFormValidator.class);
         when(mockValidator.validateAndParse(anyObject(), anyObject()))
                 .thenReturn(null)
-                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/within"))
-                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/workflow.cwl"));
+                .thenReturn(new GitDetails("https://repo.url/repo.git", "branch", "path/within"))
+                .thenReturn(new GitDetails("https://repo.url/repo.git", "branch", "path/workflow.cwl"));
 
         // The eventual accepted valid workflow
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
         when(mockWorkflow.getRetrievedFrom())
-                .thenReturn(new GithubDetails("owner", "repoName", "branch", "path/workflow.cwl"));
+                .thenReturn(new GitDetails("https://repo.url/repo.git", "branch", "path/workflow.cwl"));
+        QueuedWorkflow mockQueuedWorkflow = Mockito.mock(QueuedWorkflow.class);
+        when(mockQueuedWorkflow.getTempRepresentation())
+                .thenReturn(mockWorkflow);
 
         // Mock workflow service returning valid workflow
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.createWorkflow(anyObject()))
-                .thenReturn(null)
-                .thenReturn(mockWorkflow);
+        when(mockWorkflowService.createQueuedWorkflow(anyObject()))
+                .thenThrow(new CWLValidationException("Error"))
+                .thenReturn(mockQueuedWorkflow);
 
         // Mock controller/MVC
         WorkflowController workflowController = new WorkflowController(
@@ -127,28 +127,22 @@ public class WorkflowControllerTest {
                 .build();
 
         // Error in validation, go to index to show error
-        mockMvc.perform(post("/")
-                .param("githubURL", "invalidurl"))
+        mockMvc.perform(post("/workflows")
+                .param("url", "invalidurl"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"));
 
-        // Valid directory URL redirect
-        mockMvc.perform(post("/")
-                .param("githubURL", "https://github.com/owner/repoName/tree/branch/path/within"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/workflows/github.com/owner/repoName/tree/branch/path/within"));
-
         // Invalid workflow URL, go to index to show error
-        mockMvc.perform(post("/")
-                .param("githubURL", "https://github.com/owner/repoName/tree/branch/path/nonexistant.cwl"))
+        mockMvc.perform(post("/workflows")
+                .param("url", "https://github.com/owner/repoName/tree/branch/path/nonexistant.cwl"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"));
 
         // Valid workflow URL redirect
-        mockMvc.perform(post("/")
-                .param("githubURL", "https://github.com/owner/repoName/tree/branch/path/workflow.cwl"))
+        mockMvc.perform(post("/workflows")
+                .param("url", "https://repo.url/repo.git/branch/path/workflow.cwl"))
                 .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/workflows/github.com/owner/repoName/tree/branch/path/workflow.cwl"));
+                .andExpect(redirectedUrl("/workflows/repo.url/repo.git/branch/path/workflow.cwl"));
 
     }
 
@@ -159,16 +153,16 @@ public class WorkflowControllerTest {
     public void directWorkflowURL() throws Exception {
 
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
-        Workflow mockWorkflow2 = Mockito.mock(Workflow.class);
+        QueuedWorkflow mockQueuedWorkflow = Mockito.mock(QueuedWorkflow.class);
 
         // Mock service
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getWorkflow(Matchers.<GithubDetails>anyObject()))
+        when(mockWorkflowService.getWorkflow(Matchers.<GitDetails>anyObject()))
                 .thenReturn(mockWorkflow)
                 .thenReturn(null);
-        when(mockWorkflowService.createWorkflow(anyObject()))
-                .thenReturn(mockWorkflow2)
-                .thenReturn(null);
+        when(mockWorkflowService.createQueuedWorkflow(anyObject()))
+                .thenReturn(mockQueuedWorkflow)
+                .thenThrow(new RefNotFoundException("A Git API Error"));
 
         // Mock controller/MVC
         WorkflowController workflowController = new WorkflowController(
@@ -185,84 +179,15 @@ public class WorkflowControllerTest {
                 .andExpect(view().name("workflow"))
                 .andExpect(model().attribute("workflow", is(mockWorkflow)));
 
-        // Workflow needs to be created
+        // Workflow needs to be created, loading page
         mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within/workflow.cwl"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("workflow"))
-                .andExpect(model().attribute("workflow", is(mockWorkflow2)));
+                .andExpect(view().name("loading"))
+                .andExpect(model().attribute("queued", is(mockQueuedWorkflow)));
 
         // Error creating workflow
         mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within/badworkflow.cwl"))
-                .andExpect(status().isFound())
-                .andExpect(flash().attributeExists("errors"))
-                .andExpect(redirectedUrl("/?url=https://github.com/owner/reponame/tree/branch/path/within/badworkflow.cwl"));
-
-    }
-
-    /**
-     * Displaying directories of workflows
-     */
-    @Test
-    public void directDirectoryURL() throws Exception {
-
-        // Workflow overviews for testing
-        WorkflowOverview overview1 = new WorkflowOverview("workflow1.cwl", "label1", "doc1");
-        WorkflowOverview overview2 = new WorkflowOverview("workflow2.cwl", "label2", "doc2");
-
-        // Mock service to return these overviews
-        WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getWorkflowsFromDirectory(anyObject()))
-                .thenReturn(new ArrayList<>())
-                .thenReturn(new ArrayList<>(Arrays.asList(overview1)))
-                .thenReturn(new ArrayList<>(Arrays.asList(overview1, overview2)))
-                .thenReturn(new ArrayList<>(Arrays.asList(overview1, overview2)))
-                .thenThrow(new IOException("Error getting contents"));
-
-        // Mock controller/MVC
-        WorkflowController workflowController = new WorkflowController(
-                Mockito.mock(WorkflowFormValidator.class),
-                mockWorkflowService,
-                Mockito.mock(GraphVizService.class));
-        MockMvc mockMvc = MockMvcBuilders
-                .standaloneSetup(workflowController)
-                .build();
-
-        // No workflows in directory, redirect with errors
-        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within"))
-                .andExpect(status().isFound())
-                .andExpect(flash().attributeExists("errors"))
-                .andExpect(redirectedUrl("/?url=https://github.com/owner/reponame/tree/branch/path/within"));
-
-        // 1 workflow in directory, redirect to it
-        mockMvc.perform(get("/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/workflows/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/workflow1.cwl"));
-
-        // Multiple workflows in directory, show list
-        mockMvc.perform(get("/workflows/github.com/common-workflow-language/workflows/tree/visu/workflows/scidap"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("selectworkflow"))
-                .andExpect(model().attribute("githubDetails", allOf(
-                        hasProperty("owner", is("common-workflow-language")),
-                        hasProperty("repoName", is("workflows")),
-                        hasProperty("branch", is("visu")),
-                        hasProperty("path", is("workflows/scidap"))
-                )))
-                .andExpect(model().attribute("workflowOverviews",
-                        containsInAnyOrder(overview1, overview2)));
-
-        // Workflows at the base of a repository
-        mockMvc.perform(get("/workflows/github.com/genome/arvados_trial/tree/master"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("selectworkflow"))
-                .andExpect(model().attribute("githubDetails",
-                        hasProperty("path", is("/"))));
-
-        // Error getting contents of Github directory, redirect with errors
-        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within"))
-                .andExpect(status().isFound())
-                .andExpect(flash().attributeExists("errors"))
-                .andExpect(redirectedUrl("/?url=https://github.com/owner/reponame/tree/branch/path/within"));
+                .andExpect(status().isFound());
 
     }
 
@@ -274,7 +199,7 @@ public class WorkflowControllerTest {
 
         // Mock service to return a bundle file and then throw ROBundleNotFoundException
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getROBundle(anyString()))
+        when(mockWorkflowService.getROBundle(anyObject()))
                 .thenReturn(roBundleFolder.newFile("bundle.zip").getAbsoluteFile())
                 .thenThrow(new ROBundleNotFoundException());
 
@@ -288,12 +213,12 @@ public class WorkflowControllerTest {
                 .build();
 
         // Bundle exists and can be downloaded
-        mockMvc.perform(get("/workflows/workflowid/download"))
+        mockMvc.perform(get("/robundle/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/vnd.wf4ever.robundle+zip"));
 
         // Bundle does not exist, 404 error
-        mockMvc.perform(get("/workflows/workflowid/download"))
+        mockMvc.perform(get("/robundle/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isNotFound());
 
     }
@@ -307,7 +232,7 @@ public class WorkflowControllerTest {
         // Mock service to return mock workflow
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getWorkflow(anyString()))
+        when(mockWorkflowService.getWorkflow(Mockito.any(GitDetails.class)))
                 .thenReturn(mockWorkflow)
                 .thenReturn(null)
                 .thenReturn(mockWorkflow)
@@ -332,30 +257,30 @@ public class WorkflowControllerTest {
                 .build();
 
         // Image exists and can be downloaded
-        mockMvc.perform(get("/workflows/workflowid/graph/svg"))
+        mockMvc.perform(get("/graph/svg/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("image/svg+xml"));
 
         // Image does not exist, 404 error
-        mockMvc.perform(get("/workflows/workflowid/graph/svg"))
+        mockMvc.perform(get("/graph/svg/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isNotFound());
 
         // Image exists and can be downloaded
-        mockMvc.perform(get("/workflows/workflowid/graph/png"))
+        mockMvc.perform(get("/graph/png/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("image/png"));
 
         // Image does not exist, 404 error
-        mockMvc.perform(get("/workflows/workflowid/graph/png"))
+        mockMvc.perform(get("/graph/png/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isNotFound());
 
         // Image exists and can be downloaded
-        mockMvc.perform(get("/workflows/workflowid/graph/xdot"))
+        mockMvc.perform(get("/graph/xdot/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("text/vnd.graphviz"));
 
         // Image does not exist, 404 error
-        mockMvc.perform(get("/workflows/workflowid/graph/xdot"))
+        mockMvc.perform(get("/graph/xdot/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isNotFound());
 
     }

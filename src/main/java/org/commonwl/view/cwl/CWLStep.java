@@ -19,11 +19,14 @@
 
 package org.commonwl.view.cwl;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.Map;
 
 /**
  * Represents a step of a workflow
  */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CWLStep {
 
     private String label;
@@ -31,6 +34,9 @@ public class CWLStep {
     private String run;
     private CWLProcess runType;
     private Map<String, CWLElement> sources;
+
+    public CWLStep() {
+    }
 
     public CWLStep(String label, String doc, String run,
                    Map<String, CWLElement> sources) {
@@ -74,6 +80,10 @@ public class CWLStep {
 
     public Map<String, CWLElement> getSources() {
         return sources;
+    }
+
+    public void setSources(Map<String, CWLElement> sources) {
+        this.sources = sources;
     }
 
 }

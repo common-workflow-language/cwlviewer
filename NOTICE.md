@@ -76,6 +76,12 @@ For more information regarding the authorized uses of these items please [contac
 
 -----------
 
+# Git logo
+img/gitlogo.png
+Git Logo by Jason Long is licensed under the [Creative Commons Attribution 3.0 Unported License](https://creativecommons.org/licenses/by/3.0/)
+
+-----------
+
 # European Union flag
 img/Flag_of_Europe.svg
 Public Domain
@@ -170,4 +176,12 @@ https://github.com/ariutta/svg-pan-zoom
 
 [BSD 2-clause license](src/main/resources/static/bower_components/svg-pan-zoom/LICENSE)
 
------------
+----------
+
+# highlight.js
+bower_components/highlightjs
+https://highlightjs.org/
+
+[BSD 3-clause license](src/main/resources/static/bower_components/highlightjs/LICENSE)
+
+

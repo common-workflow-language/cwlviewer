@@ -19,12 +19,11 @@ provide a [pull request](https://github.com/common-workflow-language/cwlviewer/p
 or join the [gitter chat for common-workflow-language](https://gitter.im/common-workflow-language/common-workflow-language)!
 
 
-## Running with Docker
+## Recommended - Running with Docker
 
 This application can be started with [Docker](https://www.docker.com/).
 
-If you have [Docker Compose](https://docs.docker.com/compose/install/), then to start
-MongoDB and CWLViewer exposed on port `8080`, run:
+If you have [Docker Compose](https://docs.docker.com/compose/install/), then to start CWLViewer exposed on port `8080`, run:
 
     docker-compose up
 
@@ -42,7 +41,6 @@ services:
     build: .
 ```
 
-
 See the [docker-compose.yml](docker-compose.yml) file for details.
 
 If you don't want to use Docker Compose, you can do the equivalent manually with `docker`
@@ -51,67 +49,33 @@ and the [commonworkflowlanguage/cwlviewer](https://hub.docker.com/r/commonworkfl
     docker run --name cwlviewer-mongo -p 27017:27017 -d mongo
     docker run --name cwlviewer -p 8080:8080 --link cwlviewer-mongo:mongo -d commonworkflowlanguage/cwlviewer
     docker logs -f cwlviewer
+    
+    
+**WARNING**: Please ensure that your MongoDB installation is not exposed to the world on port `27017`
 
 If you have modified the source code, then you may want to build the docker image locally first:
 
     docker build -t commonworkflowlanguage/cwlviewer .
 
+## Running without Docker
 
-## Requirement: MongoDB
+### Requirements
+
+#### MongoDB
 
 You will need to have [MongoDB](https://www.mongodb.com/) running,
-by default on `localhost:27017`.
+by default on `localhost:27017`
 
 If you are running from the command line, you can override this by supplying
 system properties like `-Dspring.data.mongodb.host=mongo.example.org` and
 `-Dspring.data.mongodb.port=1337`
 
-If you have Docker, but are not using the Docker Compose method above,
-you may start MongoDB with [Docker](https://www.docker.com/) using:
+#### Apache Jena Fuseki (or alternative SPARQL server)
 
-    docker run --name cwlviewer-mongo -p 27017:27017 -d mongo
+You will also need to have a SPARQL server such as [Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) running, 
+by default on `localhost:3030`
 
-**WARNING**: The above expose mongodb to the world on port `27017`.
-
-## Configuration
-
-There are a variety of configuration options detailed in the [application configuration file](https://github.com/common-workflow-language/cwlviewer/blob/master/src/main/resources/application.properties) which can be adjusted.
-
-When deploying with docker, these can be overriden externally by creating/modifying `docker-compose.override.yml` as follows:
-
-```yaml
-version: '2'
-services:
-  spring:
-    environment:
-            githubAPI.authentication: oauth
-            githubAPI.oauthToken: abcdefghhijklmnopqrstuvwxyz
-```
-
-The properties can alternatively be provided as system properties on the
-command line, e.g. `-DgithubAPI.authentication=oauth`
-`-DgithubAPI.oauthToken=abcdefghhijklmnopqrstuvwxyz` or via a [variety of other methods supported by Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html)
-
-### Github API
-
-If you run cwlviewer in production, you are likely to hit the GitHub API's rate limit of 60 requests/hr. This can be increased to 5000 requests/hr by using authentication (either basic or OAuth) by setting the `githubAPI.authentication` and either `githubAPI.oauthToken` or both `githubAPI.username` and `githubAPI.password` in the [application configuration file](https://github.com/common-workflow-language/cwlviewer/blob/master/src/main/resources/application.properties) depending on the method.
-
-OAuth tokens can be obtained using the [Github authorizations API](https://developer.github.com/v3/oauth_authorizations/).
-
-## Private Repositories
-
-If you wish to use cwlviewer to view private Github repositories, set
-
-```
-githubAPI.useForDownloads = true
-singleFileSizeLimit = 1048575
-```
-
-Along with an authentication method which has the privileges necessary to access the repository (see above).
-
-**WARNING**: This uses the [Github Contents API](https://developer.github.com/v3/repos/contents/) to download files instead of [Rawgit](https://rawgit.com/) which will increase API calls significantly.
-
-## Building and Running
+## Compiling and Running
 
 To compile you will need [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html) or OpenJDK 8 (`apt install openjdk-8-jdk`),
 as well as [Apache Maven 3](https://maven.apache.org/download.cgi) (`apt install maven`).
@@ -144,6 +108,25 @@ org.researchobject.CwlViewerApplication  : Started CwlViewerApplication in 28.60
 ```
 
 Now check out http://localhost:8080/ to access CWL Viewer.
+
+## Configuration
+
+There are a variety of configuration options detailed in the [application configuration file](https://github.com/common-workflow-language/cwlviewer/blob/master/src/main/resources/application.properties) which can be adjusted.
+
+When deploying with docker, these can be overriden externally by creating/modifying `docker-compose.override.yml` as follows:
+
+```yaml
+version: '2'
+services:
+  spring:
+    environment:
+            githubAPI.authentication: oauth
+            githubAPI.oauthToken: abcdefghhijklmnopqrstuvwxyz
+```
+
+The properties can alternatively be provided as system properties on the
+command line, e.g. `-DgithubAPI.authentication=oauth`
+`-DgithubAPI.oauthToken=abcdefghhijklmnopqrstuvwxyz` or via a [variety of other methods supported by Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html)
 
 # Thanks
 

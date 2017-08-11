@@ -23,8 +23,8 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Common Workflow Language Viewer</title>
-        <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170616.css}" href="../static/css/main-20170616.css" />
         <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170616.css}" href="../static/css/main-20170616.css" />
     </head>
     <body>
 
@@ -36,38 +36,54 @@
                     <h1>Explore Workflows</h1>
                     <p>View already parsed workflows here or <a href="/" alt="homepage">click here to add your own</a></p>
 
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th style="width: 40%;">Graph</th>
-                                <th>Name</th>
-                                <th>Retrieved From</th>
-                                <th>View</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="workflow : ${workflows}" th:with="workflowURL=@{'/workflows/github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch}}">
-                                <td>
-                                    <a th:href="${workflow.retrievedFrom.path == null} ? ${workflowURL} : ${workflowURL + '/' + workflow.retrievedFrom.path}">
-                                        <img class="workflow-thumb" th:src="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" alt="workflow graph" />
-                                    </a>
-                                </td>
-                                <td>
-                                    <span th:text="${workflow.label}">Name</span>
-                                    <p><i th:text="${workflow.doc}">Description</i></p>
-                                </td>
-                                <td>
-                                    <a th:href="@{${workflow.retrievedFrom.getURL()}}" rel="noopener" target="_blank">
-                                        <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="20" height="20" />
-                                        <span th:if="${workflow.retrievedFrom.path != null}" th:text="@{${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/' + ${workflow.retrievedFrom.path}}">https://github.com</span>
-                                        <span th:unless="${workflow.retrievedFrom.path != null}" th:text="@{${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/'}">https://github.com</span>
-                                    </a>
-                                    <p>Branch/Commit ID: <i th:text="${workflow.retrievedFrom.branch}">master</i></p>
-                                </td>
-                                <td><a th:href="${workflow.retrievedFrom.path == null} ? ${workflowURL} : ${workflowURL + '/' + workflow.retrievedFrom.path}"><span class="icon-view glyphicon glyphicon-chevron-right"></span></a></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <form action="/workflows" method="GET">
+                        <div class="input-group">
+                            <input type="text" name="search" th:value="${search}" class="form-control" placeholder="Search in label or doc..." />
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="submit">Search</button>
+                            </span>
+                        </div>
+                    </form>
+
+                    <div th:unless="${#strings.isEmpty(search)}">
+                        <h3>Showing results for "<span th:text="${search}">query</span>" <a href="/workflows">(Show all)</a></h3>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40%;">Graph</th>
+                                    <th>Name</th>
+                                    <th>Retrieved From</th>
+                                    <th>View</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="workflow : ${workflows}">
+                                    <td>
+                                        <a th:href="@{${workflow.retrievedFrom.getInternalUrl()}}">
+                                            <img class="workflow-thumb" th:src="@{${workflow.getVisualisationSvg()}}" alt="workflow graph" />
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span th:text="${workflow.label}">Name</span>
+                                        <p><i th:text="${workflow.doc}">Description</i></p>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{${workflow.retrievedFrom.getUrl()}}" rel="noopener" target="_blank">
+                                            <img th:if="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="20" height="20" />
+                                            <img th:unless="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/gitlogo.png" th:src="@{/img/gitlogo.png}" width="24" height="24" />
+                                            <span th:text="@{${workflow.retrievedFrom.repoUrl}}">https://github.com/test/test2/repo.git</span>
+                                        </a>
+                                        <p th:if="${workflow.retrievedFrom.path != null}">Path: <i th:text="${workflow.retrievedFrom.path}">/path/to/workflow.cwl</i></p>
+                                        <p>Branch/Commit ID: <i th:text="${workflow.retrievedFrom.branch}">master</i></p>
+                                    </td>
+                                    <td><a th:href="@{${workflow.retrievedFrom.getInternalUrl()}}"><span class="icon-view glyphicon glyphicon-chevron-right"></span></a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <nav th:replace="fragments/pagination :: workflowControl"></nav>
 

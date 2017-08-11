@@ -19,22 +19,26 @@
 
 package org.commonwl.view.cwl;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Represents the input/output of a workflow/tool
  */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CWLElement {
 
     private String label;
     private String doc;
     private String type;
+    private String format;
     private List<String> sourceID;
     private String defaultVal;
 
     public CWLElement() {
-        this.sourceID = new ArrayList<String>();
+        this.sourceID = new ArrayList<>();
     }
 
     public String getLabel() {
@@ -59,6 +63,22 @@ public class CWLElement {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    public List<String> getSourceID() {
+        return sourceID;
+    }
+
+    public void setSourceID(List<String> sourceID) {
+        this.sourceID = sourceID;
     }
 
     public List<String> getSourceIDs() {

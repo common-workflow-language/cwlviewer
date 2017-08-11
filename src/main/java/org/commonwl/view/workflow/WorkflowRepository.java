@@ -19,7 +19,7 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.git.GitDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -34,13 +34,21 @@ public interface WorkflowRepository extends PagingAndSortingRepository<Workflow,
      * @param retrievedFrom Details of where the workflow is from
      * @return The workflow model
      */
-    Workflow findByRetrievedFrom(GithubDetails retrievedFrom);
+    Workflow findByRetrievedFrom(GitDetails retrievedFrom);
 
     /**
-     * Paged request to get all workflows
+     * Paged request to get workflows of a specific status
      * @param pageable The details of the page to be retrieved
      * @return The requested page of workflows
      */
     Page<Workflow> findAllByOrderByRetrievedOnDesc(Pageable pageable);
 
+
+    /**
+     * Finds successful workflows where a string is within the label or doc
+     * @param label The string to search for in the label
+     * @param doc The string to search for in the doc
+     * @param pageable The details of the page to be retrieved
+     */
+    Page<Workflow> findByLabelContainingOrDocContainingIgnoreCase(String label, String doc, Pageable pageable);
 }

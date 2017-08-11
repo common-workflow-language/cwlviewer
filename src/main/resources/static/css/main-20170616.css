@@ -21,8 +21,44 @@ body {
     padding-top: 61px;
 }
 
-.hide {
+.alert > pre {
+    border: 0;
+    background-color: transparent;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -o-pre-wrap;
+    word-wrap: break-word;
+    color: #a94442;
+}
+
+.navbar-nav > li > a {
+    padding-top: 20px;
+}
+
+#loadingWorkflow {
+    opacity: 0.3;
+    max-height: 500px;
+    max-width: 100%;
+}
+
+.loadingWorkflowContainer {
+    position: relative;
+    min-height: 220px;
+}
+
+#loadingSpinner, #loadingSuccess, #loadingFail {
+    position: absolute;
+    top: calc(50% - 100px);
+    left: calc(50% - 100px);
+    z-index: 99;
+}
+
+.hide, #cwltooldetails, #loadingSuccess, #loadingFail {
     display: none;
+}
+
+#loadingWarning {
+    margin-top: 10px;
 }
 
 :target {
@@ -44,13 +80,18 @@ body {
     padding-top: 20px;
 }
 
-#githubURL {
-    background: url("/img/GitHub-Mark-32px.png") no-repeat scroll 7px 4px;
-    background-size: 25px 25px;
+#url {
+    background: url("/img/gitlogo.png") no-repeat scroll 4px 1px;
+    background-size: 30px 30px;
     padding-left: 45px;
 }
 
-#githubLogo {
+#extraInputs {
+    display:none;
+    margin-top:10px;
+}
+
+#gitLogo {
     margin-right: 5px;
 }
 
@@ -184,6 +225,23 @@ body {
     color: #c30000;
 }
 
+.method {
+    color: white;
+    border-radius: 5px 5px 0px 0px;
+    padding: 2px 5px;
+}
+.method.get {
+    background-color: green;
+}
+.method.post {
+    background-color: #4070ec;
+}
+.method.delete {
+    background-color: #ed0039;
+}
+.method.put {
+    background-color: #e5c500;
+}
 
 .legend {
     list-style: none;
@@ -203,6 +261,10 @@ body {
 .legend .nestedworkflows { background-color: #F3CEA1; }
 .legend .defaults { background-color: #D5AEFC; }
 .legend .selectednode { background-color: #B9FFBB; }
+
+.recommendation {
+    font-weight: bold;
+}
 
 tr.selected, .table-hover tbody tr.selected:hover td, .table-hover tbody tr.selected:hover th {
     background-color: #b9ffbb !important;

@@ -19,16 +19,15 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.github.GitHubService;
-import org.commonwl.view.github.GithubDetails;
+import org.commonwl.view.git.GitDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 
-import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Runs validation on the workflow form from the main page
@@ -38,50 +37,53 @@ public class WorkflowFormValidator {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    /**
-     * Github API service
-     */
-    private final GitHubService githubService;
+    // URL validation for cwl files on Github
+    private static final String GITHUB_CWL_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
+    private static final Pattern githubCwlPattern = Pattern.compile(GITHUB_CWL_REGEX);
 
-    @Autowired
-    public WorkflowFormValidator(GitHubService githubService) {
-        this.githubService = githubService;
-    }
+    // URL validation for cwl files on Gitlab
+    private static final String GITLAB_CWL_REGEX = "^https?:\\/\\/gitlab\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
+    private static final Pattern gitlabCwlPattern = Pattern.compile(GITLAB_CWL_REGEX);
+
+    // Git URL validation
+    private static final String GIT_REPO_REGEX = "^((git|ssh|http(s)?)|(git@[\\w\\.]+))(:(//)?)([\\w\\.@\\:/\\-~]+)(\\.git)(/)?$";
+    private static final Pattern gitRepoPattern = Pattern.compile(GIT_REPO_REGEX);
 
     /**
      * Validates a WorkflowForm to ensure the URL is not empty and links to a cwl file
      * @param form The given WorkflowForm
      * @param e Any errors from validation
      */
-    public GithubDetails validateAndParse(WorkflowForm form, Errors e) {
-        ValidationUtils.rejectIfEmptyOrWhitespace(e, "githubURL", "githubURL.emptyOrWhitespace");
+    public GitDetails validateAndParse(WorkflowForm form, Errors e) {
+        ValidationUtils.rejectIfEmptyOrWhitespace(e, "url", "url.emptyOrWhitespace");
 
         // If not null and isn't just whitespace
         if (!e.hasErrors()) {
-            // Check for valid CWL file
-            GithubDetails githubInfo = githubService.detailsFromFileURL(form.getGithubURL());
-            if (githubInfo != null) {
-                try {
-                    // Downloads the workflow file to check for existence
-                    if (githubService.downloadFile(githubInfo) != null) {
-                        return githubInfo;
-                    }
-                } catch (IOException ex) {
-                    logger.error("Given URL " + form.getGithubURL() + " was not a .cwl file");
-                    e.rejectValue("githubURL", "githubURL.missingWorkflow", "Workflow was not found at the given Github URL");
-                }
-            } else {
-                // Check for valid Github directory
-                githubInfo = githubService.detailsFromDirURL(form.getGithubURL());
-                if (githubInfo != null) {
-                   return githubInfo;
-                } else {
-                    logger.error("The Github URL " + form.getGithubURL() + " is not valid");
-                    e.rejectValue("githubURL", "githubURL.invalid", "You must enter a valid Github URL to a .cwl file");
+
+            // Github URL
+            Matcher m = githubCwlPattern.matcher(form.getUrl());
+            if (m.find()) {
+                String repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                return new GitDetails(repoUrl, m.group(3), m.group(4));
+            }
+
+            // Gitlab URL
+            m = gitlabCwlPattern.matcher(form.getUrl());
+            if (m.find()) {
+                String repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                return new GitDetails(repoUrl, m.group(3), m.group(4));
+            }
+
+            // General Git details if didn't match the above
+            ValidationUtils.rejectIfEmptyOrWhitespace(e, "branch", "branch.emptyOrWhitespace");
+            ValidationUtils.rejectIfEmptyOrWhitespace(e, "path", "path.emptyOrWhitespace");
+            if (!e.hasErrors()) {
+                m = gitRepoPattern.matcher(form.getUrl());
+                if (m.find()) {
+                    return new GitDetails(form.getUrl(), form.getBranch(), form.getPath());
                 }
             }
-        } else {
-            logger.error("Github URL is empty");
+
         }
 
         // Errors will stop this being used anyway

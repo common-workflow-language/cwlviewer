@@ -27,7 +27,7 @@
     <meta name="twitter:title" th:content="${'CWL Workflow: ' + workflow.label}" />
     <meta name="twitter:description" th:if="${workflow.doc != null}" th:content="${workflow.doc}" />
     <meta name="twitter:image" th:content="${appURL + '/workflows/' + workflow.id + '/graph/png'}" />
-    <title>Common Workflow Language Viewer</title>
+    <title th:text="${workflow.label + ' - Common Workflow Language Viewer'}">Common Workflow Language Viewer</title>
     <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170616.css}" href="../static/css/main-20170616.css" />
 </head>
@@ -45,7 +45,7 @@
             </div>
             <div class="modal-body">
                 <h4 id="modalTitle">Dot File Source:</h4>
-<textarea id="dot" class="form-control" rows="15" th:field="${workflow.dotGraph}">
+<textarea id="dot" class="form-control" rows="15" th:field="${workflow.visualisationDot}">
 digraph G {
     graph [
         bgcolor="#eeeeee"
@@ -97,7 +97,7 @@ digraph G {
 </textarea>
                 <a id="download-link-dot" href="" download="workflow.dot"></a>
                 <button id="download-dot" class="btn btn-primary" type="button">Download dot File</button>
-                <a th:href="@{'/workflows/' + ${workflow.id} + '/graph/xdot'}" href="#" download="graph.dot" class="btn btn-primary" type="button">Download xdot File</a>
+                <a th:href="@{${workflow.getVisualisationXdot()}}" href="#" download="graph.dot" class="btn btn-primary" type="button">Download xdot File</a>
             </div>
         </div>
     </div>
@@ -113,8 +113,8 @@ digraph G {
             </div>
             <div class="modal-body">
                 <span id="fullscreen-close" data-dismiss="modal" class="close glyphicon glyphicon-resize-small graphControl" data-tooltip="true" title="Close"></span>
-                <object id="graphFullscreen" th:data="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" type="image/svg+xml">
-                    <img th:src="@{'/workflows/' + ${workflow.id} + '/graph/png'}" alt="fullscreen" />
+                <object id="graphFullscreen" th:data="@{${workflow.getVisualisationSvg()}}" type="image/svg+xml">
+                    <img th:src="@{${workflow.getVisualisationPng()}}" alt="fullscreen" />
                 </object>
             </div>
         </div>
@@ -125,18 +125,24 @@ digraph G {
     <div class="row">
         <div class="col-md-12" role="main" id="main">
             <h2>Workflow: <span th:text="${workflow.label}">Workflow Name</span></h2>
-            <p>
-                <a th:href="@{${workflow.retrievedFrom.getURL()}}" href="#" rel="noopener" target="_blank">
-                    <img id="githubLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
-                </a>
-                <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
-                <span th:if="${workflow.roBundle == null}" id="ajaxRequired"></span>
-                <span th:class="${workflow.roBundle != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
-                <span th:class="${workflow.roBundle == null} ? hide : ''" id="generated">
-                    - <a th:href="@{'/workflows/' + ${workflow.id} + '/download'}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
+        </div>
+        <div class="col-md-6">
+            <a th:href="@{${workflow.retrievedFrom.getUrl()}}" href="#" rel="noopener" target="_blank" style="text-decoration:none;">
+                <img th:if="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
+                <img th:unless="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/gitlogo.png" th:src="@{/img/gitlogo.png}" width="30" height="30" />
+            </a>
+        <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
+                <span th:if="${workflow.roBundlePath == null}" id="ajaxRequired"></span>
+            <span th:class="${workflow.roBundlePath != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
+            <span th:class="${workflow.roBundlePath == null} ? hide : ''" id="generated">
+                    - <a th:href="@{${workflow.getRoBundleLink()}}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
                     <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>
                 </span>
-            </p>
+        </div>
+        <div class="col-md-6 text-right">
+            <img class="verification_icon" src="../static/img/tick.svg" th:src="@{/img/tick.svg}" width="20" height="22" /> Verified with cwltool version <span th:text="${workflow.cwltoolVersion}">1.0.20170622090721</span>
+        </div>
+        <div class="col-md-12" style="margin-top:5px;" th:if="${workflow.doc != null}">
             <p th:text="${workflow.doc}">Workflow Doc</p>
         </div>
     </div>
@@ -150,8 +156,8 @@ digraph G {
                         Download Image <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a id="download-graph" th:href="@{'/workflows/' + ${workflow.id} + '/graph/svg'}" download="graph.svg">As .svg</a></li>
-                        <li><a id="download-graph" th:href="@{'/workflows/' + ${workflow.id} + '/graph/png'}" download="graph.png">As .png</a></li>
+                        <li><a id="download-graph" th:href="@{${workflow.getVisualisationSvg()}}" download="graph.svg">As .svg</a></li>
+                        <li><a id="download-graph" th:href="@{${workflow.getVisualisationPng()}}" download="graph.png">As .png</a></li>
                     </ul>
                 </div>
             </div>
@@ -163,7 +169,7 @@ digraph G {
                 <span id="fullscreen-open" data-toggle="modal" data-target="#fullScreenGraphModal" data-tooltip="true" class="glyphicon glyphicon-resize-full graphControl" title="Expand"></span>
                 <img id="selectChildren" class="graphControl" th:src="@{/img/children-logo.svg}" src="../static/img/children-logo.svg" alt="children" data-tooltip="true" title="Select All Children" />
                 <img id="selectParents" class="graphControl" th:src="@{/img/parents-logo.svg}" src="../static/img/parents-logo.svg" alt="parents" data-tooltip="true" title="Select All Parents" />
-                <div id="graph" data-th-attr="data-svgurl=@{'/workflows/' + ${workflow.id} + '/graph/svg'}"></div>
+                <div id="graph" data-th-attr="data-svgurl=@{${workflow.getVisualisationSvg()}}"></div>
             </div>
             <ul class="legend">
                 <li><span class="selectednode"></span> Selected</li>
@@ -185,81 +191,93 @@ digraph G {
                 <p>There are no inputs in this workflow</p>
             </div>
             <div th:unless="${workflow.inputs.isEmpty()}">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <th>ID</th>
-                        <th>Type</th>
-                        <th>Label</th>
-                        <th>Doc</th>
-                    </thead>
-                    <tbody>
-                        <tr th:each="input : ${workflow.inputs}">
-                            <td th:text="${input.key}">ID</td>
-                            <td th:text="${input.value.type}">Type</td>
-                            <td th:text="${input.value.label}">Label</td>
-                            <td>
-                                <p th:if="${input.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(input.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Label</th>
+                            <th>Doc</th>
+                        </thead>
+                        <tbody>
+                            <tr th:each="input : ${workflow.inputs}">
+                                <td th:text="${input.key}">ID</td>
+                                <td>
+                                    <a th:if="${input.value.format != null}" th:href="@{${input.value.format}}" th:text="${input.value.type}" target="_blank" rel="noopener">Type</a>
+                                    <span th:if="${input.value.format == null}" th:text="${input.value.type}"></span>
+                                </td>
+                                <td th:text="${input.value.label}">Label</td>
+                                <td>
+                                    <p th:if="${input.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(input.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <h2>Steps</h2>
             <div th:if="${workflow.steps.isEmpty()}" class="alert alert-info">
                 <p>There are no steps in this workflow</p>
             </div>
             <div th:unless="${workflow.steps.isEmpty()}">
-                <table class="table table-striped table-hover">
-                    <thead>
-                    <th>ID</th>
-                    <th>Runs</th>
-                    <th>Label</th>
-                    <th>Doc</th>
-                    </thead>
-                    <tbody>
-                    <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{'/workflows/github.com/' + ${workflow.retrievedFrom.owner} + '/' + ${workflow.retrievedFrom.repoName} + '/tree/' + ${workflow.retrievedFrom.branch}}">
-                        <td th:text="${step.key}">ID</td>
-                        <td>
-                            <div th:if="${step.value.runType != null}">
-                                <a th:if="${step.value.runType.name() == 'WORKFLOW'}" th:href="${step.value.run}" th:text="${step.value.run}">workflow.cwl</a>
-                                <span th:unless="${step.value.runType.name() == 'WORKFLOW'}" th:text="${step.value.run}">cmdlinetool.cwl</span>
-                                (<span th:text="${step.value.runType}">Workflow</span>)
-                            </div>
-                            <div th:if="${step.value.run != null and step.value.runType == null}">
-                                <span th:text="${step.value.run} + ' (?)'" class="notFound" data-tooltip="true" title="Not Found - Must be somewhere within this repository">workflow.cwl (?)</span>
-                            </div>
-                        </td>
-                        <td th:text="${step.value.label}">Label</td>
-                        <td>
-                            <p th:if="${step.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(step.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                        <th>ID</th>
+                        <th>Runs</th>
+                        <th>Label</th>
+                        <th>Doc</th>
+                        </thead>
+                        <tbody>
+                        <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{${workflow.retrievedFrom.getUrl()}}">
+                            <td th:text="${step.key}">ID</td>
+                            <td>
+                                <div th:if="${step.value.runType != null}">
+                                    <a th:if="${step.value.runType.name() == 'WORKFLOW'}" th:href="${step.value.run}" th:text="${step.value.run}" class="subworkflow">workflow.cwl</a>
+                                    <span th:unless="${step.value.runType.name() == 'WORKFLOW'}" th:text="${step.value.run}">cmdlinetool.cwl</span>
+                                    (<span th:text="${step.value.runType}">Workflow</span>)
+                                </div>
+                                <div th:if="${step.value.run != null and step.value.runType == null}">
+                                    <span th:text="${step.value.run} + ' (?)'" class="notFound" data-tooltip="true" title="Not Found - Must be somewhere within this repository">workflow.cwl (?)</span>
+                                </div>
+                            </td>
+                            <td th:text="${step.value.label}">Label</td>
+                            <td>
+                                <p th:if="${step.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(step.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <h2>Outputs</h2>
             <div th:if="${workflow.outputs.isEmpty()}" class="alert alert-info">
                 <p>There are no outputs in this workflow</p>
             </div>
             <div th:unless="${workflow.outputs.isEmpty()}">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <th>ID</th>
-                        <th>Type</th>
-                        <th>Label</th>
-                        <th>Doc</th>
-                    </thead>
-                    <tbody>
-                        <tr th:each="output : ${workflow.outputs}">
-                            <td th:text="${output.key}">ID</td>
-                            <td th:text="${output.value.type}">Type</td>
-                            <td th:text="${output.value.label}">Label</td>
-                            <td>
-                                <p th:if="${output.value.doc != null}" th:utext="${#strings.replace(#strings.escapeXml(output.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Label</th>
+                            <th>Doc</th>
+                        </thead>
+                        <tbody>
+                            <tr th:each="output : ${workflow.outputs}">
+                                <td th:text="${output.key}">ID</td>
+                                <td>
+                                    <a th:if="${output.value.format != null}" th:href="@{${output.value.format}}" th:text="${output.value.type}" target="_blank" rel="noopener">Type</a>
+                                    <span th:if="${output.value.format == null}" th:text="${output.value.type}"></span>
+                                </td>
+                                <td th:text="${output.value.label}">Label</td>
+                                <td>
+                                    <p th:if="${output.value.doc != null}" th:utext="${#strings.replace(#strings.escapeXml(output.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
