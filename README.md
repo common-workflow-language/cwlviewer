@@ -1,6 +1,6 @@
 # CWL Viewer
 
-This is a work-in-progress [Spring Boot](http://projects.spring.io/spring-boot/) MVC application which fetches [Common Workflow Language](http://www.commonwl.org/) files from a Github repository and creates a page for it detailing the main workflow and its inputs, outputs and steps.
+This is a [Spring Boot](http://projects.spring.io/spring-boot/) MVC application which fetches [Common Workflow Language](http://www.commonwl.org/) files from a Github repository and creates a page for it detailing the main workflow and its inputs, outputs and steps.
 
 [![Build Status](https://travis-ci.org/common-workflow-language/cwlviewer.svg?branch=master)](https://travis-ci.org/common-workflow-language/cwlviewer) [![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/common-workflow-language/cwlviewer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![](https://images.microbadger.com/badges/image/commonworkflowlanguage/cwlviewer.svg)](https://microbadger.com/images/commonworkflowlanguage/cwlviewer "MicroBadger commonworkflowlanguage/cwlviewer") [![Docker image commonworkflowlanguage/cwlviewer](https://images.microbadger.com/badges/version/commonworkflowlanguage/cwlviewer.svg)](https://hub.docker.com/r/commonworkflowlanguage/cwlviewer/ "Docker Hub commonworkflowlanguage/cwlviewer")
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.823534.svg)](https://doi.org/10.5281/zenodo.823534)
@@ -17,14 +17,14 @@ See the file [LICENSE.md](LICENSE.md) for details, and
 
 Feel free to contribute! You may [raise an issue](https://github.com/common-workflow-language/cwlviewer/issues),
 provide a [pull request](https://github.com/common-workflow-language/cwlviewer/pulls)
-or join the [gitter chat for common-workflow-language](https://gitter.im/common-workflow-language/common-workflow-language)!
+or join the [gitter chat for cwlviewer](https://gitter.im/common-workflow-language/cwlviewer)!
 
 
 ## Recommended - Running with Docker
 
-This application can be started with [Docker](https://www.docker.com/).
+This application can be started with [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/).
 
-If you have [Docker Compose](https://docs.docker.com/compose/install/), then to start CWLViewer exposed on port `8080`, run:
+To start CWLViewer exposed on port `8080`, run:
 
     docker-compose up
 
@@ -36,23 +36,13 @@ If you change the source code, then use this `docker-compose.override.yml` and
 re-build with `docker-compose build`:
 
 ```yaml
-version: '2'
+version: '3.2'
 services:
   spring:
     build: .
 ```
 
 See the [docker-compose.yml](docker-compose.yml) file for details.
-
-If you don't want to use Docker Compose, you can do the equivalent manually with `docker`
-and the [commonworkflowlanguage/cwlviewer](https://hub.docker.com/r/commonworkflowlanguage/cwlviewer/builds/) docker image.
-
-    docker run --name cwlviewer-mongo -p 27017:27017 -d mongo
-    docker run --name cwlviewer -p 8080:8080 --link cwlviewer-mongo:mongo -d commonworkflowlanguage/cwlviewer
-    docker logs -f cwlviewer
-    
-    
-**WARNING**: Please ensure that your MongoDB installation is not exposed to the world on port `27017`
 
 If you have modified the source code, then you may want to build the docker image locally first:
 
@@ -117,17 +107,17 @@ There are a variety of configuration options detailed in the [application config
 When deploying with docker, these can be overriden externally by creating/modifying `docker-compose.override.yml` as follows:
 
 ```yaml
-version: '2'
+version: '3.2'
 services:
   spring:
     environment:
-            githubAPI.authentication: oauth
-            githubAPI.oauthToken: abcdefghhijklmnopqrstuvwxyz
+            applicationName: Common Workflow Language Viewer
+            applicationURL: https://view.commonwl.org
+            cacheDays: 1
 ```
 
 The properties can alternatively be provided as system properties on the
-command line, e.g. `-DgithubAPI.authentication=oauth`
-`-DgithubAPI.oauthToken=abcdefghhijklmnopqrstuvwxyz` or via a [variety of other methods supported by Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html)
+command line, e.g. `-DcacheDays=1` or via a [variety of other methods supported by Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html)
 
 # Thanks
 
