@@ -36,7 +36,7 @@ If you change the source code, then use this `docker-compose.override.yml` and
 re-build with `docker-compose build`:
 
 ```yaml
-version: '2'
+version: '3.2'
 services:
   spring:
     build: .
