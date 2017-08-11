@@ -25,7 +25,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
-import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,21 +108,13 @@ public class GitService {
             // Checkout the specific branch or commit ID
             if (repo != null) {
                 // Create a new local branch if it does not exist and not a commit ID
-                boolean createBranch = !ObjectId.isId(gitDetails.getBranch());
-                if (createBranch) {
-                    Ref ref = repo.getRepository().exactRef("refs/heads/" + gitDetails.getBranch());
-                    if (ref != null) {
-                        createBranch = false;
-                    }
+                String branchOrCommitId = gitDetails.getBranch();
+                if (!ObjectId.isId(branchOrCommitId)) {
+                    branchOrCommitId = "refs/remotes/origin/" + branchOrCommitId;
                 }
                 repo.checkout()
-                        .setCreateBranch(createBranch)
-                        .setName(gitDetails.getBranch())
+                        .setName(branchOrCommitId)
                         .call();
-                String branch = repo.getRepository().getFullBranch();
-                if (branch != null && !branch.startsWith(gitDetails.getBranch())) {
-                    repo.pull().call();
-                }
             }
         } catch (IOException ex) {
             logger.error("Could not open existing Git repository for '"
