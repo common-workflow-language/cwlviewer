@@ -49,5 +49,5 @@ services:
     volumes:
     - type: volume
       source: sparql
-      target: /fuseki/databases
+      target: /fuseki/databases/cwlviewer
     command: "/jena-fuseki/fuseki-server --loc=/fuseki/databases/cwlviewer /cwlviewer"
