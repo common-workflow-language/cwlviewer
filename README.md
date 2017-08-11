@@ -117,17 +117,17 @@ There are a variety of configuration options detailed in the [application config
 When deploying with docker, these can be overriden externally by creating/modifying `docker-compose.override.yml` as follows:
 
 ```yaml
-version: '2'
+version: '3.2'
 services:
   spring:
     environment:
-            githubAPI.authentication: oauth
-            githubAPI.oauthToken: abcdefghhijklmnopqrstuvwxyz
+            applicationName: Common Workflow Language Viewer
+            applicationURL: https://view.commonwl.org
+            cacheDays: 1
 ```
 
 The properties can alternatively be provided as system properties on the
-command line, e.g. `-DgithubAPI.authentication=oauth`
-`-DgithubAPI.oauthToken=abcdefghhijklmnopqrstuvwxyz` or via a [variety of other methods supported by Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html)
+command line, e.g. `-DcacheDays=1` or via a [variety of other methods supported by Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html)
 
 # Thanks
 
