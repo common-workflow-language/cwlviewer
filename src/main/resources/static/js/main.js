@@ -79,17 +79,22 @@ require(['jquery'],
             var pathPattern = new RegExp("^\\/?([^\\/]*\\/)*[^\\/]+\\.cwl$");
             var input = $("#url").val();
             if (gitPattern.test(input)) {
-                var success = true;
-                if (!$("#branch").val()) {
-                    addWarning("branch", "You must provide a branch name for the workflow");
-                    success = false;
-                }
-                if (!$("#path").val()) {
-                    addWarning("path", "You must provide a path to the workflow");
-                    success = false;
-                } else if (!pathPattern.test($("#path").val())) {
-                    addWarning("path", "Must be a valid path from the root to a .cwl workflow");
-                    success = false;
+                var success = false;
+                if (input.startsWith("ssh") || input.startsWith("git@")) {
+                    addWarning("url", "SSH is not supported as a protocol, please provide a HTTPS URL to clone");
+                } else {
+                    success = true;
+                    if (!$("#branch").val()) {
+                        addWarning("branch", "You must provide a branch name for the workflow");
+                        success = false;
+                    }
+                    if (!$("#path").val()) {
+                        addWarning("path", "You must provide a path to the workflow");
+                        success = false;
+                    } else if (!pathPattern.test($("#path").val())) {
+                        addWarning("path", "Must be a valid path from the root to a .cwl workflow");
+                        success = false;
+                    }
                 }
                 return success;
             } else if (!githubPattern.test(input) && !gitlabPattern.test(input)) {
