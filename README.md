@@ -20,6 +20,16 @@ provide a [pull request](https://github.com/common-workflow-language/cwlviewer/p
 or join the [gitter chat for cwlviewer](https://gitter.im/common-workflow-language/cwlviewer)!
 
 
+# Using CWL Viewer
+
+You are recommended to use the **production instance** of CWL Viewer at https://view.commonwl.org/ which runs the latest [release](https://github.com/common-workflow-language/cwlviewer/releases). Any downtime should be reported on the [gitter chat for cwlviewer](https://gitter.im/common-workflow-language/cwlviewer). 
+
+The **dev instance** at http://view.commonwl.org:8082/ corresponds to the current `master` branch, and is updated every 6 minutes to run the latest [commonworkflowlanguage/cwlviewer docker image](https://hub.docker.com/r/commonworkflowlanguage/cwlviewer/builds/). Note that this instance is NOT secured and might break at any time.
+
+# Running
+
+If you are a developer, or you want to use the CWL Viewer in a closed environment, then you can run your own instance.
+
 ## Recommended - Running with Docker
 
 This application can be started with [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/).
