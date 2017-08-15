@@ -36,7 +36,9 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -49,6 +51,54 @@ public class WorkflowServiceTest {
      */
     @Rule
     public TemporaryFolder roBundleFolder = new TemporaryFolder();
+
+    /**
+     * Getting a list of workflow overviews from a directory
+     */
+    @Test
+    public void getWorkflowsFromDirectory() throws Exception {
+
+        // Mock CWL service which returns simple overview once simulating 1 workflow found
+        CWLService mockCWLService = Mockito.mock(CWLService.class);
+        when(mockCWLService.getWorkflowOverview(anyObject()))
+                .thenReturn(new WorkflowOverview("workflow.cwl", "label", "doc"))
+                .thenReturn(new WorkflowOverview("workflow2.cwl", "label2", "doc2"))
+                .thenReturn(null);
+
+        Repository mockRepo = Mockito.mock(Repository.class);
+        when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/hello"));
+
+        Git mockGitRepo = Mockito.mock(Git.class);
+        when(mockGitRepo.getRepository()).thenReturn(mockRepo);
+
+        GitService mockGitService = Mockito.mock(GitService.class);
+        when(mockGitService.getRepository(anyObject(), anyBoolean())).thenReturn(mockGitRepo);
+
+        // Create service under test
+        WorkflowService testWorkflowService = new WorkflowService(
+                mockGitService, mockCWLService,
+                Mockito.mock(WorkflowRepository.class),
+                Mockito.mock(QueuedWorkflowRepository.class),
+                Mockito.mock(ROBundleFactory.class),
+                Mockito.mock(GraphVizService.class),
+                Mockito.mock(CWLToolRunner.class),
+                Mockito.mock(GitSemaphore.class), 1);
+
+        // Get a list of workflows from the directory
+        List<WorkflowOverview> list = testWorkflowService.getWorkflowsFromDirectory(
+                new GitDetails(null, null, "/"));
+
+        // 1 workflow should be found
+        assertTrue(list.size() == 2);
+        assertEquals("workflow.cwl", list.get(0).getFileName());
+        assertEquals("label", list.get(0).getLabel());
+        assertEquals("doc", list.get(0).getDoc());
+
+        assertEquals("workflow2.cwl", list.get(1).getFileName());
+        assertEquals("label2", list.get(1).getLabel());
+        assertEquals("doc2", list.get(1).getDoc());
+
+    }
 
     /**
      * Getting a workflow when cache has expired

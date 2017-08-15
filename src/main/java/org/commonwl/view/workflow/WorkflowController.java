@@ -46,6 +46,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 @Controller
 public class WorkflowController {
@@ -120,7 +121,11 @@ public class WorkflowController {
             Workflow workflow = workflowService.getWorkflow(gitInfo);
             if (workflow == null) {
                 try {
-                    workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
+                    if (gitInfo.getPath().endsWith(".cwl")) {
+                        workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
+                    } else {
+                        return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
+                    }
                 } catch (TransportException ex) {
                     bindingResult.rejectValue("url", "git.sshError");
                     return new ModelAndView("index");
@@ -453,7 +458,20 @@ public class WorkflowController {
                 workflowFormValidator.validateAndParse(workflowForm, errors);
                 if (!errors.hasErrors()) {
                     try {
-                        queued = workflowService.createQueuedWorkflow(gitDetails);
+                        if (gitDetails.getPath().endsWith(".cwl")) {
+                            queued = workflowService.createQueuedWorkflow(gitDetails);
+                        } else {
+                            List<WorkflowOverview> workflowOverviews = workflowService.getWorkflowsFromDirectory(gitDetails);
+                            if (workflowOverviews.size() > 1) {
+                                return new ModelAndView("selectworkflow", "workflowOverviews", workflowOverviews)
+                                        .addObject("gitDetails", gitDetails);
+                            } else if (workflowOverviews.size() == 1) {
+                                return new ModelAndView("redirect:" + gitDetails.getInternalUrl() +
+                                        "/" + workflowOverviews.get(0).getFileName());
+                            } else {
+                                errors.rejectValue("url", "url.noWorkflowsInDirectory", "No workflow files were found in the given directory");
+                            }
+                        }
                     } catch (TransportException ex) {
                         errors.rejectValue("url", "git.sshError", "SSH URLs are not supported, please provide a HTTPS URL for the repository or submodules");
                     } catch (GitAPIException ex) {

@@ -39,6 +39,7 @@ import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.ModelDotWriter;
 import org.commonwl.view.graphviz.RDFDotWriter;
 import org.commonwl.view.workflow.Workflow;
+import org.commonwl.view.workflow.WorkflowOverview;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -425,6 +426,55 @@ public class CWLService {
 
 
         return workflowModel;
+
+    }
+
+    /**
+     * Get an overview of a workflow
+     * @param file A file, potentially a workflow
+     * @return A constructed WorkflowOverview of the workflow
+     * @throws IOException Any API errors which may have occurred
+     */
+    public WorkflowOverview getWorkflowOverview(File file) throws IOException {
+
+        // Get the content of this file from Github
+        long fileSizeBytes = file.length();
+
+        // Check file size limit before parsing
+        if (fileSizeBytes <= singleFileSizeLimit) {
+
+            // Parse file as yaml
+            JsonNode cwlFile = yamlStringToJson(readFileToString(file));
+
+            // If the CWL file is packed there can be multiple workflows in a file
+            if (cwlFile.has(DOC_GRAPH)) {
+                // Packed CWL, find the first subelement which is a workflow and take it
+                for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
+                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
+                        cwlFile = jsonNode;
+                    }
+                }
+            }
+
+            // Can only make an overview if this is a workflow
+            if (extractProcess(cwlFile) == CWLProcess.WORKFLOW) {
+                // Use filename for label if there is no defined one
+                String label = extractLabel(cwlFile);
+                if (label == null) {
+                    label = file.getName();
+                }
+
+                // Return the constructed overview
+                return new WorkflowOverview(file.getName(), label, extractDoc(cwlFile));
+            } else {
+                // Return null if not a workflow file
+                return null;
+            }
+        } else {
+            throw new IOException("File '" + file.getName() +  "' is over singleFileSizeLimit - " +
+                    FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +
+                    FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
+        }
 
     }
 
