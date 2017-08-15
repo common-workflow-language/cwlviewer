@@ -24,6 +24,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
+import org.commonwl.view.workflow.WorkflowOverview;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -156,6 +157,48 @@ public class CWLServiceTest {
         CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 0);
         cwlService.parseWorkflowNative(
                 new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"));
+
+    }
+
+    /**
+     * Test retrieval of a workflow overview for hello world example in cwl
+     */
+    @Test
+    public void getHelloWorkflowOverview() throws Exception {
+
+        // Test cwl service
+        CWLService cwlService = new CWLService(Mockito.mock(RDFService.class),
+                Mockito.mock(CWLTool.class), 5242880);
+
+        // Run workflow overview
+        File helloWorkflow = new File("src/test/resources/cwl/hello/hello.cwl");
+        WorkflowOverview hello = cwlService.getWorkflowOverview(helloWorkflow);
+        assertNotNull(hello);
+
+        // No docs for this workflow
+        assertEquals("Hello World", hello.getLabel());
+        assertEquals("Puts a message into a file using echo", hello.getDoc());
+        assertEquals("hello.cwl", hello.getFileName());
+
+    }
+
+    /**
+     * Test IOException is thrown when files are over limit with getWorkflowOverview
+     */
+    @Test
+    public void workflowOverviewOverSingleFileSizeLimitThrowsIOException() throws Exception {
+
+        // Test cwl service
+        CWLService cwlService = new CWLService(Mockito.mock(RDFService.class),
+                Mockito.mock(CWLTool.class), 0);
+
+        // File to test
+        File helloWorkflow = new File("src/test/resources/cwl/hello/hello.cwl");
+
+        // Should throw IOException due to oversized file
+        thrown.expect(IOException.class);
+        thrown.expectMessage("File 'hello.cwl' is over singleFileSizeLimit - 672 bytes/0 bytes");
+        cwlService.getWorkflowOverview(helloWorkflow);
 
     }
 
