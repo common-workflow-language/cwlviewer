@@ -41,11 +41,19 @@ public class WorkflowFormValidator {
     private static final String GITHUB_CWL_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
     private static final Pattern githubCwlPattern = Pattern.compile(GITHUB_CWL_REGEX);
 
+    // URL validation for directories on Github
+    private static final String GITHUB_DIR_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)\\/?(.*)?)?$";
+    private static final Pattern githubDirPattern = Pattern.compile(GITHUB_DIR_REGEX);
+
     // URL validation for cwl files on Gitlab
     private static final String GITLAB_CWL_REGEX = "^https?:\\/\\/gitlab\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
     private static final Pattern gitlabCwlPattern = Pattern.compile(GITLAB_CWL_REGEX);
 
-    // Git URL validation
+    // URL validation for directories on Gitlab
+    private static final String GITLAB_DIR_REGEX = "^https?:\\/\\/gitlab\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)\\/?(.*)?)?$";
+    private static final Pattern gitlabDirPattern = Pattern.compile(GITLAB_DIR_REGEX);
+
+    // Generic Git URL validation
     private static final String GIT_REPO_REGEX = "^((git|ssh|http(s)?)|(git@[\\w\\.]+))(:(//)?)([\\w\\.@\\:/\\-~]+)(\\.git)(/)?$";
     private static final Pattern gitRepoPattern = Pattern.compile(GIT_REPO_REGEX);
 
@@ -74,9 +82,22 @@ public class WorkflowFormValidator {
                 return new GitDetails(repoUrl, m.group(3), m.group(4));
             }
 
+            // Github Dir URL
+            m = githubDirPattern.matcher(form.getUrl());
+            if (m.find()) {
+                String repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                return new GitDetails(repoUrl, m.group(3), m.group(4));
+            }
+
+            // Gitlab Dir URL
+            m = gitlabDirPattern.matcher(form.getUrl());
+            if (m.find()) {
+                String repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                return new GitDetails(repoUrl, m.group(3), m.group(4));
+            }
+
             // General Git details if didn't match the above
             ValidationUtils.rejectIfEmptyOrWhitespace(e, "branch", "branch.emptyOrWhitespace");
-            ValidationUtils.rejectIfEmptyOrWhitespace(e, "path", "path.emptyOrWhitespace");
             if (!e.hasErrors()) {
                 m = gitRepoPattern.matcher(form.getUrl());
                 if (m.find()) {
