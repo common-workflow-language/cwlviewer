@@ -24,6 +24,7 @@ import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +121,9 @@ public class WorkflowController {
             if (workflow == null) {
                 try {
                     workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
+                } catch (TransportException ex) {
+                    bindingResult.rejectValue("url", "git.sshError");
+                    return new ModelAndView("index");
                 } catch (GitAPIException ex) {
                     bindingResult.rejectValue("url", "git.retrievalError");
                     logger.error("Git API Error", ex);
@@ -450,9 +454,10 @@ public class WorkflowController {
                 if (!errors.hasErrors()) {
                     try {
                         queued = workflowService.createQueuedWorkflow(gitDetails);
+                    } catch (TransportException ex) {
+                        errors.rejectValue("url", "git.sshError", "SSH URLs are not supported, please provide a HTTPS URL for the repository or submodules");
                     } catch (GitAPIException ex) {
                         errors.rejectValue("url", "git.retrievalError", "The workflow could not be retrieved from the Git repository using the details given");
-                        logger.error("Git API Error", ex);
                     } catch (WorkflowNotFoundException ex) {
                         errors.rejectValue("url", "git.pathTraversal", "The path given did not resolve to a location within the repository");
                     } catch (IOException ex) {
