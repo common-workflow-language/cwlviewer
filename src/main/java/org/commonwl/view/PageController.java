@@ -35,7 +35,7 @@ public class PageController {
      */
     @GetMapping("/")
     public String homePage(Model model, @RequestParam(value = "url", required = false) String defaultURL) {
-        model.addAttribute("workflowForm", new WorkflowForm(defaultURL));
+        model.addAttribute("workflowForm", new WorkflowForm(defaultURL, "", ""));
         return "index";
     }
 

@@ -32,9 +32,13 @@ public class WorkflowForm {
     public WorkflowForm() {}
 
     public WorkflowForm(String url) {
-        if (url != null) {
-            this.url = trimTrailingSlashes(url);
-        }
+        setUrl(url);
+    }
+
+    public WorkflowForm(String url, String branch, String path) {
+        setUrl(url);
+        this.branch = branch;
+        this.path = path;
     }
 
     public String getUrl() {

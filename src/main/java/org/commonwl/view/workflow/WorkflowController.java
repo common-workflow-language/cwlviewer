@@ -444,7 +444,7 @@ public class WorkflowController {
             queued = workflowService.getQueuedWorkflow(gitDetails);
             if (queued == null) {
                 // Validation
-                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl());
+                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl(), gitDetails.getBranch(), gitDetails.getPath());
                 BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
                 workflowFormValidator.validateAndParse(workflowForm, errors);
                 if (!errors.hasErrors()) {
