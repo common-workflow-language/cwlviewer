@@ -158,9 +158,10 @@ public class CWLService {
     /**
      * Gets the Workflow object from internal parsing
      * @param workflowFile The workflow file to be parsed
+     * @param packedWorkflowId The ID of the workflow object if the file is packed
      * @return The constructed workflow object
      */
-    public Workflow parseWorkflowNative(File workflowFile) throws IOException {
+    public Workflow parseWorkflowNative(File workflowFile, String packedWorkflowId) throws IOException {
 
         // Check file size limit before parsing
         long fileSizeBytes = workflowFile.length();
@@ -169,14 +170,12 @@ public class CWLService {
             // Parse file as yaml
             JsonNode cwlFile = yamlStringToJson(readFileToString(workflowFile));
 
-            // If the CWL file is packed there can be multiple workflows in a file
-            Map<String, JsonNode> packedFiles = new HashMap<>();
-            if (cwlFile.has(DOC_GRAPH)) {
-                // Packed CWL, find the first subelement which is a workflow and take it
+            if (packedWorkflowId != null) {
                 for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
-                    packedFiles.put(jsonNode.get(ID).asText(), jsonNode);
-                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
+                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW &&
+                            jsonNode.get(ID).asText().equals(packedWorkflowId)) {
                         cwlFile = jsonNode;
+                        break;
                     }
                 }
             }
@@ -190,10 +189,7 @@ public class CWLService {
             // Construct the rest of the workflow model
             Workflow workflowModel = new Workflow(label, extractDoc(cwlFile), getInputs(cwlFile),
                     getOutputs(cwlFile), getSteps(cwlFile), null);
-
-            if (packedFiles.size() > 0) {
-                workflowModel.setPackedWorkflowID(cwlFile.get(ID).asText());
-            }
+            workflowModel.setPackedWorkflowID(packedWorkflowId);
 
             workflowModel.setCwltoolVersion(cwlTool.getVersion());
 
@@ -510,7 +506,7 @@ public class CWLService {
                 }
 
                 // Return the constructed overview
-                return new WorkflowOverview(file.getName(), label, extractDoc(cwlFile));
+                return new WorkflowOverview("/" + file.getName(), label, extractDoc(cwlFile));
             } else {
                 // Return null if not a workflow file
                 return null;

@@ -38,8 +38,8 @@
                 <p>Multiple CWL files were found, please select the workflow you would like to view below</p>
             </div>
             <div class="list-group">
-                <a href="#" class="list-group-item" th:each="workflowOverview : ${workflowOverviews}" th:href="@{${gitDetails.getInternalUrl()} + '/' + ${workflowOverview.fileName}}">
-                    <h4 class="list-group-item-heading" th:text="${workflowOverview.fileName}">ExampleWorkflow.cwl</h4>
+                <a href="#" class="list-group-item" th:each="workflowOverview : ${workflowOverviews}" th:href="@{${gitDetails.getInternalUrl()} + ${workflowOverview.fileName.replace('#', '%23')}}">
+                    <h4 class="list-group-item-heading" th:text="${workflowOverview.fileName.replaceFirst('^/', '')}">ExampleWorkflow.cwl</h4>
                     <p class="list-group-item-text">
                         <span th:if="${workflowOverview.label != null}" th:text="${workflowOverview.label}">Label</span>
                         <i th:if="${workflowOverview.doc != null}" th:text="' - ' + ${workflowOverview.doc}">Doc</i>

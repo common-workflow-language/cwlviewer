@@ -307,7 +307,24 @@ public class WorkflowService {
             }
 
             File workflowFile = new File(pathToWorkflowFile.toString());
-            Workflow basicModel = cwlService.parseWorkflowNative(workflowFile);
+
+            // Handling of packed workflows
+            String packedWorkflowId = null;
+            if (cwlService.isPacked(workflowFile)) {
+                List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(workflowFile);
+                if (overviews.size() == 0) {
+                    throw new IOException("No workflow was found within the packed CWL file");
+                } else if (overviews.size() == 1) {
+                    packedWorkflowId = overviews.get(0).getFileName();
+                } else {
+                    // Dummy queued workflow object to return the list
+                    QueuedWorkflow overviewList = new QueuedWorkflow();
+                    overviewList.setWorkflowList(overviews);
+                    return overviewList;
+                }
+            }
+
+            Workflow basicModel = cwlService.parseWorkflowNative(workflowFile, packedWorkflowId);
 
             // Set origin details
             basicModel.setRetrievedOn(new Date());

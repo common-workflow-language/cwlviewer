@@ -122,7 +122,12 @@ public class WorkflowController {
             if (workflow == null) {
                 try {
                     if (gitInfo.getPath().endsWith(".cwl")) {
-                        workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
+                        QueuedWorkflow result = workflowService.createQueuedWorkflow(gitInfo);
+                        if (result.getWorkflowList() == null) {
+                            workflow = result.getTempRepresentation();
+                        } else {
+                            return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
+                        }
                     } else {
                         return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
                     }
@@ -460,6 +465,11 @@ public class WorkflowController {
                     try {
                         if (gitDetails.getPath().endsWith(".cwl")) {
                             queued = workflowService.createQueuedWorkflow(gitDetails);
+                            if (queued.getWorkflowList() != null) {
+                                // Packed workflow listing
+                                return new ModelAndView("selectworkflow", "workflowOverviews", queued.getWorkflowList())
+                                        .addObject("gitDetails", gitDetails);
+                            }
                         } else {
                             List<WorkflowOverview> workflowOverviews = workflowService.getWorkflowsFromDirectory(gitDetails);
                             if (workflowOverviews.size() > 1) {

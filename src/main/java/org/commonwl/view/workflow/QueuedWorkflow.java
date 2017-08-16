@@ -5,10 +5,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.springframework.data.annotation.Id;
 
+import java.util.List;
+
 /**
  * A workflow pending completion of cwltool
  */
-@JsonIgnoreProperties(value = {"id", "tempRepresentation"})
+@JsonIgnoreProperties(value = {"id", "tempRepresentation", "workflowList"})
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class QueuedWorkflow {
 
@@ -18,6 +20,10 @@ public class QueuedWorkflow {
 
     // Very barebones workflow to build loading thumbnail and overview
     private Workflow tempRepresentation;
+
+    // List of packed workflows for packed workflows
+    // TODO: Refactor so this is not necessary
+    private List<WorkflowOverview> workflowList;
 
     // Cwltool details
     private CWLToolStatus cwltoolStatus = CWLToolStatus.RUNNING;
@@ -60,4 +66,11 @@ public class QueuedWorkflow {
         this.message = message;
     }
 
+    public List<WorkflowOverview> getWorkflowList() {
+        return workflowList;
+    }
+
+    public void setWorkflowList(List<WorkflowOverview> workflowList) {
+        this.workflowList = workflowList;
+    }
 }

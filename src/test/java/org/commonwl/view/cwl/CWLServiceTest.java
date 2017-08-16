@@ -94,7 +94,7 @@ public class CWLServiceTest {
     public void parseLobSTRDraft3WorkflowNative() throws Exception {
         CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 5242880);
         Workflow lobSTRDraft3 = cwlService.parseWorkflowNative(
-                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"));
+                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
         testLobSTRWorkflow(lobSTRDraft3, true);
     }
 
@@ -105,7 +105,7 @@ public class CWLServiceTest {
     public void parseLobSTRv1WorkflowNative() throws Exception {
         CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
         Workflow lobSTRv1 = cwlService.parseWorkflowNative(
-                new File("src/test/resources/cwl/lobstr-v1/lobSTR-workflow.cwl"));
+                new File("src/test/resources/cwl/lobstr-v1/lobSTR-workflow.cwl"), null);
         testLobSTRWorkflow(lobSTRv1, true);
     }
 
@@ -157,7 +157,7 @@ public class CWLServiceTest {
 
         CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 0);
         cwlService.parseWorkflowNative(
-                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"));
+                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
 
     }
 
