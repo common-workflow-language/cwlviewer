@@ -39,6 +39,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.io.FileUtils.readFileToString;
@@ -200,6 +201,23 @@ public class CWLServiceTest {
         thrown.expectMessage("File 'hello.cwl' is over singleFileSizeLimit - 672 bytes/0 bytes");
         cwlService.getWorkflowOverview(helloWorkflow);
 
+    }
+
+    /**
+     * Get workflow overviews from a packed file
+     * TODO: Get better example with multiple workflows with label/doc
+     */
+    @Test
+    public void workflowOverviewsFromPackedFile() throws Exception {
+        CWLService cwlService = new CWLService(Mockito.mock(RDFService.class),
+                Mockito.mock(CWLTool.class), 5242880);
+        File packedFile = new File("src/test/resources/cwl/make_to_cwl/dna.cwl");
+        assertTrue(cwlService.isPacked(packedFile));
+        List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(packedFile);
+        assertEquals(1, overviews.size());
+        assertEquals("main", overviews.get(0).getFileName());
+        assertNull(overviews.get(0).getLabel());
+        assertNull(overviews.get(0).getDoc());
     }
 
     /**

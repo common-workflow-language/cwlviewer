@@ -111,6 +111,51 @@ public class CWLService {
     }
 
     /**
+     * Gets whether a file is packed using schema salad
+     * @param workflowFile The file to be parsed
+     * @return Whether the file is packed
+     */
+    public boolean isPacked(File workflowFile) throws IOException {
+        if (workflowFile.length() > singleFileSizeLimit) {
+            return false;
+        }
+        String fileContent = readFileToString(workflowFile);
+        return fileContent.contains("$graph");
+    }
+
+    /**
+     * Gets a list of workflows from a packed CWL file
+     * @param packedFile The packed CWL file
+     * @return The list of workflow overviews
+     */
+    public List<WorkflowOverview> getWorkflowOverviewsFromPacked(File packedFile) throws IOException {
+        if (packedFile.length() <= singleFileSizeLimit) {
+            List<WorkflowOverview> overviews = new ArrayList<>();
+
+            JsonNode packedJson = yamlStringToJson(readFileToString(packedFile));
+
+            if (packedJson.has(DOC_GRAPH)) {
+                for (JsonNode jsonNode : packedJson.get(DOC_GRAPH)) {
+                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
+                        WorkflowOverview overview = new WorkflowOverview(jsonNode.get(ID).asText(),
+                                extractLabel(jsonNode), extractDoc(jsonNode));
+                        overviews.add(overview);
+                    }
+                }
+            } else {
+                throw new IOException("The file given was not recognised as a packed CWL file");
+            }
+
+            return overviews;
+
+        } else {
+            throw new IOException("File '" + packedFile.getName() +  "' is over singleFileSizeLimit - " +
+                    FileUtils.byteCountToDisplaySize(packedFile.length()) + "/" +
+                    FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
+        }
+    }
+
+    /**
      * Gets the Workflow object from internal parsing
      * @param workflowFile The workflow file to be parsed
      * @return The constructed workflow object
