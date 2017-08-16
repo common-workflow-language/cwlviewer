@@ -392,9 +392,9 @@ public class CWLService {
                 rdfService.addToOntologies(ontModel);
             }
             String formatLabel = rdfService.getOntLabel(format);
-            inputOutput.setType(inputOutput.getType() + " (" + formatLabel + ")");
+            inputOutput.setType(inputOutput.getType() + " [" + formatLabel + "]");
         } catch (RiotException ex) {
-            inputOutput.setType(inputOutput.getType() + " (format)");
+            inputOutput.setType(inputOutput.getType() + " [format]");
         }
     }
 
