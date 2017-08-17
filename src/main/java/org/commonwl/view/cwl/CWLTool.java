@@ -117,6 +117,7 @@ public class CWLTool {
                 inputGobbler.join();
                 return inputGobbler.getContent();
             } else {
+                errorGobbler.join();
                 throw new CWLValidationException(errorGobbler.getContent());
             }
         } catch (IOException|InterruptedException e) {
