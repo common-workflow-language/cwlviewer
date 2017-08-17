@@ -314,8 +314,6 @@ public class WorkflowService {
                 List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(workflowFile);
                 if (overviews.size() == 0) {
                     throw new IOException("No workflow was found within the packed CWL file");
-                } else if (overviews.size() == 1) {
-                    packedWorkflowId = overviews.get(0).getFileName();
                 } else {
                     // Dummy queued workflow object to return the list
                     QueuedWorkflow overviewList = new QueuedWorkflow();
@@ -328,7 +326,6 @@ public class WorkflowService {
 
             // Set origin details
             basicModel.setRetrievedOn(new Date());
-            gitInfo.setPackedId(packedWorkflowId);
             basicModel.setRetrievedFrom(gitInfo);
             basicModel.setLastCommit(latestCommit);
 

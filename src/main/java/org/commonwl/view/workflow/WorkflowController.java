@@ -126,6 +126,9 @@ public class WorkflowController {
                         if (result.getWorkflowList() == null) {
                             workflow = result.getTempRepresentation();
                         } else {
+                            if (result.getWorkflowList().size() == 1) {
+                                gitInfo.setPackedId(result.getWorkflowList().get(0).getFileName());
+                            }
                             return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
                         }
                     } else {
