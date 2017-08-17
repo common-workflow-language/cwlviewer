@@ -171,10 +171,15 @@ public class CWLService {
 
             if (packedWorkflowId != null) {
                 for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
-                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW &&
-                            jsonNode.get(ID).asText().equals(packedWorkflowId)) {
-                        cwlFile = jsonNode;
-                        break;
+                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
+                        String currentId = jsonNode.get(ID).asText();
+                        if (currentId.startsWith("#")) {
+                            currentId = currentId.substring(1);
+                        }
+                        if (currentId.equals(packedWorkflowId)) {
+                            cwlFile = jsonNode;
+                            break;
+                        }
                     }
                 }
             }

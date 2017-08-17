@@ -333,7 +333,6 @@ public class WorkflowService {
                 if (!cwlService.isPacked(workflowFile)) {
                     throw new WorkflowNotFoundException();
                 }
-
             }
 
             Workflow basicModel = cwlService.parseWorkflowNative(workflowFile, packedWorkflowId);
