@@ -233,7 +233,7 @@ digraph G {
                             <td th:text="${step.key}">ID</td>
                             <td>
                                 <div th:if="${step.value.runType != null}">
-                                    <a th:if="${step.value.runType.name() == 'WORKFLOW'}" th:href="@{${step.value.run}}" th:text="${step.value.run}" class="subworkflow">workflow.cwl</a>
+                                    <a th:if="${step.value.runType.name() == 'WORKFLOW'}" th:href="@{${step.value.run.replace('#', '%23')}}" th:text="${step.value.run}" class="subworkflow">workflow.cwl</a>
                                     <span th:unless="${step.value.runType.name() == 'WORKFLOW'}" th:text="${step.value.run}">cmdlinetool.cwl</span>
                                     (<span th:text="${step.value.runType}">Workflow</span>)
                                 </div>

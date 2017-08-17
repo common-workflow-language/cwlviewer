@@ -143,8 +143,8 @@ public class WorkflowController {
                     bindingResult.rejectValue("url", "git.retrievalError");
                     return new ModelAndView("index");
                 } catch (WorkflowNotFoundException ex) {
-                    logger.warn("git.pathTraversal " + workflowForm , ex);
-                    bindingResult.rejectValue("url", "git.pathTraversal");
+                    logger.warn("git.notFound " + workflowForm , ex);
+                    bindingResult.rejectValue("url", "git.notFound");
                     return new ModelAndView("index");
                 } catch (Exception ex) {
                     logger.warn("url.parsingError " + workflowForm , ex);
@@ -503,8 +503,8 @@ public class WorkflowController {
                         logger.error("git.retrievalError " + workflowForm, ex);
                         errors.rejectValue("url", "git.retrievalError", "The workflow could not be retrieved from the Git repository using the details given");
                     } catch (WorkflowNotFoundException ex) {
-                        logger.warn("git.pathTraversal " + workflowForm, ex);
-                        errors.rejectValue("url", "git.pathTraversal", "The path given did not resolve to a location within the repository");
+                        logger.warn("git.notFound " + workflowForm, ex);
+                        errors.rejectValue("url", "git.notFound", "The workflow could not be found within the repository");
                     } catch (IOException ex) {
                         logger.warn("git.parsingError " + workflowForm, ex);
                         errors.rejectValue("url", "url.parsingError", "The workflow could not be parsed from the given URL");

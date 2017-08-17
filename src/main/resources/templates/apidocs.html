@@ -138,6 +138,11 @@ Location: /workflows/:githubURL
                             <td>Path to the workflow within the repository</td>
                         </tr>
                         <tr>
+                            <td>retrievedFrom.packedId</td>
+                            <td>String</td>
+                            <td>The ID of the workflow within the file, if this is a packed CWL file (contains a <a href="http://www.commonwl.org/draft-3/SchemaSalad.html#Document_graph">document graph</a>).</td>
+                        </tr>
+                        <tr>
                             <td>retrievedFrom.url</td>
                             <td>URL</td>
                             <td>The URL to the page on the site if type is not GENERIC, otherwise the same as repoUrl</td>
@@ -161,11 +166,6 @@ Location: /workflows/:githubURL
                             <td>lastCommit</td>
                             <td>String</td>
                             <td>The last commit ID on the branch</td>
-                        </tr>
-                        <tr>
-                            <td>packedWorkflowID</td>
-                            <td>String</td>
-                            <td>The ID of the workflow within the file, if this is a packed CWL file (contains a <a href="http://www.commonwl.org/draft-3/SchemaSalad.html#Document_graph">document graph</a>).</td>
                         </tr>
                         <tr>
                             <td>label</td>
