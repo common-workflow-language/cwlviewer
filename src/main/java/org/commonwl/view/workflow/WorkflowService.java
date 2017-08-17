@@ -41,6 +41,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -307,6 +308,9 @@ public class WorkflowService {
             }
 
             File workflowFile = new File(pathToWorkflowFile.toString());
+            if (! Files.isReadable(workflowFile.toPath())) {
+                throw new WorkflowNotFoundException();
+            }
             Workflow basicModel = cwlService.parseWorkflowNative(workflowFile);
 
             // Set origin details
