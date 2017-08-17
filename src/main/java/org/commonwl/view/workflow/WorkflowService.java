@@ -41,9 +41,13 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class WorkflowService {
@@ -184,6 +188,62 @@ public class WorkflowService {
     }
 
     /**
+     * Get a list of workflows from a directory
+     * @param gitInfo The Git directory information
+     * @return The list of workflow overviews
+     */
+    public List<WorkflowOverview> getWorkflowsFromDirectory(GitDetails gitInfo) throws IOException, GitAPIException {
+        List<WorkflowOverview> workflowsInDir = new ArrayList<>();
+        try {
+            Git repo = null;
+            while (repo == null) {
+                try {
+                    boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
+                    repo = gitService.getRepository(gitInfo, safeToAccess);
+                } catch (RefNotFoundException ex) {
+                    // Attempt slashes in branch fix
+                    GitDetails correctedForSlash = transferPathToBranch(gitInfo);
+                    if (correctedForSlash != null) {
+                        gitSemaphore.release(gitInfo.getRepoUrl());
+                        gitInfo = correctedForSlash;
+                    } else {
+                        throw ex;
+                    }
+                }
+            }
+
+            Path localPath = repo.getRepository().getWorkTree().toPath();
+            Path pathToDirectory = localPath.resolve(gitInfo.getPath()).normalize().toAbsolutePath();
+            Path root = Paths.get("/").toAbsolutePath();
+            if (pathToDirectory.equals(root)) {
+                pathToDirectory = localPath;
+            } else if (!pathToDirectory.startsWith(localPath.normalize().toAbsolutePath())) {
+                // Prevent path traversal attacks
+                throw new WorkflowNotFoundException();
+            }
+
+            File directory = new File(pathToDirectory.toString());
+            if (directory.exists() && directory.isDirectory()) {
+                for (final File file : directory.listFiles()) {
+                    int eIndex = file.getName().lastIndexOf('.') + 1;
+                    if (eIndex > 0) {
+                        String extension = file.getName().substring(eIndex);
+                        if (extension.equals("cwl")) {
+                            WorkflowOverview overview = cwlService.getWorkflowOverview(file);
+                            if (overview != null) {
+                                workflowsInDir.add(overview);
+                            }
+                        }
+                    }
+                }
+            }
+        } finally {
+            gitSemaphore.release(gitInfo.getRepoUrl());
+        }
+        return workflowsInDir;
+    }
+
+    /**
      * Get the RO bundle for a Workflow, triggering re-download if it does not exist
      * @param gitDetails The origin details of the workflow
      * @return The file containing the RO bundle
@@ -224,7 +284,6 @@ public class WorkflowService {
         QueuedWorkflow queuedWorkflow;
 
         try {
-            // Clone repository to temporary folder
             Git repo = null;
             while (repo == null) {
                 try {
@@ -251,6 +310,9 @@ public class WorkflowService {
             }
 
             File workflowFile = new File(pathToWorkflowFile.toString());
+            if (! Files.isReadable(workflowFile.toPath())) {
+                throw new WorkflowNotFoundException();
+            }
             Workflow basicModel = cwlService.parseWorkflowNative(workflowFile);
 
             // Set origin details

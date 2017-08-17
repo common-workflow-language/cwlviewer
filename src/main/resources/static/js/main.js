@@ -23,7 +23,7 @@
 requirejs.config({
     baseUrl: '/bower_components',
     paths: {
-        'jquery': 'jquery/dist/jquery.min',
+        'jquery': 'jquery/dist/jquery.min'
     }
 });
 
@@ -43,7 +43,7 @@ require(['jquery'],
  */
 require(['jquery'],
     function ($) {
-        var generalPattern = "\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
+        var generalPattern = "\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)\\/?(.*)?)?$";
         var githubPattern = new RegExp("^https?:\\/\\/github\\.com" + generalPattern);
         var gitlabPattern = new RegExp("^https?:\\/\\/gitlab\\.com" + generalPattern);
         var gitPattern = new RegExp("^((git|ssh|http(s)?)|(git@[\\w\\.]+))(:(//)?)([\\w\\.@\\:/\\-~]+)(\\.git)(/)?$");
@@ -76,24 +76,25 @@ require(['jquery'],
          * Validate form before submit
          */
         $('#add').submit(function() {
-            var pathPattern = new RegExp("^\\/?([^\\/]*\\/)*[^\\/]+\\.cwl$");
             var input = $("#url").val();
             if (gitPattern.test(input)) {
-                var success = true;
-                if (!$("#branch").val()) {
-                    addWarning("branch", "You must provide a branch name for the workflow");
-                    success = false;
-                }
-                if (!$("#path").val()) {
-                    addWarning("path", "You must provide a path to the workflow");
-                    success = false;
-                } else if (!pathPattern.test($("#path").val())) {
-                    addWarning("path", "Must be a valid path from the root to a .cwl workflow");
-                    success = false;
+                var success = false;
+                if (input.startsWith("ssh") || input.startsWith("git@")) {
+                    addWarning("url", "SSH is not supported as a protocol, please provide a HTTPS URL to clone");
+                } else {
+                    success = true;
+                    if (!$("#branch").val()) {
+                        addWarning("branch", "You must provide a branch name for the workflow");
+                        success = false;
+                    }
+                    if (!$("#path").val()) {
+                        addWarning("path", "You must provide a path to the workflow or a directory of workflows");
+                        success = false;
+                    }
                 }
                 return success;
             } else if (!githubPattern.test(input) && !gitlabPattern.test(input)) {
-                addWarning("url", "Must be a URL to a workflow on Gitlab or Github, or a Git repository URL");
+                addWarning("url", "Must be a URL to a workflow or directory of workflows on Gitlab or Github, or a Git repository URL");
                 return false;
             }
         });

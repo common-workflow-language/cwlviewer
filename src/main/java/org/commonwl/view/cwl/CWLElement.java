@@ -73,14 +73,6 @@ public class CWLElement {
         this.format = format;
     }
 
-    public List<String> getSourceID() {
-        return sourceID;
-    }
-
-    public void setSourceID(List<String> sourceID) {
-        this.sourceID = sourceID;
-    }
-
     public List<String> getSourceIDs() {
         return sourceID;
     }

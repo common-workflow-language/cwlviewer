@@ -100,13 +100,13 @@ public class WorkflowControllerTest {
         WorkflowFormValidator mockValidator = Mockito.mock(WorkflowFormValidator.class);
         when(mockValidator.validateAndParse(anyObject(), anyObject()))
                 .thenReturn(null)
-                .thenReturn(new GitDetails("https://repo.url/repo.git", "branch", "path/within"))
-                .thenReturn(new GitDetails("https://repo.url/repo.git", "branch", "path/workflow.cwl"));
+                .thenReturn(new GitDetails("https://github.com/owner/repoName.git", "branch", "path/within"))
+                .thenReturn(new GitDetails("https://github.com/owner/repoName.git", "branch", "path/workflow.cwl"));
 
         // The eventual accepted valid workflow
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
         when(mockWorkflow.getRetrievedFrom())
-                .thenReturn(new GitDetails("https://repo.url/repo.git", "branch", "path/workflow.cwl"));
+                .thenReturn(new GitDetails("https://github.com/owner/repoName.git", "branch", "path/workflow.cwl"));
         QueuedWorkflow mockQueuedWorkflow = Mockito.mock(QueuedWorkflow.class);
         when(mockQueuedWorkflow.getTempRepresentation())
                 .thenReturn(mockWorkflow);
@@ -132,17 +132,23 @@ public class WorkflowControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"));
 
+        // Valid directory URL redirect
+        mockMvc.perform(post("/workflows")
+                .param("url", "https://github.com/owner/repoName/blob/branch/path/within"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/workflows/github.com/owner/repoName/blob/branch/path/within"));
+
         // Invalid workflow URL, go to index to show error
         mockMvc.perform(post("/workflows")
-                .param("url", "https://github.com/owner/repoName/tree/branch/path/nonexistant.cwl"))
+                .param("url", "https://github.com/owner/repoName/blob/branch/path/nonexistant.cwl"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"));
 
         // Valid workflow URL redirect
         mockMvc.perform(post("/workflows")
-                .param("url", "https://repo.url/repo.git/branch/path/workflow.cwl"))
+                .param("url", "https://github.com/owner/repoName/blob/branch/path/workflow.cwl"))
                 .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/workflows/repo.url/repo.git/branch/path/workflow.cwl"));
+                .andExpect(redirectedUrl("/workflows/github.com/owner/repoName/blob/branch/path/workflow.cwl"));
 
     }
 
