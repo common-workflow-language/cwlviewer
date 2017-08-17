@@ -99,7 +99,7 @@ public class WorkflowFormValidator {
 
             // Github Dir URL
             m = githubDirPattern.matcher(form.getUrl());
-            if (m.find()) {
+            if (m.find() && ! m.group(2).endsWith(".git")) {
                 String repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
                 if (branch == null) branch = m.group(3);
                 if (path == null) path = m.group(4);
@@ -108,7 +108,7 @@ public class WorkflowFormValidator {
 
             // Gitlab Dir URL
             m = gitlabDirPattern.matcher(form.getUrl());
-            if (m.find()) {
+            if (m.find() && ! m.group(2).endsWith(".git")) {
                 String repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
                 if (branch == null) branch = m.group(3);
                 if (path == null) path = m.group(4);
