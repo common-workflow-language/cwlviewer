@@ -54,9 +54,6 @@ public class Workflow {
     // Used for caching purposes
     private String lastCommit;
 
-    // If schema salad packed, the workflow ID
-    private String packedWorkflowID;
-
     // A String which represents the path to a RO bundle
     // Path types cannot be stored using Spring Data, unfortunately
     private String roBundlePath;
@@ -162,14 +159,6 @@ public class Workflow {
 
     public void setLastCommit(String lastCommit) {
         this.lastCommit = lastCommit;
-    }
-
-    public String getPackedWorkflowID() {
-        return packedWorkflowID;
-    }
-
-    public void setPackedWorkflowID(String packedWorkflowID) {
-        this.packedWorkflowID = packedWorkflowID;
     }
 
     public String getDockerLink() {

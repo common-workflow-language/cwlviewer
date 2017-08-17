@@ -328,6 +328,7 @@ public class WorkflowService {
 
             // Set origin details
             basicModel.setRetrievedOn(new Date());
+            gitInfo.setPackedId(packedWorkflowId);
             basicModel.setRetrievedFrom(gitInfo);
             basicModel.setLastCommit(latestCommit);
 

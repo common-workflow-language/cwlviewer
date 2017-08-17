@@ -70,6 +70,7 @@ public class WorkflowFormValidator {
         if (!e.hasErrors()) {
 
             // Override if specific branch or path is given in the form
+            String repoUrl = null;
             String branch = null;
             String path = null;
             if (!isEmptyOrWhitespace(form.getBranch())) {
@@ -82,37 +83,44 @@ public class WorkflowFormValidator {
             // Github URL
             Matcher m = githubCwlPattern.matcher(form.getUrl());
             if (m.find()) {
-                String repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
                 if (branch == null) branch = m.group(3);
                 if (path == null) path = m.group(4);
-                return new GitDetails(repoUrl, branch, path);
             }
 
             // Gitlab URL
             m = gitlabCwlPattern.matcher(form.getUrl());
             if (m.find()) {
-                String repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
                 if (branch == null) branch = m.group(3);
                 if (path == null) path = m.group(4);
-                return new GitDetails(repoUrl, branch, path);
             }
 
             // Github Dir URL
             m = githubDirPattern.matcher(form.getUrl());
             if (m.find()) {
-                String repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
                 if (branch == null) branch = m.group(3);
                 if (path == null) path = m.group(4);
-                return new GitDetails(repoUrl, branch, path);
             }
 
             // Gitlab Dir URL
             m = gitlabDirPattern.matcher(form.getUrl());
             if (m.find()) {
-                String repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
                 if (branch == null) branch = m.group(3);
                 if (path == null) path = m.group(4);
-                return new GitDetails(repoUrl, branch, path);
+            }
+
+            // Split off packed ID if present
+            if (repoUrl != null) {
+                String[] pathSplit = path.split("#");
+                GitDetails details = new GitDetails(repoUrl, branch, path);
+                if (pathSplit.length > 1) {
+                    details.setPath(pathSplit[pathSplit.length - 2]);
+                    details.setPackedId(pathSplit[pathSplit.length - 1]);
+                }
+                return details;
             }
 
             // General Git details if didn't match the above

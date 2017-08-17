@@ -413,7 +413,13 @@ public class WorkflowController {
             default:
                 throw new WorkflowNotFoundException();
         }
-        return new GitDetails(repoUrl, branch, path);
+        String[] pathSplit = path.split("#");
+        GitDetails details = new GitDetails(repoUrl, branch, path);
+        if (pathSplit.length > 1) {
+            details.setPath(pathSplit[pathSplit.length - 2]);
+            details.setPackedId(pathSplit[pathSplit.length - 1]);
+        }
+        return details;
     }
 
     /**

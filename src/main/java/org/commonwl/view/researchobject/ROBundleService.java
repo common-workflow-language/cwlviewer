@@ -171,7 +171,7 @@ public class ROBundleService {
 
             // Get URL to run cwltool
             String rawUrl = wfDetails.getRawUrl();
-            String packedWorkflowID = workflow.getPackedWorkflowID();
+            String packedWorkflowID = wfDetails.getPackedId();
             if (packedWorkflowID != null) {
                 if (packedWorkflowID.charAt(0) != '#') {
                     rawUrl += "#";

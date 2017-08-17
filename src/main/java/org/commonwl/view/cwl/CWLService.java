@@ -189,7 +189,6 @@ public class CWLService {
             // Construct the rest of the workflow model
             Workflow workflowModel = new Workflow(label, extractDoc(cwlFile), getInputs(cwlFile),
                     getOutputs(cwlFile), getSteps(cwlFile), null);
-            workflowModel.setPackedWorkflowID(packedWorkflowId);
 
             workflowModel.setCwltoolVersion(cwlTool.getVersion());
 
@@ -223,7 +222,7 @@ public class CWLService {
                                              File workflowFile) throws CWLValidationException {
         GitDetails gitDetails = basicModel.getRetrievedFrom();
         String latestCommit = basicModel.getLastCommit();
-        String packedWorkflowID = basicModel.getPackedWorkflowID();
+        String packedWorkflowID = gitDetails.getPackedId();
 
         // Get paths to workflow
         String url = gitDetails.getUrl(latestCommit).replace("https://", "");
@@ -488,12 +487,18 @@ public class CWLService {
             JsonNode cwlFile = yamlStringToJson(readFileToString(file));
 
             // If the CWL file is packed there can be multiple workflows in a file
+            int packedCount = 0;
             if (cwlFile.has(DOC_GRAPH)) {
                 // Packed CWL, find the first subelement which is a workflow and take it
                 for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
                     if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
                         cwlFile = jsonNode;
+                        packedCount++;
                     }
+                }
+                if (packedCount > 1) {
+                    return new WorkflowOverview("/" + file.getName(), "Packed file",
+                            "contains " + packedCount + " workflows");
                 }
             }
 

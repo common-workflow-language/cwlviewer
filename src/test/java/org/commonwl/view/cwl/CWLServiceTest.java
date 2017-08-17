@@ -128,7 +128,7 @@ public class CWLServiceTest {
                 "549c973ccc01781595ce562dea4cedc6c9540fe0", "workflows/make-to-cwl/dna.cwl");
         Workflow basicModel = new Workflow(null, null, null, null, null, null);
         basicModel.setRetrievedFrom(gitInfo);
-        basicModel.setPackedWorkflowID("main");
+        gitInfo.setPackedId("main");
         basicModel.setLastCommit("549c973ccc01781595ce562dea4cedc6c9540fe0");
 
         // Parse the workflow
