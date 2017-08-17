@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -213,7 +214,8 @@ public class WorkflowService {
 
             Path localPath = repo.getRepository().getWorkTree().toPath();
             Path pathToDirectory = localPath.resolve(gitInfo.getPath()).normalize().toAbsolutePath();
-            if (pathToDirectory.toString().equals("/")) {
+            Path root = Paths.get("/").toAbsolutePath();
+            if (pathToDirectory.equals(root)) {
                 pathToDirectory = localPath;
             } else if (!pathToDirectory.startsWith(localPath.normalize().toAbsolutePath())) {
                 // Prevent path traversal attacks
