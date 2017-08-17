@@ -19,13 +19,22 @@
 
 package org.commonwl.view.cwl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import static org.apache.commons.io.FileUtils.readFileToString;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
@@ -47,15 +56,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-
-import static org.apache.commons.io.FileUtils.readFileToString;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
@@ -65,6 +70,7 @@ import static org.apache.commons.io.FileUtils.readFileToString;
 public class CWLService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final IRIFactory iriFactory = IRIFactory.iriImplementation();
 
     // Autowired properties/services
     private final RDFService rdfService;
@@ -368,8 +374,10 @@ public class CWLService {
                 // Add new step
                 CWLStep wfStep = new CWLStep();
 
-                Path workflowPath = Paths.get(step.get("wf").toString()).getParent();
-                Path runPath = Paths.get(step.get("run").toString());
+                IRI wfStepUri = iriFactory.construct(step.get("wf").asResource().getURI());
+                IRI workflowPath = wfStepUri.resolve("./");
+
+                IRI runPath = iriFactory.construct(step.get("run").asResource().getURI());
                 wfStep.setRun(workflowPath.relativize(runPath).toString());
                 wfStep.setRunType(rdfService.strToRuntype(step.get("runtype").toString()));
 
