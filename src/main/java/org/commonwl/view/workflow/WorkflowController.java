@@ -467,7 +467,9 @@ public class WorkflowController {
             queued = workflowService.getQueuedWorkflow(gitDetails);
             if (queued == null) {
                 // Validation
-                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl(), gitDetails.getBranch(), gitDetails.getPath());
+                String packedPart = (gitDetails.getPackedId() == null) ? "" : "#" + gitDetails.getPackedId();
+                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl(), gitDetails.getBranch(),
+                        gitDetails.getPath() + packedPart);
                 BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
                 workflowFormValidator.validateAndParse(workflowForm, errors);
                 if (!errors.hasErrors()) {
@@ -476,6 +478,10 @@ public class WorkflowController {
                             queued = workflowService.createQueuedWorkflow(gitDetails);
                             if (queued.getWorkflowList() != null) {
                                 // Packed workflow listing
+                                if (queued.getWorkflowList().size() == 1) {
+                                    gitDetails.setPackedId(queued.getWorkflowList().get(0).getFileName());
+                                    return new ModelAndView("redirect:" + gitDetails.getInternalUrl());
+                                }
                                 return new ModelAndView("selectworkflow", "workflowOverviews", queued.getWorkflowList())
                                         .addObject("gitDetails", gitDetails);
                             }

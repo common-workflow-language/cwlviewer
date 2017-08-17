@@ -309,17 +309,25 @@ public class WorkflowService {
             File workflowFile = new File(pathToWorkflowFile.toString());
 
             // Handling of packed workflows
-            String packedWorkflowId = null;
-            if (cwlService.isPacked(workflowFile)) {
-                List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(workflowFile);
-                if (overviews.size() == 0) {
-                    throw new IOException("No workflow was found within the packed CWL file");
-                } else {
-                    // Dummy queued workflow object to return the list
-                    QueuedWorkflow overviewList = new QueuedWorkflow();
-                    overviewList.setWorkflowList(overviews);
-                    return overviewList;
+            String packedWorkflowId = gitInfo.getPackedId();
+            if (packedWorkflowId == null) {
+                if (cwlService.isPacked(workflowFile)) {
+                    List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(workflowFile);
+                    if (overviews.size() == 0) {
+                        throw new IOException("No workflow was found within the packed CWL file");
+                    } else {
+                        // Dummy queued workflow object to return the list
+                        QueuedWorkflow overviewList = new QueuedWorkflow();
+                        overviewList.setWorkflowList(overviews);
+                        return overviewList;
+                    }
                 }
+            } else {
+                // Packed ID specified but was not found
+                if (!cwlService.isPacked(workflowFile)) {
+                    throw new WorkflowNotFoundException();
+                }
+
             }
 
             Workflow basicModel = cwlService.parseWorkflowNative(workflowFile, packedWorkflowId);
