@@ -168,8 +168,7 @@ public class WorkflowController {
      */
     @GetMapping(value={"/workflows/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
                        "/workflows/{domain}.com/{owner}/{repoName}/blob/{branch}/**"})
-    public ModelAndView getWorkflow(@Value("${applicationURL}") String applicationURL,
-                                    @PathVariable("domain") String domain,
+    public ModelAndView getWorkflow(@PathVariable("domain") String domain,
                                     @PathVariable("owner") String owner,
                                     @PathVariable("repoName") String repoName,
                                     @PathVariable("branch") String branch,
@@ -183,8 +182,7 @@ public class WorkflowController {
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
 
         // Get workflow
-        ModelAndView modelAndView = getWorkflow(gitDetails, redirectAttrs);
-        return modelAndView.addObject("appURL", applicationURL);
+        return getWorkflow(gitDetails, redirectAttrs);
     }
 
     /**
@@ -199,8 +197,7 @@ public class WorkflowController {
                                            RedirectAttributes redirectAttrs) {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         GitDetails gitDetails = getGitDetails(11, path, branch);
-        ModelAndView modelAndView = getWorkflow(gitDetails, redirectAttrs);
-        return modelAndView.addObject("appURL", applicationURL);
+        return getWorkflow(gitDetails, redirectAttrs);
     }
 
     /**
