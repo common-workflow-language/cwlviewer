@@ -139,12 +139,13 @@ public class GitDetails implements Serializable {
      * @return The URL
      */
     public String getInternalUrl() {
+        String pathPart = path.equals("/") ? "" : "/" + path;
         switch (getType()) {
             case GITHUB:
             case GITLAB:
-                return "/workflows/" + normaliseUrl(repoUrl).replace(".git", "") + "/blob/" + branch + "/" + path;
+                return "/workflows/" + normaliseUrl(repoUrl).replace(".git", "") + "/blob/" + branch + pathPart;
             default:
-                return "/workflows/" + normaliseUrl(repoUrl) + "/" + branch + "/" + path;
+                return "/workflows/" + normaliseUrl(repoUrl) + "/" + branch + pathPart;
         }
     }
 

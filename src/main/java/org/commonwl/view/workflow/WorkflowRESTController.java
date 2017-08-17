@@ -88,14 +88,18 @@ public class WorkflowRESTController {
     /**
      * Create a new workflow from the given URL
      * @param url The URL of the workflow
+     * @param branch The branch where the workflow can be found
+     * @param path The path within the repository to the workflow file
      * @return Appropriate response code and optional JSON string with message
      */
     @PostMapping(value = "/workflows", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<?> newWorkflowFromGithubURLJson(@RequestParam(value="url") String url,
-                                                          HttpServletResponse response) {
+    public ResponseEntity<?> newWorkflowFromGitURLJson(@RequestParam(value="url") String url,
+                                                       @RequestParam(value="branch", required=false) String branch,
+                                                       @RequestParam(value="path", required=false) String path,
+                                                       HttpServletResponse response) {
 
-        // Run validator which checks the github URL is valid
-        WorkflowForm workflowForm = new WorkflowForm(url);
+        // Run validator which checks the URL is valid
+        WorkflowForm workflowForm = new WorkflowForm(url, branch, path);
         BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
         GitDetails gitInfo = workflowFormValidator.validateAndParse(workflowForm, errors);
 

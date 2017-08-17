@@ -24,6 +24,7 @@ import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 @Controller
 public class WorkflowController {
@@ -119,21 +121,30 @@ public class WorkflowController {
             Workflow workflow = workflowService.getWorkflow(gitInfo);
             if (workflow == null) {
                 try {
-                    workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
+                    if (gitInfo.getPath().endsWith(".cwl")) {
+                        workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
+                    } else {
+                        return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
+                    }
+                } catch (TransportException ex) {
+                    logger.warn("git.sshError " + workflowForm , ex);
+                    bindingResult.rejectValue("url", "git.sshError");
+                    return new ModelAndView("index");
                 } catch (GitAPIException ex) {
+                    logger.error("git.retrievalError " + workflowForm , ex);
                     bindingResult.rejectValue("url", "git.retrievalError");
-                    logger.error("Git API Error", ex);
                     return new ModelAndView("index");
                 } catch (WorkflowNotFoundException ex) {
+                    logger.warn("git.pathTraversal " + workflowForm , ex);
                     bindingResult.rejectValue("url", "git.pathTraversal");
                     return new ModelAndView("index");
                 } catch (Exception ex) {
+                    logger.warn("url.parsingError " + workflowForm , ex);
                     bindingResult.rejectValue("url", "url.parsingError");
                     return new ModelAndView("index");
                 }
             }
             gitInfo = workflow.getRetrievedFrom();
-
             // Redirect to the workflow
             return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
         }
@@ -444,18 +455,36 @@ public class WorkflowController {
             queued = workflowService.getQueuedWorkflow(gitDetails);
             if (queued == null) {
                 // Validation
-                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl());
+                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl(), gitDetails.getBranch(), gitDetails.getPath());
                 BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
                 workflowFormValidator.validateAndParse(workflowForm, errors);
                 if (!errors.hasErrors()) {
                     try {
-                        queued = workflowService.createQueuedWorkflow(gitDetails);
+                        if (gitDetails.getPath().endsWith(".cwl")) {
+                            queued = workflowService.createQueuedWorkflow(gitDetails);
+                        } else {
+                            List<WorkflowOverview> workflowOverviews = workflowService.getWorkflowsFromDirectory(gitDetails);
+                            if (workflowOverviews.size() > 1) {
+                                return new ModelAndView("selectworkflow", "workflowOverviews", workflowOverviews)
+                                        .addObject("gitDetails", gitDetails);
+                            } else if (workflowOverviews.size() == 1) {
+                                return new ModelAndView("redirect:" + gitDetails.getInternalUrl() +
+                                        "/" + workflowOverviews.get(0).getFileName());
+                            } else {
+                                errors.rejectValue("url", "url.noWorkflowsInDirectory", "No workflow files were found in the given directory");
+                            }
+                        }
+                    } catch (TransportException ex) {
+                        logger.warn("git.sshError " + workflowForm , ex);
+                        errors.rejectValue("url", "git.sshError", "SSH URLs are not supported, please provide a HTTPS URL for the repository or submodules");
                     } catch (GitAPIException ex) {
+                        logger.error("git.retrievalError " + workflowForm, ex);
                         errors.rejectValue("url", "git.retrievalError", "The workflow could not be retrieved from the Git repository using the details given");
-                        logger.error("Git API Error", ex);
                     } catch (WorkflowNotFoundException ex) {
+                        logger.warn("git.pathTraversal " + workflowForm, ex);
                         errors.rejectValue("url", "git.pathTraversal", "The path given did not resolve to a location within the repository");
                     } catch (IOException ex) {
+                        logger.warn("git.parsingError " + workflowForm, ex);
                         errors.rejectValue("url", "url.parsingError", "The workflow could not be parsed from the given URL");
                     }
                 }

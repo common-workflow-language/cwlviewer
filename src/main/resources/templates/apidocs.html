@@ -34,7 +34,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-12" role="main" id="main">
-                    <h1>REST API Documentation</h1>
+                    <h1>JSON API Documentation</h1>
                     <div class="alert alert-warning"><strong>Disclaimer:</strong> The API is still under heavy development and breaking changes to endpoints or parameters may be made</div>
 
                     <p>If you make anything utilizing our API, please <a href="https://gitter.im/common-workflow-language/cwlviewer" alt="Gitter Chatroom" target="_blank" rel="noopener">let us know about it</a> - we would love to see!</p>
@@ -59,13 +59,30 @@
                         <tr>
                             <td>url</td>
                             <td>String</td>
-                            <td>The Github URL to the workflow</td>
+                            <td>The URL of the repository. Either a Gitlab or Github URL, or any Git repository URL.</td>
+                        </tr>
+                        <tr>
+                            <td>branch</td>
+                            <td>String</td>
+                            <td>The branch of the repository. Required if the URL is not from Gitlab or Github.</td>
+                        </tr>
+                        <tr>
+                            <td>path</td>
+                            <td>String</td>
+                            <td>The path within the repository to the workflow file. Required if the URL is not from Gitlab or Github.</td>
                         </tr>
                     </table>
                     <h4>Input</h4>
 <pre class="highlight json">
 {
     "url": "https://github.com/common-workflow-language/workflows/tree/master/workflows/compile/compile1.cwl"
+}
+</pre>
+<pre class="highlight json">
+{
+    "url": "https://bitbucket.org/markrobinson96/workflows.git",
+    "branch": "master",
+    "path": "/workflows/make-to-cwl/dna.cwl"
 }
 </pre>
                     <h4>Success</h4>
@@ -84,7 +101,7 @@ Location: /workflows/:githubURL
 
                     <h3 id="workflowDetails">Get Workflow Details</h3>
                     <span class="method get">GET</span>
-                    <pre>/workflows/:githubURL</pre>
+                    <pre>/workflows/:url</pre>
                     <h4>Parameters</h4>
                     <table class="table">
                         <tr>
@@ -93,9 +110,9 @@ Location: /workflows/:githubURL
                             <th>Description</th>
                         </tr>
                         <tr>
-                            <td>githubURL</td>
+                            <td>url</td>
                             <td>String</td>
-                            <td>Partial github URL to the workflow (no "https://")</td>
+                            <td>Partial URL to the workflow eg "github.com/owner/repo/tree/branch/workflow.cwl" or "bitbucket.org/owner/repo.git/master/workflow.cwl</td>
                         </tr>
                     </table>
                     <h4>Success 200</h4>
@@ -106,14 +123,9 @@ Location: /workflows/:githubURL
                             <th>Description</th>
                         </tr>
                         <tr>
-                            <td>retrievedFrom.owner</td>
+                            <td>retrievedFrom.repoUrl</td>
                             <td>String</td>
-                            <td>Github username or organisation name</td>
-                        </tr>
-                        <tr>
-                            <td>retrievedFrom.repoName</td>
-                            <td>String</td>
-                            <td>Github repository name</td>
+                            <td>URL of the Github repository</td>
                         </tr>
                         <tr>
                             <td>retrievedFrom.branch</td>
@@ -128,7 +140,17 @@ Location: /workflows/:githubURL
                         <tr>
                             <td>retrievedFrom.url</td>
                             <td>URL</td>
-                            <td>The full Github URL to the workflow</td>
+                            <td>The URL to the page on the site if type is not GENERIC, otherwise the same as repoUrl</td>
+                        </tr>
+                        <tr>
+                            <td>retrievedFrom.rawUrl</td>
+                            <td>URL</td>
+                            <td>The URL directly to the file if type is not GENERIC, otherwise the same as repoUrl</td>
+                        </tr>
+                        <tr>
+                            <td>retrievedFrom.type</td>
+                            <td>Enum</td>
+                            <td>One of GENERIC, GITHUB, GITLAB, BITBUCKET</td>
                         </tr>
                         <tr>
                             <td>retrievedOn</td>
@@ -139,6 +161,11 @@ Location: /workflows/:githubURL
                             <td>lastCommit</td>
                             <td>String</td>
                             <td>The last commit ID on the branch</td>
+                        </tr>
+                        <tr>
+                            <td>packedWorkflowID</td>
+                            <td>String</td>
+                            <td>The ID of the workflow within the file, if this is a packed CWL file (contains a <a href="http://www.commonwl.org/draft-3/SchemaSalad.html#Document_graph">document graph</a>).</td>
                         </tr>
                         <tr>
                             <td>label</td>
@@ -207,46 +234,39 @@ Location: /workflows/:githubURL
 <pre class="highlight json">
 {
     "retrievedFrom": {
-        "owner": "common-workflow-language",
-        "repoName": "workflows",
+        "repoUrl": "https://github.com/common-workflow-language/workflows.git",
         "branch": "master",
         "path": "workflows/lobSTR/lobSTR-workflow.cwl",
-        "url": "https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl"
+        "url": "https://github.com/common-workflow-language/workflows/blob/master/workflows/lobSTR/lobSTR-workflow.cwl",
+        "rawUrl": "https://raw.githubusercontent.com/common-workflow-language/workflows/master/workflows/lobSTR/lobSTR-workflow.cwl",
+        "type": "GITHUB"
     },
-    "retrievedOn": 1499175275743,
-    "lastCommit": "920c6be45f08e979e715a0018f22c532b024074f",
+    "retrievedOn": 1502714218616,
+    "lastCommit": "17b65ea19d81527090fded62ffa0e1ba3b25d561",
     "label": "lobSTR-workflow.cwl",
     "inputs": {
         "reference": {
-            "doc": "lobSTR's bwa reference files",
             "type": "File"
         },
         "rg-sample": {
-            "doc": "Use this in the read group SM tag",
             "type": "String"
         },
         "p1": {
-            "doc": "list of files containing the first end of paired end reads in fasta or fastq format",
-            "type": "11a1d32ade317199b68e62aa6ce50b3e"
+            "type": "ee54066e73d068edfbf9ca5059e14acd"
         },
         "p2": {
-            "doc": "list of files containing the second end of paired end reads in fasta or fastq format",
-            "type": "f9505470accbbaf6b9e15db2123490aa"
+            "type": "79ab371b6d0fdbadbf9a4a89ef393353"
         },
         "output_prefix": {
-            "doc": "prefix for output files. will output prefix.aligned.bam and prefix.aligned.stats",
             "type": "String"
         },
         "rg-lib": {
-            "doc": "Use this in the read group LB tag",
             "type": "String"
         },
         "strinfo": {
-            "doc": "File containing statistics for each STR.",
             "type": "File"
         },
         "noise_model": {
-            "doc": "File to read noise model parameters from (.stepmodel)",
             "type": "File"
         }
     },
@@ -266,34 +286,106 @@ Location: /workflows/:githubURL
     },
     "steps": {
         "allelotype": {
-            "doc": "Run lobSTR allelotype classifier.",
             "run": "allelotype.cwl",
-            "runType": "COMMANDLINETOOL"
+            "runType": "COMMANDLINETOOL",
+            "sources": {
+                "file:///data/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/lobSTR/lobSTR-workflow.cwl#allelotype/bam": {
+                    "sourceIDs": [
+                        "samindex"
+                    ]
+                },
+                "allelotype": {
+                    "sourceIDs": [
+                        "strinfo"
+                    ]
+                },
+                "file:///data/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/lobSTR/lobSTR-workflow.cwl#allelotype/noise_model": {
+                    "sourceIDs": [
+                        "noise_model"
+                    ]
+                },
+                "file:///data/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/lobSTR/lobSTR-workflow.cwl#allelotype/reference": {
+                    "sourceIDs": [
+                        "reference"
+                    ]
+                },
+                "file:///data/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/lobSTR/lobSTR-workflow.cwl#allelotype/output_prefix": {
+                    "sourceIDs": [
+                        "output_prefix"
+                    ]
+                }
+            }
         },
         "samsort": {
-            "doc": "Invoke 'samtools sort' (samtools 1.19)",
             "run": "samtools-sort.cwl",
-            "runType": "COMMANDLINETOOL"
+            "runType": "COMMANDLINETOOL",
+            "sources": {
+                "samsort": {
+                    "sourceIDs": [
+                        "lobSTR"
+                    ]
+                },
+                "file:///data/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/lobSTR/lobSTR-workflow.cwl#samsort/output_name": {
+                    "defaultVal": "\\\"aligned.sorted.bam\\\""
+                }
+            }
         },
         "lobSTR": {
             "label": "lobSTR",
-            "doc": "lobSTR is a tool for profiling Short Tandem Repeats (STRs) from high throughput sequencing data.",
             "run": "lobSTR-tool.cwl",
-            "runType": "COMMANDLINETOOL"
+            "runType": "COMMANDLINETOOL",
+            "sources": {
+                "lobSTR": {
+                    "sourceIDs": [
+                        "rg-lib"
+                    ]
+                },
+                "file:///data/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/lobSTR/lobSTR-workflow.cwl#lobSTR/p1": {
+                    "sourceIDs": [
+                        "p1"
+                    ]
+                },
+                "file:///data/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/lobSTR/lobSTR-workflow.cwl#lobSTR/p2": {
+                    "sourceIDs": [
+                        "p2"
+                    ]
+                },
+                "file:///data/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/lobSTR/lobSTR-workflow.cwl#lobSTR/output_prefix": {
+                    "sourceIDs": [
+                        "output_prefix"
+                    ]
+                },
+                "file:///data/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/lobSTR/lobSTR-workflow.cwl#lobSTR/rg-sample": {
+                    "sourceIDs": [
+                        "rg-sample"
+                    ]
+                },
+                "file:///data/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/lobSTR/lobSTR-workflow.cwl#lobSTR/reference": {
+                    "sourceIDs": [
+                        "reference"
+                    ]
+                }
+            }
         },
         "samindex": {
-            "doc": "Invoke 'samtools index' to create a 'BAI' index (samtools 1.19)",
             "run": "samtools-index.cwl",
-            "runType": "COMMANDLINETOOL"
+            "runType": "COMMANDLINETOOL",
+            "sources": {
+                "samindex": {
+                    "sourceIDs": [
+                        "samsort"
+                    ]
+                }
+            }
         }
     },
-    "dockerLink": "true",
-    "cwltoolVersion": " 1.0.20170622090721",
-    "visualisationDot": "digraph workflow {\n  graph [\n    bgcolor = \"#eeeeee\"\n    color = \"black\"\n    fontsize = \"10\"\n    labeljust = \"left\"\n    clusterrank = \"local\"\n    ranksep = \"0.22\"\n    nodesep = \"0.05\"\n  ]\n  node [\n    fontname = \"Helvetica\"\n    fontsize = \"10\"\n    fontcolor = \"black\"\n    shape = \"record\"\n    height = \"0\"\n    width = \"0\"\n    color = \"black\"\n    fillcolor = \"lightgoldenrodyellow\"\n    style = \"filled\"\n  ];\n  edge [\n    fontname=\"Helvetica\"\n    fontsize=\"8\"\n    fontcolor=\"black\"\n    color=\"black\"\n    arrowsize=\"0.7\"\n  ];\n  subgraph cluster_inputs {\n    rank = \"same\";\n    style = \"dashed\";\n    label = \"Workflow Inputs\";\n    \"lobSTR-workflow.cwl#output_prefix\" [fillcolor=\"#94DDF4\",label=\"output_prefix\"];\n    \"lobSTR-workflow.cwl#reference\" [fillcolor=\"#94DDF4\",label=\"reference\"];\n    \"lobSTR-workflow.cwl#p2\" [fillcolor=\"#94DDF4\",label=\"p2\"];\n    \"lobSTR-workflow.cwl#p2\" [fillcolor=\"#94DDF4\",label=\"p2\"];\n    \"lobSTR-workflow.cwl#strinfo\" [fillcolor=\"#94DDF4\",label=\"strinfo\"];\n    \"lobSTR-workflow.cwl#p1\" [fillcolor=\"#94DDF4\",label=\"p1\"];\n    \"lobSTR-workflow.cwl#p1\" [fillcolor=\"#94DDF4\",label=\"p1\"];\n    \"lobSTR-workflow.cwl#rg-lib\" [fillcolor=\"#94DDF4\",label=\"rg-lib\"];\n    \"lobSTR-workflow.cwl#noise_model\" [fillcolor=\"#94DDF4\",label=\"noise_model\"];\n    \"lobSTR-workflow.cwl#rg-sample\" [fillcolor=\"#94DDF4\",label=\"rg-sample\"];\n  }\n  subgraph cluster_outputs {\n    rank = \"same\";\n    style = \"dashed\";\n    label = \"Workflow Outputs\";\n    \"lobSTR-workflow.cwl#bam_stats\" [fillcolor=\"#94DDF4\",label=\"bam_stats\"];\n    \"lobSTR-workflow.cwl#vcf_stats\" [fillcolor=\"#94DDF4\",label=\"vcf_stats\"];\n    \"lobSTR-workflow.cwl#vcf\" [fillcolor=\"#94DDF4\",label=\"vcf\"];\n    \"lobSTR-workflow.cwl#bam\" [fillcolor=\"#94DDF4\",label=\"bam\"];\n  }\n  \"lobSTR-workflow.cwl#allelotype\" [label=\"allelotype\"];\n  \"lobSTR-workflow.cwl#samindex\" [label=\"samindex\"];\n  \"lobSTR-workflow.cwl#samsort\" [label=\"samsort\"];\n  \"lobSTR-workflow.cwl#lobSTR\" [label=\"lobSTR\"];\n}\n",
-    "robundle": "/robundle/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl",
-    "visualisationXdot": "/graph/xdot/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl",
-    "visualisationPng": "/graph/png/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl",
-    "visualisationSvg": "/graph/svg/github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR/lobSTR-workflow.cwl"
+    "dockerLink": "https://hub.docker.com/r/rabix/lobstr",
+    "cwltoolVersion": "1.0.20170810192106",
+    "visualisationDot": "digraph workflow {\n  graph [\n    bgcolor = \"#eeeeee\"\n    color = \"black\"\n    fontsize = \"10\"\n    labeljust = \"left\"\n    clusterrank = \"local\"\n    ranksep = \"0.22\"\n    nodesep = \"0.05\"\n  ]\n  node [\n    fontname = \"Helvetica\"\n    fontsize = \"10\"\n    fontcolor = \"black\"\n    shape = \"record\"\n    height = \"0\"\n    width = \"0\"\n    color = \"black\"\n    fillcolor = \"lightgoldenrodyellow\"\n    style = \"filled\"\n  ];\n  edge [\n    fontname=\"Helvetica\"\n    fontsize=\"8\"\n    fontcolor=\"black\"\n    color=\"black\"\n    arrowsize=\"0.7\"\n  ];\n  subgraph cluster_inputs {\n    rank = \"same\";\n    style = \"dashed\";\n    label = \"Workflow Inputs\";\n    \"p2\" [fillcolor=\"#94DDF4\",label=\"p2\"];\n    \"p2\" [fillcolor=\"#94DDF4\",label=\"p2\"];\n    \"output_prefix\" [fillcolor=\"#94DDF4\",label=\"output_prefix\"];\n    \"reference\" [fillcolor=\"#94DDF4\",label=\"reference\"];\n    \"noise_model\" [fillcolor=\"#94DDF4\",label=\"noise_model\"];\n    \"strinfo\" [fillcolor=\"#94DDF4\",label=\"strinfo\"];\n    \"p1\" [fillcolor=\"#94DDF4\",label=\"p1\"];\n    \"p1\" [fillcolor=\"#94DDF4\",label=\"p1\"];\n    \"rg-lib\" [fillcolor=\"#94DDF4\",label=\"rg-lib\"];\n    \"rg-sample\" [fillcolor=\"#94DDF4\",label=\"rg-sample\"];\n  }\n  subgraph cluster_outputs {\n    rank = \"same\";\n    style = \"dashed\";\n    labelloc = \"b\";\n    label = \"Workflow Outputs\";\n    \"bam\" [fillcolor=\"#94DDF4\",label=\"bam\"];\n    \"vcf\" [fillcolor=\"#94DDF4\",label=\"vcf\"];\n    \"bam_stats\" [fillcolor=\"#94DDF4\",label=\"bam_stats\"];\n    \"vcf_stats\" [fillcolor=\"#94DDF4\",label=\"vcf_stats\"];\n  }\n  \"allelotype\" [label=\"allelotype\"];\n  \"samsort\" [label=\"samsort\"];\n  \"lobSTR\" [label=\"lobSTR\"];\n  \"samindex\" [label=\"samindex\"];\n  \"strinfo\" -> \"allelotype\" [label=\"strinfo\"];\n  \"reference\" -> \"allelotype\" [label=\"reference\"];\n  \"output_prefix\" -> \"allelotype\" [label=\"output_prefix\"];\n  \"noise_model\" -> \"allelotype\" [label=\"noise_model\"];\n  \"samindex\" -> \"allelotype\" [label=\"bam\"];\n  \"lobSTR\" -> \"samsort\" [label=\"input\"];\n  \"default1\" -> \"samsort\" [label=\"output_name\"];\n  \"default1\" [label=\"\\\"aligned.sorted.bam\\\"\", fillcolor=\"#D5AEFC\"];\n  \"rg-lib\" -> \"lobSTR\" [label=\"rg-lib\"];\n  \"rg-sample\" -> \"lobSTR\" [label=\"rg-sample\"];\n  \"p2\" -> \"lobSTR\" [label=\"p2\"];\n  \"p1\" -> \"lobSTR\" [label=\"p1\"];\n  \"reference\" -> \"lobSTR\" [label=\"reference\"];\n  \"output_prefix\" -> \"lobSTR\" [label=\"output_prefix\"];\n  \"samsort\" -> \"samindex\" [label=\"input\"];\n  \"samindex\" -> \"bam\";\n  \"allelotype\" -> \"vcf\";\n  \"lobSTR\" -> \"bam_stats\";\n  \"allelotype\" -> \"vcf_stats\";\n}\n",
+    "visualisationPng": "/graph/png/github.com/common-workflow-language/workflows/blob/master/workflows/lobSTR/lobSTR-workflow.cwl",
+    "visualisationSvg": "/graph/svg/github.com/common-workflow-language/workflows/blob/master/workflows/lobSTR/lobSTR-workflow.cwl",
+    "roBundle": "/robundle/github.com/common-workflow-language/workflows/blob/master/workflows/lobSTR/lobSTR-workflow.cwl",
+    "visualisationXdot": "/graph/xdot/github.com/common-workflow-language/workflows/blob/master/workflows/lobSTR/lobSTR-workflow.cwl"
 }
 </pre>
 
@@ -454,7 +546,7 @@ Location: /workflows/:githubURL
                     <h4>Finished 303</h4>
 <pre>
 HTTP/1.1 303 See Other
-Location: /workflows/:githubURL
+Location: /workflows/:url
 </pre>
 
                     <h2>Examples</h2>
