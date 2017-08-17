@@ -179,7 +179,7 @@ public class CWLServiceTest {
         // No docs for this workflow
         assertEquals("Hello World", hello.getLabel());
         assertEquals("Puts a message into a file using echo", hello.getDoc());
-        assertEquals("hello.cwl", hello.getFileName());
+        assertEquals("/hello.cwl", hello.getFileName());
 
     }
 

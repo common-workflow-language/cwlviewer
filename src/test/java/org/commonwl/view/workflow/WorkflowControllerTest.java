@@ -160,6 +160,7 @@ public class WorkflowControllerTest {
 
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
         QueuedWorkflow mockQueuedWorkflow = Mockito.mock(QueuedWorkflow.class);
+        when(mockQueuedWorkflow.getWorkflowList()).thenReturn(null);
 
         // Mock service
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
