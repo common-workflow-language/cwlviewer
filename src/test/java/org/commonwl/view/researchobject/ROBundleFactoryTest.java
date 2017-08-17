@@ -65,7 +65,8 @@ public class ROBundleFactoryTest {
         // Attempt to add RO to workflow
         factory.createWorkflowRO(validWorkflow);
 
-        assertEquals("test/path/to/check/for.zip", validWorkflow.getRoBundlePath());
+        assertEquals(Paths.get("test/path/to/check/for.zip"), 
+                Paths.get(validWorkflow.getRoBundlePath()));
 
     }
 

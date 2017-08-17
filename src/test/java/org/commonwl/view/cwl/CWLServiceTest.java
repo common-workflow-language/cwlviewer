@@ -197,7 +197,8 @@ public class CWLServiceTest {
 
         // Should throw IOException due to oversized file
         thrown.expect(IOException.class);
-        thrown.expectMessage("File 'hello.cwl' is over singleFileSizeLimit - 672 bytes/0 bytes");
+        thrown.expectMessage(String.format("File 'hello.cwl' is over singleFileSizeLimit - %s bytes/0 bytes", 
+                helloWorkflow.length()));
         cwlService.getWorkflowOverview(helloWorkflow);
 
     }
