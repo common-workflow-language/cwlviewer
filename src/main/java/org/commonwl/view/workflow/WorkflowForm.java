@@ -75,4 +75,11 @@ public class WorkflowForm {
     private String trimTrailingSlashes(String url) {
         return url.replaceAll("\\/+$", "");
     }
+
+    @Override
+    public String toString() {
+        return "WorkflowForm [" + (url != null ? "url=" + url + ", " : "")
+                 + (branch != null ? "branch=" + branch + ", " : "") + (path != null ? "path=" + path : "") + "]";
+    }
+
 }

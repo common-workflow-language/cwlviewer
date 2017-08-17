@@ -107,7 +107,8 @@ public class WorkflowServiceTest {
     @Test
     public void getWorkflowCacheHasExpired() throws Exception {
 
-        GitDetails githubInfo = new GitDetails("https://github.com/owner/repoName.git", "sha", "path");
+        GitDetails githubInfo = new GitDetails("https://github.com/common-workflow-language/workflows.git",
+                "master", "dna.cwl");
 
         Workflow oldWorkflow = new Workflow("old", "This is the expired workflow",
                 new HashMap<>(), new HashMap<>(), new HashMap<>(), null);
@@ -128,7 +129,7 @@ public class WorkflowServiceTest {
         when(mockCWLService.parseWorkflowNative(anyObject(), anyObject())).thenReturn(updatedWorkflow);
 
         Repository mockRepo = Mockito.mock(Repository.class);
-        when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/make_to_cwl/dna.cwl"));
+        when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/make_to_cwl"));
 
         Git mockGitRepo = Mockito.mock(Git.class);
         when(mockGitRepo.getRepository()).thenReturn(mockRepo);

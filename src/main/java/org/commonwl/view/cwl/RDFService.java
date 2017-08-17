@@ -158,15 +158,29 @@ public class RDFService {
     public ResultSet getInputs(String path, String workflowURI) {
         ParameterizedSparqlString inputsQuery = new ParameterizedSparqlString();
         inputsQuery.setCommandText(queryCtx +
-                "SELECT ?name ?type ?format ?label ?doc\n" +
+                "SELECT ?name ?type ?items ?null ?format ?label ?doc\n" +
                 "WHERE {\n" +
                 "  GRAPH ?graphName {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:inputs ?name .\n" +
-                "    OPTIONAL { ?name sld:type ?type }\n" +
+                "    OPTIONAL {\n" +
+                "      { \n" +
+                "        ?name sld:type ?type\n" +
+                "        FILTER(?type != sld:null) \n" +
+                "        FILTER (!isBlank(?type))\n" +
+                "      } UNION { \n" +
+                "        ?name sld:type ?arraytype .\n" +
+                "        ?arraytype sld:type ?type .\n" +
+                "        ?arraytype sld:items ?items \n" +
+                "      }\n" +
+                "    }\n" +
+                "    OPTIONAL { \n" +
+                "      ?name sld:type ?null\n" +
+                "      FILTER(?null = sld:null)\n" +
+                "    }\n" +
                 "    OPTIONAL { ?name cwl:format ?format }\n" +
                 "    OPTIONAL { ?name sld:label|rdfs:label ?label }\n" +
-                "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }\n" +
+                "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }" +
                 "    FILTER(regex(str(?wf), ?wfFilter, \"i\" ))" +
                 "  }" +
                 "}");
@@ -184,15 +198,29 @@ public class RDFService {
     public ResultSet getOutputs(String path, String workflowURI) {
         ParameterizedSparqlString outputsQuery = new ParameterizedSparqlString();
         outputsQuery.setCommandText(queryCtx +
-                "SELECT ?name ?type ?format ?label ?doc\n" +
+                "SELECT ?name ?type ?items ?null ?format ?label ?doc\n" +
                 "WHERE {\n" +
                 "  GRAPH ?graphName {" +
                 "    ?wf rdf:type cwl:Workflow .\n" +
                 "    ?wf cwl:outputs ?name .\n" +
-                "    OPTIONAL { ?name sld:type ?type }\n" +
+                "    OPTIONAL {\n" +
+                "      { \n" +
+                "        ?name sld:type ?type\n" +
+                "        FILTER(?type != sld:null) \n" +
+                "        FILTER (!isBlank(?type))\n" +
+                "      } UNION { \n" +
+                "        ?name sld:type ?arraytype .\n" +
+                "        ?arraytype sld:type ?type .\n" +
+                "        ?arraytype sld:items ?items \n" +
+                "      }\n" +
+                "    }\n" +
+                "    OPTIONAL { \n" +
+                "      ?name sld:type ?null\n" +
+                "      FILTER(?null = sld:null)\n" +
+                "    }\n" +
                 "    OPTIONAL { ?name cwl:format ?format }\n" +
                 "    OPTIONAL { ?name sld:label|rdfs:label ?label }\n" +
-                "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }\n" +
+                "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }" +
                 "    FILTER(regex(str(?wf), ?wfFilter, \"i\" ))" +
                 "  }" +
                 "}");

@@ -135,22 +135,24 @@ public class WorkflowController {
                         return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
                     }
                 } catch (TransportException ex) {
+                    logger.warn("git.sshError " + workflowForm , ex);
                     bindingResult.rejectValue("url", "git.sshError");
                     return new ModelAndView("index");
                 } catch (GitAPIException ex) {
+                    logger.error("git.retrievalError " + workflowForm , ex);
                     bindingResult.rejectValue("url", "git.retrievalError");
-                    logger.error("Git API Error", ex);
                     return new ModelAndView("index");
                 } catch (WorkflowNotFoundException ex) {
+                    logger.warn("git.pathTraversal " + workflowForm , ex);
                     bindingResult.rejectValue("url", "git.pathTraversal");
                     return new ModelAndView("index");
                 } catch (Exception ex) {
+                    logger.warn("url.parsingError " + workflowForm , ex);
                     bindingResult.rejectValue("url", "url.parsingError");
                     return new ModelAndView("index");
                 }
             }
             gitInfo = workflow.getRetrievedFrom();
-
             // Redirect to the workflow
             return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
         }
@@ -498,12 +500,16 @@ public class WorkflowController {
                             }
                         }
                     } catch (TransportException ex) {
+                        logger.warn("git.sshError " + workflowForm , ex);
                         errors.rejectValue("url", "git.sshError", "SSH URLs are not supported, please provide a HTTPS URL for the repository or submodules");
                     } catch (GitAPIException ex) {
+                        logger.error("git.retrievalError " + workflowForm, ex);
                         errors.rejectValue("url", "git.retrievalError", "The workflow could not be retrieved from the Git repository using the details given");
                     } catch (WorkflowNotFoundException ex) {
+                        logger.warn("git.pathTraversal " + workflowForm, ex);
                         errors.rejectValue("url", "git.pathTraversal", "The path given did not resolve to a location within the repository");
                     } catch (IOException ex) {
+                        logger.warn("git.parsingError " + workflowForm, ex);
                         errors.rejectValue("url", "url.parsingError", "The workflow could not be parsed from the given URL");
                     }
                 }

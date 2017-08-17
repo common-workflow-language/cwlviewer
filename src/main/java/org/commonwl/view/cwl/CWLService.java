@@ -19,20 +19,27 @@
 
 package org.commonwl.view.cwl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import static org.apache.commons.io.FileUtils.readFileToString;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RiotException;
 import org.commonwl.view.docker.DockerService;
 import org.commonwl.view.git.GitDetails;
@@ -47,15 +54,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-
-import static org.apache.commons.io.FileUtils.readFileToString;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
@@ -65,6 +68,7 @@ import static org.apache.commons.io.FileUtils.readFileToString;
 public class CWLService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final IRIFactory iriFactory = IRIFactory.iriImplementation();
 
     // Autowired properties/services
     private final RDFService rdfService;
@@ -273,42 +277,18 @@ public class CWLService {
             String inputName = rdfService.stepNameFromURI(gitPath, input.get("name").toString());
 
             CWLElement wfInput = new CWLElement();
-
-            // Array types
             if (input.contains("type")) {
-                StmtIterator itr = input.get("type").asResource().listProperties();
-                if (itr.hasNext()) {
-                    while (itr.hasNext()) {
-                        Statement complexType = itr.nextStatement();
-                        if (complexType.getPredicate().toString()
-                                .equals("https://w3id.org/cwl/salad#items")) {
-                            if (wfInputs.containsKey(inputName)
-                                    && wfInputs.get(inputName).getType().equals("?")) {
-                                wfInput.setType(typeURIToString(complexType.getObject().toString()) + "[]?");
-                            } else {
-                                wfInput.setType(typeURIToString(complexType.getObject().toString()) + "[]");
-                            }
-                        }
-                    }
+                String type;
+                if (input.get("type").toString().equals("https://w3id.org/cwl/salad#array")) {
+                    type = typeURIToString(input.get("items").toString()) + "[]";
                 } else {
-                    // Optional types
-                    if (input.get("type").toString().equals("https://w3id.org/cwl/salad#null")) {
-                        if (wfInputs.containsKey(inputName)) {
-                            CWLElement inputInMap = wfInputs.get(inputName);
-                            inputInMap.setType(inputInMap.getType() + "?");
-                        } else {
-                            wfInput.setType("?");
-                        }
-                    } else if (wfInput.getType() != null && wfInput.getType().equals("?")
-                            && !wfInput.getType().endsWith("[]")) {
-                        wfInput.setType(typeURIToString(input.get("type").toString()) + "?");
-                    } else {
-                        // Standard type
-                        wfInput.setType(typeURIToString(input.get("type").toString()));
-                    }
+                    type = typeURIToString(input.get("type").toString());
                 }
+                if (input.contains("null")) {
+                    type += " (Optional)";
+                }
+                wfInput.setType(type);
             }
-
             if (input.contains("format")) {
                 String format = input.get("format").toString();
                 setFormat(wfInput, format);
@@ -330,41 +310,17 @@ public class CWLService {
             CWLElement wfOutput = new CWLElement();
 
             String outputName = rdfService.stepNameFromURI(gitPath, output.get("name").toString());
-
-            // Array types
             if (output.contains("type")) {
-                StmtIterator itr = output.get("type").asResource().listProperties();
-                if (itr.hasNext()) {
-                    while (itr.hasNext()) {
-                        Statement complexType = itr.nextStatement();
-                        if (complexType.getPredicate().toString()
-                                .equals("https://w3id.org/cwl/salad#items")) {
-                            if (wfOutputs.containsKey(outputName)
-                                    && wfOutputs.get(outputName).getType().equals("?")) {
-                                wfOutput.setType(typeURIToString(complexType.getObject().toString()) + "[]?");
-                            } else {
-                                wfOutput.setType(typeURIToString(complexType.getObject().toString()) + "[]");
-                            }
-                        }
-                    }
+                String type;
+                if (output.get("type").toString().equals("https://w3id.org/cwl/salad#array")) {
+                    type = typeURIToString(output.get("items").toString()) + "[]";
                 } else {
-                    // Standard types
-                    if (wfOutput.getType() != null && wfOutput.getType().equals("?")) {
-                        wfOutput.setType(typeURIToString(output.get("type").toString()) + "?");
-                    } else {
-                        wfOutput.setType(typeURIToString(output.get("type").toString()));
-                    }
-
-                    // Optional types
-                    if (output.get("type").toString().equals("https://w3id.org/cwl/salad#null")) {
-                        if (wfOutputs.containsKey(outputName)) {
-                            CWLElement outputInMap = wfOutputs.get(outputName);
-                            outputInMap.setType(outputInMap.getType() + "?");
-                        } else {
-                            wfOutput.setType("?");
-                        }
-                    }
+                    type = typeURIToString(output.get("type").toString());
                 }
+                if (output.contains("null")) {
+                    type += " (Optional)";
+                }
+                wfOutput.setType(type);
             }
 
             if (output.contains("src")) {
@@ -408,8 +364,10 @@ public class CWLService {
                 // Add new step
                 CWLStep wfStep = new CWLStep();
 
-                Path workflowPath = Paths.get(step.get("wf").toString()).getParent();
-                Path runPath = Paths.get(step.get("run").toString());
+                IRI wfStepUri = iriFactory.construct(step.get("wf").asResource().getURI());
+                IRI workflowPath = wfStepUri.resolve("./");
+
+                IRI runPath = iriFactory.construct(step.get("run").asResource().getURI());
                 wfStep.setRun(workflowPath.relativize(runPath).toString());
                 wfStep.setRunType(rdfService.strToRuntype(step.get("runtype").toString()));
 
@@ -538,9 +496,9 @@ public class CWLService {
                 rdfService.addToOntologies(ontModel);
             }
             String formatLabel = rdfService.getOntLabel(format);
-            inputOutput.setType(inputOutput.getType() + " (" + formatLabel + ")");
+            inputOutput.setType(inputOutput.getType() + " [" + formatLabel + "]");
         } catch (RiotException ex) {
-            inputOutput.setType(inputOutput.getType() + " (format)");
+            inputOutput.setType(inputOutput.getType() + " [format]");
         }
     }
 
