@@ -23,20 +23,18 @@ package org.commonwl.view.cwl;
  * Enum for possible CWL processes
  */
 public enum CWLProcess {
-    WORKFLOW,
-    COMMANDLINETOOL,
-    EXPRESSIONTOOL;
+    WORKFLOW("Workflow"),
+    COMMANDLINETOOL("CommandLineTool"),
+    EXPRESSIONTOOL("ExpressionTool");
+
+    private final String name;
+
+    CWLProcess(String name) {
+        this.name = name;
+    }
 
     @Override
     public String toString() {
-        switch (this) {
-            case WORKFLOW:
-                return "Workflow";
-            case COMMANDLINETOOL:
-                return "CommandLineTool";
-            case EXPRESSIONTOOL:
-            default:
-                return "ExpressionTool";
-        }
+        return name;
     }
 }
