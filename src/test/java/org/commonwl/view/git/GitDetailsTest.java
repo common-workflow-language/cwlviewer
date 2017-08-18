@@ -30,6 +30,7 @@ public class GitDetailsTest {
     private static final GitDetails GITLAB_DETAILS = new GitDetails("https://gitlab.com/owner/repoName.git", "branch", "path/within/structure.cwl");
     private static final GitDetails BITBUCKET_DETAILS = new GitDetails("https://bitbucket.org/owner/repoName.git", "branch", "path/within/structure.cwl");
     private static final GitDetails GENERIC_DETAILS = new GitDetails("https://could.com/be/anything.git", "branch", "path/within/structure.cwl");
+    private static final GitDetails PACKED_DETAILS = new GitDetails("https://could.com/be/anything.git", "branch", "path/within/structure/packed.cwl#testId");
 
     /**
      * Branch getter, should default to "master" if null
@@ -92,6 +93,7 @@ public class GitDetailsTest {
         assertEquals("/workflows/gitlab.com/owner/repoName/blob/branch/path/within/structure.cwl", GITLAB_DETAILS.getInternalUrl());
         assertEquals("/workflows/bitbucket.org/owner/repoName.git/branch/path/within/structure.cwl", BITBUCKET_DETAILS.getInternalUrl());
         assertEquals("/workflows/could.com/be/anything.git/branch/path/within/structure.cwl", GENERIC_DETAILS.getInternalUrl());
+        assertEquals("/workflows/could.com/be/anything.git/branch/path/within/structure/packed.cwl#testId", PACKED_DETAILS.getInternalUrl());
     }
 
     /**
