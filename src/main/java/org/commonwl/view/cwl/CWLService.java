@@ -39,6 +39,7 @@ import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.ModelDotWriter;
 import org.commonwl.view.graphviz.RDFDotWriter;
 import org.commonwl.view.workflow.Workflow;
+import org.commonwl.view.workflow.WorkflowNotFoundException;
 import org.commonwl.view.workflow.WorkflowOverview;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,18 +170,29 @@ public class CWLService {
             // Parse file as yaml
             JsonNode cwlFile = yamlStringToJson(readFileToString(workflowFile));
 
+            // Check packed workflow occurs
             if (packedWorkflowId != null) {
-                for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
-                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
-                        String currentId = jsonNode.get(ID).asText();
-                        if (currentId.startsWith("#")) {
-                            currentId = currentId.substring(1);
-                        }
-                        if (currentId.equals(packedWorkflowId)) {
-                            cwlFile = jsonNode;
-                            break;
+                boolean found = false;
+                if (cwlFile.has(DOC_GRAPH)) {
+                    for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
+                        if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
+                            String currentId = jsonNode.get(ID).asText();
+                            if (currentId.startsWith("#")) {
+                                currentId = currentId.substring(1);
+                            }
+                            if (currentId.equals(packedWorkflowId)) {
+                                cwlFile = jsonNode;
+                                found = true;
+                                break;
+                            }
                         }
                     }
+                }
+                if (!found) throw new WorkflowNotFoundException();
+            } else {
+                // Check the current json node is a workflow
+                if (extractProcess(cwlFile) != CWLProcess.WORKFLOW) {
+                    throw new WorkflowNotFoundException();
                 }
             }
 

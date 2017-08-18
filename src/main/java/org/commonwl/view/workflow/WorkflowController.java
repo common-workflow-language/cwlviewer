@@ -506,7 +506,7 @@ public class WorkflowController {
                         logger.warn("git.notFound " + workflowForm, ex);
                         errors.rejectValue("url", "git.notFound", "The workflow could not be found within the repository");
                     } catch (IOException ex) {
-                        logger.warn("git.parsingError " + workflowForm, ex);
+                        logger.warn("url.parsingError " + workflowForm, ex);
                         errors.rejectValue("url", "url.parsingError", "The workflow could not be parsed from the given URL");
                     }
                 }

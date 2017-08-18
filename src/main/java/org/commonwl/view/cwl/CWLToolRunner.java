@@ -19,6 +19,7 @@
 
 package org.commonwl.view.cwl;
 
+import org.apache.jena.query.QueryException;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.workflow.QueuedWorkflow;
 import org.commonwl.view.workflow.QueuedWorkflowRepository;
@@ -88,19 +89,22 @@ public class CWLToolRunner {
 
             // Mark success on queue
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.SUCCESS);
-            queuedWorkflowRepository.save(queuedWorkflow);
 
+        } catch (QueryException ex) {
+            logger.error("Jena query exception ", ex);
+            queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
+            queuedWorkflow.setMessage("An error occurred when executing a query on the SPARQL store");
         } catch (CWLValidationException ex) {
             logger.error(ex.getMessage(), ex);
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
             queuedWorkflow.setMessage(ex.getMessage());
-            queuedWorkflowRepository.save(queuedWorkflow);
         } catch (Exception ex) {
             logger.error("Unexpected error", ex);
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
             queuedWorkflow.setMessage("Whoops! Cwltool ran successfully, but an unexpected " +
                     "error occurred in CWLViewer!\n" +
                     "Help us by reporting it on Gitter or a Github issue\n");
+        } finally {
             queuedWorkflowRepository.save(queuedWorkflow);
         }
 
