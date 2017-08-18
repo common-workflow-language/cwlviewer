@@ -33,10 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -71,30 +71,28 @@ public class GitService {
      * @returns The git object for the repository
      */
     public Git getRepository(GitDetails gitDetails, boolean reuseDir)
-            throws GitAPIException {
+            throws GitAPIException, IOException {
         Git repo = null;
         while (repo == null) {
             try {
                 if (reuseDir) {
                     // Base dir from configuration, name from hash of repository URL
-                    File baseDir = new File(gitStorage.toString());
                     String baseName = DigestUtils.sha1Hex(GitDetails.normaliseUrl(gitDetails.getRepoUrl()));
 
                     // Check if folder already exists
-                    File repoDir = new File(baseDir, baseName);
-                    if (repoDir.exists() && repoDir.isDirectory()) {
-                        repo = Git.open(repoDir);
+                    Path repoDir = gitStorage.resolve(baseName);
+                    if (Files.isReadable(repoDir) && Files.isDirectory(repoDir)) {
+                        repo = Git.open(repoDir.toFile());
                         repo.fetch().call();
                     } else {
                         // Create a folder and clone repository into it
-                        if (repoDir.mkdir()) {
-                            repo = Git.cloneRepository()
-                                    .setCloneSubmodules(cloneSubmodules)
-                                    .setURI(gitDetails.getRepoUrl())
-                                    .setDirectory(repoDir)
-                                    .setCloneAllBranches(true)
-                                    .call();
-                        }
+                        Files.createDirectory(repoDir);
+                        repo = Git.cloneRepository()
+                                .setCloneSubmodules(cloneSubmodules)
+                                .setURI(gitDetails.getRepoUrl())
+                                .setDirectory(repoDir.toFile())
+                                .setCloneAllBranches(true)
+                                .call();
                     }
                 } else {
                     // Another thread is already using the existing folder
@@ -126,9 +124,6 @@ public class GitService {
                 } else {
                     throw ex;
                 }
-            } catch (IOException ex) {
-                logger.error("Could not open existing Git repository for '"
-                        + gitDetails.getRepoUrl() + "'", ex);
             }
         }
 
