@@ -40,7 +40,7 @@
                     <p>If you make anything utilizing our API, please <a href="https://gitter.im/common-workflow-language/cwlviewer" alt="Gitter Chatroom" target="_blank" rel="noopener">let us know about it</a> - we would love to see!</p>
 
                     <p>All queries require the following header to receive a JSON response:
-                        <pre>accept: application/json</pre>
+                        <pre class="highlight http">accept: application/json</pre>
                     </p>
 
                     <h2>Workflow</h2>
@@ -86,18 +86,31 @@
 }
 </pre>
                     <h4>Success</h4>
-<pre>
+<pre class="highlight http">
 HTTP/1.1 202 Accepted
 Location: /queue/:queueid
 </pre>
                     <h4>Already Exists</h4>
-<pre>
+<pre class="highlight http">
 HTTP/1.1 303 See Other
 Location: /workflows/:githubURL
 </pre>
-
+                    <h4>Packed Workflow with Multiple Choices</h4>
+                    <pre class="highlight json">
+HTTP/1.1 422 Unprocessable Entity
+{
+    "message": "This workflow file is packed and contains multiple workflow descriptions. Please choose one to add"
+    "workflows": [
+        "#workflow.cwl",
+        "#main",
+        "#workflow_exome.cwl",
+        "#align.cwl",
+        "#workflow.cwl_2"
+    ]
+}
+</pre>
                     <h4>Error</h4>
-                    <pre>HTTP/1.1 400 Bad Request</pre>
+                    <pre class="highlight http">HTTP/1.1 400 Bad Request</pre>
 
                     <h3 id="workflowDetails">Get Workflow Details</h3>
                     <span class="method get">GET</span>
@@ -544,7 +557,7 @@ Location: /workflows/:githubURL
 </pre>
 
                     <h4>Finished 303</h4>
-<pre>
+<pre class="highlight http">
 HTTP/1.1 303 See Other
 Location: /workflows/:url
 </pre>
