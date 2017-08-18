@@ -37,8 +37,7 @@ import org.springframework.web.servlet.HandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static org.commonwl.view.cwl.CWLToolStatus.SUCCESS;
 
@@ -121,6 +120,27 @@ public class WorkflowRESTController {
                 if (queued == null) {
                     try {
                         queued = workflowService.createQueuedWorkflow(gitInfo);
+                        if (queued.getWorkflowList() != null) {
+                            if (queued.getWorkflowList().size() == 1) {
+                                // Parse the packed workflow within automatically if there is only one
+                                gitInfo.setPackedId(queued.getWorkflowList().get(0).getFileName());
+                                queued = workflowService.getQueuedWorkflow(gitInfo);
+                                if (queued == null) {
+                                    queued = workflowService.createQueuedWorkflow(gitInfo);
+                                }
+                            } else {
+                                // Error with alternatives suggested
+                                List<String> workflowUris = new ArrayList<>();
+                                for (WorkflowOverview overview : queued.getWorkflowList()) {
+                                    workflowUris.add(overview.getFileName());
+                                }
+                                Map<String, Object> responseMap = new HashMap<>();
+                                responseMap.put("message", "This workflow file is packed and contains multiple workflow " +
+                                        "descriptions. Please choose one to add");
+                                responseMap.put("workflows", workflowUris);
+                                return new ResponseEntity<Map>(responseMap, HttpStatus.UNPROCESSABLE_ENTITY);
+                            }
+                        }
                     } catch (CWLValidationException ex) {
                         Map<String, String> message = Collections.singletonMap("message", "Error:" + ex.getMessage());
                         return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
