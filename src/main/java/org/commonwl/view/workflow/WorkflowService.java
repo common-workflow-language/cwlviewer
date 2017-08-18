@@ -30,7 +30,6 @@ import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -133,7 +132,7 @@ public class WorkflowService {
         // Slash in branch fix
         boolean slashesInPath = true;
         while (queued == null && slashesInPath) {
-            GitDetails correctedForSlash = transferPathToBranch(githubInfo);
+            GitDetails correctedForSlash = gitService.transferPathToBranch(githubInfo);
             if (correctedForSlash != null) {
                 githubInfo = correctedForSlash;
                 queued = queuedWorkflowRepository.findByRetrievedFrom(githubInfo);
@@ -157,7 +156,7 @@ public class WorkflowService {
         // Slash in branch fix
         boolean slashesInPath = true;
         while (workflow == null && slashesInPath) {
-            GitDetails correctedForSlash = transferPathToBranch(gitInfo);
+            GitDetails correctedForSlash = gitService.transferPathToBranch(gitInfo);
             if (correctedForSlash != null) {
                 gitInfo = correctedForSlash;
                 workflow = workflowRepository.findByRetrievedFrom(gitInfo);
@@ -194,24 +193,9 @@ public class WorkflowService {
      */
     public List<WorkflowOverview> getWorkflowsFromDirectory(GitDetails gitInfo) throws IOException, GitAPIException {
         List<WorkflowOverview> workflowsInDir = new ArrayList<>();
+        boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
         try {
-            Git repo = null;
-            while (repo == null) {
-                try {
-                    boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
-                    repo = gitService.getRepository(gitInfo, safeToAccess);
-                } catch (RefNotFoundException ex) {
-                    // Attempt slashes in branch fix
-                    GitDetails correctedForSlash = transferPathToBranch(gitInfo);
-                    if (correctedForSlash != null) {
-                        gitSemaphore.release(gitInfo.getRepoUrl());
-                        gitInfo = correctedForSlash;
-                    } else {
-                        throw ex;
-                    }
-                }
-            }
-
+            Git repo = gitService.getRepository(gitInfo, safeToAccess);
             Path localPath = repo.getRepository().getWorkTree().toPath();
             Path pathToDirectory = localPath.resolve(gitInfo.getPath()).normalize().toAbsolutePath();
             Path root = Paths.get("/").toAbsolutePath();
@@ -283,23 +267,9 @@ public class WorkflowService {
             throws GitAPIException, WorkflowNotFoundException, IOException {
         QueuedWorkflow queuedWorkflow;
 
+        boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
         try {
-            Git repo = null;
-            while (repo == null) {
-                try {
-                    boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
-                    repo = gitService.getRepository(gitInfo, safeToAccess);
-                } catch (RefNotFoundException ex) {
-                    // Attempt slashes in branch fix
-                    GitDetails correctedForSlash = transferPathToBranch(gitInfo);
-                    if (correctedForSlash != null) {
-                        gitSemaphore.release(gitInfo.getRepoUrl());
-                        gitInfo = correctedForSlash;
-                    } else {
-                        throw ex;
-                    }
-                }
-            }
+            Git repo = gitService.getRepository(gitInfo, safeToAccess);
             File localPath = repo.getRepository().getWorkTree();
             String latestCommit = gitService.getCurrentCommitID(repo);
 
@@ -468,27 +438,5 @@ public class WorkflowService {
             }
         }
         return false;
-    }
-
-    /**
-     * Transfers part of the path to the branch to fix / in branch names
-     * @param githubInfo The current Github info possibly with
-     *                   part of the branch name in the path
-     * @return A potentially corrected set of Github details,
-     *         or null if there are no slashes in the path
-     */
-    private GitDetails transferPathToBranch(GitDetails githubInfo) {
-        String path = githubInfo.getPath();
-        String branch = githubInfo.getBranch();
-
-        int firstSlash = path.indexOf("/");
-        if (firstSlash > 0) {
-            branch += "/" + path.substring(0, firstSlash);
-            path = path.substring(firstSlash + 1);
-            return new GitDetails(githubInfo.getRepoUrl(), branch,
-                    path);
-        } else {
-            return null;
-        }
     }
 }
