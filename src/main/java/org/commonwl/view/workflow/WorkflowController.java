@@ -491,7 +491,7 @@ public class WorkflowController {
                                         .addObject("gitDetails", gitDetails);
                             } else if (workflowOverviews.size() == 1) {
                                 return new ModelAndView("redirect:" + gitDetails.getInternalUrl() +
-                                        "/" + workflowOverviews.get(0).getFileName());
+                                        workflowOverviews.get(0).getFileName());
                             } else {
                                 errors.rejectValue("url", "url.noWorkflowsInDirectory", "No workflow files were found in the given directory");
                             }

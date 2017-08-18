@@ -19,11 +19,11 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
-import org.eclipse.jgit.api.errors.RefNotFoundException;
+import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -34,8 +34,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.anyObject;
@@ -114,7 +119,10 @@ public class WorkflowControllerTest {
         // Mock workflow service returning valid workflow
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
         when(mockWorkflowService.createQueuedWorkflow(anyObject()))
-                .thenThrow(new CWLValidationException("Error"))
+                .thenThrow(new WorkflowNotFoundException())
+                .thenThrow(new WrongRepositoryStateException("Some Error"))
+                .thenThrow(new TransportException("No SSH Key"))
+                .thenThrow(new IOException())
                 .thenReturn(mockQueuedWorkflow);
 
         // Mock controller/MVC
@@ -142,7 +150,29 @@ public class WorkflowControllerTest {
         mockMvc.perform(post("/workflows")
                 .param("url", "https://github.com/owner/repoName/blob/branch/path/nonexistant.cwl"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("index"));
+                .andExpect(view().name("index"))
+                .andExpect(model().attributeHasFieldErrors("workflowForm", "url"));
+
+        // Git API error
+        mockMvc.perform(post("/workflows")
+                .param("url", "https://github.com/owner/repoName/blob/branch/path/cantbecloned.cwl"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("index"))
+                .andExpect(model().attributeHasFieldErrors("workflowForm", "url"));
+
+        // Unsupported SSH URL
+        mockMvc.perform(post("/workflows")
+                .param("url", "ssh://github.com/owner/repoName/blob/branch/path/workflow.cwl"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("index"))
+                .andExpect(model().attributeHasFieldErrors("workflowForm", "url"));
+
+        // Unexpected error
+        mockMvc.perform(post("/workflows")
+                .param("url", "ssh://github.com/owner/repoName/blob/branch/path/unexpected.cwl"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("index"))
+                .andExpect(model().attributeHasFieldErrors("workflowForm", "url"));
 
         // Valid workflow URL redirect
         mockMvc.perform(post("/workflows")
@@ -169,7 +199,18 @@ public class WorkflowControllerTest {
                 .thenReturn(null);
         when(mockWorkflowService.createQueuedWorkflow(anyObject()))
                 .thenReturn(mockQueuedWorkflow)
-                .thenThrow(new RefNotFoundException("A Git API Error"));
+                .thenThrow(new WorkflowNotFoundException())
+                .thenThrow(new WrongRepositoryStateException("Some Error"))
+                .thenThrow(new TransportException("No SSH Key"))
+                .thenThrow(new IOException());
+        List<WorkflowOverview> listOfTwoOverviews = new ArrayList<>();
+        listOfTwoOverviews.add(new WorkflowOverview("/workflow1.cwl", "label", "doc"));
+        listOfTwoOverviews.add(new WorkflowOverview("/workflow2.cwl", "label2", "doc2"));
+        List<WorkflowOverview> listOfOneOverview = new ArrayList<>();
+        listOfOneOverview.add(new WorkflowOverview("/workflow1.cwl", "label", "doc"));
+        when(mockWorkflowService.getWorkflowsFromDirectory(anyObject()))
+                .thenReturn(listOfTwoOverviews)
+                .thenReturn(listOfOneOverview);
 
         // Mock controller/MVC
         WorkflowController workflowController = new WorkflowController(
@@ -192,10 +233,37 @@ public class WorkflowControllerTest {
                 .andExpect(view().name("loading"))
                 .andExpect(model().attribute("queued", is(mockQueuedWorkflow)));
 
-        // Error creating workflow
-        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within/badworkflow.cwl"))
-                .andExpect(status().isFound());
+        // Directory URL, select between
+        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("selectworkflow"))
+                .andExpect(model().attributeExists("gitDetails"))
+                .andExpect(model().attributeExists("workflowOverviews"));
 
+        // Directory URL with only one workflow redirects
+        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/workflows/github.com/owner/reponame/blob/branch/path/within/workflow1.cwl"));
+
+        // Workflow not found
+        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within/nonexistant.cwl"))
+                .andExpect(status().isFound())
+                .andExpect(MockMvcResultMatchers.flash().attributeExists("errors"));
+
+        // Git API error
+        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within/cantbecloned.cwl"))
+                .andExpect(status().isFound())
+                .andExpect(MockMvcResultMatchers.flash().attributeExists("errors"));
+
+        // Submodules with SSH Url
+        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within/submodulewithssh.cwl"))
+                .andExpect(status().isFound())
+                .andExpect(MockMvcResultMatchers.flash().attributeExists("errors"));
+
+        // Unexpected error
+        mockMvc.perform(get("/workflows/github.com/owner/reponame/tree/branch/path/within/badworkflow.cwl"))
+                .andExpect(status().isFound())
+                .andExpect(MockMvcResultMatchers.flash().attributeExists("errors"));
     }
 
     /**

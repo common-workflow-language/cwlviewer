@@ -35,9 +35,8 @@ public enum CWLProcess {
             case COMMANDLINETOOL:
                 return "CommandLineTool";
             case EXPRESSIONTOOL:
-                return "ExpressionTool";
             default:
-                return super.toString();
+                return "ExpressionTool";
         }
     }
 }
