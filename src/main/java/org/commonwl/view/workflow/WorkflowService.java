@@ -373,7 +373,7 @@ public class WorkflowService {
             // Multiple matches means either added by both branch and ID
             // Or packed workflow
             for (Workflow workflow : matches) {
-                if (workflow.getPackedWorkflowID() != null) {
+                if (workflow.getRetrievedFrom().getPackedId() != null) {
                     // This is a packed file
                     // TODO: return 300 multiple choices response for this in controller
                     throw new WorkflowNotFoundException();

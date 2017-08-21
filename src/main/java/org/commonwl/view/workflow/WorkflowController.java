@@ -467,7 +467,7 @@ public class WorkflowController {
             if (queued == null) {
                 // Validation
                 String packedPart = (gitDetails.getPackedId() == null) ? "" : "#" + gitDetails.getPackedId();
-                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl(), gitDetails.getBranch(),
+                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getRepoUrl(), gitDetails.getBranch(),
                         gitDetails.getPath() + packedPart);
                 BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
                 workflowFormValidator.validateAndParse(workflowForm, errors);

@@ -247,11 +247,9 @@ public class CWLService {
         if (packedWorkflowID != null) {
             if (packedWorkflowID.charAt(0) != '#') {
                 localPath += "#";
-                url += "#";
                 gitPath += "#";
             }
             localPath += packedWorkflowID;
-            url += packedWorkflowID;
             gitPath += packedWorkflowID;
         }
 

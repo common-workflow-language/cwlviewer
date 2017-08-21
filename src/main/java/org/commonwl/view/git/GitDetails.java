@@ -122,14 +122,15 @@ public class GitDetails implements Serializable {
      * @return The URL
      */
     public String getUrl(String branchOverride) {
+        String packedPart = packedId == null ? "" : "#" + packedId;
         switch (getType()) {
             case GITHUB:
             case GITLAB:
                 return "https://" + normaliseUrl(repoUrl).replace(".git", "")
-                        + "/blob/" + branchOverride + "/" + path;
+                        + "/blob/" + branchOverride + "/" + path + packedPart;
             case BITBUCKET:
                 return "https://" + normaliseUrl(repoUrl).replace(".git", "")
-                        + "/src/" + branchOverride + "/" + path;
+                        + "/src/" + branchOverride + "/" + path + packedPart;
             default:
                 return repoUrl;
         }

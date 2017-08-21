@@ -187,13 +187,10 @@ public class ROBundleService {
             } catch (CWLValidationException ex) {
                 logger.error("Could not pack workflow when creating Research Object", ex.getMessage());
             }
-            if (gitInfo.getType() != GitType.GENERIC) {
-                try {
-                    addAggregation(bundle, manifestAnnotations,
-                            "workflow.ttl", cwlTool.getRDF(rawUrl));
-                } catch (CWLValidationException ex) {
-                    logger.error("Could not get RDF for workflow from raw URL", ex.getMessage());
-                }
+            String rdfUrl = wfDetails.getUrl(workflow.getLastCommit()).replace("https://", "");
+            if (rdfService.graphExists(rdfUrl)) {
+                addAggregation(bundle, manifestAnnotations, "workflow.ttl",
+                        new String(rdfService.getModel(rdfUrl, "TURTLE")));
             }
             bundle.getManifest().setAnnotations(manifestAnnotations);
 
