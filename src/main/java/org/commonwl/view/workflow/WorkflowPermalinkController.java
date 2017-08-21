@@ -42,13 +42,10 @@ import java.io.File;
 @RestController
 public class WorkflowPermalinkController {
 
-    private final WorkflowRepository workflowRepository;
     private final WorkflowService workflowService;
 
     @Autowired
-    public WorkflowPermalinkController(WorkflowRepository workflowRepository,
-                                       WorkflowService workflowService) {
-        this.workflowRepository = workflowRepository;
+    public WorkflowPermalinkController(WorkflowService workflowService) {
         this.workflowService = workflowService;
     }
 
@@ -131,9 +128,11 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "image/svg+xml")
-    public Workflow getGraphAsSvg(@PathVariable("commitid") String commitId,
-                                  HttpServletRequest request) {
-        return null;
+    public FileSystemResource getGraphAsSvg(@PathVariable("commitid") String commitId,
+                                            HttpServletRequest request,
+                                            HttpServletResponse response) {
+        Workflow workflow = getWorkflow(commitId, request);
+        return workflowService.getWorkflowGraph("svg", workflow.getRetrievedFrom(), response);
     }
 
     /**
@@ -143,9 +142,11 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "image/png")
-    public Workflow getGraphAsPng(@PathVariable("commitid") String commitId,
-                                  HttpServletRequest request) {
-        return null;
+    public FileSystemResource getGraphAsPng(@PathVariable("commitid") String commitId,
+                                            HttpServletRequest request,
+                                            HttpServletResponse response) {
+        Workflow workflow = getWorkflow(commitId, request);
+        return workflowService.getWorkflowGraph("png", workflow.getRetrievedFrom(), response);
     }
 
     /**
@@ -155,9 +156,11 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "text/vnd+graphviz")
-    public Workflow getGraphAsDot(@PathVariable("commitid") String commitId,
-                                  HttpServletRequest request) {
-        return null;
+    public FileSystemResource getGraphAsXDot(@PathVariable("commitid") String commitId,
+                                             HttpServletRequest request,
+                                             HttpServletResponse response) {
+        Workflow workflow = getWorkflow(commitId, request);
+        return workflowService.getWorkflowGraph("xdot", workflow.getRetrievedFrom(), response);
     }
 
 

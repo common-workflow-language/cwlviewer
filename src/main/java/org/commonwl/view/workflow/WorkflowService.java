@@ -35,10 +35,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -388,6 +390,43 @@ public class WorkflowService {
             // Not a packed workflow, just different references to the same ID
             return matches.get(0);
         }
+    }
+
+    /**
+     * Get a graph in a particular format and return it
+     * @param format The format for the graph file
+     * @param gitDetails The Git details of the workflow
+     * @param response The response object for setting content-disposition header
+     * @return A FileSystemResource representing the graph
+     * @throws WorkflowNotFoundException Error getting the workflow or format
+     */
+    public FileSystemResource getWorkflowGraph(String format, GitDetails gitDetails,
+                                               HttpServletResponse response)
+            throws WorkflowNotFoundException {
+        // Determine file extension from format
+        String extension;
+        switch (format) {
+            case "svg":
+            case "png":
+                extension = format;
+                break;
+            case "xdot":
+                extension = "dot";
+                break;
+            default:
+                throw new WorkflowNotFoundException();
+        }
+
+        // Get workflow
+        Workflow workflow = getWorkflow(gitDetails);
+        if (workflow == null) {
+            throw new WorkflowNotFoundException();
+        }
+
+        // Generate graph and serve the file
+        File out = graphVizService.getGraph(workflow.getID() + "." + extension, workflow.getVisualisationDot(), format);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph." + extension + "\"");
+        return new FileSystemResource(out);
     }
 
     /**
