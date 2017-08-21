@@ -136,16 +136,45 @@ public class GitDetails implements Serializable {
 
     /**
      * Get the URL to the page containing this workflow
+     * @param branchOverride The branch to use instead of the one in this instance
      * @return The URL
      */
-    public String getInternalUrl() {
+    public String getInternalUrl(String branchOverride) {
         String pathPart = path.equals("/") ? "" : "/" + path;
         switch (getType()) {
             case GITHUB:
             case GITLAB:
-                return "/workflows/" + normaliseUrl(repoUrl).replace(".git", "") + "/blob/" + branch + pathPart;
+                return "/workflows/" + normaliseUrl(repoUrl).replace(".git", "") + "/blob/" + branchOverride + pathPart;
             default:
-                return "/workflows/" + normaliseUrl(repoUrl) + "/" + branch + pathPart;
+                return "/workflows/" + normaliseUrl(repoUrl) + "/" + branchOverride + pathPart;
+        }
+    }
+
+    /**
+     * Get the URL to the page containing this workflow
+     * @return The URL
+     */
+    public String getInternalUrl() {
+        return getInternalUrl(branch);
+    }
+
+    /**
+     * Get the URL directly to the resource
+     * @param branchOverride The branch to use instead of the one in this instance
+     * @return The URL
+     */
+    public String getRawUrl(String branchOverride) {
+        switch (getType()) {
+            case GITHUB:
+                return "https://raw.githubusercontent.com/" +
+                        normaliseUrl(repoUrl).replace("github.com/", "").replace(".git", "") +
+                        "/" + branchOverride + "/" + path;
+            case GITLAB:
+            case BITBUCKET:
+                return "https://" + normaliseUrl(repoUrl).replace(".git", "")
+                        + "/raw/" + branchOverride + "/" + path;
+            default:
+                return repoUrl;
         }
     }
 
@@ -154,18 +183,7 @@ public class GitDetails implements Serializable {
      * @return The URL
      */
     public String getRawUrl() {
-        switch (getType()) {
-            case GITHUB:
-                return "https://raw.githubusercontent.com/" +
-                        normaliseUrl(repoUrl).replace("github.com/", "").replace(".git", "") +
-                        "/" + branch + "/" + path;
-            case GITLAB:
-            case BITBUCKET:
-                return "https://" + normaliseUrl(repoUrl).replace(".git", "")
-                        + "/raw/" + branch + "/" + path;
-            default:
-                return repoUrl;
-        }
+        return getRawUrl(branch);
     }
 
     /**

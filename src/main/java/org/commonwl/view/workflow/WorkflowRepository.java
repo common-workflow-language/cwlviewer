@@ -22,10 +22,16 @@ package org.commonwl.view.workflow;
 import org.commonwl.view.git.GitDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
+import java.util.List;
+
 /**
- * Stores workflow objects in the database
+ * Stores and retrieved workflow objects from the database
+ *
+ * See Spring Data MongoDB docs:
+ * https://docs.spring.io/spring-data/data-mongo/docs/current/reference/html/
  */
 public interface WorkflowRepository extends PagingAndSortingRepository<Workflow, String> {
 
@@ -35,6 +41,15 @@ public interface WorkflowRepository extends PagingAndSortingRepository<Workflow,
      * @return The workflow model
      */
     Workflow findByRetrievedFrom(GitDetails retrievedFrom);
+
+    /**
+     * Finds a workflow model in the database based on a commit ID and path
+     * @param commitId The latest commit ID of the workflow
+     * @param path The path to the workflow within the repository
+     * @return The workflow model
+     */
+    @Query("{\"lastCommit\": ?0, \"retrievedFrom.path\": ?1}")
+    List<Workflow> findByCommitAndPath(String commitId, String path);
 
     /**
      * Paged request to get workflows of a specific status
