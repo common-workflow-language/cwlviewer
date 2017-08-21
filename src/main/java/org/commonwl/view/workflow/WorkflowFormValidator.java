@@ -70,49 +70,65 @@ public class WorkflowFormValidator {
         if (!e.hasErrors()) {
 
             // Override if specific branch or path is given in the form
+            String repoUrl = null;
             String branch = null;
             String path = null;
+            String packedId = null;
             if (!isEmptyOrWhitespace(form.getBranch())) {
                 branch = form.getBranch();
             }
             if (!isEmptyOrWhitespace(form.getPath())) {
                 path = form.getPath();
             }
+            if (!isEmptyOrWhitespace(form.getPackedId())) {
+                packedId = form.getPackedId();
+            }
 
             // Github URL
             Matcher m = githubCwlPattern.matcher(form.getUrl());
             if (m.find()) {
-                String repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
                 if (branch == null) branch = m.group(3);
                 if (path == null) path = m.group(4);
-                return new GitDetails(repoUrl, branch, path);
             }
 
             // Gitlab URL
             m = gitlabCwlPattern.matcher(form.getUrl());
             if (m.find()) {
-                String repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
                 if (branch == null) branch = m.group(3);
                 if (path == null) path = m.group(4);
-                return new GitDetails(repoUrl, branch, path);
             }
 
             // Github Dir URL
             m = githubDirPattern.matcher(form.getUrl());
             if (m.find() && ! m.group(2).endsWith(".git")) {
-                String repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
                 if (branch == null) branch = m.group(3);
                 if (path == null) path = m.group(4);
-                return new GitDetails(repoUrl, branch, path);
             }
 
             // Gitlab Dir URL
             m = gitlabDirPattern.matcher(form.getUrl());
             if (m.find() && ! m.group(2).endsWith(".git")) {
-                String repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
+                repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
                 if (branch == null) branch = m.group(3);
                 if (path == null) path = m.group(4);
-                return new GitDetails(repoUrl, branch, path);
+            }
+
+            // Split off packed ID if present
+            if (repoUrl != null) {
+                GitDetails details = new GitDetails(repoUrl, branch, path);
+                if (packedId != null) {
+                    details.setPackedId(packedId);
+                } else {
+                    String[] pathSplit = path.split("#");
+                    if (pathSplit.length > 1) {
+                        details.setPath(pathSplit[pathSplit.length - 2]);
+                        details.setPackedId(pathSplit[pathSplit.length - 1]);
+                    }
+                }
+                return details;
             }
 
             // General Git details if didn't match the above
@@ -120,7 +136,9 @@ public class WorkflowFormValidator {
             if (!e.hasErrors()) {
                 m = gitRepoPattern.matcher(form.getUrl());
                 if (m.find()) {
-                    return new GitDetails(form.getUrl(), form.getBranch(), form.getPath());
+                    GitDetails details = new GitDetails(form.getUrl(), form.getBranch(), form.getPath());
+                    details.setPackedId(form.getPackedId());
+                    return details;
                 }
             }
 

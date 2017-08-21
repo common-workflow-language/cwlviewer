@@ -34,6 +34,7 @@ public class GitDetails implements Serializable {
     private String repoUrl;
     private String branch;
     private String path;
+    private String packedId;
 
     public GitDetails(String repoUrl, String branch, String path) {
         this.repoUrl = repoUrl;
@@ -65,6 +66,14 @@ public class GitDetails implements Serializable {
 
     public void setBranch(String branch) {
         this.branch = branch;
+    }
+
+    public String getPackedId() {
+        return packedId;
+    }
+
+    public void setPackedId(String packedId) {
+        this.packedId = packedId;
     }
 
     public String getPath() {
@@ -140,13 +149,14 @@ public class GitDetails implements Serializable {
      * @return The URL
      */
     public String getInternalUrl(String branchOverride) {
+        String packedPart = packedId == null ? "" : "%23" + packedId;
         String pathPart = path.equals("/") ? "" : "/" + path;
         switch (getType()) {
             case GITHUB:
             case GITLAB:
-                return "/workflows/" + normaliseUrl(repoUrl).replace(".git", "") + "/blob/" + branchOverride + pathPart;
+                return "/workflows/" + normaliseUrl(repoUrl).replace(".git", "") + "/blob/" + branchOverride + pathPart + packedPart;
             default:
-                return "/workflows/" + normaliseUrl(repoUrl) + "/" + branchOverride + pathPart;
+                return "/workflows/" + normaliseUrl(repoUrl) + "/" + branchOverride + pathPart + packedPart;
         }
     }
 

@@ -39,6 +39,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.io.FileUtils.readFileToString;
@@ -86,6 +87,19 @@ public class CWLServiceTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
+    @Test
+    public void parsePackedWorkflowNative() throws Exception {
+        CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 5242880);
+        Workflow dna = cwlService.parseWorkflowNative(
+                new File("src/test/resources/cwl/make_to_cwl/dna.cwl"), "main");
+        assertNotNull(dna);
+        assertEquals("dna.cwl", dna.getLabel());
+        assertEquals(1, dna.getInputs().size());
+        assertEquals(1, dna.getOutputs().size());
+        assertEquals(3, dna.getSteps().size());
+
+    }
+
     /**
      * Test native loading parsing of a the LobSTR workflow CWL version draft-3
      */
@@ -93,7 +107,7 @@ public class CWLServiceTest {
     public void parseLobSTRDraft3WorkflowNative() throws Exception {
         CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 5242880);
         Workflow lobSTRDraft3 = cwlService.parseWorkflowNative(
-                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"));
+                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
         testLobSTRWorkflow(lobSTRDraft3, true);
     }
 
@@ -104,7 +118,7 @@ public class CWLServiceTest {
     public void parseLobSTRv1WorkflowNative() throws Exception {
         CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
         Workflow lobSTRv1 = cwlService.parseWorkflowNative(
-                new File("src/test/resources/cwl/lobstr-v1/lobSTR-workflow.cwl"));
+                new File("src/test/resources/cwl/lobstr-v1/lobSTR-workflow.cwl"), null);
         testLobSTRWorkflow(lobSTRv1, true);
     }
 
@@ -127,7 +141,7 @@ public class CWLServiceTest {
                 "549c973ccc01781595ce562dea4cedc6c9540fe0", "workflows/make-to-cwl/dna.cwl");
         Workflow basicModel = new Workflow(null, null, null, null, null, null);
         basicModel.setRetrievedFrom(gitInfo);
-        basicModel.setPackedWorkflowID("main");
+        gitInfo.setPackedId("main");
         basicModel.setLastCommit("549c973ccc01781595ce562dea4cedc6c9540fe0");
 
         // Parse the workflow
@@ -156,7 +170,7 @@ public class CWLServiceTest {
 
         CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 0);
         cwlService.parseWorkflowNative(
-                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"));
+                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
 
     }
 
@@ -178,7 +192,7 @@ public class CWLServiceTest {
         // No docs for this workflow
         assertEquals("Hello World", hello.getLabel());
         assertEquals("Puts a message into a file using echo", hello.getDoc());
-        assertEquals("hello.cwl", hello.getFileName());
+        assertEquals("/hello.cwl", hello.getFileName());
 
     }
 
@@ -201,6 +215,23 @@ public class CWLServiceTest {
                 helloWorkflow.length()));
         cwlService.getWorkflowOverview(helloWorkflow);
 
+    }
+
+    /**
+     * Get workflow overviews from a packed file
+     * TODO: Get better example with multiple workflows with label/doc
+     */
+    @Test
+    public void workflowOverviewsFromPackedFile() throws Exception {
+        CWLService cwlService = new CWLService(Mockito.mock(RDFService.class),
+                Mockito.mock(CWLTool.class), 5242880);
+        File packedFile = new File("src/test/resources/cwl/make_to_cwl/dna.cwl");
+        assertTrue(cwlService.isPacked(packedFile));
+        List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(packedFile);
+        assertEquals(1, overviews.size());
+        assertEquals("main", overviews.get(0).getFileName());
+        assertNull(overviews.get(0).getLabel());
+        assertNull(overviews.get(0).getDoc());
     }
 
     /**

@@ -78,6 +78,7 @@
                                         </a>
                                         <p th:if="${workflow.retrievedFrom.path != null}">Path: <i th:text="${workflow.retrievedFrom.path}">/path/to/workflow.cwl</i></p>
                                         <p>Branch/Commit ID: <i th:text="${workflow.retrievedFrom.branch}">master</i></p>
+                                        <p th:if="${workflow.retrievedFrom.packedId != null}">Packed ID: <i th:text="${workflow.retrievedFrom.packedId}">#main</i></p>
                                     </td>
                                     <td><a th:href="@{${workflow.retrievedFrom.getInternalUrl()}}"><span class="icon-view glyphicon glyphicon-chevron-right"></span></a></td>
                                 </tr>

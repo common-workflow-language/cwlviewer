@@ -53,6 +53,14 @@ public class WorkflowServiceTest {
     public TemporaryFolder roBundleFolder = new TemporaryFolder();
 
     /**
+     * Retry the running of cwltool
+     */
+    @Test
+    public void retryCwltoolGeneration() throws Exception {
+
+    }
+
+    /**
      * Getting a list of workflow overviews from a directory
      */
     @Test
@@ -126,7 +134,7 @@ public class WorkflowServiceTest {
         when(mockWorkflowRepo.findByRetrievedFrom(anyObject())).thenReturn(oldWorkflow);
 
         CWLService mockCWLService = Mockito.mock(CWLService.class);
-        when(mockCWLService.parseWorkflowNative(anyObject())).thenReturn(updatedWorkflow);
+        when(mockCWLService.parseWorkflowNative(anyObject(), anyObject())).thenReturn(updatedWorkflow);
 
         Repository mockRepo = Mockito.mock(Repository.class);
         when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/make_to_cwl"));

@@ -79,6 +79,7 @@ public class ModelDotWriterTest {
         CWLStep step2 = new CWLStep(null, null, null, step2inputs);
         step2.setRunType(CWLProcess.WORKFLOW);
         step2.setRun("subworkflow.cwl");
+        step2.setLabel("Label for step 2");
         steps.put("step2", step2);
 
         // Output

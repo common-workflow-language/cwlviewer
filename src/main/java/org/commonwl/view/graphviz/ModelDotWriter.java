@@ -105,7 +105,7 @@ public class ModelDotWriter extends DotWriter {
             if (label == null) {
                 writeLine("  \"" + step.getKey() + "\";");
             } else {
-                writeLine("  \"" + step.getKey() + "\" [label=\"" + label + "\"]");
+                writeLine("  \"" + step.getKey() + "\" [label=\"" + label + "\"];");
             }
         }
 

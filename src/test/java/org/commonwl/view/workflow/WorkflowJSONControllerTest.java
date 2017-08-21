@@ -31,6 +31,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.when;
@@ -67,6 +72,14 @@ public class WorkflowJSONControllerTest {
                 .thenReturn("123");
         when(mockQueuedWorkflow.getTempRepresentation())
                 .thenReturn(mockWorkflow);
+        List<WorkflowOverview> listOfTwoOverviews = new ArrayList<>();
+        listOfTwoOverviews.add(new WorkflowOverview("#packedId1", "label", "doc"));
+        listOfTwoOverviews.add(new WorkflowOverview("#packedId2", "label2", "doc2"));
+        when(mockQueuedWorkflow.getWorkflowList())
+                .thenReturn(null)
+                .thenReturn(null)
+                .thenReturn(Collections.singletonList(new WorkflowOverview("#packedId", "Label", "Doc")))
+                .thenReturn(listOfTwoOverviews);
 
         // Mock workflow service returning valid workflow
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
@@ -109,10 +122,26 @@ public class WorkflowJSONControllerTest {
 
         // Success
         mockMvc.perform(post("/workflows")
-                .param("url", "https://github.com/owner/repoName/tree/branch/path/workflow.cwl")
+                .param("url", "https://github.com/owner/repoName/tree/branch/path/success.cwl")
                 .accept(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(status().isAccepted())
                 .andExpect(header().string("Location", is("/queue/123")));
+
+        // Packed workflow with one ID is still accepted and parsed using that ID
+        mockMvc.perform(post("/workflows")
+                .param("url", "https://github.com/owner/repoName/tree/branch/path/singlePacked.cwl")
+                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isAccepted())
+                .andExpect(header().string("Location", is("/queue/123")));
+
+        // Packed workflow with multiple IDs is unprocessable
+        mockMvc.perform(post("/workflows")
+                .param("url", "https://github.com/owner/repoName/tree/branch/path/multiplePacked.cwl")
+                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.message", is("This workflow file is packed and contains multiple workflow " +
+                        "descriptions. Please provide a packedId parameter with one of the following")))
+                .andExpect(jsonPath("$.packedId", containsInAnyOrder("packedId1", "packedId2")));
 
     }
 

@@ -28,6 +28,7 @@ public class WorkflowForm {
     private String url;
     private String branch;
     private String path;
+    private String packedId;
 
     public WorkflowForm() {}
 
@@ -39,6 +40,13 @@ public class WorkflowForm {
         setUrl(url);
         this.branch = branch;
         this.path = path;
+    }
+
+    public WorkflowForm(String url, String branch, String path, String packedId) {
+        setUrl(url);
+        this.branch = branch;
+        this.path = path;
+        this.packedId = packedId;
     }
 
     public String getUrl() {
@@ -65,6 +73,14 @@ public class WorkflowForm {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public String getPackedId() {
+        return packedId;
+    }
+
+    public void setPackedId(String packedId) {
+        this.packedId = packedId;
     }
 
     /**
