@@ -19,6 +19,7 @@
 
 package org.commonwl.view.cwl;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,20 @@ public class RDFService {
     public void addToOntologies(Model model) {
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(rdfService);
         accessor.add("ontologies", model);
+    }
+
+    /**
+     * Get a model from the triple store in a given format
+     * @param graphName The name of the graph for the model
+     * @param format The name of the writer (format to be written)
+     * @return A byte array representing the model in the given format
+     */
+    public byte[] getModel(String graphName, String format) {
+        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(rdfService);
+        Model model = accessor.getModel(rdfService + graphName);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        model.write(outputStream, format);
+        return outputStream.toByteArray();
     }
 
     /**

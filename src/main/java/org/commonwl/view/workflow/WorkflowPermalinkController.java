@@ -19,6 +19,7 @@
 
 package org.commonwl.view.workflow;
 
+import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.git.GitType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -43,10 +44,13 @@ import java.io.File;
 public class WorkflowPermalinkController {
 
     private final WorkflowService workflowService;
+    private final RDFService rdfService;
 
     @Autowired
-    public WorkflowPermalinkController(WorkflowService workflowService) {
+    public WorkflowPermalinkController(WorkflowService workflowService,
+                                       RDFService rdfService) {
         this.workflowService = workflowService;
+        this.rdfService = rdfService;
     }
 
     /**
@@ -92,9 +96,15 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "text/turtle")
-    public Workflow getRdfAsTurtle(@PathVariable("commitid") String commitId,
-                                   HttpServletRequest request) {
-        return null;
+    public byte[] getRdfAsTurtle(@PathVariable("commitid") String commitId,
+                                 HttpServletRequest request) {
+        Workflow workflow = getWorkflow(commitId, request);
+        String rdfUrl = workflow.getRetrievedFrom().getUrl(commitId).replace("https://", "");
+        if (rdfService.graphExists(rdfUrl)) {
+            return rdfService.getModel(rdfUrl, "TURTLE");
+        } else {
+            throw new WorkflowNotFoundException();
+        }
     }
 
     /**
@@ -104,9 +114,15 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "application/ld+json")
-    public Workflow getRdfAsJsonLd(@PathVariable("commitid") String commitId,
-                                   HttpServletRequest request) {
-        return null;
+    public byte[] getRdfAsJsonLd(@PathVariable("commitid") String commitId,
+                                 HttpServletRequest request) {
+        Workflow workflow = getWorkflow(commitId, request);
+        String rdfUrl = workflow.getRetrievedFrom().getUrl(commitId).replace("https://", "");
+        if (rdfService.graphExists(rdfUrl)) {
+            return rdfService.getModel(rdfUrl, "JSON-LD");
+        } else {
+            throw new WorkflowNotFoundException();
+        }
     }
 
     /**
@@ -116,9 +132,15 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "application/rdf+xml")
-    public Workflow getRdfAsRdfXml(@PathVariable("commitid") String commitId,
-                                   HttpServletRequest request) {
-        return null;
+    public byte[] getRdfAsRdfXml(@PathVariable("commitid") String commitId,
+                                 HttpServletRequest request) {
+        Workflow workflow = getWorkflow(commitId, request);
+        String rdfUrl = workflow.getRetrievedFrom().getUrl(commitId).replace("https://", "");
+        if (rdfService.graphExists(rdfUrl)) {
+            return rdfService.getModel(rdfUrl, "RDFXML");
+        } else {
+            throw new WorkflowNotFoundException();
+        }
     }
 
     /**
