@@ -204,7 +204,7 @@ public class WorkflowController {
      */
     @GetMapping(value={"/robundle/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
                        "/robundle/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
-                produces = "application/vnd.wf4ever.robundle+zip")
+                produces = {"application/ro+zip", "application/vnd.wf4ever.robundle+zip"})
     @ResponseBody
     public FileSystemResource getROBundle(@PathVariable("domain") String domain,
                                           @PathVariable("owner") String owner,

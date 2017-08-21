@@ -139,7 +139,7 @@ public class WorkflowPermalinkController {
      * @return The Research Object Bundle
      */
     @GetMapping(value = "/git/{commitid}/**",
-            produces = "text/vnd+graphviz")
+                produces = {"application/ro+zip", "application/vnd.wf4ever.robundle+zip"})
     public Workflow getROBundle(@PathVariable("commitid") String commitId,
                                 HttpServletRequest request) {
         return null;
