@@ -40,7 +40,7 @@ digraph workflow {
     "output" [fillcolor="#94DDF4",label="Single Output";];
   }
   "default1";
-  "step2";
+  "step2" [label="Label for step 2"];
   "step1";
   "step2" -> "output";
   "step1" -> "step2";

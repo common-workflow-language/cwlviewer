@@ -19,18 +19,11 @@
 
 package org.commonwl.view.cwl;
 
-import static org.apache.commons.io.FileUtils.readFileToString;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.iri.IRI;
@@ -46,6 +39,7 @@ import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.ModelDotWriter;
 import org.commonwl.view.graphviz.RDFDotWriter;
 import org.commonwl.view.workflow.Workflow;
+import org.commonwl.view.workflow.WorkflowNotFoundException;
 import org.commonwl.view.workflow.WorkflowOverview;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,11 +48,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.*;
+
+import static org.apache.commons.io.FileUtils.readFileToString;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
@@ -115,11 +111,57 @@ public class CWLService {
     }
 
     /**
+     * Gets whether a file is packed using schema salad
+     * @param workflowFile The file to be parsed
+     * @return Whether the file is packed
+     */
+    public boolean isPacked(File workflowFile) throws IOException {
+        if (workflowFile.length() > singleFileSizeLimit) {
+            return false;
+        }
+        String fileContent = readFileToString(workflowFile);
+        return fileContent.contains("$graph");
+    }
+
+    /**
+     * Gets a list of workflows from a packed CWL file
+     * @param packedFile The packed CWL file
+     * @return The list of workflow overviews
+     */
+    public List<WorkflowOverview> getWorkflowOverviewsFromPacked(File packedFile) throws IOException {
+        if (packedFile.length() <= singleFileSizeLimit) {
+            List<WorkflowOverview> overviews = new ArrayList<>();
+
+            JsonNode packedJson = yamlStringToJson(readFileToString(packedFile));
+
+            if (packedJson.has(DOC_GRAPH)) {
+                for (JsonNode jsonNode : packedJson.get(DOC_GRAPH)) {
+                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
+                        WorkflowOverview overview = new WorkflowOverview(jsonNode.get(ID).asText(),
+                                extractLabel(jsonNode), extractDoc(jsonNode));
+                        overviews.add(overview);
+                    }
+                }
+            } else {
+                throw new IOException("The file given was not recognised as a packed CWL file");
+            }
+
+            return overviews;
+
+        } else {
+            throw new IOException("File '" + packedFile.getName() +  "' is over singleFileSizeLimit - " +
+                    FileUtils.byteCountToDisplaySize(packedFile.length()) + "/" +
+                    FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
+        }
+    }
+
+    /**
      * Gets the Workflow object from internal parsing
      * @param workflowFile The workflow file to be parsed
+     * @param packedWorkflowId The ID of the workflow object if the file is packed
      * @return The constructed workflow object
      */
-    public Workflow parseWorkflowNative(File workflowFile) throws IOException {
+    public Workflow parseWorkflowNative(File workflowFile, String packedWorkflowId) throws IOException {
 
         // Check file size limit before parsing
         long fileSizeBytes = workflowFile.length();
@@ -128,15 +170,29 @@ public class CWLService {
             // Parse file as yaml
             JsonNode cwlFile = yamlStringToJson(readFileToString(workflowFile));
 
-            // If the CWL file is packed there can be multiple workflows in a file
-            Map<String, JsonNode> packedFiles = new HashMap<>();
-            if (cwlFile.has(DOC_GRAPH)) {
-                // Packed CWL, find the first subelement which is a workflow and take it
-                for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
-                    packedFiles.put(jsonNode.get(ID).asText(), jsonNode);
-                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
-                        cwlFile = jsonNode;
+            // Check packed workflow occurs
+            if (packedWorkflowId != null) {
+                boolean found = false;
+                if (cwlFile.has(DOC_GRAPH)) {
+                    for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
+                        if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
+                            String currentId = jsonNode.get(ID).asText();
+                            if (currentId.startsWith("#")) {
+                                currentId = currentId.substring(1);
+                            }
+                            if (currentId.equals(packedWorkflowId)) {
+                                cwlFile = jsonNode;
+                                found = true;
+                                break;
+                            }
+                        }
                     }
+                }
+                if (!found) throw new WorkflowNotFoundException();
+            } else {
+                // Check the current json node is a workflow
+                if (extractProcess(cwlFile) != CWLProcess.WORKFLOW) {
+                    throw new WorkflowNotFoundException();
                 }
             }
 
@@ -149,10 +205,6 @@ public class CWLService {
             // Construct the rest of the workflow model
             Workflow workflowModel = new Workflow(label, extractDoc(cwlFile), getInputs(cwlFile),
                     getOutputs(cwlFile), getSteps(cwlFile), null);
-
-            if (packedFiles.size() > 0) {
-                workflowModel.setPackedWorkflowID(cwlFile.get(ID).asText());
-            }
 
             workflowModel.setCwltoolVersion(cwlTool.getVersion());
 
@@ -186,7 +238,7 @@ public class CWLService {
                                              File workflowFile) throws CWLValidationException {
         GitDetails gitDetails = basicModel.getRetrievedFrom();
         String latestCommit = basicModel.getLastCommit();
-        String packedWorkflowID = basicModel.getPackedWorkflowID();
+        String packedWorkflowID = gitDetails.getPackedId();
 
         // Get paths to workflow
         String url = gitDetails.getUrl(latestCommit).replace("https://", "");
@@ -405,12 +457,18 @@ public class CWLService {
             JsonNode cwlFile = yamlStringToJson(readFileToString(file));
 
             // If the CWL file is packed there can be multiple workflows in a file
+            int packedCount = 0;
             if (cwlFile.has(DOC_GRAPH)) {
                 // Packed CWL, find the first subelement which is a workflow and take it
                 for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
                     if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
                         cwlFile = jsonNode;
+                        packedCount++;
                     }
+                }
+                if (packedCount > 1) {
+                    return new WorkflowOverview("/" + file.getName(), "Packed file",
+                            "contains " + packedCount + " workflows");
                 }
             }
 
@@ -423,7 +481,7 @@ public class CWLService {
                 }
 
                 // Return the constructed overview
-                return new WorkflowOverview(file.getName(), label, extractDoc(cwlFile));
+                return new WorkflowOverview("/" + file.getName(), label, extractDoc(cwlFile));
             } else {
                 // Return null if not a workflow file
                 return null;

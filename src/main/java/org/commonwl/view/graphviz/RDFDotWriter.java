@@ -28,7 +28,10 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Writes GraphViz DOT files from a workflow RDF model
@@ -36,7 +39,6 @@ import java.util.*;
 public class RDFDotWriter extends DotWriter {
 
     private RDFService rdfService;
-    private Map<String, String> subworkflows = new HashMap<>();
     private String gitPath;
 
     public RDFDotWriter(Writer writer, RDFService rdfService, String gitPath) {
@@ -133,14 +135,8 @@ public class RDFDotWriter extends DotWriter {
                 // Distinguish nested workflows
                 CWLProcess runType = rdfService.strToRuntype(step.get("runtype").toString());
                 if (runType == CWLProcess.WORKFLOW) {
-                    //if (subworkflow) {
-                        writeLine("  \"" + stepName + "\" [label=\"" + label +
-                                "\", fillcolor=\"#F3CEA1\"];");
-                    /*} else {
-                        String runFile = step.get("run").toString();
-                        subworkflows.put(stepName, FilenameUtils.getName(runFile));
-                        writeSubworkflow(stepName, runFile);
-                    }*/
+                    writeLine("  \"" + stepName + "\" [label=\"" + label +
+                            "\", fillcolor=\"#F3CEA1\"];");
                 } else {
                     writeLine("  \"" + stepName + "\" [label=\"" + label + "\"];");
                 }
@@ -163,9 +159,9 @@ public class RDFDotWriter extends DotWriter {
             QuerySolution stepLink = stepLinks.nextSolution();
             if (stepLink.contains("src")) {
                 // Normal link from step
-                String sourceID = nodeIDFromUri(workflowUri, stepLink.get("src").toString());
+                String sourceID = nodeIDFromUri(stepLink.get("src").toString());
                 String dest = stepLink.get("dest").toString();
-                String destID = nodeIDFromUri(workflowUri, dest);
+                String destID = nodeIDFromUri(dest);
                 String destInput = dest.substring(dest.replaceAll("#", "/").lastIndexOf("/") + 1);
                 writeLine("  \"" + sourceID + "\" -> \"" + destID + "\" [label=\"" + destInput + "\"];");
             } else if (stepLink.contains("default")) {
@@ -197,51 +193,19 @@ public class RDFDotWriter extends DotWriter {
         ResultSet outputLinks = rdfService.getOutputLinks(gitPath, workflowUri);
         while (outputLinks.hasNext()) {
             QuerySolution outputLink = outputLinks.nextSolution();
-            String sourceID = nodeIDFromUri(workflowUri, outputLink.get("src").toString());
-            String destID = nodeIDFromUri(workflowUri, outputLink.get("dest").toString());
+            String sourceID = nodeIDFromUri(outputLink.get("src").toString());
+            String destID = nodeIDFromUri(outputLink.get("dest").toString());
             writeLine("  \"" + sourceID + "\" -> \"" + destID + "\";");
         }
     }
 
     /**
      * Get a node ID from a URI, with ID handling for subworkflows
-     * @param workflowUri The URI of the workflow in the model
      * @param uri The URI of the step
      * @return A string in the format filename#stepID
      */
-    private String nodeIDFromUri(String workflowUri, String uri) {
-
-        String nodeID = rdfService.stepNameFromURI(gitPath, uri);
-        if (subworkflows.containsKey(nodeID)) {
-            int slashAfterHashIndex = uri.indexOf('/', uri.lastIndexOf('#'));
-            if (slashAfterHashIndex != -1) {
-                String subworkflowStepID = uri.substring(slashAfterHashIndex + 1);
-                nodeID = subworkflows.get(nodeID) + "#" + subworkflowStepID;
-            }
-        }
-        return nodeID;
-    }
-
-    /**
-     * Writes a subworkflow as a cluster on the graph
-     * @param name The name of the step the subworkflow is running in
-     * @param subWorkflowUri The URI of the subworkflow in the model
-     */
-    private void writeSubworkflow(String name, String subWorkflowUri) throws IOException {
-
-        // Start of subgraph with styling
-        writeLine("  subgraph \"cluster_" + name + "\" {");
-        writeLine("    rank = \"same\";");
-        writeLine("    style=\"filled,dotted\";");
-        writeLine("    color=\"black\";");
-        writeLine("    fillcolor=\"#F9DBB7\";");
-        writeLine("    label = \"" + rdfService.labelFromName(name) + "\";");
-
-        writeInputs(subWorkflowUri);
-        writeSteps(subWorkflowUri, true);
-        writeOutputs(subWorkflowUri);
-
-        writeLine("  }");
+    private String nodeIDFromUri(String uri) {
+        return rdfService.stepNameFromURI(gitPath, uri);
     }
 
     /**

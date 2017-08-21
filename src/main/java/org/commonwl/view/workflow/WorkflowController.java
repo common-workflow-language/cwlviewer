@@ -122,7 +122,15 @@ public class WorkflowController {
             if (workflow == null) {
                 try {
                     if (gitInfo.getPath().endsWith(".cwl")) {
-                        workflow = workflowService.createQueuedWorkflow(gitInfo).getTempRepresentation();
+                        QueuedWorkflow result = workflowService.createQueuedWorkflow(gitInfo);
+                        if (result.getWorkflowList() == null) {
+                            workflow = result.getTempRepresentation();
+                        } else {
+                            if (result.getWorkflowList().size() == 1) {
+                                gitInfo.setPackedId(result.getWorkflowList().get(0).getFileName());
+                            }
+                            return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
+                        }
                     } else {
                         return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
                     }
@@ -135,8 +143,8 @@ public class WorkflowController {
                     bindingResult.rejectValue("url", "git.retrievalError");
                     return new ModelAndView("index");
                 } catch (WorkflowNotFoundException ex) {
-                    logger.warn("git.pathTraversal " + workflowForm , ex);
-                    bindingResult.rejectValue("url", "git.pathTraversal");
+                    logger.warn("git.notFound " + workflowForm , ex);
+                    bindingResult.rejectValue("url", "git.notFound");
                     return new ModelAndView("index");
                 } catch (Exception ex) {
                     logger.warn("url.parsingError " + workflowForm , ex);
@@ -160,8 +168,7 @@ public class WorkflowController {
      */
     @GetMapping(value={"/workflows/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
                        "/workflows/{domain}.com/{owner}/{repoName}/blob/{branch}/**"})
-    public ModelAndView getWorkflow(@Value("${applicationURL}") String applicationURL,
-                                    @PathVariable("domain") String domain,
+    public ModelAndView getWorkflow(@PathVariable("domain") String domain,
                                     @PathVariable("owner") String owner,
                                     @PathVariable("repoName") String repoName,
                                     @PathVariable("branch") String branch,
@@ -175,8 +182,7 @@ public class WorkflowController {
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
 
         // Get workflow
-        ModelAndView modelAndView = getWorkflow(gitDetails, redirectAttrs);
-        return modelAndView.addObject("appURL", applicationURL);
+        return getWorkflow(gitDetails, redirectAttrs);
     }
 
     /**
@@ -191,8 +197,7 @@ public class WorkflowController {
                                            RedirectAttributes redirectAttrs) {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         GitDetails gitDetails = getGitDetails(11, path, branch);
-        ModelAndView modelAndView = getWorkflow(gitDetails, redirectAttrs);
-        return modelAndView.addObject("appURL", applicationURL);
+        return getWorkflow(gitDetails, redirectAttrs);
     }
 
     /**
@@ -410,7 +415,13 @@ public class WorkflowController {
             default:
                 throw new WorkflowNotFoundException();
         }
-        return new GitDetails(repoUrl, branch, path);
+        String[] pathSplit = path.split("#");
+        GitDetails details = new GitDetails(repoUrl, branch, path);
+        if (pathSplit.length > 1) {
+            details.setPath(pathSplit[pathSplit.length - 2]);
+            details.setPackedId(pathSplit[pathSplit.length - 1]);
+        }
+        return details;
     }
 
     /**
@@ -455,13 +466,24 @@ public class WorkflowController {
             queued = workflowService.getQueuedWorkflow(gitDetails);
             if (queued == null) {
                 // Validation
-                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl(), gitDetails.getBranch(), gitDetails.getPath());
+                String packedPart = (gitDetails.getPackedId() == null) ? "" : "#" + gitDetails.getPackedId();
+                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl(), gitDetails.getBranch(),
+                        gitDetails.getPath() + packedPart);
                 BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
                 workflowFormValidator.validateAndParse(workflowForm, errors);
                 if (!errors.hasErrors()) {
                     try {
                         if (gitDetails.getPath().endsWith(".cwl")) {
                             queued = workflowService.createQueuedWorkflow(gitDetails);
+                            if (queued.getWorkflowList() != null) {
+                                // Packed workflow listing
+                                if (queued.getWorkflowList().size() == 1) {
+                                    gitDetails.setPackedId(queued.getWorkflowList().get(0).getFileName());
+                                    return new ModelAndView("redirect:" + gitDetails.getInternalUrl());
+                                }
+                                return new ModelAndView("selectworkflow", "workflowOverviews", queued.getWorkflowList())
+                                        .addObject("gitDetails", gitDetails);
+                            }
                         } else {
                             List<WorkflowOverview> workflowOverviews = workflowService.getWorkflowsFromDirectory(gitDetails);
                             if (workflowOverviews.size() > 1) {
@@ -469,7 +491,7 @@ public class WorkflowController {
                                         .addObject("gitDetails", gitDetails);
                             } else if (workflowOverviews.size() == 1) {
                                 return new ModelAndView("redirect:" + gitDetails.getInternalUrl() +
-                                        "/" + workflowOverviews.get(0).getFileName());
+                                        workflowOverviews.get(0).getFileName());
                             } else {
                                 errors.rejectValue("url", "url.noWorkflowsInDirectory", "No workflow files were found in the given directory");
                             }
@@ -481,10 +503,10 @@ public class WorkflowController {
                         logger.error("git.retrievalError " + workflowForm, ex);
                         errors.rejectValue("url", "git.retrievalError", "The workflow could not be retrieved from the Git repository using the details given");
                     } catch (WorkflowNotFoundException ex) {
-                        logger.warn("git.pathTraversal " + workflowForm, ex);
-                        errors.rejectValue("url", "git.pathTraversal", "The path given did not resolve to a location within the repository");
+                        logger.warn("git.notFound " + workflowForm, ex);
+                        errors.rejectValue("url", "git.notFound", "The workflow could not be found within the repository");
                     } catch (IOException ex) {
-                        logger.warn("git.parsingError " + workflowForm, ex);
+                        logger.warn("url.parsingError " + workflowForm, ex);
                         errors.rejectValue("url", "url.parsingError", "The workflow could not be parsed from the given URL");
                     }
                 }

@@ -17,24 +17,26 @@
  * under the License.
  */
 
-package org.commonwl.view.cwl;
+/**
+ * RequireJS configuration with all possible dependencies
+ */
+requirejs.config({
+    baseUrl: '/bower_components',
+    paths: {
+        'jquery': 'jquery/dist/jquery.min'
+    }
+});
 
 /**
- * Enum for possible CWL processes
+ * Redirect with URL escaping for # parameters referring to subworkflows
  */
-public enum CWLProcess {
-    WORKFLOW("Workflow"),
-    COMMANDLINETOOL("CommandLineTool"),
-    EXPRESSIONTOOL("ExpressionTool");
-
-    private final String name;
-
-    CWLProcess(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        return name;
-    }
-}
+require(['jquery'],
+    function ($) {
+        var hashValue = window.location.hash.substr(1);
+        $(".filename").each(function() {
+            var workflowLink = $(this).parent("a").attr("href");
+            if (workflowLink.endsWith("%23" + hashValue)) {
+                window.location.replace(workflowLink);
+            }
+        });
+    });

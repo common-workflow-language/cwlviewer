@@ -37,8 +37,7 @@ import org.springframework.web.servlet.HandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static org.commonwl.view.cwl.CWLToolStatus.SUCCESS;
 
@@ -90,16 +89,18 @@ public class WorkflowRESTController {
      * @param url The URL of the workflow
      * @param branch The branch where the workflow can be found
      * @param path The path within the repository to the workflow file
+     * @param packedId The ID of the workflow if the file is packed
      * @return Appropriate response code and optional JSON string with message
      */
     @PostMapping(value = "/workflows", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<?> newWorkflowFromGitURLJson(@RequestParam(value="url") String url,
                                                        @RequestParam(value="branch", required=false) String branch,
                                                        @RequestParam(value="path", required=false) String path,
+                                                       @RequestParam(value="packedId", required=false) String packedId,
                                                        HttpServletResponse response) {
 
         // Run validator which checks the URL is valid
-        WorkflowForm workflowForm = new WorkflowForm(url, branch, path);
+        WorkflowForm workflowForm = new WorkflowForm(url, branch, path, packedId);
         BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
         GitDetails gitInfo = workflowFormValidator.validateAndParse(workflowForm, errors);
 
@@ -121,6 +122,28 @@ public class WorkflowRESTController {
                 if (queued == null) {
                     try {
                         queued = workflowService.createQueuedWorkflow(gitInfo);
+                        if (queued.getWorkflowList() != null) {
+                            if (queued.getWorkflowList().size() == 1) {
+                                // Parse the packed workflow within automatically if there is only one
+                                gitInfo.setPackedId(queued.getWorkflowList().get(0).getFileName());
+                                queued = workflowService.getQueuedWorkflow(gitInfo);
+                                if (queued == null) {
+                                    queued = workflowService.createQueuedWorkflow(gitInfo);
+                                }
+                            } else {
+                                // Error with alternatives suggested
+                                List<WorkflowOverview> test = queued.getWorkflowList();
+                                List<String> workflowUris = new ArrayList<>();
+                                for (WorkflowOverview overview : queued.getWorkflowList()) {
+                                    workflowUris.add(overview.getFileName().substring(1));
+                                }
+                                Map<String, Object> responseMap = new HashMap<>();
+                                responseMap.put("message", "This workflow file is packed and contains multiple workflow " +
+                                        "descriptions. Please provide a packedId parameter with one of the following");
+                                responseMap.put("packedId", workflowUris);
+                                return new ResponseEntity<Map>(responseMap, HttpStatus.UNPROCESSABLE_ENTITY);
+                            }
+                        }
                     } catch (CWLValidationException ex) {
                         Map<String, String> message = Collections.singletonMap("message", "Error:" + ex.getMessage());
                         return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);

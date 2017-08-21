@@ -23,6 +23,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -32,10 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -70,55 +71,60 @@ public class GitService {
      * @returns The git object for the repository
      */
     public Git getRepository(GitDetails gitDetails, boolean reuseDir)
-            throws GitAPIException {
+            throws GitAPIException, IOException {
         Git repo = null;
-        try {
-            if (reuseDir) {
-                // Base dir from configuration, name from hash of repository URL
-                File baseDir = new File(gitStorage.toString());
-                String baseName = DigestUtils.sha1Hex(GitDetails.normaliseUrl(gitDetails.getRepoUrl()));
+        while (repo == null) {
+            try {
+                if (reuseDir) {
+                    // Base dir from configuration, name from hash of repository URL
+                    String baseName = DigestUtils.sha1Hex(GitDetails.normaliseUrl(gitDetails.getRepoUrl()));
 
-                // Check if folder already exists
-                File repoDir = new File(baseDir, baseName);
-                if (repoDir.exists() && repoDir.isDirectory()) {
-                    repo = Git.open(repoDir);
-                    repo.fetch().call();
-                } else {
-                    // Create a folder and clone repository into it
-                    if (repoDir.mkdir()) {
+                    // Check if folder already exists
+                    Path repoDir = gitStorage.resolve(baseName);
+                    if (Files.isReadable(repoDir) && Files.isDirectory(repoDir)) {
+                        repo = Git.open(repoDir.toFile());
+                        repo.fetch().call();
+                    } else {
+                        // Create a folder and clone repository into it
+                        Files.createDirectory(repoDir);
                         repo = Git.cloneRepository()
                                 .setCloneSubmodules(cloneSubmodules)
                                 .setURI(gitDetails.getRepoUrl())
-                                .setDirectory(repoDir)
+                                .setDirectory(repoDir.toFile())
                                 .setCloneAllBranches(true)
                                 .call();
                     }
+                } else {
+                    // Another thread is already using the existing folder
+                    // Must create another temporary one
+                    repo = Git.cloneRepository()
+                            .setCloneSubmodules(cloneSubmodules)
+                            .setURI(gitDetails.getRepoUrl())
+                            .setDirectory(createTempDir())
+                            .setCloneAllBranches(true)
+                            .call();
                 }
-            } else {
-                // Another thread is already using the existing folder
-                // Must create another temporary one
-                repo = Git.cloneRepository()
-                        .setCloneSubmodules(cloneSubmodules)
-                        .setURI(gitDetails.getRepoUrl())
-                        .setDirectory(createTempDir())
-                        .setCloneAllBranches(true)
-                        .call();
-            }
 
-            // Checkout the specific branch or commit ID
-            if (repo != null) {
-                // Create a new local branch if it does not exist and not a commit ID
-                String branchOrCommitId = gitDetails.getBranch();
-                if (!ObjectId.isId(branchOrCommitId)) {
-                    branchOrCommitId = "refs/remotes/origin/" + branchOrCommitId;
+                // Checkout the specific branch or commit ID
+                if (repo != null) {
+                    // Create a new local branch if it does not exist and not a commit ID
+                    String branchOrCommitId = gitDetails.getBranch();
+                    if (!ObjectId.isId(branchOrCommitId)) {
+                        branchOrCommitId = "refs/remotes/origin/" + branchOrCommitId;
+                    }
+                    repo.checkout()
+                            .setName(branchOrCommitId)
+                            .call();
                 }
-                repo.checkout()
-                        .setName(branchOrCommitId)
-                        .call();
+            } catch (RefNotFoundException ex) {
+                // Attempt slashes in branch fix
+                GitDetails correctedForSlash = transferPathToBranch(gitDetails);
+                if (correctedForSlash != null) {
+                    gitDetails = correctedForSlash;
+                } else {
+                    throw ex;
+                }
             }
-        } catch (IOException ex) {
-            logger.error("Could not open existing Git repository for '"
-                    + gitDetails.getRepoUrl() + "'", ex);
         }
 
         return repo;
@@ -166,6 +172,28 @@ public class GitService {
             }
         }
         return fileAuthors;
+    }
+
+    /**
+     * Transfers part of the path to the branch to fix / in branch names
+     * @param githubInfo The current Github info possibly with
+     *                   part of the branch name in the path
+     * @return A potentially corrected set of Github details,
+     *         or null if there are no slashes in the path
+     */
+    public GitDetails transferPathToBranch(GitDetails githubInfo) {
+        String path = githubInfo.getPath();
+        String branch = githubInfo.getBranch();
+
+        int firstSlash = path.indexOf("/");
+        if (firstSlash > 0) {
+            branch += "/" + path.substring(0, firstSlash);
+            path = path.substring(firstSlash + 1);
+            return new GitDetails(githubInfo.getRepoUrl(), branch,
+                    path);
+        } else {
+            return null;
+        }
     }
 
 }

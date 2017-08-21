@@ -94,6 +94,25 @@ public class WorkflowFormValidatorTest {
     }
 
     /**
+     * Packed URL
+     */
+    @Test
+    public void packedUrl() throws Exception {
+
+        WorkflowForm githubUrl = new WorkflowForm("https://github.com/MarkRobbo/workflows/tree/master/packed.cwl#workflowId");
+        Errors errors = new BeanPropertyBindingResult(githubUrl, "workflowForm");
+        GitDetails details = workflowFormValidator.validateAndParse(githubUrl, errors);
+
+        assertNotNull(details);
+        assertEquals("https://github.com/MarkRobbo/workflows.git", details.getRepoUrl());
+        assertEquals("master", details.getBranch());
+        assertEquals("packed.cwl", details.getPath());
+        assertEquals("workflowId", details.getPackedId());
+        assertFalse(errors.hasErrors());
+
+    }
+
+    /**
      * Empty URL
      */
     @Test
