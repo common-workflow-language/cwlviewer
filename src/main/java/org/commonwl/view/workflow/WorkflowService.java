@@ -364,6 +364,33 @@ public class WorkflowService {
     }
 
     /**
+     * Find a workflow by commit ID and path
+     * @param commitID The commit ID of the workflow
+     * @param path The path to the workflow within the repository
+     * @return A workflow model with the above two parameters
+     */
+    public Workflow findByCommitAndPath(String commitID, String path) throws WorkflowNotFoundException {
+        List<Workflow> matches = workflowRepository.findByCommitAndPath(commitID, path);
+        if (matches == null || matches.size() == 0) {
+            throw new WorkflowNotFoundException();
+        } else if (matches.size() == 1) {
+            return matches.get(0);
+        } else {
+            // Multiple matches means either added by both branch and ID
+            // Or packed workflow
+            for (Workflow workflow : matches) {
+                if (workflow.getPackedWorkflowID() != null) {
+                    // This is a packed file
+                    // TODO: return 300 multiple choices response for this in controller
+                    throw new WorkflowNotFoundException();
+                }
+            }
+            // Not a packed workflow, just different references to the same ID
+            return matches.get(0);
+        }
+    }
+
+    /**
      * Generates the RO bundle for a Workflow and adds it to the model
      * @param workflow The workflow model to create a Research Object for
      */

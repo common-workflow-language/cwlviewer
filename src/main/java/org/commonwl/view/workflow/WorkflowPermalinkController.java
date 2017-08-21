@@ -21,6 +21,7 @@ package org.commonwl.view.workflow;
 
 import org.commonwl.view.git.GitType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,7 +30,7 @@ import org.springframework.web.servlet.HandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
+import java.io.File;
 
 /**
  * Allows permalinks in URIs across our RDF to identify a
@@ -42,10 +43,13 @@ import java.util.List;
 public class WorkflowPermalinkController {
 
     private final WorkflowRepository workflowRepository;
+    private final WorkflowService workflowService;
 
     @Autowired
-    public WorkflowPermalinkController(WorkflowRepository workflowRepository) {
+    public WorkflowPermalinkController(WorkflowRepository workflowRepository,
+                                       WorkflowService workflowService) {
         this.workflowRepository = workflowRepository;
+        this.workflowService = workflowService;
     }
 
     /**
@@ -60,9 +64,7 @@ public class WorkflowPermalinkController {
     public void goToViewer(@PathVariable("commitid") String commitId,
                            HttpServletRequest request,
                            HttpServletResponse response) {
-        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        path = WorkflowController.extractPath(path, 3);
-        Workflow workflow = findByCommitAndPath(commitId, path);
+        Workflow workflow = getWorkflow(commitId, request);
         response.setHeader("Location", workflow.getRetrievedFrom().getInternalUrl(commitId));
         response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
     }
@@ -77,9 +79,7 @@ public class WorkflowPermalinkController {
     public void goToRawUrl(@PathVariable("commitid") String commitId,
                            HttpServletRequest request,
                            HttpServletResponse response) {
-        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        path = WorkflowController.extractPath(path, 3);
-        Workflow workflow = findByCommitAndPath(commitId, path);
+        Workflow workflow = getWorkflow(commitId, request);
         if (workflow.getRetrievedFrom().getType() == GitType.GENERIC) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         } else {
@@ -168,36 +168,25 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = {"application/ro+zip", "application/vnd.wf4ever.robundle+zip"})
-    public Workflow getROBundle(@PathVariable("commitid") String commitId,
-                                HttpServletRequest request) {
-        return null;
+    public FileSystemResource getROBundle(@PathVariable("commitid") String commitId,
+                                          HttpServletRequest request,
+                                          HttpServletResponse response) {
+        Workflow workflow = getWorkflow(commitId, request);
+        File bundleDownload = workflowService.getROBundle(workflow.getRetrievedFrom());
+        response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
+        return new FileSystemResource(bundleDownload);
     }
 
     /**
-     * Find a workflow by commit ID and path
-     * @param commitID The commit ID of the workflow
-     * @param path The path to the workflow within the repository
-     * @return A workflow model with the above two parameters
+     * Get a workflow based on commit ID and extracting path from request
+     * @param commitId The commit ID of the repository
+     * @param request The HttpServletRequest from the controller to extract path
+     * @throws WorkflowNotFoundException If workflow could not be found (404)
      */
-    private Workflow findByCommitAndPath(String commitID, String path) throws WorkflowNotFoundException {
-        List<Workflow> matches = workflowRepository.findByCommitAndPath(commitID, path);
-        if (matches == null || matches.size() == 0) {
-            throw new WorkflowNotFoundException();
-        } else if (matches.size() == 1) {
-            return matches.get(0);
-        } else {
-            // Multiple matches means either added by both branch and ID
-            // Or packed workflow
-            for (Workflow workflow : matches) {
-                if (workflow.getPackedWorkflowID() != null) {
-                    // This is a packed file
-                    // TODO: return 300 multiple choices response for this in controller
-                    throw new WorkflowNotFoundException();
-                }
-            }
-            // Not a packed workflow, just different references to the same ID
-            return matches.get(0);
-        }
+    private Workflow getWorkflow(String commitId, HttpServletRequest request) throws WorkflowNotFoundException {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        path = WorkflowController.extractPath(path, 3);
+        return workflowService.findByCommitAndPath(commitId, path);
     }
 
 }
