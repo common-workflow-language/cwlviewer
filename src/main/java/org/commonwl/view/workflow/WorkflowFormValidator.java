@@ -73,11 +73,15 @@ public class WorkflowFormValidator {
             String repoUrl = null;
             String branch = null;
             String path = null;
+            String packedId = null;
             if (!isEmptyOrWhitespace(form.getBranch())) {
                 branch = form.getBranch();
             }
             if (!isEmptyOrWhitespace(form.getPath())) {
                 path = form.getPath();
+            }
+            if (!isEmptyOrWhitespace(form.getPackedId())) {
+                packedId = form.getPackedId();
             }
 
             // Github URL
@@ -114,11 +118,15 @@ public class WorkflowFormValidator {
 
             // Split off packed ID if present
             if (repoUrl != null) {
-                String[] pathSplit = path.split("#");
                 GitDetails details = new GitDetails(repoUrl, branch, path);
-                if (pathSplit.length > 1) {
-                    details.setPath(pathSplit[pathSplit.length - 2]);
-                    details.setPackedId(pathSplit[pathSplit.length - 1]);
+                if (packedId != null) {
+                    details.setPackedId(packedId);
+                } else {
+                    String[] pathSplit = path.split("#");
+                    if (pathSplit.length > 1) {
+                        details.setPath(pathSplit[pathSplit.length - 2]);
+                        details.setPackedId(pathSplit[pathSplit.length - 1]);
+                    }
                 }
                 return details;
             }
@@ -128,7 +136,9 @@ public class WorkflowFormValidator {
             if (!e.hasErrors()) {
                 m = gitRepoPattern.matcher(form.getUrl());
                 if (m.find()) {
-                    return new GitDetails(form.getUrl(), form.getBranch(), form.getPath());
+                    GitDetails details = new GitDetails(form.getUrl(), form.getBranch(), form.getPath());
+                    details.setPackedId(form.getPackedId());
+                    return details;
                 }
             }
 

@@ -59,7 +59,7 @@
                         <tr>
                             <td>url</td>
                             <td>String</td>
-                            <td>The URL of the repository. Either a Gitlab or Github URL, or any Git repository URL.</td>
+                            <td>The URL of the repository. Either a Gitlab or Github URL, or any Git repository URL. If a Gitlab or Github repository URL is used, the following fields will take priority over those parsed from the URL if provided.</td>
                         </tr>
                         <tr>
                             <td>branch</td>
@@ -70,6 +70,11 @@
                             <td>path</td>
                             <td>String</td>
                             <td>The path within the repository to the workflow file. Required if the URL is not from Gitlab or Github.</td>
+                        </tr>
+                        <tr>
+                            <td>packedId</td>
+                            <td>String</td>
+                            <td>The ID of the workflow, to be provided if the workflow file is packed (contains multiple descriptions with <code>$graph</code>).</td>
                         </tr>
                     </table>
                     <h4>Input</h4>
@@ -93,19 +98,19 @@ Location: /queue/:queueid
                     <h4>Already Exists</h4>
 <pre class="highlight http">
 HTTP/1.1 303 See Other
-Location: /workflows/:githubURL
+Location: /workflows/:URL
 </pre>
                     <h4>Packed Workflow with Multiple Choices</h4>
                     <pre class="highlight json">
 HTTP/1.1 422 Unprocessable Entity
 {
-    "message": "This workflow file is packed and contains multiple workflow descriptions. Please choose one to add"
-    "workflows": [
-        "#workflow.cwl",
-        "#main",
-        "#workflow_exome.cwl",
-        "#align.cwl",
-        "#workflow.cwl_2"
+    "message": "This workflow file is packed and contains multiple workflow descriptions. Please provide a packedId parameter with one of the following values"
+    "packedId": [
+        "workflow.cwl",
+        "main",
+        "workflow_exome.cwl",
+        "align.cwl",
+        "workflow.cwl_2"
     ]
 }
 </pre>

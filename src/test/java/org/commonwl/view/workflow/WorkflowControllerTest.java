@@ -40,6 +40,7 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.core.Is.is;
@@ -206,11 +207,9 @@ public class WorkflowControllerTest {
         List<WorkflowOverview> listOfTwoOverviews = new ArrayList<>();
         listOfTwoOverviews.add(new WorkflowOverview("/workflow1.cwl", "label", "doc"));
         listOfTwoOverviews.add(new WorkflowOverview("/workflow2.cwl", "label2", "doc2"));
-        List<WorkflowOverview> listOfOneOverview = new ArrayList<>();
-        listOfOneOverview.add(new WorkflowOverview("/workflow1.cwl", "label", "doc"));
         when(mockWorkflowService.getWorkflowsFromDirectory(anyObject()))
                 .thenReturn(listOfTwoOverviews)
-                .thenReturn(listOfOneOverview);
+                .thenReturn(Collections.singletonList(new WorkflowOverview("/workflow1.cwl", "label", "doc")));
 
         // Mock controller/MVC
         WorkflowController workflowController = new WorkflowController(
