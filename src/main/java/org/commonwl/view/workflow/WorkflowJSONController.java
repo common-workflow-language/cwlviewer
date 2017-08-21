@@ -43,10 +43,10 @@ import java.util.Map;
 import static org.commonwl.view.cwl.CWLToolStatus.SUCCESS;
 
 /**
- * RESTful API controller
+ * JSON API Controller
  */
 @RestController
-public class WorkflowRESTController {
+public class WorkflowJSONController {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -59,7 +59,7 @@ public class WorkflowRESTController {
      * @param workflowService Builds new Workflow objects
      */
     @Autowired
-    public WorkflowRESTController(WorkflowFormValidator workflowFormValidator,
+    public WorkflowJSONController(WorkflowFormValidator workflowFormValidator,
                                   WorkflowService workflowService) {
         this.workflowFormValidator = workflowFormValidator;
         this.workflowService = workflowService;
