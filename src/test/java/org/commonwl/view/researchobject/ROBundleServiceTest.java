@@ -95,14 +95,16 @@ public class ROBundleServiceTest {
         CWLTool mockCwlTool = Mockito.mock(CWLTool.class);
         when(mockCwlTool.getPackedVersion(anyString()))
                 .thenReturn("cwlVersion: v1.0");
-        when(mockCwlTool.getRDF(anyString()))
-                .thenReturn("@prefix cwl: <https://w3id.org/cwl/cwl#> .");
 
         // Mock RDF Service
         ResultSet emptyResult = Mockito.mock(ResultSet.class);
         when(emptyResult.hasNext()).thenReturn(false);
         RDFService mockRdfService = Mockito.mock(RDFService.class);
         when(mockRdfService.getAuthors(anyString(), anyString())).thenReturn(emptyResult);
+        when(mockRdfService.graphExists(anyString()))
+                .thenReturn(true);
+        when(mockRdfService.getModel(anyObject(), anyObject()))
+                .thenReturn("@prefix cwl: <https://w3id.org/cwl/cwl#> .".getBytes());
 
         // Workflow details
         GitDetails lobSTRv1Details = new GitDetails("https://github.com/common-workflow-language/workflows.git",

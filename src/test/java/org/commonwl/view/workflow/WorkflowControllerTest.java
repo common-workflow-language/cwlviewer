@@ -289,7 +289,7 @@ public class WorkflowControllerTest {
         // Bundle exists and can be downloaded
         mockMvc.perform(get("/robundle/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType("application/vnd.wf4ever.robundle+zip"));
+                .andExpect(content().contentType("application/ro+zip"));
 
         // Bundle does not exist, 404 error
         mockMvc.perform(get("/robundle/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
