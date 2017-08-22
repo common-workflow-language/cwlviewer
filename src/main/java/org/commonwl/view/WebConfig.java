@@ -22,13 +22,11 @@ package org.commonwl.view;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import static org.springframework.http.MediaType.parseMediaType;
 
 @Configuration
-@EnableWebMvc
 public class WebConfig extends WebMvcConfigurerAdapter {
 
     /**
@@ -37,7 +35,7 @@ public class WebConfig extends WebMvcConfigurerAdapter {
      */
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
-        configurer.favorParameter(true)
+        configurer.favorPathExtension(true).favorParameter(false).useJaf(true)
             .mediaType("html", MediaType.TEXT_HTML)
             .mediaType("json", MediaType.APPLICATION_JSON)
             .mediaType("turtle", parseMediaType("text/turtle"))
