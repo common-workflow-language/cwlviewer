@@ -19,16 +19,6 @@
 
 package org.commonwl.view.git;
 
-import static org.apache.jena.ext.com.google.common.io.Files.createTempDir;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;
@@ -42,6 +32,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.apache.jena.ext.com.google.common.io.Files.createTempDir;
 
 /**
  * Handles Git related functionality
@@ -82,6 +82,7 @@ public class GitService {
                     // Check if folder already exists
                     Path repoDir = gitStorage.resolve(baseName);
                     if (Files.isReadable(repoDir) && Files.isDirectory(repoDir)) {
+                        repo = Git.open(repoDir.toFile());
                         repo.fetch().call();
                     } else {
                         // Create a folder and clone repository into it
