@@ -32,8 +32,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Date;
 
 /**
@@ -65,7 +65,7 @@ public class CWLToolRunner {
     }
 
     @Async
-    public void createWorkflowFromQueued(QueuedWorkflow queuedWorkflow, File workflowFile)
+    public void createWorkflowFromQueued(QueuedWorkflow queuedWorkflow, Path workflowFile, Path workTree)
             throws IOException, InterruptedException {
 
         Workflow tempWorkflow = queuedWorkflow.getTempRepresentation();
@@ -74,7 +74,8 @@ public class CWLToolRunner {
         try {
             Workflow newWorkflow = cwlService.parseWorkflowWithCwltool(
                     tempWorkflow,
-                    workflowFile);
+                    workflowFile,
+                    workTree);
 
             // Success
             newWorkflow.setRetrievedFrom(tempWorkflow.getRetrievedFrom());

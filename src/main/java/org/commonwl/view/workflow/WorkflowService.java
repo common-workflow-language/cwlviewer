@@ -272,25 +272,25 @@ public class WorkflowService {
         boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
         try {
             Git repo = gitService.getRepository(gitInfo, safeToAccess);
-            File localPath = repo.getRepository().getWorkTree();
+            Path localPath = repo.getRepository().getWorkTree().toPath();
             String latestCommit = gitService.getCurrentCommitID(repo);
 
-            Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
+            Path workflowFile = localPath.resolve(gitInfo.getPath()).normalize().toAbsolutePath();
             // Prevent path traversal attacks
-            if (!pathToWorkflowFile.startsWith(localPath.toPath().normalize().toAbsolutePath())) {
+            if (!workflowFile.startsWith(localPath.normalize().toAbsolutePath())) {
                 throw new WorkflowNotFoundException();
             }
 
-            File workflowFile = new File(pathToWorkflowFile.toString());
-            if (! Files.isReadable(workflowFile.toPath())) {
+            // Check workflow is readable
+            if (!Files.isReadable(workflowFile)) {
                 throw new WorkflowNotFoundException();
             }
 
             // Handling of packed workflows
             String packedWorkflowId = gitInfo.getPackedId();
             if (packedWorkflowId == null) {
-                if (cwlService.isPacked(workflowFile)) {
-                    List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(workflowFile);
+                if (cwlService.isPacked(workflowFile.toFile())) {
+                    List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(workflowFile.toFile());
                     if (overviews.size() == 0) {
                         throw new IOException("No workflow was found within the packed CWL file");
                     } else {
@@ -302,7 +302,7 @@ public class WorkflowService {
                 }
             } else {
                 // Packed ID specified but was not found
-                if (!cwlService.isPacked(workflowFile)) {
+                if (!cwlService.isPacked(workflowFile.toFile())) {
                     throw new WorkflowNotFoundException();
                 }
             }
@@ -322,7 +322,7 @@ public class WorkflowService {
             // ASYNC OPERATIONS
             // Parse with cwltool and update model
             try {
-                cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, workflowFile);
+                cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, workflowFile, localPath);
             } catch (Exception e) {
                 logger.error("Could not update workflow with cwltool", e);
             }
@@ -347,9 +347,9 @@ public class WorkflowService {
         boolean safeToAccess = gitSemaphore.acquire(gitDetails.getRepoUrl());
         try {
             Git repo = gitService.getRepository(gitDetails, safeToAccess);
-            File localPath = repo.getRepository().getWorkTree();
-            Path pathToWorkflowFile = localPath.toPath().resolve(gitDetails.getPath()).normalize().toAbsolutePath();
-            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, new File(pathToWorkflowFile.toString()));
+            Path localPath = repo.getRepository().getWorkTree().toPath();
+            Path pathToWorkflowFile = localPath.resolve(gitDetails.getPath()).normalize().toAbsolutePath();
+            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, pathToWorkflowFile, localPath);
         } catch (Exception e) {
             logger.error("Could not update workflow with cwltool", e);
         } finally {

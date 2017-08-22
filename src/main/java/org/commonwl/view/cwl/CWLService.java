@@ -52,6 +52,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import static org.apache.commons.io.FileUtils.readFileToString;
@@ -161,14 +163,14 @@ public class CWLService {
      * @param packedWorkflowId The ID of the workflow object if the file is packed
      * @return The constructed workflow object
      */
-    public Workflow parseWorkflowNative(File workflowFile, String packedWorkflowId) throws IOException {
+    public Workflow parseWorkflowNative(Path workflowFile, String packedWorkflowId) throws IOException {
 
         // Check file size limit before parsing
-        long fileSizeBytes = workflowFile.length();
+        long fileSizeBytes = Files.size(workflowFile);
         if (fileSizeBytes <= singleFileSizeLimit) {
 
             // Parse file as yaml
-            JsonNode cwlFile = yamlStringToJson(readFileToString(workflowFile));
+            JsonNode cwlFile = yamlStringToJson(readFileToString(workflowFile.toFile()));
 
             // Check packed workflow occurs
             if (packedWorkflowId != null) {
@@ -199,7 +201,7 @@ public class CWLService {
             // Use filename for label if there is no defined one
             String label = extractLabel(cwlFile);
             if (label == null) {
-                label = FilenameUtils.getName(workflowFile.getPath());
+                label = workflowFile.getFileName().toString();
             }
 
             // Construct the rest of the workflow model
@@ -221,7 +223,7 @@ public class CWLService {
             return workflowModel;
 
         } else {
-            throw new IOException("File '" + workflowFile.getName() +  "' is over singleFileSizeLimit - " +
+            throw new IOException("File '" + workflowFile.getFileName() +  "' is over singleFileSizeLimit - " +
                     FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +
                     FileUtils.byteCountToDisplaySize(singleFileSizeLimit));
         }
@@ -235,14 +237,15 @@ public class CWLService {
      * @return The constructed workflow object
      */
     public Workflow parseWorkflowWithCwltool(Workflow basicModel,
-                                             File workflowFile) throws CWLValidationException {
+                                             Path workflowFile,
+                                             Path workTree) throws CWLValidationException {
         GitDetails gitDetails = basicModel.getRetrievedFrom();
         String latestCommit = basicModel.getLastCommit();
         String packedWorkflowID = gitDetails.getPackedId();
 
         // Get paths to workflow
         String url = gitDetails.getUrl(latestCommit).replace("https://", "");
-        String localPath = workflowFile.toPath().toAbsolutePath().toString();
+        String localPath = workflowFile.toAbsolutePath().toString();
         String gitPath = gitDetails.getPath();
         if (packedWorkflowID != null) {
             if (packedWorkflowID.charAt(0) != '#') {
@@ -256,6 +259,8 @@ public class CWLService {
         // Get RDF representation from cwltool
         if (!rdfService.graphExists(url)) {
             String rdf = cwlTool.getRDF(localPath);
+            rdf = rdf.replace("file://" + workTree.toAbsolutePath().toString(),
+                    "https://w3id.org/cwl/v/git/" + latestCommit + "/");
 
             // Create a workflow model from RDF representation
             Model model = ModelFactory.createDefaultModel();
