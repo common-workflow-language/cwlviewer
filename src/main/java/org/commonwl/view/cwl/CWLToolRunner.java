@@ -19,22 +19,26 @@
 
 package org.commonwl.view.cwl;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Date;
+
 import org.apache.jena.query.QueryException;
+import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitSemaphore;
+import org.commonwl.view.git.GitService;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.workflow.QueuedWorkflow;
 import org.commonwl.view.workflow.QueuedWorkflowRepository;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
+import org.eclipse.jgit.api.Git;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
 
 /**
  * Replace existing workflow with the one given by cwltool
@@ -50,31 +54,38 @@ public class CWLToolRunner {
     private final CWLService cwlService;
     private final ROBundleFactory roBundleFactory;
     private final String cwlToolVersion;
+    private final GitSemaphore gitSemaphore;
+    private final GitService gitService;
 
     @Autowired
-    public CWLToolRunner(WorkflowRepository workflowRepository,
-                         QueuedWorkflowRepository queuedWorkflowRepository,
-                         CWLService cwlService,
-                         CWLTool cwlTool,
-                         ROBundleFactory roBundleFactory) {
+    public CWLToolRunner(WorkflowRepository workflowRepository, QueuedWorkflowRepository queuedWorkflowRepository,
+            CWLService cwlService, CWLTool cwlTool, ROBundleFactory roBundleFactory, GitSemaphore gitSemaphore,
+            GitService gitService) {
         this.workflowRepository = workflowRepository;
         this.queuedWorkflowRepository = queuedWorkflowRepository;
         this.cwlService = cwlService;
         this.cwlToolVersion = cwlTool.getVersion();
         this.roBundleFactory = roBundleFactory;
+        this.gitSemaphore = gitSemaphore;
+        this.gitService = gitService;
     }
 
     @Async
-    public void createWorkflowFromQueued(QueuedWorkflow queuedWorkflow, File workflowFile)
+    public void createWorkflowFromQueued(QueuedWorkflow queuedWorkflow)
             throws IOException, InterruptedException {
 
         Workflow tempWorkflow = queuedWorkflow.getTempRepresentation();
-
+        GitDetails gitInfo = tempWorkflow.getRetrievedFrom();
+        final String repoUrl = gitInfo.getRepoUrl();
         // Parse using cwltool and replace in database
         try {
+            boolean safeToAccess = gitSemaphore.acquire(repoUrl);
+            Git repo = gitService.getRepository(gitInfo, safeToAccess);
+            Path localPath = repo.getRepository().getWorkTree().toPath();
+            Path workflowFile = localPath.resolve(gitInfo.getPath()).normalize().toAbsolutePath();
             Workflow newWorkflow = cwlService.parseWorkflowWithCwltool(
                     tempWorkflow,
-                    workflowFile);
+                    workflowFile.toFile());
 
             // Success
             newWorkflow.setRetrievedFrom(tempWorkflow.getRetrievedFrom());
@@ -105,6 +116,7 @@ public class CWLToolRunner {
                     "error occurred in CWLViewer!\n" +
                     "Help us by reporting it on Gitter or a Github issue\n");
         } finally {
+            gitSemaphore.release(repoUrl);
             queuedWorkflowRepository.save(queuedWorkflow);
         }
 
