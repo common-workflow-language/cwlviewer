@@ -19,10 +19,6 @@
 
 package org.commonwl.view.cwl;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Date;
-
 import org.apache.jena.query.QueryException;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitSemaphore;

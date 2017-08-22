@@ -32,7 +32,6 @@ import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitSemaphore;
 import org.commonwl.view.git.GitService;
-import org.commonwl.view.git.GitType;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
 import org.eclipse.jgit.api.Git;
@@ -125,6 +124,9 @@ public class ROBundleService {
 
         // Simplified attribution for RO bundle
         try {
+            manifest.setId(new URI("https://w3id.org/cwl/v/git/" + workflow.getLastCommit() +
+                    "/" + workflow.getRetrievedFrom().getPath() + "?format=ro"));
+
             // Tool attribution in createdBy
             manifest.setCreatedBy(appAgent);
 
@@ -159,12 +161,14 @@ public class ROBundleService {
             File png = graphVizService.getGraph(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
             Files.copy(png.toPath(), bundleRoot.resolve("visualisation.png"));
             PathMetadata pngAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.png"));
-            pngAggr.setRetrievedFrom(new URI(appAgent.getUri() + workflow.getVisualisationPng()));
+            pngAggr.setRetrievedFrom(new URI("https://w3id.org/cwl/v/git" + workflow.getLastCommit()
+                    + "/" + workflow.getRetrievedFrom().getPath() + "?format=png"));
 
             File svg = graphVizService.getGraph(workflow.getID() + ".svg", workflow.getVisualisationDot(), "svg");
             Files.copy(svg.toPath(), bundleRoot.resolve("visualisation.svg"));
             PathMetadata svgAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.svg"));
-            svgAggr.setRetrievedFrom(new URI(appAgent.getUri() + workflow.getVisualisationSvg()));
+            svgAggr.setRetrievedFrom(new URI("https://w3id.org/cwl/v/git" + workflow.getLastCommit()
+                    + "/" + workflow.getRetrievedFrom().getPath() + "?format=svg"));
 
             // Add annotation files
             GitDetails wfDetails = workflow.getRetrievedFrom();
@@ -246,12 +250,9 @@ public class ROBundleService {
                         // Where to store the new file in bundle
                         Path bundleFilePath = bundlePath.resolve(file.getName());
 
-                        // Create git details object for file
-                        GitDetails fileGitDetails = new GitDetails(gitDetails.getRepoUrl(), gitDetails.getBranch(),
-                                Paths.get(gitDetails.getPath()).resolve(file.getName()).toString());
-
-                        // Get direct URL
-                        URI rawURI = new URI(fileGitDetails.getRawUrl());
+                        // Get direct URL permalink
+                        URI rawURI = new URI("https://w3id.org/cwl/v/git/" + workflow.getLastCommit() +
+                                "/" + workflow.getRetrievedFrom().getPath() + "?format=raw");
 
                         // Variable to store file contents and aggregation
                         String fileContent = null;
@@ -265,11 +266,9 @@ public class ROBundleService {
 
                             // Set retrieved information for this file in the manifest
                             aggregation = bundle.getManifest().getAggregation(bundleFilePath);
-                            if (gitDetails.getType() != GitType.GENERIC) {
-                                aggregation.setRetrievedFrom(rawURI);
-                                aggregation.setRetrievedBy(appAgent);
-                                aggregation.setRetrievedOn(aggregation.getCreatedOn());
-                            }
+                            aggregation.setRetrievedFrom(rawURI);
+                            aggregation.setRetrievedBy(appAgent);
+                            aggregation.setRetrievedOn(aggregation.getCreatedOn());
                         } else {
                             logger.info("File " + file.getName() + " is too large to download - " +
                                     FileUtils.byteCountToDisplaySize(file.length()) + "/" +

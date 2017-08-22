@@ -260,7 +260,7 @@ public class CWLService {
         if (!rdfService.graphExists(url)) {
             String rdf = cwlTool.getRDF(localPath);
             rdf = rdf.replace("file://" + workTree.toAbsolutePath().toString(),
-                    "https://w3id.org/cwl/v/git/" + latestCommit + "/");
+                    "https://w3id.org/cwl/v/git" + latestCommit + "/");
 
             // Create a workflow model from RDF representation
             Model model = ModelFactory.createDefaultModel();

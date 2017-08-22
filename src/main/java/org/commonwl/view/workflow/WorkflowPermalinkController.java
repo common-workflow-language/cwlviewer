@@ -39,6 +39,7 @@ import java.io.File;
  *
  * Uses content negotiation to return all useful resources
  * related to a workflow
+ * Note: May need to edit WebConfig.java to add new content types
  */
 @RestController
 public class WorkflowPermalinkController {
@@ -76,7 +77,7 @@ public class WorkflowPermalinkController {
      * @return A 302 redirect response to the raw URL or 404
      */
     @GetMapping(value = "/git/{commitid}/**",
-                produces = {"application/x-yaml", MediaType.APPLICATION_OCTET_STREAM_VALUE})
+                produces = {"application/x-yaml", MediaType.APPLICATION_OCTET_STREAM_VALUE, "*/*"})
     public void goToRawUrl(@PathVariable("commitid") String commitId,
                            HttpServletRequest request,
                            HttpServletResponse response) {
@@ -192,7 +193,7 @@ public class WorkflowPermalinkController {
      * @return The Research Object Bundle
      */
     @GetMapping(value = "/git/{commitid}/**",
-                produces = {"application/ro+zip", "application/vnd.wf4ever.robundle+zip"})
+                produces = {"application/vnd.wf4ever.robundle+zip", "application/zip"})
     public FileSystemResource getROBundle(@PathVariable("commitid") String commitId,
                                           HttpServletRequest request,
                                           HttpServletResponse response) {
