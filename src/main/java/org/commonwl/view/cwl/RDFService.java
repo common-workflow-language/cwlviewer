@@ -38,7 +38,7 @@ public class RDFService {
             "PREFIX sld: <https://w3id.org/cwl/salad#>\n" +
             "PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>\n" +
             "PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>\n" +
-            "PREFIX rdfs: <rdfs:>\n" +
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
             "PREFIX s: <http://schema.org/>";
 
     private String rdfService;
@@ -142,7 +142,7 @@ public class RDFService {
 
     /**
      * Get the label for an ontology URL
-     * TODO: can be merged with getLabelAndDoc when cwltool namespace bug is resolved
+     * TODO: can be merged with getLabelAndDoc when common-workflow-language/cwltool#427 is resolved
      * @param ontologyURI The format URI for the ontology
      * @return Result set with label and doc strings
      */
