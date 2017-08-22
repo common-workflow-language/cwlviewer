@@ -19,6 +19,16 @@
 
 package org.commonwl.view.workflow;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
@@ -322,7 +332,7 @@ public class WorkflowService {
             // ASYNC OPERATIONS
             // Parse with cwltool and update model
             try {
-                cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, workflowFile, localPath);
+                cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
             } catch (Exception e) {
                 logger.error("Could not update workflow with cwltool", e);
             }
@@ -343,17 +353,10 @@ public class WorkflowService {
         queuedWorkflow.setMessage(null);
         queuedWorkflow.setCwltoolStatus(CWLToolStatus.RUNNING);
         queuedWorkflowRepository.save(queuedWorkflow);
-        GitDetails gitDetails = queuedWorkflow.getTempRepresentation().getRetrievedFrom();
-        boolean safeToAccess = gitSemaphore.acquire(gitDetails.getRepoUrl());
         try {
-            Git repo = gitService.getRepository(gitDetails, safeToAccess);
-            Path localPath = repo.getRepository().getWorkTree().toPath();
-            Path pathToWorkflowFile = localPath.resolve(gitDetails.getPath()).normalize().toAbsolutePath();
-            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow, pathToWorkflowFile, localPath);
+            cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
         } catch (Exception e) {
             logger.error("Could not update workflow with cwltool", e);
-        } finally {
-            gitSemaphore.release(gitDetails.getRepoUrl());
         }
     }
 
