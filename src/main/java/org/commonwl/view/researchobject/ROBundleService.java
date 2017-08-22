@@ -124,8 +124,9 @@ public class ROBundleService {
 
         // Simplified attribution for RO bundle
         try {
-            manifest.setId(new URI("https://w3id.org/cwl/v/git/" + workflow.getLastCommit() +
-                    "/" + workflow.getRetrievedFrom().getPath() + "?format=ro"));
+            String id = "https://w3id.org/cwl/v/git/" + workflow.getLastCommit() +
+                    "/" + workflow.getRetrievedFrom().getPath();
+            manifest.setId(new URI(id));
 
             // Tool attribution in createdBy
             manifest.setCreatedBy(appAgent);
@@ -134,7 +135,7 @@ public class ROBundleService {
             // TODO: Make this importedBy/On/From
             manifest.setRetrievedBy(appAgent);
             manifest.setRetrievedOn(manifest.getCreatedOn());
-            manifest.setRetrievedFrom(new URI(gitInfo.getUrl()));
+            manifest.setRetrievedFrom(new URI(id + "?format=ro"));
 
             // Make a directory in the RO bundle to store the files
             Path bundleRoot = bundle.getRoot();
