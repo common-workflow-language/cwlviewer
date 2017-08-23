@@ -175,6 +175,13 @@ public class WorkflowService {
                 // Add the new workflow if it exists
                 try {
                     createQueuedWorkflow(workflow.getRetrievedFrom());
+
+                    // Add the old commit for the purposes of permalinks
+                    // TODO: Separate concept of commit from branch ref, see #164
+                    GitDetails byOldCommitId = workflow.getRetrievedFrom();
+                    byOldCommitId.setBranch(workflow.getLastCommit());
+                    createQueuedWorkflow(byOldCommitId);
+
                     workflow = null;
                 } catch (Exception e) {
                     // Add back the old workflow if it is broken now
