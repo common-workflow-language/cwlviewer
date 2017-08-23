@@ -138,7 +138,7 @@ public class ROBundleServiceTest {
         // Check cwl aggregation information
         PathMetadata cwlAggregate = manifest.getAggregation(
                 bundleRoot.resolve("lobSTR-workflow.cwl"));
-        assertEquals("https://raw.githubusercontent.com/common-workflow-language/workflows/933bf2a1a1cce32d88f88f136275535da9df0954/lobstr-draft3/lobSTR-workflow.cwl",
+        assertEquals("https://w3id.org/cwl/v/git/null/workflows/lobSTR/lobSTR-workflow.cwl?format=raw",
                 cwlAggregate.getRetrievedFrom().toString());
         assertEquals("Mark Robinson", cwlAggregate.getAuthoredBy().get(0).getName());
         assertEquals("mailto:mark@example.com", cwlAggregate.getAuthoredBy().get(0).getUri().toString());

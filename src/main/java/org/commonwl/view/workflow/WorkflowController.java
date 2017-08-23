@@ -263,7 +263,9 @@ public class WorkflowController {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
-        return workflowService.getWorkflowGraph("svg", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
+        FileSystemResource test = workflowService.getWorkflowGraph("svg", gitDetails);
+        return test;
     }
 
     /**
@@ -278,7 +280,8 @@ public class WorkflowController {
                                                       HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         GitDetails gitDetails = getGitDetails(11, path, branch);
-        return workflowService.getWorkflowGraph("svg", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
+        return workflowService.getWorkflowGraph("svg", gitDetails);
     }
 
     /**
@@ -301,7 +304,8 @@ public class WorkflowController {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
-        return workflowService.getWorkflowGraph("png", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
+        return workflowService.getWorkflowGraph("png", gitDetails);
     }
 
     /**
@@ -316,7 +320,8 @@ public class WorkflowController {
                                                       HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         GitDetails gitDetails = getGitDetails(11, path, branch);
-        return workflowService.getWorkflowGraph("png", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
+        return workflowService.getWorkflowGraph("png", gitDetails);
     }
 
     /**
@@ -339,7 +344,8 @@ public class WorkflowController {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
-        return workflowService.getWorkflowGraph("xdot", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
+        return workflowService.getWorkflowGraph("xdot", gitDetails);
     }
 
     /**
@@ -354,7 +360,8 @@ public class WorkflowController {
                                                       HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         GitDetails gitDetails = getGitDetails(12, path, branch);
-        return workflowService.getWorkflowGraph("xdot", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
+        return workflowService.getWorkflowGraph("xdot", gitDetails);
     }
 
     /**

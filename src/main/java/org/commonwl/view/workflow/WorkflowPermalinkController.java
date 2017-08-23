@@ -155,7 +155,8 @@ public class WorkflowPermalinkController {
                                             HttpServletRequest request,
                                             HttpServletResponse response) {
         Workflow workflow = getWorkflow(commitId, request);
-        return workflowService.getWorkflowGraph("svg", workflow.getRetrievedFrom(), response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
+        return workflowService.getWorkflowGraph("svg", workflow.getRetrievedFrom());
     }
 
     /**
@@ -169,7 +170,8 @@ public class WorkflowPermalinkController {
                                             HttpServletRequest request,
                                             HttpServletResponse response) {
         Workflow workflow = getWorkflow(commitId, request);
-        return workflowService.getWorkflowGraph("png", workflow.getRetrievedFrom(), response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
+        return workflowService.getWorkflowGraph("png", workflow.getRetrievedFrom());
     }
 
     /**
@@ -183,7 +185,8 @@ public class WorkflowPermalinkController {
                                              HttpServletRequest request,
                                              HttpServletResponse response) {
         Workflow workflow = getWorkflow(commitId, request);
-        return workflowService.getWorkflowGraph("xdot", workflow.getRetrievedFrom(), response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
+        return workflowService.getWorkflowGraph("xdot", workflow.getRetrievedFrom());
     }
 
 

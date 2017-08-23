@@ -39,7 +39,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -381,12 +380,10 @@ public class WorkflowService {
      * Get a graph in a particular format and return it
      * @param format The format for the graph file
      * @param gitDetails The Git details of the workflow
-     * @param response The response object for setting content-disposition header
      * @return A FileSystemResource representing the graph
      * @throws WorkflowNotFoundException Error getting the workflow or format
      */
-    public FileSystemResource getWorkflowGraph(String format, GitDetails gitDetails,
-                                               HttpServletResponse response)
+    public FileSystemResource getWorkflowGraph(String format, GitDetails gitDetails)
             throws WorkflowNotFoundException {
         // Determine file extension from format
         String extension;
@@ -410,7 +407,6 @@ public class WorkflowService {
 
         // Generate graph and serve the file
         File out = graphVizService.getGraph(workflow.getID() + "." + extension, workflow.getVisualisationDot(), format);
-        response.setHeader("Content-Disposition", "inline; filename=\"graph." + extension + "\"");
         return new FileSystemResource(out);
     }
 
