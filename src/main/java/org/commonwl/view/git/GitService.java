@@ -118,6 +118,7 @@ public class GitService {
                 }
             } catch (RefNotFoundException ex) {
                 // Attempt slashes in branch fix
+                repo = null;
                 GitDetails correctedForSlash = transferPathToBranch(gitDetails);
                 if (correctedForSlash != null) {
                     gitDetails = correctedForSlash;
