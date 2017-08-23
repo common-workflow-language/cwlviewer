@@ -23,7 +23,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -72,60 +71,47 @@ public class GitService {
      */
     public Git getRepository(GitDetails gitDetails, boolean reuseDir)
             throws GitAPIException, IOException {
-        Git repo = null;
-        while (repo == null) {
-            try {
-                if (reuseDir) {
-                    // Base dir from configuration, name from hash of repository URL
-                    String baseName = DigestUtils.sha1Hex(GitDetails.normaliseUrl(gitDetails.getRepoUrl()));
+        Git repo;
+        if (reuseDir) {
+            // Base dir from configuration, name from hash of repository URL
+            String baseName = DigestUtils.sha1Hex(GitDetails.normaliseUrl(gitDetails.getRepoUrl()));
 
-                    // Check if folder already exists
-                    Path repoDir = gitStorage.resolve(baseName);
-                    if (Files.isReadable(repoDir) && Files.isDirectory(repoDir)) {
-                        repo = Git.open(repoDir.toFile());
-                        repo.fetch().call();
-                    } else {
-                        // Create a folder and clone repository into it
-                        Files.createDirectory(repoDir);
-                        repo = Git.cloneRepository()
-                                .setCloneSubmodules(cloneSubmodules)
-                                .setURI(gitDetails.getRepoUrl())
-                                .setDirectory(repoDir.toFile())
-                                .setCloneAllBranches(true)
-                                .call();
-                    }
-                } else {
-                    // Another thread is already using the existing folder
-                    // Must create another temporary one
-                    repo = Git.cloneRepository()
-                            .setCloneSubmodules(cloneSubmodules)
-                            .setURI(gitDetails.getRepoUrl())
-                            .setDirectory(createTempDir())
-                            .setCloneAllBranches(true)
-                            .call();
-                }
-
-                // Checkout the specific branch or commit ID
-                if (repo != null) {
-                    // Create a new local branch if it does not exist and not a commit ID
-                    String branchOrCommitId = gitDetails.getBranch();
-                    if (!ObjectId.isId(branchOrCommitId)) {
-                        branchOrCommitId = "refs/remotes/origin/" + branchOrCommitId;
-                    }
-                    repo.checkout()
-                            .setName(branchOrCommitId)
-                            .call();
-                }
-            } catch (RefNotFoundException ex) {
-                // Attempt slashes in branch fix
-                repo = null;
-                GitDetails correctedForSlash = transferPathToBranch(gitDetails);
-                if (correctedForSlash != null) {
-                    gitDetails = correctedForSlash;
-                } else {
-                    throw ex;
-                }
+            // Check if folder already exists
+            Path repoDir = gitStorage.resolve(baseName);
+            if (Files.isReadable(repoDir) && Files.isDirectory(repoDir)) {
+                repo = Git.open(repoDir.toFile());
+                repo.fetch().call();
+            } else {
+                // Create a folder and clone repository into it
+                Files.createDirectory(repoDir);
+                repo = Git.cloneRepository()
+                        .setCloneSubmodules(cloneSubmodules)
+                        .setURI(gitDetails.getRepoUrl())
+                        .setDirectory(repoDir.toFile())
+                        .setCloneAllBranches(true)
+                        .call();
             }
+        } else {
+            // Another thread is already using the existing folder
+            // Must create another temporary one
+            repo = Git.cloneRepository()
+                    .setCloneSubmodules(cloneSubmodules)
+                    .setURI(gitDetails.getRepoUrl())
+                    .setDirectory(createTempDir())
+                    .setCloneAllBranches(true)
+                    .call();
+        }
+
+        // Checkout the specific branch or commit ID
+        if (repo != null) {
+            // Create a new local branch if it does not exist and not a commit ID
+            String branchOrCommitId = gitDetails.getBranch();
+            if (!ObjectId.isId(branchOrCommitId)) {
+                branchOrCommitId = "refs/remotes/origin/" + branchOrCommitId;
+            }
+            repo.checkout()
+                    .setName(branchOrCommitId)
+                    .call();
         }
 
         return repo;
@@ -190,8 +176,9 @@ public class GitService {
         if (firstSlash > 0) {
             branch += "/" + path.substring(0, firstSlash);
             path = path.substring(firstSlash + 1);
-            return new GitDetails(githubInfo.getRepoUrl(), branch,
-                    path);
+            GitDetails newDetails = new GitDetails(githubInfo.getRepoUrl(), branch, path);
+            newDetails.setPackedId(githubInfo.getPackedId());
+            return newDetails;
         } else {
             return null;
         }
