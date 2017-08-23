@@ -35,7 +35,7 @@ public class WebConfig extends WebMvcConfigurerAdapter {
      */
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
-        configurer.favorPathExtension(true).favorParameter(false).useJaf(true)
+        configurer.favorParameter(true)
             .mediaType("html", MediaType.TEXT_HTML)
             .mediaType("json", MediaType.APPLICATION_JSON)
             .mediaType("turtle", parseMediaType("text/turtle"))
