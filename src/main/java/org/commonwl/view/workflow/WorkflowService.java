@@ -30,6 +30,7 @@ import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -201,9 +202,23 @@ public class WorkflowService {
      */
     public List<WorkflowOverview> getWorkflowsFromDirectory(GitDetails gitInfo) throws IOException, GitAPIException {
         List<WorkflowOverview> workflowsInDir = new ArrayList<>();
-        boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
         try {
-            Git repo = gitService.getRepository(gitInfo, safeToAccess);
+            boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
+            Git repo = null;
+            while (repo == null) {
+                try {
+                    repo = gitService.getRepository(gitInfo, safeToAccess);
+                } catch (RefNotFoundException ex) {
+                    // Attempt slashes in branch fix
+                    GitDetails correctedForSlash = gitService.transferPathToBranch(gitInfo);
+                    if (correctedForSlash != null) {
+                        gitInfo = correctedForSlash;
+                    } else {
+                        throw ex;
+                    }
+                }
+            }
+
             Path localPath = repo.getRepository().getWorkTree().toPath();
             Path pathToDirectory = localPath.resolve(gitInfo.getPath()).normalize().toAbsolutePath();
             Path root = Paths.get("/").toAbsolutePath();
@@ -275,10 +290,23 @@ public class WorkflowService {
             throws GitAPIException, WorkflowNotFoundException, IOException {
         QueuedWorkflow queuedWorkflow;
 
-        boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
         try {
-            Git repo = gitService.getRepository(gitInfo, safeToAccess);
-            Path localPath = repo.getRepository().getWorkTree().toPath();
+            boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
+            Git repo = null;
+            while (repo == null) {
+                try {
+                    repo = gitService.getRepository(gitInfo, safeToAccess);
+                } catch (RefNotFoundException ex) {
+                    // Attempt slashes in branch fix
+                    GitDetails correctedForSlash = gitService.transferPathToBranch(gitInfo);
+                    if (correctedForSlash != null) {
+                        gitInfo = correctedForSlash;
+                    } else {
+                        throw ex;
+                    }
+                }
+            }
+            File localPath = repo.getRepository().getWorkTree();
             String latestCommit = gitService.getCurrentCommitID(repo);
 
             Path workflowFile = localPath.resolve(gitInfo.getPath()).normalize().toAbsolutePath();
