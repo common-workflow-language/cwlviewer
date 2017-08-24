@@ -74,7 +74,7 @@ public class WorkflowPermalinkController {
     /**
      * Redirect to the raw file if this exists
      * @param commitId The commit ID of the workflow
-     * @return A 302 redirect response to the raw URL or 404
+     * @return A 302 redirect response to the raw URL or 406
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = {"application/x-yaml", MediaType.APPLICATION_OCTET_STREAM_VALUE, "*/*"})
@@ -83,7 +83,7 @@ public class WorkflowPermalinkController {
                            HttpServletResponse response) {
         Workflow workflow = getWorkflow(commitId, request);
         if (workflow.getRetrievedFrom().getType() == GitType.GENERIC) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            throw new RepresentationNotFoundException();
         } else {
             response.setHeader("Location", workflow.getRetrievedFrom().getRawUrl(commitId));
             response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
