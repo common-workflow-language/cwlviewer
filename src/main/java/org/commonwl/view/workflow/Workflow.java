@@ -211,4 +211,9 @@ public class Workflow {
     public String getRoBundleLink() {
         return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/robundle");
     }
+
+    public String getPermalink() {
+        String packedPart = (retrievedFrom.getPackedId() != null) ? "%23" + retrievedFrom.getPackedId() : "";
+        return "https://w3id.org/cwl/v/git/" + lastCommit + "/" + retrievedFrom.getPath() + packedPart;
+    }
 }

@@ -23,7 +23,9 @@ import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.git.GitType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,6 +34,8 @@ import org.springframework.web.servlet.HandlerMapping;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Allows permalinks in URIs across our RDF to identify a
@@ -63,12 +67,16 @@ public class WorkflowPermalinkController {
                 produces = {MediaType.TEXT_HTML_VALUE,
                             MediaType.APPLICATION_JSON_VALUE,
                             MediaType.APPLICATION_JSON_UTF8_VALUE})
-    public void goToViewer(@PathVariable("commitid") String commitId,
+    public ResponseEntity<?> goToViewer(@PathVariable("commitid") String commitId,
                            HttpServletRequest request,
                            HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
-        response.setHeader("Location", workflow.getRetrievedFrom().getInternalUrl(commitId));
-        response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+        List<Workflow> workflows = getWorkflows(commitId, request);
+        if (workflows.size() == 1) {
+            response.setHeader("Location", workflows.get(0).getRetrievedFrom().getInternalUrl(commitId));
+            return new ResponseEntity(HttpStatus.TEMPORARY_REDIRECT);
+        } else {
+            return new ResponseEntity<>(getPermalinks(workflows), HttpStatus.MULTIPLE_CHOICES);
+        }
     }
 
     /**
@@ -78,15 +86,19 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = {"application/x-yaml", MediaType.APPLICATION_OCTET_STREAM_VALUE, "*/*"})
-    public void goToRawUrl(@PathVariable("commitid") String commitId,
+    public ResponseEntity<?> goToRawUrl(@PathVariable("commitid") String commitId,
                            HttpServletRequest request,
                            HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
-        if (workflow.getRetrievedFrom().getType() == GitType.GENERIC) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        List<Workflow> workflows = getWorkflows(commitId, request);
+        if (workflows.size() == 1) {
+            if (workflows.get(0).getRetrievedFrom().getType() == GitType.GENERIC) {
+                return new ResponseEntity(HttpStatus.NOT_FOUND);
+            } else {
+                response.setHeader("Location", workflows.get(0).getRetrievedFrom().getRawUrl(commitId));
+                return new ResponseEntity(HttpStatus.TEMPORARY_REDIRECT);
+            }
         } else {
-            response.setHeader("Location", workflow.getRetrievedFrom().getRawUrl(commitId));
-            response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+            return new ResponseEntity<>(getPermalinks(workflows), HttpStatus.MULTIPLE_CHOICES);
         }
     }
 
@@ -97,14 +109,18 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "text/turtle")
-    public byte[] getRdfAsTurtle(@PathVariable("commitid") String commitId,
+    public ResponseEntity<?> getRdfAsTurtle(@PathVariable("commitid") String commitId,
                                  HttpServletRequest request) {
-        Workflow workflow = getWorkflow(commitId, request);
-        String rdfUrl = workflow.getRetrievedFrom().getUrl(commitId).replace("https://", "");
-        if (rdfService.graphExists(rdfUrl)) {
-            return rdfService.getModel(rdfUrl, "TURTLE");
+        List<Workflow> workflows = getWorkflows(commitId, request);
+        if (workflows.size() == 1) {
+            String rdfUrl = workflows.get(0).getRetrievedFrom().getUrl(commitId).replace("https://", "");
+            if (rdfService.graphExists(rdfUrl)) {
+                return new ResponseEntity<>(rdfService.getModel(rdfUrl, "TURTLE"), HttpStatus.OK);
+            } else {
+                throw new WorkflowNotFoundException();
+            }
         } else {
-            throw new WorkflowNotFoundException();
+            return new ResponseEntity<>(getPermalinks(workflows), HttpStatus.MULTIPLE_CHOICES);
         }
     }
 
@@ -115,14 +131,18 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "application/ld+json")
-    public byte[] getRdfAsJsonLd(@PathVariable("commitid") String commitId,
+    public ResponseEntity<?> getRdfAsJsonLd(@PathVariable("commitid") String commitId,
                                  HttpServletRequest request) {
-        Workflow workflow = getWorkflow(commitId, request);
-        String rdfUrl = workflow.getRetrievedFrom().getUrl(commitId).replace("https://", "");
-        if (rdfService.graphExists(rdfUrl)) {
-            return rdfService.getModel(rdfUrl, "JSON-LD");
+        List<Workflow> workflows = getWorkflows(commitId, request);
+        if (workflows.size() == 1) {
+            String rdfUrl = workflows.get(0).getRetrievedFrom().getUrl(commitId).replace("https://", "");
+            if (rdfService.graphExists(rdfUrl)) {
+                return new ResponseEntity<>(rdfService.getModel(rdfUrl, "JSON-LD"), HttpStatus.OK);
+            } else {
+                throw new WorkflowNotFoundException();
+            }
         } else {
-            throw new WorkflowNotFoundException();
+            return new ResponseEntity<>(getPermalinks(workflows), HttpStatus.MULTIPLE_CHOICES);
         }
     }
 
@@ -133,14 +153,18 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "application/rdf+xml")
-    public byte[] getRdfAsRdfXml(@PathVariable("commitid") String commitId,
+    public ResponseEntity<?> getRdfAsRdfXml(@PathVariable("commitid") String commitId,
                                  HttpServletRequest request) {
-        Workflow workflow = getWorkflow(commitId, request);
-        String rdfUrl = workflow.getRetrievedFrom().getUrl(commitId).replace("https://", "");
-        if (rdfService.graphExists(rdfUrl)) {
-            return rdfService.getModel(rdfUrl, "RDFXML");
+        List<Workflow> workflows = getWorkflows(commitId, request);
+        if (workflows.size() == 1) {
+            String rdfUrl = workflows.get(0).getRetrievedFrom().getUrl(commitId).replace("https://", "");
+            if (rdfService.graphExists(rdfUrl)) {
+                return new ResponseEntity<>(rdfService.getModel(rdfUrl, "RDFXML"), HttpStatus.OK);
+            } else {
+                throw new WorkflowNotFoundException();
+            }
         } else {
-            throw new WorkflowNotFoundException();
+            return new ResponseEntity<>(getPermalinks(workflows), HttpStatus.MULTIPLE_CHOICES);
         }
     }
 
@@ -151,12 +175,17 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "image/svg+xml")
-    public FileSystemResource getGraphAsSvg(@PathVariable("commitid") String commitId,
+    public ResponseEntity<?> getGraphAsSvg(@PathVariable("commitid") String commitId,
                                             HttpServletRequest request,
                                             HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
-        response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
-        return workflowService.getWorkflowGraph("svg", workflow.getRetrievedFrom());
+        List<Workflow> workflows = getWorkflows(commitId, request);
+        if (workflows.size() == 1) {
+            response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
+            FileSystemResource image = workflowService.getWorkflowGraph("svg", workflows.get(0).getRetrievedFrom());
+            return new ResponseEntity<>(image, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(getPermalinks(workflows), HttpStatus.MULTIPLE_CHOICES);
+        }
     }
 
     /**
@@ -166,12 +195,17 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "image/png")
-    public FileSystemResource getGraphAsPng(@PathVariable("commitid") String commitId,
+    public ResponseEntity<?> getGraphAsPng(@PathVariable("commitid") String commitId,
                                             HttpServletRequest request,
                                             HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
-        response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
-        return workflowService.getWorkflowGraph("png", workflow.getRetrievedFrom());
+        List<Workflow> workflows = getWorkflows(commitId, request);
+        if (workflows.size() == 1) {
+            response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
+            FileSystemResource image = workflowService.getWorkflowGraph("png", workflows.get(0).getRetrievedFrom());
+            return new ResponseEntity<>(image, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(getPermalinks(workflows), HttpStatus.MULTIPLE_CHOICES);
+        }
     }
 
     /**
@@ -181,12 +215,17 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "text/vnd+graphviz")
-    public FileSystemResource getGraphAsXDot(@PathVariable("commitid") String commitId,
+    public ResponseEntity<?> getGraphAsXDot(@PathVariable("commitid") String commitId,
                                              HttpServletRequest request,
                                              HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
-        response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
-        return workflowService.getWorkflowGraph("xdot", workflow.getRetrievedFrom());
+        List<Workflow> workflows = getWorkflows(commitId, request);
+        if (workflows.size() == 1) {
+            response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
+            FileSystemResource image = workflowService.getWorkflowGraph("xdot", workflows.get(0).getRetrievedFrom());
+            return new ResponseEntity<>(image, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(getPermalinks(workflows), HttpStatus.MULTIPLE_CHOICES);
+        }
     }
 
 
@@ -197,25 +236,39 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = {"application/vnd.wf4ever.robundle+zip", "application/zip"})
-    public FileSystemResource getROBundle(@PathVariable("commitid") String commitId,
-                                          HttpServletRequest request,
-                                          HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
-        File bundleDownload = workflowService.getROBundle(workflow.getRetrievedFrom());
-        response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
-        return new FileSystemResource(bundleDownload);
+    public ResponseEntity<?> getROBundle(@PathVariable("commitid") String commitId,
+                                         HttpServletRequest request,
+                                         HttpServletResponse response) {
+        List<Workflow> workflows = getWorkflows(commitId, request);
+        if (workflows.size() == 1) {
+            File bundleDownload = workflowService.getROBundle(workflows.get(0).getRetrievedFrom());
+            response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
+            return new ResponseEntity<>(new FileSystemResource(bundleDownload), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(getPermalinks(workflows), HttpStatus.MULTIPLE_CHOICES);
+        }
     }
 
     /**
-     * Get a workflow based on commit ID and extracting path from request
+     * Get workflows based on commit ID and extracting path from request
      * @param commitId The commit ID of the repository
      * @param request The HttpServletRequest from the controller to extract path
      * @throws WorkflowNotFoundException If workflow could not be found (404)
      */
-    private Workflow getWorkflow(String commitId, HttpServletRequest request) throws WorkflowNotFoundException {
+    private List<Workflow> getWorkflows(String commitId,
+                                        HttpServletRequest request) throws WorkflowNotFoundException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = WorkflowController.extractPath(path, 3);
         return workflowService.findByCommitAndPath(commitId, path);
+    }
+
+    /**
+     * Get a list of permalinks from a list of workflows
+     * @param workflows The list of workflows
+     * @return The list of permalinks for the given workflows
+     */
+    private List<String> getPermalinks(List<Workflow> workflows) {
+        return workflows.stream().map(Workflow::getPermalink).collect(Collectors.toList());
     }
 
 }

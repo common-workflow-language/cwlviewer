@@ -44,10 +44,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class WorkflowService {
@@ -357,29 +354,34 @@ public class WorkflowService {
     }
 
     /**
-     * Find a workflow by commit ID and path
+     * Find workflows by commit ID and path
      * @param commitID The commit ID of the workflow
      * @param path The path to the workflow within the repository
-     * @return A workflow model with the above two parameters
+     * @return A workflow model with the above two parameters or list of Workflows if packed
      */
-    public Workflow findByCommitAndPath(String commitID, String path) throws WorkflowNotFoundException {
+    public List<Workflow> findByCommitAndPath(String commitID, String path) throws WorkflowNotFoundException {
         List<Workflow> matches = workflowRepository.findByCommitAndPath(commitID, path);
         if (matches == null || matches.size() == 0) {
             throw new WorkflowNotFoundException();
         } else if (matches.size() == 1) {
-            return matches.get(0);
+            return Collections.singletonList(matches.get(0));
         } else {
             // Multiple matches means either added by both branch and ID
             // Or packed workflow
+            List<Workflow> packedWorkflows = new ArrayList<>();
+            boolean packed = false;
             for (Workflow workflow : matches) {
                 if (workflow.getRetrievedFrom().getPackedId() != null) {
-                    // This is a packed file
-                    // TODO: return 300 multiple choices response for this in controller
-                    throw new WorkflowNotFoundException();
+                    packedWorkflows.add(workflow);
+                    packed = true;
                 }
             }
-            // Not a packed workflow, just different references to the same ID
-            return matches.get(0);
+            if (packed) {
+                return packedWorkflows;
+            } else {
+                // Not a packed workflow, just different references to the same ID
+                return Collections.singletonList(matches.get(0));
+            }
         }
     }
 

@@ -124,8 +124,7 @@ public class ROBundleService {
 
         // Simplified attribution for RO bundle
         try {
-            String id = "https://w3id.org/cwl/v/git/" + workflow.getLastCommit() +
-                    "/" + workflow.getRetrievedFrom().getPath();
+            String id = workflow.getPermalink();
             manifest.setId(new URI(id));
 
             // Tool attribution in createdBy
