@@ -164,13 +164,13 @@ public class ROBundleService {
             File png = graphVizService.getGraph(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
             Files.copy(png.toPath(), bundleRoot.resolve("visualisation.png"));
             PathMetadata pngAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.png"));
-            pngAggr.setRetrievedFrom(new URI("https://w3id.org/cwl/v/git" + workflow.getLastCommit()
+            pngAggr.setRetrievedFrom(new URI("https://w3id.org/cwl/v/git/" + workflow.getLastCommit()
                     + "/" + workflow.getRetrievedFrom().getPath() + "?format=png"));
 
             File svg = graphVizService.getGraph(workflow.getID() + ".svg", workflow.getVisualisationDot(), "svg");
             Files.copy(svg.toPath(), bundleRoot.resolve("visualisation.svg"));
             PathMetadata svgAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.svg"));
-            svgAggr.setRetrievedFrom(new URI("https://w3id.org/cwl/v/git" + workflow.getLastCommit()
+            svgAggr.setRetrievedFrom(new URI("https://w3id.org/cwl/v/git/" + workflow.getLastCommit()
                     + "/" + workflow.getRetrievedFrom().getPath() + "?format=svg"));
 
             // Add annotation files
