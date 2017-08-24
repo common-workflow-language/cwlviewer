@@ -69,7 +69,7 @@ public class RDFService {
      */
     public byte[] getModel(String graphName, String format) {
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(rdfService);
-        Model model = accessor.getModel(rdfService + graphName);
+        Model model = accessor.getModel(graphName);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         model.write(outputStream, format);
         return outputStream.toByteArray();
@@ -82,7 +82,7 @@ public class RDFService {
      */
     public void storeModel(String graphName, Model model) {
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(rdfService);
-        accessor.putModel(rdfService + graphName, model);
+        accessor.putModel(graphName, model);
     }
 
     /**
@@ -93,7 +93,7 @@ public class RDFService {
     public boolean graphExists(String graphName) {
         ParameterizedSparqlString graphQuery = new ParameterizedSparqlString();
         graphQuery.setCommandText("ASK WHERE { GRAPH ?graphName { ?s ?p ?o } }");
-        graphQuery.setIri("graphName", rdfService + graphName);
+        graphQuery.setIri("graphName", graphName);
         Query query = QueryFactory.create(graphQuery.toString());
         try (QueryExecution qexec = QueryExecutionFactory.createServiceRequest(rdfService, query)) {
             return qexec.execAsk();
@@ -136,7 +136,7 @@ public class RDFService {
                 "  }" +
                 "}");
         labelQuery.setLiteral("wfFilter", path + "$");
-        labelQuery.setIri("graphName", rdfService + workflowURI);
+        labelQuery.setIri("graphName", workflowURI);
         return runQuery(labelQuery);
     }
 
@@ -200,7 +200,7 @@ public class RDFService {
                 "  }" +
                 "}");
         inputsQuery.setLiteral("wfFilter", path + "$");
-        inputsQuery.setIri("graphName", rdfService + workflowURI);
+        inputsQuery.setIri("graphName", workflowURI);
         return runQuery(inputsQuery);
     }
 
@@ -240,7 +240,7 @@ public class RDFService {
                 "  }" +
                 "}");
         outputsQuery.setLiteral("wfFilter", path + "$");
-        outputsQuery.setIri("graphName", rdfService + workflowURI);
+        outputsQuery.setIri("graphName", workflowURI);
         return runQuery(outputsQuery);
     }
 
@@ -269,7 +269,7 @@ public class RDFService {
                 "  }" +
                 "}");
         stepQuery.setLiteral("wfFilter", path + "$");
-        stepQuery.setIri("graphName", rdfService + workflowURI);
+        stepQuery.setIri("graphName", workflowURI);
         return runQuery(stepQuery);
     }
 
@@ -291,7 +291,7 @@ public class RDFService {
                 "  }" +
                 "}");
         linkQuery.setLiteral("wfFilter", path + "$");
-        linkQuery.setIri("graphName", rdfService + workflowURI);
+        linkQuery.setIri("graphName", workflowURI);
         return runQuery(linkQuery);
     }
 
@@ -313,7 +313,7 @@ public class RDFService {
                 "  }" +
                 "}");
         linkQuery.setLiteral("wfFilter", path + "$");
-        linkQuery.setIri("graphName", rdfService + workflowURI);
+        linkQuery.setIri("graphName", workflowURI);
         return runQuery(linkQuery);
     }
 
@@ -337,7 +337,7 @@ public class RDFService {
                 "  }" +
                 "}");
         dockerQuery.setLiteral("wfFilter", path + "$");
-        dockerQuery.setIri("graphName", rdfService + workflowURI);
+        dockerQuery.setIri("graphName", workflowURI);
         return runQuery(dockerQuery);
     }
 
@@ -372,7 +372,7 @@ public class RDFService {
                 "  }" +
                 "}");
         linkQuery.setLiteral("wfFilter", path + "$");
-        linkQuery.setIri("graphName", rdfService + fileUri);
+        linkQuery.setIri("graphName", fileUri);
         return runQuery(linkQuery);
     }
 

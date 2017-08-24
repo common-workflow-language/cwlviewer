@@ -124,11 +124,7 @@ public class ROBundleService {
 
         // Simplified attribution for RO bundle
         try {
-            String packedId = workflow.getRetrievedFrom().getPackedId();
-            String packedPart = (packedId != null) ? "#" + packedId : "";
-            String id = "https://w3id.org/cwl/v/git/" + workflow.getLastCommit() +
-                    "/" + workflow.getRetrievedFrom().getPath();
-            manifest.setId(new URI(id + packedPart));
+            manifest.setId(new URI(workflow.getPermalink()));
 
             // Tool attribution in createdBy
             manifest.setCreatedBy(appAgent);
@@ -137,7 +133,7 @@ public class ROBundleService {
             // TODO: Make this importedBy/On/From
             manifest.setRetrievedBy(appAgent);
             manifest.setRetrievedOn(manifest.getCreatedOn());
-            manifest.setRetrievedFrom(new URI(id + "?format=ro" + packedPart));
+            manifest.setRetrievedFrom(new URI(workflow.getPermalink("ro")));
 
             // Make a directory in the RO bundle to store the files
             Path bundleRoot = bundle.getRoot();
@@ -164,14 +160,12 @@ public class ROBundleService {
             File png = graphVizService.getGraph(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
             Files.copy(png.toPath(), bundleRoot.resolve("visualisation.png"));
             PathMetadata pngAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.png"));
-            pngAggr.setRetrievedFrom(new URI("https://w3id.org/cwl/v/git/" + workflow.getLastCommit()
-                    + "/" + workflow.getRetrievedFrom().getPath() + "?format=png"));
+            pngAggr.setRetrievedFrom(new URI(workflow.getPermalink("png")));
 
             File svg = graphVizService.getGraph(workflow.getID() + ".svg", workflow.getVisualisationDot(), "svg");
             Files.copy(svg.toPath(), bundleRoot.resolve("visualisation.svg"));
             PathMetadata svgAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.svg"));
-            svgAggr.setRetrievedFrom(new URI("https://w3id.org/cwl/v/git/" + workflow.getLastCommit()
-                    + "/" + workflow.getRetrievedFrom().getPath() + "?format=svg"));
+            svgAggr.setRetrievedFrom(new URI(workflow.getPermalink("svg")));
 
             // Add annotation files
             GitDetails wfDetails = workflow.getRetrievedFrom();
@@ -194,7 +188,7 @@ public class ROBundleService {
             } catch (CWLValidationException ex) {
                 logger.error("Could not pack workflow when creating Research Object", ex.getMessage());
             }
-            String rdfUrl = wfDetails.getUrl(workflow.getLastCommit()).replace("https://", "");
+            String rdfUrl = workflow.getPermalink();
             if (rdfService.graphExists(rdfUrl)) {
                 addAggregation(bundle, manifestAnnotations, "workflow.ttl",
                         new String(rdfService.getModel(rdfUrl, "TURTLE")));
@@ -303,9 +297,6 @@ public class ROBundleService {
                         }
 
                         try {
-                            String url = workflow.getRetrievedFrom()
-                                    .getUrl(workflow.getLastCommit()).replace("https://", "");
-
                             // Add authors from git commits to the file
                             Set<HashableAgent> fileAuthors = gitService.getAuthors(gitRepo,
                                     gitPath.toString());
@@ -313,7 +304,8 @@ public class ROBundleService {
                             if (cwl) {
                                 // Attempt to get authors from cwl description - takes priority
                                 ResultSet descAuthors = rdfService.getAuthors(bundlePath
-                                        .resolve(file.getName()).toString().substring(10), url);
+                                        .resolve(file.getName()).toString().substring(10),
+                                        workflow.getPermalink());
                                 if (descAuthors.hasNext()) {
                                     QuerySolution authorSoln = descAuthors.nextSolution();
                                     HashableAgent newAuthor = new HashableAgent();

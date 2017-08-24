@@ -244,7 +244,7 @@ public class CWLService {
         String packedWorkflowID = gitDetails.getPackedId();
 
         // Get paths to workflow
-        String url = gitDetails.getUrl(latestCommit).replace("https://", "");
+        String url = basicModel.getPermalink();
         String localPath = workflowFile.toAbsolutePath().toString();
         String gitPath = gitDetails.getPath();
         if (packedWorkflowID != null) {

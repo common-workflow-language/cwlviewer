@@ -100,7 +100,7 @@ public class WorkflowPermalinkController {
     public byte[] getRdfAsTurtle(@PathVariable("commitid") String commitId,
                                  HttpServletRequest request) {
         Workflow workflow = getWorkflow(commitId, request);
-        String rdfUrl = workflow.getRetrievedFrom().getUrl(commitId).replace("https://", "");
+        String rdfUrl = workflow.getPermalink();
         if (rdfService.graphExists(rdfUrl)) {
             return rdfService.getModel(rdfUrl, "TURTLE");
         } else {
@@ -118,7 +118,7 @@ public class WorkflowPermalinkController {
     public byte[] getRdfAsJsonLd(@PathVariable("commitid") String commitId,
                                  HttpServletRequest request) {
         Workflow workflow = getWorkflow(commitId, request);
-        String rdfUrl = workflow.getRetrievedFrom().getUrl(commitId).replace("https://", "");
+        String rdfUrl = workflow.getPermalink();
         if (rdfService.graphExists(rdfUrl)) {
             return rdfService.getModel(rdfUrl, "JSON-LD");
         } else {
@@ -136,7 +136,7 @@ public class WorkflowPermalinkController {
     public byte[] getRdfAsRdfXml(@PathVariable("commitid") String commitId,
                                  HttpServletRequest request) {
         Workflow workflow = getWorkflow(commitId, request);
-        String rdfUrl = workflow.getRetrievedFrom().getUrl(commitId).replace("https://", "");
+        String rdfUrl = workflow.getPermalink();
         if (rdfService.graphExists(rdfUrl)) {
             return rdfService.getModel(rdfUrl, "RDFXML");
         } else {
