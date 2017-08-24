@@ -306,7 +306,7 @@ public class WorkflowService {
                     }
                 }
             }
-            File localPath = repo.getRepository().getWorkTree();
+            Path localPath = repo.getRepository().getWorkTree().toPath();
             String latestCommit = gitService.getCurrentCommitID(repo);
 
             Path workflowFile = localPath.resolve(gitInfo.getPath()).normalize().toAbsolutePath();
