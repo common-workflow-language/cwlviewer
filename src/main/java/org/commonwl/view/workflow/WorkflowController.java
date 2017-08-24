@@ -264,8 +264,7 @@ public class WorkflowController {
         path = extractPath(path, 8);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
         response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
-        FileSystemResource test = workflowService.getWorkflowGraph("svg", gitDetails);
-        return test;
+        return workflowService.getWorkflowGraph("svg", gitDetails);
     }
 
     /**
