@@ -9,7 +9,7 @@ services:
   spring:
     # To run from this source code instead of Docker hub,
     # disable "image:"" and enable "build:" below
-    image: commonworkflowlanguage/cwlviewer:v1.2.1
+    image: commonworkflowlanguage/cwlviewer:v1.2.2
     #build: .
     ports:
      - "8080:8080"
