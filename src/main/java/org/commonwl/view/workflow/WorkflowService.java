@@ -181,7 +181,10 @@ public class WorkflowService {
                     // TODO: Separate concept of commit from branch ref, see #164
                     GitDetails byOldCommitId = workflow.getRetrievedFrom();
                     byOldCommitId.setBranch(workflow.getLastCommit());
-                    createQueuedWorkflow(byOldCommitId);
+                    if (getQueuedWorkflow(byOldCommitId) == null
+                            && getWorkflow(byOldCommitId) == null) {
+                        createQueuedWorkflow(byOldCommitId);
+                    }
 
                     workflow = null;
                 } catch (Exception e) {
