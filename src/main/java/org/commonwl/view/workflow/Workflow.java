@@ -215,12 +215,15 @@ public class Workflow {
         return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/robundle");
     }
 
-    public void setGraphUrl(String graphUrl) {
-        this.graphUrl = graphUrl;
+    public String getPermalink(String format) {
+        String formatPart = (format == null || format.isEmpty()) ? "" : "?format=" + format;
+        String packedPart = (retrievedFrom.getPackedId() != null) ? "#" + retrievedFrom.getPackedId() : "";
+        return "https://w3id.org/cwl/view/git/" + lastCommit +
+                "/" + retrievedFrom.getPath() + formatPart + packedPart;
     }
 
-    public String getGraphUrl() {
-        return this.graphUrl;
+    public String getPermalink() {
+        return getPermalink(null);
     }
 
 }

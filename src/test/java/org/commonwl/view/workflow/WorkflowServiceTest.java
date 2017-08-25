@@ -19,8 +19,20 @@
 
 package org.commonwl.view.workflow;
 
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
+import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitSemaphore;
 import org.commonwl.view.git.GitService;
@@ -32,17 +44,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
-
-import java.io.File;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.when;
 
 public class WorkflowServiceTest {
 
@@ -90,7 +91,7 @@ public class WorkflowServiceTest {
                 Mockito.mock(ROBundleFactory.class),
                 Mockito.mock(GraphVizService.class),
                 Mockito.mock(CWLToolRunner.class),
-                Mockito.mock(GitSemaphore.class), 1);
+                Mockito.mock(GitSemaphore.class), 1, Mockito.mock(RDFService.class));
 
         // Get a list of workflows from the directory
         List<WorkflowOverview> list = testWorkflowService.getWorkflowsFromDirectory(
@@ -153,7 +154,7 @@ public class WorkflowServiceTest {
                 Mockito.mock(ROBundleFactory.class),
                 Mockito.mock(GraphVizService.class),
                 Mockito.mock(CWLToolRunner.class),
-                Mockito.mock(GitSemaphore.class), -1);
+                Mockito.mock(GitSemaphore.class), -1, Mockito.mock(RDFService.class));
 
         // Will use check cache algorithm, find expired,
         // check git and find commit IDs do not match,
@@ -191,7 +192,7 @@ public class WorkflowServiceTest {
                 Mockito.mock(ROBundleFactory.class),
                 Mockito.mock(GraphVizService.class),
                 Mockito.mock(CWLToolRunner.class),
-                Mockito.mock(GitSemaphore.class), -1);
+                Mockito.mock(GitSemaphore.class), -1, Mockito.mock(RDFService.class));
 
         File fetchedBundle = testWorkflowService.getROBundle(Mockito.mock(GitDetails.class));
         assertEquals(roBundlePath, fetchedBundle.getAbsolutePath());

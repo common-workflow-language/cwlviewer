@@ -5,7 +5,7 @@
 
 	<groupId>org.commonwl.view</groupId>
 	<artifactId>cwlviewer</artifactId>
-	<version>1.1.2-SNAPSHOT</version>
+	<version>1.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>CWLViewer</name>
@@ -92,6 +92,11 @@
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-osgi</artifactId>
             <version>3.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.jsonld-java</groupId>
+            <artifactId>jsonld-java</artifactId>
+            <version>0.9.0</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
