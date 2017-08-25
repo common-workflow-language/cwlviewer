@@ -22,115 +22,115 @@
 @prefix CommandLineTool: <https://w3id.org/cwl/cwl#CommandLineTool/> .
 @prefix ExpressionTool: <https://w3id.org/cwl/cwl#ExpressionTool/> .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#cat/sequences>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#cat/sequences>
         sld:type  [ sld:items  cwl:File ;
                     sld:type   sld:array
                   ] .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr/from>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr/from>
         sld:type  xsd:string .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#rnaseq>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#rnaseq>
         a              cwl:CommandLineTool ;
         cwl:arguments  ( "echo" "$(inputs.sequence)" ) ;
-        cwl:inputs     <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#rnaseq/sequence> ;
-        cwl:outputs    <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#rnaseq/seqout> ;
+        cwl:inputs     <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#rnaseq/sequence> ;
+        cwl:outputs    <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#rnaseq/seqout> ;
         cwl:stdout     "rnaseq" .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#rnaseq/seqout>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#rnaseq/seqout>
         cwl:outputBinding  [ CommandOutputBinding:glob
                           "rnaseq" ] ;
         sld:type           cwl:File .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#rnaseq/sequence>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#rnaseq/sequence>
         sld:type  xsd:string .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#cat/catfilename>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#cat/catfilename>
         sld:type  xsd:string .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences/from>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences/from>
         cwl:default  "U" .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/get_sequences>
-        cwl:in       <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/get_sequences/sequence> ;
-        cwl:out      <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/get_sequences/seqout> ;
-        cwl:run      <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#rnaseq> ;
-        cwl:scatter  ( <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/get_sequences/sequence> ) .
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/get_sequences>
+        cwl:in       <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/get_sequences/sequence> ;
+        cwl:out      <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/get_sequences/seqout> ;
+        cwl:run      <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#rnaseq> ;
+        cwl:scatter  ( <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/get_sequences/sequence> ) .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/get_sequences/sequence>
-        cwl:source  <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/rna> .
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/get_sequences/sequence>
+        cwl:source  <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/rna> .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr>
         a                      cwl:CommandLineTool ;
         CommandLineTool:stdin  "$(inputs.trinput.path)" ;
         cwl:arguments          ( "tr" "$(inputs.from)" "$(inputs.to)" ) ;
-        cwl:inputs             <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr/from> , <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr/trinput> , <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr/to> , <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr/filename> ;
-        cwl:outputs            <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr/trout> ;
+        cwl:inputs             <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr/from> , <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr/trinput> , <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr/to> , <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr/filename> ;
+        cwl:outputs            <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr/trout> ;
         cwl:stdout             "$(inputs.filename)" .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr/trout>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr/trout>
         cwl:outputBinding  [ CommandOutputBinding:glob
                           "$(inputs.filename)" ] ;
         sld:type           cwl:File .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr/trinput>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr/trinput>
         sld:type  cwl:File .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr/to>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr/to>
         sld:type  xsd:string .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr/filename>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr/filename>
         sld:type  xsd:string .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences/filename>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences/filename>
         cwl:default  "database.dna" .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/combine_sequences/catfilename>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/combine_sequences/catfilename>
         cwl:default  "database.dna" .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/combine_sequences>
-        cwl:in   <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/combine_sequences/catfilename> , <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/combine_sequences/sequences> ;
-        cwl:out  <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/combine_sequences/catout> ;
-        cwl:run  <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#cat> .
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/combine_sequences>
+        cwl:in   <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/combine_sequences/catfilename> , <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/combine_sequences/sequences> ;
+        cwl:out  <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/combine_sequences/catout> ;
+        cwl:run  <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#cat> .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#cat>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#cat>
         a              cwl:CommandLineTool ;
         cwl:arguments  ( "cat" "$(inputs.sequences)" ) ;
-        cwl:inputs     <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#cat/sequences> , <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#cat/catfilename> ;
-        cwl:outputs    <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#cat/catout> ;
+        cwl:inputs     <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#cat/sequences> , <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#cat/catfilename> ;
+        cwl:outputs    <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#cat/catout> ;
         cwl:stdout     "$(inputs.catfilename)" .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/combine_sequences/sequences>
-        cwl:source  <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/get_sequences/seqout> .
-
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/combine_sequences/sequences>
+        cwl:source  <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/get_sequences/seqout> .
+        
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main>
         a                 cwl:Workflow ;
-        Workflow:steps    <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/get_sequences> , <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/combine_sequences> , <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences> ;
-        cwl:inputs        <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/rna> ;
-        cwl:outputs       <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/outfile> ;
+        Workflow:steps    <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/get_sequences> , <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/combine_sequences> , <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences> ;
+        cwl:inputs        <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/rna> ;
+        cwl:outputs       <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/outfile> ;
         cwl:requirements  [ a  cwl:ScatterFeatureRequirement ] .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/outfile>
-        cwl:outputSource  <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences/trout> ;
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/outfile>
+        cwl:outputSource  <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences/trout> ;
         sld:type          cwl:File .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/rna>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/rna>
         sld:type  [ sld:items  xsd:string ;
                     sld:type   sld:array
                   ] .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences>
-        cwl:in   <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences/from> , <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences/filename> , <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences/trinput> , <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences/to> ;
-        cwl:out  <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences/trout> ;
-        cwl:run  <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#tr> .
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences>
+        cwl:in   <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences/from> , <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences/filename> , <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences/trinput> , <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences/to> ;
+        cwl:out  <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences/trout> ;
+        cwl:run  <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#tr> .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences/trinput>
-        cwl:source  <https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/combine_sequences/catout> .
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences/trinput>
+        cwl:source  <https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/combine_sequences/catout> .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#main/translate_sequences/to>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/translate_sequences/to>
         cwl:default  "T" .
 
-<https://w3id.org/cwl/view/git/3ec0d19076841a1140e71cc3a1b330a56099aac2/workflows/make-to-cwl/dna.cwl#cat/catout>
+<https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#cat/catout>
         cwl:outputBinding  [ CommandOutputBinding:glob
                           "$(inputs.catfilename)" ] ;
         sld:type           cwl:File .
