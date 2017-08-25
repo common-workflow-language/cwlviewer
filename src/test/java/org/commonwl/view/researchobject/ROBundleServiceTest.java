@@ -221,7 +221,7 @@ public class ROBundleServiceTest {
         assertEquals(14, manifest.getAggregates().size());
 
         PathMetadata urlAggregate = manifest.getAggregation(
-                new URI("https://w3id.org/cwl/view/git/null/lobstr-draft3/models/illumina_v3.pcrfree.stepmodel?format=raw"));
+                new URI("https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/lobstr-draft3/models/illumina_v3.pcrfree.stepmodel?format=raw"));
         assertEquals("Mark Robinson", urlAggregate.getAuthoredBy().get(0).getName());
 
     }
