@@ -209,7 +209,7 @@ public class WorkflowController {
      */
     @GetMapping(value={"/robundle/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
                        "/robundle/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
-                produces = "application/vnd.wf4ever.robundle+zip")
+                produces = {"application/vnd.wf4ever.robundle+zip", "application/zip"})
     @ResponseBody
     public FileSystemResource getROBundle(@PathVariable("domain") String domain,
                                           @PathVariable("owner") String owner,
@@ -263,7 +263,8 @@ public class WorkflowController {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
-        return getGraph("svg", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
+        return workflowService.getWorkflowGraph("svg", gitDetails);
     }
 
     /**
@@ -278,7 +279,8 @@ public class WorkflowController {
                                                       HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         GitDetails gitDetails = getGitDetails(11, path, branch);
-        return getGraph("svg", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
+        return workflowService.getWorkflowGraph("svg", gitDetails);
     }
 
     /**
@@ -301,7 +303,8 @@ public class WorkflowController {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
-        return getGraph("png", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
+        return workflowService.getWorkflowGraph("png", gitDetails);
     }
 
     /**
@@ -316,7 +319,8 @@ public class WorkflowController {
                                                       HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         GitDetails gitDetails = getGitDetails(11, path, branch);
-        return getGraph("png", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
+        return workflowService.getWorkflowGraph("png", gitDetails);
     }
 
     /**
@@ -339,7 +343,8 @@ public class WorkflowController {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 8);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
-        return getGraph("xdot", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
+        return workflowService.getWorkflowGraph("xdot", gitDetails);
     }
 
     /**
@@ -354,7 +359,8 @@ public class WorkflowController {
                                                       HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         GitDetails gitDetails = getGitDetails(12, path, branch);
-        return getGraph("xdot", gitDetails, response);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
+        return workflowService.getWorkflowGraph("xdot", gitDetails);
     }
 
     /**
@@ -467,7 +473,7 @@ public class WorkflowController {
             if (queued == null) {
                 // Validation
                 String packedPart = (gitDetails.getPackedId() == null) ? "" : "#" + gitDetails.getPackedId();
-                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getUrl(), gitDetails.getBranch(),
+                WorkflowForm workflowForm = new WorkflowForm(gitDetails.getRepoUrl(), gitDetails.getBranch(),
                         gitDetails.getPath() + packedPart);
                 BeanPropertyBindingResult errors = new BeanPropertyBindingResult(workflowForm, "errors");
                 workflowFormValidator.validateAndParse(workflowForm, errors);
@@ -528,42 +534,5 @@ public class WorkflowController {
         } else {
             return new ModelAndView("workflow", "workflow", workflowModel);
         }
-    }
-
-    /**
-     * Get a graph in a particular format and return it
-     * @param format The format for the graph file
-     * @param gitDetails The Git details of the workflow
-     * @param response The response object for setting content-disposition header
-     * @return A FileSystemResource representing the graph
-     * @throws WorkflowNotFoundException Error getting the workflow or format
-     */
-    private FileSystemResource getGraph(String format, GitDetails gitDetails,
-                                        HttpServletResponse response)
-            throws WorkflowNotFoundException {
-        // Determine file extension from format
-        String extension;
-        switch (format) {
-            case "svg":
-            case "png":
-                extension = format;
-                break;
-            case "xdot":
-                extension = "dot";
-                break;
-            default:
-                throw new WorkflowNotFoundException();
-        }
-
-        // Get workflow
-        Workflow workflow = workflowService.getWorkflow(gitDetails);
-        if (workflow == null) {
-            throw new WorkflowNotFoundException();
-        }
-
-        // Generate graph and serve the file
-        File out = graphVizService.getGraph(workflow.getID() + "." + extension, workflow.getVisualisationDot(), format);
-        response.setHeader("Content-Disposition", "inline; filename=\"graph." + extension + "\"");
-        return new FileSystemResource(out);
     }
 }

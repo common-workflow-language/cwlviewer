@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -38,6 +39,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -273,8 +275,10 @@ public class WorkflowControllerTest {
 
         // Mock service to return a bundle file and then throw ROBundleNotFoundException
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
+        File bundle = roBundleFolder.newFile("bundle.zip").getAbsoluteFile();
         when(mockWorkflowService.getROBundle(anyObject()))
-                .thenReturn(roBundleFolder.newFile("bundle.zip").getAbsoluteFile())
+                .thenReturn(bundle)
+                .thenReturn(bundle)
                 .thenThrow(new ROBundleNotFoundException());
 
         // Mock controller/MVC
@@ -291,6 +295,11 @@ public class WorkflowControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/vnd.wf4ever.robundle+zip"));
 
+        // Generic git and bundle exists
+        mockMvc.perform(get("/robundle/bitbucket.org/owner/repo.git/branch/path/to/workflow.cwl"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/vnd.wf4ever.robundle+zip"));
+
         // Bundle does not exist, 404 error
         mockMvc.perform(get("/robundle/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isNotFound());
@@ -304,56 +313,52 @@ public class WorkflowControllerTest {
     public void downloadGraphVizFiles() throws Exception {
 
         // Mock service to return mock workflow
-        Workflow mockWorkflow = Mockito.mock(Workflow.class);
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getWorkflow(Mockito.any(GitDetails.class)))
-                .thenReturn(mockWorkflow)
-                .thenReturn(null)
-                .thenReturn(mockWorkflow)
-                .thenReturn(null)
-                .thenReturn(mockWorkflow)
-                .thenReturn(null);
-
-        // Mock service to return files
-        GraphVizService mockGraphVizService = Mockito.mock(GraphVizService.class);
-        when(mockGraphVizService.getGraph(anyString(), anyString(), anyString()))
-                .thenReturn(roBundleFolder.newFile("graph.svg").getAbsoluteFile())
-                .thenReturn(roBundleFolder.newFile("graph.png").getAbsoluteFile())
-                .thenReturn(roBundleFolder.newFile("graph.dot").getAbsoluteFile());
+        when(mockWorkflowService.getWorkflowGraph(anyString(), anyObject()))
+                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.svg"))
+                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.png"))
+                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testWorkflow.dot"))
+                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.svg"))
+                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.png"))
+                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testWorkflow.dot"))
+                .thenThrow(new WorkflowNotFoundException());
 
         // Mock controller/MVC
         WorkflowController workflowController = new WorkflowController(
                 Mockito.mock(WorkflowFormValidator.class),
                 mockWorkflowService,
-                mockGraphVizService);
+                Mockito.mock(GraphVizService.class));
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(workflowController)
                 .build();
 
-        // Image exists and can be downloaded
+        // Images exist and can be downloaded
         mockMvc.perform(get("/graph/svg/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("image/svg+xml"));
-
-        // Image does not exist, 404 error
-        mockMvc.perform(get("/graph/svg/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
-                .andExpect(status().isNotFound());
-
-        // Image exists and can be downloaded
         mockMvc.perform(get("/graph/png/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("image/png"));
-
-        // Image does not exist, 404 error
-        mockMvc.perform(get("/graph/png/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
-                .andExpect(status().isNotFound());
-
-        // Image exists and can be downloaded
         mockMvc.perform(get("/graph/xdot/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("text/vnd.graphviz"));
 
-        // Image does not exist, 404 error
+        // Images exist at generic git URLs
+        mockMvc.perform(get("/graph/svg/bitbucket.org/owner/repo.git/branch/path/to/workflow.cwl"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("image/svg+xml"));
+        mockMvc.perform(get("/graph/png/bitbucket.org/owner/repo.git/branch/path/to/workflow.cwl"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("image/png"));
+        mockMvc.perform(get("/graph/xdot/bitbucket.org/owner/repo.git/branch/path/to/workflow.cwl"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("text/vnd.graphviz"));
+
+        // Images do not exist, 404 error
+        mockMvc.perform(get("/graph/png/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/graph/svg/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
+                .andExpect(status().isNotFound());
         mockMvc.perform(get("/graph/xdot/github.com/owner/repo/blob/branch/path/to/workflow.cwl"))
                 .andExpect(status().isNotFound());
 

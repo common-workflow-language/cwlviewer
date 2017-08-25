@@ -39,6 +39,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -63,7 +64,7 @@ public class CWLServiceTest {
         Model workflowModel = ModelFactory.createDefaultModel();
         workflowModel.read(new ByteArrayInputStream(readFileToString(packedWorkflowRdf).getBytes()), null, "TURTLE");
         Dataset workflowDataset = DatasetFactory.create();
-        workflowDataset.addNamedModel("http://localhost:3030/cwlviewer/github.com/common-workflow-language/workflows/blob/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main", workflowModel);
+        workflowDataset.addNamedModel("https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main", workflowModel);
 
         Answer queryRdf = new Answer<ResultSet>() {
             @Override
@@ -91,7 +92,7 @@ public class CWLServiceTest {
     public void parsePackedWorkflowNative() throws Exception {
         CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 5242880);
         Workflow dna = cwlService.parseWorkflowNative(
-                new File("src/test/resources/cwl/make_to_cwl/dna.cwl"), "main");
+                Paths.get("src/test/resources/cwl/make_to_cwl/dna.cwl"), "main");
         assertNotNull(dna);
         assertEquals("dna.cwl", dna.getLabel());
         assertEquals(1, dna.getInputs().size());
@@ -107,7 +108,7 @@ public class CWLServiceTest {
     public void parseLobSTRDraft3WorkflowNative() throws Exception {
         CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 5242880);
         Workflow lobSTRDraft3 = cwlService.parseWorkflowNative(
-                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
+                Paths.get("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
         testLobSTRWorkflow(lobSTRDraft3, true);
     }
 
@@ -118,7 +119,7 @@ public class CWLServiceTest {
     public void parseLobSTRv1WorkflowNative() throws Exception {
         CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
         Workflow lobSTRv1 = cwlService.parseWorkflowNative(
-                new File("src/test/resources/cwl/lobstr-v1/lobSTR-workflow.cwl"), null);
+                Paths.get("src/test/resources/cwl/lobstr-v1/lobSTR-workflow.cwl"), null);
         testLobSTRWorkflow(lobSTRv1, true);
     }
 
@@ -146,7 +147,7 @@ public class CWLServiceTest {
 
         // Parse the workflow
         Workflow workflow = cwlService.parseWorkflowWithCwltool(basicModel,
-                new File("src/test/resources/cwl/make_to_cwl/dna.cwl"));
+                Paths.get("src/test/resources/cwl/make_to_cwl/dna.cwl"), Paths.get("src/test/resources/cwl/make_to_cwl"));
 
         // Check basic information
         assertNotNull(workflow);
@@ -170,7 +171,7 @@ public class CWLServiceTest {
 
         CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 0);
         cwlService.parseWorkflowNative(
-                new File("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
+                Paths.get("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
 
     }
 

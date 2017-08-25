@@ -48,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class WorkflowRESTControllerTest {
+public class WorkflowJSONControllerTest {
 
     @Test
     public void newWorkflowFromGithubURLJson() throws Exception {
@@ -91,12 +91,12 @@ public class WorkflowRESTControllerTest {
                 .thenReturn(mockQueuedWorkflow);
 
         // Mock controller/MVC
-        WorkflowRESTController workflowRESTController = new WorkflowRESTController(
+        WorkflowJSONController workflowJSONController = new WorkflowJSONController(
                 mockValidator,
                 mockWorkflowService);
 
         MockMvc mockMvc = MockMvcBuilders
-                .standaloneSetup(workflowRESTController)
+                .standaloneSetup(workflowJSONController)
                 .build();
 
         // Error in validation
@@ -158,12 +158,12 @@ public class WorkflowRESTControllerTest {
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
         when(mockWorkflowService.getWorkflow(any(GitDetails.class))).thenReturn(workflow1);
 
-        WorkflowRESTController workflowRESTController = new WorkflowRESTController(
+        WorkflowJSONController workflowJSONController = new WorkflowJSONController(
                 Mockito.mock(WorkflowFormValidator.class),
                 mockWorkflowService);
 
         MockMvc mockMvc = MockMvcBuilders
-                .standaloneSetup(workflowRESTController)
+                .standaloneSetup(workflowJSONController)
                 .build();
 
         mockMvc.perform(
@@ -210,12 +210,12 @@ public class WorkflowRESTControllerTest {
                 .thenReturn(qwfError)
                 .thenReturn(qwfSuccess);
 
-        WorkflowRESTController workflowRESTController = new WorkflowRESTController(
+        WorkflowJSONController workflowJSONController = new WorkflowJSONController(
                 Mockito.mock(WorkflowFormValidator.class),
                 mockWorkflowService);
 
         MockMvc mockMvc = MockMvcBuilders
-                .standaloneSetup(workflowRESTController)
+                .standaloneSetup(workflowJSONController)
                 .build();
 
         // No workflow

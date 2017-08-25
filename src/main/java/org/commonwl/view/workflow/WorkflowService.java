@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -175,6 +176,16 @@ public class WorkflowService {
                 // Add the new workflow if it exists
                 try {
                     createQueuedWorkflow(workflow.getRetrievedFrom());
+
+                    // Add the old commit for the purposes of permalinks
+                    // TODO: Separate concept of commit from branch ref, see #164
+                    GitDetails byOldCommitId = workflow.getRetrievedFrom();
+                    byOldCommitId.setBranch(workflow.getLastCommit());
+                    if (getQueuedWorkflow(byOldCommitId) == null
+                            && getWorkflow(byOldCommitId) == null) {
+                        createQueuedWorkflow(byOldCommitId);
+                    }
+
                     workflow = null;
                 } catch (Exception e) {
                     // Add back the old workflow if it is broken now
@@ -298,25 +309,25 @@ public class WorkflowService {
                     }
                 }
             }
-            File localPath = repo.getRepository().getWorkTree();
+            Path localPath = repo.getRepository().getWorkTree().toPath();
             String latestCommit = gitService.getCurrentCommitID(repo);
 
-            Path pathToWorkflowFile = localPath.toPath().resolve(gitInfo.getPath()).normalize().toAbsolutePath();
+            Path workflowFile = localPath.resolve(gitInfo.getPath()).normalize().toAbsolutePath();
             // Prevent path traversal attacks
-            if (!pathToWorkflowFile.startsWith(localPath.toPath().normalize().toAbsolutePath())) {
+            if (!workflowFile.startsWith(localPath.normalize().toAbsolutePath())) {
                 throw new WorkflowNotFoundException();
             }
 
-            File workflowFile = new File(pathToWorkflowFile.toString());
-            if (! Files.isReadable(workflowFile.toPath())) {
+            // Check workflow is readable
+            if (!Files.isReadable(workflowFile)) {
                 throw new WorkflowNotFoundException();
             }
 
             // Handling of packed workflows
             String packedWorkflowId = gitInfo.getPackedId();
             if (packedWorkflowId == null) {
-                if (cwlService.isPacked(workflowFile)) {
-                    List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(workflowFile);
+                if (cwlService.isPacked(workflowFile.toFile())) {
+                    List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(workflowFile.toFile());
                     if (overviews.size() == 0) {
                         throw new IOException("No workflow was found within the packed CWL file");
                     } else {
@@ -328,7 +339,7 @@ public class WorkflowService {
                 }
             } else {
                 // Packed ID specified but was not found
-                if (!cwlService.isPacked(workflowFile)) {
+                if (!cwlService.isPacked(workflowFile.toFile())) {
                     throw new WorkflowNotFoundException();
                 }
             }
@@ -374,6 +385,67 @@ public class WorkflowService {
         } catch (Exception e) {
             logger.error("Could not update workflow with cwltool", e);
         }
+    }
+
+    /**
+     * Find a workflow by commit ID and path
+     * @param commitID The commit ID of the workflow
+     * @param path The path to the workflow within the repository
+     * @return A workflow model with the above two parameters
+     */
+    public Workflow findByCommitAndPath(String commitID, String path) throws WorkflowNotFoundException {
+        List<Workflow> matches = workflowRepository.findByCommitAndPath(commitID, path);
+        if (matches == null || matches.size() == 0) {
+            throw new WorkflowNotFoundException();
+        } else if (matches.size() == 1) {
+            return matches.get(0);
+        } else {
+            // Multiple matches means either added by both branch and ID
+            // Or packed workflow
+            for (Workflow workflow : matches) {
+                if (workflow.getRetrievedFrom().getPackedId() != null) {
+                    // This is a packed file
+                    // TODO: return 300 multiple choices response for this in controller
+                    throw new WorkflowNotFoundException();
+                }
+            }
+            // Not a packed workflow, just different references to the same ID
+            return matches.get(0);
+        }
+    }
+
+    /**
+     * Get a graph in a particular format and return it
+     * @param format The format for the graph file
+     * @param gitDetails The Git details of the workflow
+     * @return A FileSystemResource representing the graph
+     * @throws WorkflowNotFoundException Error getting the workflow or format
+     */
+    public FileSystemResource getWorkflowGraph(String format, GitDetails gitDetails)
+            throws WorkflowNotFoundException {
+        // Determine file extension from format
+        String extension;
+        switch (format) {
+            case "svg":
+            case "png":
+                extension = format;
+                break;
+            case "xdot":
+                extension = "dot";
+                break;
+            default:
+                throw new WorkflowNotFoundException();
+        }
+
+        // Get workflow
+        Workflow workflow = getWorkflow(gitDetails);
+        if (workflow == null) {
+            throw new WorkflowNotFoundException();
+        }
+
+        // Generate graph and serve the file
+        File out = graphVizService.getGraph(workflow.getID() + "." + extension, workflow.getVisualisationDot(), format);
+        return new FileSystemResource(out);
     }
 
     /**

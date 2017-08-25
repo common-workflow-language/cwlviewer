@@ -32,7 +32,6 @@ import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitSemaphore;
 import org.commonwl.view.git.GitService;
-import org.commonwl.view.git.GitType;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
 import org.eclipse.jgit.api.Git;
@@ -125,6 +124,8 @@ public class ROBundleService {
 
         // Simplified attribution for RO bundle
         try {
+            manifest.setId(new URI(workflow.getPermalink()));
+
             // Tool attribution in createdBy
             manifest.setCreatedBy(appAgent);
 
@@ -132,7 +133,7 @@ public class ROBundleService {
             // TODO: Make this importedBy/On/From
             manifest.setRetrievedBy(appAgent);
             manifest.setRetrievedOn(manifest.getCreatedOn());
-            manifest.setRetrievedFrom(new URI(gitInfo.getUrl()));
+            manifest.setRetrievedFrom(new URI(workflow.getPermalink("ro")));
 
             // Make a directory in the RO bundle to store the files
             Path bundleRoot = bundle.getRoot();
@@ -159,12 +160,12 @@ public class ROBundleService {
             File png = graphVizService.getGraph(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
             Files.copy(png.toPath(), bundleRoot.resolve("visualisation.png"));
             PathMetadata pngAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.png"));
-            pngAggr.setRetrievedFrom(new URI(appAgent.getUri() + workflow.getVisualisationPng()));
+            pngAggr.setRetrievedFrom(new URI(workflow.getPermalink("png")));
 
             File svg = graphVizService.getGraph(workflow.getID() + ".svg", workflow.getVisualisationDot(), "svg");
             Files.copy(svg.toPath(), bundleRoot.resolve("visualisation.svg"));
             PathMetadata svgAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.svg"));
-            svgAggr.setRetrievedFrom(new URI(appAgent.getUri() + workflow.getVisualisationSvg()));
+            svgAggr.setRetrievedFrom(new URI(workflow.getPermalink("svg")));
 
             // Add annotation files
             GitDetails wfDetails = workflow.getRetrievedFrom();
@@ -187,13 +188,10 @@ public class ROBundleService {
             } catch (CWLValidationException ex) {
                 logger.error("Could not pack workflow when creating Research Object", ex.getMessage());
             }
-            if (gitInfo.getType() != GitType.GENERIC) {
-                try {
-                    addAggregation(bundle, manifestAnnotations,
-                            "workflow.ttl", cwlTool.getRDF(rawUrl));
-                } catch (CWLValidationException ex) {
-                    logger.error("Could not get RDF for workflow from raw URL", ex.getMessage());
-                }
+            String rdfUrl = workflow.getPermalink();
+            if (rdfService.graphExists(rdfUrl)) {
+                addAggregation(bundle, manifestAnnotations, "workflow.ttl",
+                        new String(rdfService.getModel(rdfUrl, "TURTLE")));
             }
             bundle.getManifest().setAnnotations(manifestAnnotations);
 
@@ -246,15 +244,13 @@ public class ROBundleService {
 
                 } else {
                     try {
-                        // Where to store the new file in bundle
+                        // Where to store the new file
                         Path bundleFilePath = bundlePath.resolve(file.getName());
+                        Path gitPath = Paths.get(gitDetails.getPath()).resolve(file.getName());
 
-                        // Create git details object for file
-                        GitDetails fileGitDetails = new GitDetails(gitDetails.getRepoUrl(), gitDetails.getBranch(),
-                                Paths.get(gitDetails.getPath()).resolve(file.getName()).toString());
-
-                        // Get direct URL
-                        URI rawURI = new URI(fileGitDetails.getRawUrl());
+                        // Get direct URL permalink
+                        URI rawURI = new URI("https://w3id.org/cwl/view/git/" + workflow.getLastCommit() +
+                                "/" + gitPath + "?format=raw");
 
                         // Variable to store file contents and aggregation
                         String fileContent = null;
@@ -268,11 +264,9 @@ public class ROBundleService {
 
                             // Set retrieved information for this file in the manifest
                             aggregation = bundle.getManifest().getAggregation(bundleFilePath);
-                            if (gitDetails.getType() != GitType.GENERIC) {
-                                aggregation.setRetrievedFrom(rawURI);
-                                aggregation.setRetrievedBy(appAgent);
-                                aggregation.setRetrievedOn(aggregation.getCreatedOn());
-                            }
+                            aggregation.setRetrievedFrom(rawURI);
+                            aggregation.setRetrievedBy(appAgent);
+                            aggregation.setRetrievedOn(aggregation.getCreatedOn());
                         } else {
                             logger.info("File " + file.getName() + " is too large to download - " +
                                     FileUtils.byteCountToDisplaySize(file.length()) + "/" +
@@ -303,10 +297,6 @@ public class ROBundleService {
                         }
 
                         try {
-                            Path gitPath = Paths.get(gitDetails.getPath()).resolve(file.getName());
-                            String url = workflow.getRetrievedFrom()
-                                    .getUrl(workflow.getLastCommit()).replace("https://", "");
-
                             // Add authors from git commits to the file
                             Set<HashableAgent> fileAuthors = gitService.getAuthors(gitRepo,
                                     gitPath.toString());
@@ -314,7 +304,8 @@ public class ROBundleService {
                             if (cwl) {
                                 // Attempt to get authors from cwl description - takes priority
                                 ResultSet descAuthors = rdfService.getAuthors(bundlePath
-                                        .resolve(file.getName()).toString().substring(10), url);
+                                        .resolve(file.getName()).toString().substring(10),
+                                        workflow.getPermalink());
                                 if (descAuthors.hasNext()) {
                                     QuerySolution authorSoln = descAuthors.nextSolution();
                                     HashableAgent newAuthor = new HashableAgent();
