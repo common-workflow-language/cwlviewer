@@ -19,7 +19,15 @@
 
 package org.commonwl.view.cwl;
 
-import org.apache.jena.query.*;
+import org.apache.jena.query.DatasetAccessor;
+import org.apache.jena.query.DatasetAccessorFactory;
+import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.rdf.model.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -433,6 +441,30 @@ public class RDFService {
         try (QueryExecution qexec = QueryExecutionFactory.createServiceRequest(rdfService, query)) {
             return ResultSetFactory.copyResults(qexec.execSelect());
         }
+    }
+
+    public ResultSet findRelatedWorkflows(String graphIRI) {
+        ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
+        linkQuery.setCommandText(queryCtx + "SELECT DISTINCT ?g2 (COUNT(?image2NoVersion) AS ?c)\r\n" + 
+                "WHERE {\r\n" + 
+                "  GRAPH ?g1 {\r\n" + 
+                "      [] DockerRequirement:dockerPull ?image1 .\r\n" +
+                "      BIND (REPLACE (?image1, \":.*\", \"\") AS ?image1NoVersion)\r\n" + 
+                "  }\r\n" + 
+                "  \r\n" + 
+                "    GRAPH ?g2 {\r\n" + 
+                "      [] DockerRequirement:dockerPull ?image2 .\r\n"
+                + 
+                "    BIND (REPLACE (?image2, \":.*\", \"\") AS ?image2NoVersion)\r\n" + 
+                "  }\r\n" + 
+                "  FILTER (?g1 != ?g2)  \r\n" + 
+                "  FILTER (?image1NoVersion = ?image2NoVersion)  \r\n" + 
+                "}\r\n" + 
+                "\r\n" + 
+                "GROUP BY ?g2\r\n" + 
+                "ORDER BY DESC(?c)");
+        linkQuery.setIri("g1", rdfService + graphIRI);
+        return runQuery(linkQuery);
     }
 
 }

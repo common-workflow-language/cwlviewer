@@ -19,8 +19,9 @@
 
 package org.commonwl.view.workflow;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.Date;
+import java.util.Map;
+
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.git.GitDetails;
@@ -29,8 +30,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * Representation of a workflow
@@ -72,6 +73,8 @@ public class Workflow {
 
     // DOT graph of the contents
     private String visualisationDot;
+
+    private String graphUrl;
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
                     Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink) {
@@ -211,4 +214,13 @@ public class Workflow {
     public String getRoBundleLink() {
         return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/robundle");
     }
+
+    public void setGraphUrl(String graphUrl) {
+        this.graphUrl = graphUrl;
+    }
+
+    public String getGraphUrl() {
+        return this.graphUrl;
+    }
+
 }

@@ -29,9 +29,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
+import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitSemaphore;
 import org.commonwl.view.git.GitService;
@@ -62,6 +65,7 @@ public class WorkflowService {
     private final CWLToolRunner cwlToolRunner;
     private final GitSemaphore gitSemaphore;
     private final int cacheDays;
+    private final RDFService rdfService;
 
     @Autowired
     public WorkflowService(GitService gitService,
@@ -72,7 +76,7 @@ public class WorkflowService {
                            GraphVizService graphVizService,
                            CWLToolRunner cwlToolRunner,
                            GitSemaphore gitSemaphore,
-                           @Value("${cacheDays}") int cacheDays) {
+            @Value("${cacheDays}") int cacheDays, RDFService rdfService) {
         this.gitService = gitService;
         this.cwlService = cwlService;
         this.workflowRepository = workflowRepository;
@@ -82,6 +86,7 @@ public class WorkflowService {
         this.cwlToolRunner = cwlToolRunner;
         this.cacheDays = cacheDays;
         this.gitSemaphore = gitSemaphore;
+        this.rdfService = rdfService;
     }
 
     /**
@@ -431,5 +436,21 @@ public class WorkflowService {
             }
         }
         return false;
+    }
+
+    public List<Workflow> findRelatedWorkflows(Workflow workflowModel) {
+        final int MAX_HITS = 10;
+        final List<Workflow> workflows = new ArrayList<>();
+        ResultSet related = rdfService.findRelatedWorkflows(workflowModel.getGraphUrl());
+        while (related.hasNext() && workflows.size() < MAX_HITS) {
+            QuerySolution s = related.nextSolution();
+            if (s.contains("g2")) {
+                // skip unbound g2 when there are no hits
+                String permalink = s.getResource("g2").getURI();
+                // workflows.add(getWorkflowByPermalink(permaLink));
+            }
+        }
+        return workflows;
+
     }
 }

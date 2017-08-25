@@ -279,6 +279,14 @@ digraph G {
                     </table>
                 </div>
             </div>
+            <div th:unless="${related.isEmpty()}">
+	            <h2>Related workflows</h2>
+               	<ul>
+               		<li th:each="r : ${related}">
+               			<a th:href="${r}" th:text="${r}">http://example.com/</a>
+               		</li>
+               	</ul>
+            </div>
         </div>
     </div>
 </div>

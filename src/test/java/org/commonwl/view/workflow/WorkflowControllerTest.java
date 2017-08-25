@@ -19,6 +19,24 @@
 
 package org.commonwl.view.workflow;
 
+import static org.hamcrest.core.Is.is;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
@@ -37,19 +55,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static org.hamcrest.core.Is.is;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Tests the controller for workflow related functionality
@@ -75,7 +80,8 @@ public class WorkflowControllerTest {
         WorkflowController workflowController = new WorkflowController(
                 Mockito.mock(WorkflowFormValidator.class),
                 Mockito.mock(WorkflowService.class),
-                Mockito.mock(GraphVizService.class));
+                Mockito.mock(GraphVizService.class),
+                Mockito.mock(RDFService.class));
 
         // Lots of hassle to make Spring Data Pageable work
         PageableHandlerMethodArgumentResolver pageableArgumentResolver =
@@ -130,7 +136,7 @@ public class WorkflowControllerTest {
         WorkflowController workflowController = new WorkflowController(
                 mockValidator,
                 mockWorkflowService,
-                Mockito.mock(GraphVizService.class));
+                Mockito.mock(GraphVizService.class), Mockito.mock(RDFService.class));
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(workflowController)
                 .build();
@@ -215,7 +221,7 @@ public class WorkflowControllerTest {
         WorkflowController workflowController = new WorkflowController(
                 Mockito.mock(WorkflowFormValidator.class),
                 mockWorkflowService,
-                Mockito.mock(GraphVizService.class));
+                Mockito.mock(GraphVizService.class), Mockito.mock(RDFService.class));
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(workflowController)
                 .build();
@@ -281,7 +287,7 @@ public class WorkflowControllerTest {
         WorkflowController workflowController = new WorkflowController(
                 Mockito.mock(WorkflowFormValidator.class),
                 mockWorkflowService,
-                Mockito.mock(GraphVizService.class));
+                Mockito.mock(GraphVizService.class), Mockito.mock(RDFService.class));
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(workflowController)
                 .build();
@@ -325,7 +331,7 @@ public class WorkflowControllerTest {
         WorkflowController workflowController = new WorkflowController(
                 Mockito.mock(WorkflowFormValidator.class),
                 mockWorkflowService,
-                mockGraphVizService);
+                mockGraphVizService, Mockito.mock(RDFService.class));
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(workflowController)
                 .build();

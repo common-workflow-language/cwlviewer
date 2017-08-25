@@ -19,19 +19,19 @@
 
 package org.commonwl.view.graphviz;
 
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
-import org.commonwl.view.cwl.CWLProcess;
-import org.commonwl.view.cwl.RDFService;
-
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.commonwl.view.cwl.CWLProcess;
+import org.commonwl.view.cwl.RDFService;
 
 /**
  * Writes GraphViz DOT files from a workflow RDF model
@@ -40,6 +40,7 @@ public class RDFDotWriter extends DotWriter {
 
     private RDFService rdfService;
     private String gitPath;
+    private final IRIFactory iriFactory = IRIFactory.iriImplementation();
 
     public RDFDotWriter(Writer writer, RDFService rdfService, String gitPath) {
         super(writer);
@@ -171,9 +172,8 @@ public class RDFDotWriter extends DotWriter {
                 if (stepLink.get("default").isLiteral()) {
                     label = rdfService.formatDefault(stepLink.get("default").toString());
                 } else if (stepLink.get("default").isURIResource()) {
-                    Path workflowPath = Paths.get(stepLink.get("wf").toString()).getParent();
-                    Path resourcePath = Paths.get(stepLink.get("default").toString());
-                    label = workflowPath.relativize(resourcePath).toString();
+                    IRI workflowIri = iriFactory.create(stepLink.get("wf").asResource().getURI());
+                    label = workflowIri.relativize(stepLink.get("default").asResource().getURI()).toDisplayString();
                 } else {
                     label = "[Complex Object]";
                 }
