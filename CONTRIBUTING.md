@@ -63,6 +63,10 @@ GitHub, clone, and develop on a branch. Steps:
 5. Follow [these instructions](https://help.github.com/articles/creating-a-pull-request-from-a-fork)
 to create a pull request from your fork.
 
+### Running the Application and Tests
+See [README.md](README.md) for details on running the application with dependencies.
+The tests can be run using the standard `mvn test` command.
+
 ### Code Structure and Dependencies
 This project uses the [Maven standard directory layout](https://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html) 
 and is a [Model-view-controller](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller) 
@@ -81,6 +85,57 @@ The application also uses a triple store to keep the RDF representing
 workflows (gathered from [cwltool](https://github.com/common-workflow-language/cwltool)'s 
 `--print-rdf` functionality).
 
-See [README.md](README.md) for details on running the application with dependencies.
-The tests can be run using the standard `mvn test` command.
+In general, the controller classes call services which have the main logic for 
+the application. These controllers are:
+* `PageController` - handles basic static pages such as the index and documentation
+* `workflow.WorkflowController` - the main controller class for the application
+* `workflow.WorkflowJSONController` - handles API functionality
+* `workflow.PermalinkController` - handles permalinks with content negotiation for 
+retrieving different formats
 
+Notable services include
+* `workflow.WorkflowService` - Handles workflow related functionality
+* `researchobject.ROBundleService` - Creates research object bundles
+* `graphviz.GraphVizService` - A wrapper for `com.github.jabbalaci.graphviz.GraphViz` 
+to generate images from DOT source code
+* `git.GitService` - Builds on JGit to provide Git functionality
+* `cwl.CWLService` - Implements parsing of cwl files
+
+Note: For the async operations, Spring does not support the calling of a method within 
+the same class (as a proxy needs to kick in to spawn a new thread). For this reason 
+some extra classes such as `researchobject.ROBundleFactory` and `cwl.CWLToolRunner` 
+are used when they would otherwise not be required.
+
+### Basic Application Flow
+
+1. User fills in the form on the front page. This is represented by 
+`workflow.WorkflowForm` and consists of just a URL to Github/Gitlab, 
+or a URL to a git repository as well as the branch and path of a 
+workflow within the repository.
+
+2. This is submitted and picked up by a method in `workflow.WorkflowController`. 
+The form is validated and parsed by `workflow.WorkflowFormValidator` to 
+produce a `git.GitDetails` object with a repository URL, branch and path. 
+The MongoDB database is checked for already pending `workflow.QueuedWorkflow` or 
+created `workflow.Workflow` objects based on this (but this flow assumes they do 
+not already exist).
+
+3. A new `workflow.QueuedWorkflow` object is created by cloning the repository 
+locally (if it does not already exist), checking out the new branch and parsing 
+the file using built-in YAML parsing code. Intermediate visualisations and 
+models are produced which may not yet be complete.
+
+4. [cwltool](https://github.com/common-workflow-language/cwltool) is run on the 
+workflow using the `--print-rdf` option to produce the RDF representation. The RDF 
+will be stored in the SPARQL store and queries will extract the information 
+required. Afterwards this is used to construct a Research Object Bundle for the workflow. 
+This is an asynchronous operation so meanwhile...
+
+5. The user is redirected to the main workflow page, which will use the `loading` 
+template for now until cwltool has finished running. The background is the intermediate 
+visualisation. An AJAX call repeatedly checks the status of cwltool saved in the 
+`workflow.QueuedWorkflow` object in MongoDB.
+
+6. The page either displays an error on the loading page or reloads to view the 
+ parsed workflow on the `workflow` template. An AJAX call checks if the Research Object 
+ Bundle has been created and adds it to the page when it has.
