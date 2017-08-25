@@ -39,6 +39,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.net.URI;
@@ -55,6 +57,7 @@ public class ROBundleServiceTest {
 
     private static ROBundleService roBundleService;
     private static ROBundleService roBundleServiceZeroSizeLimit;
+    private static Workflow lobSTRdraft3;
 
     @Before
     public void setUp() throws Exception {
@@ -103,6 +106,23 @@ public class ROBundleServiceTest {
                 "CWL Viewer", "https://view.commonwl.org", 0,
                 mockGraphvizService, mockGitService, mockRdfService,
                 Mockito.mock(GitSemaphore.class), mockCwlTool);
+
+        GitDetails lobSTRdraft3Details = new GitDetails("https://github.com/common-workflow-language/workflows.git",
+                "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR/lobSTR-workflow.cwl");
+        lobSTRdraft3 = Mockito.mock(Workflow.class);
+        when(lobSTRdraft3.getID()).thenReturn("testID");
+        when(lobSTRdraft3.getRetrievedFrom()).thenReturn(lobSTRdraft3Details);
+        when(lobSTRdraft3.getLastCommit()).thenReturn("933bf2a1a1cce32d88f88f136275535da9df0954");
+        when(lobSTRdraft3.getPermalink()).thenReturn("https://w3id.org/cwl/view/git/" +
+                "933bf2a1a1cce32d88f88f136275535da9df0954/workflows/lobSTR/lobSTR-workflow.cwl");
+        when(lobSTRdraft3.getPermalink(anyString())).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                return "https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/" +
+                        "workflows/lobSTR/lobSTR-workflow.cwl?format=" + args[0];
+            }
+        });
     }
 
     /**
@@ -116,13 +136,6 @@ public class ROBundleServiceTest {
      */
     @Test
     public void generateAndSaveROBundle() throws Exception {
-
-        // Workflow details
-        GitDetails lobSTRdraft3Details = new GitDetails("https://github.com/common-workflow-language/workflows.git",
-                "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR/lobSTR-workflow.cwl");
-        Workflow lobSTRdraft3 = Mockito.mock(Workflow.class);
-        when(lobSTRdraft3.getID()).thenReturn("testID");
-        when(lobSTRdraft3.getRetrievedFrom()).thenReturn(lobSTRdraft3Details);
 
         // RO details
         GitDetails lobSTRdraft3RODetails = new GitDetails("https://github.com/common-workflow-language/workflows.git",
@@ -140,12 +153,18 @@ public class ROBundleServiceTest {
         assertEquals("CWL Viewer", manifest.getCreatedBy().getName());
         assertEquals("https://view.commonwl.org", manifest.getCreatedBy().getUri().toString());
         assertEquals("Mark Robinson", manifest.getAuthoredBy().get(0).getName());
-        assertEquals(14, manifest.getAggregates().size());
+        assertEquals(new URI("https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/lobSTR/lobSTR-workflow.cwl"),
+                manifest.getId());
+        assertEquals(new URI("https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/lobSTR/lobSTR-workflow.cwl?format=ro"),
+                manifest.getRetrievedFrom());
 
         // Check cwl aggregation information
+        assertEquals(14, manifest.getAggregates().size());
         PathMetadata cwlAggregate = manifest.getAggregation(
                 bundleRoot.resolve("lobSTR-workflow.cwl"));
-        assertEquals("https://w3id.org/cwl/view/git/null/lobstr-draft3/lobSTR-workflow.cwl?format=raw",
+        // NOTE: This permalink is based on local folder structure, here in tests
+        // it is slightly different but normally would not be
+        assertEquals("https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/lobstr-draft3/lobSTR-workflow.cwl?format=raw",
                 cwlAggregate.getRetrievedFrom().toString());
         assertEquals("Mark Robinson", cwlAggregate.getAuthoredBy().get(0).getName());
         assertEquals("mailto:mark@example.com", cwlAggregate.getAuthoredBy().get(0).getUri().toString());
@@ -188,13 +207,6 @@ public class ROBundleServiceTest {
      */
     @Test
     public void filesOverLimit() throws Exception {
-
-        // Workflow details
-        GitDetails lobSTRdraft3Details = new GitDetails("https://github.com/common-workflow-language/workflows.git",
-                "933bf2a1a1cce32d88f88f136275535da9df0954", "workflows/lobSTR/lobSTR-workflow.cwl");
-        Workflow lobSTRdraft3 = Mockito.mock(Workflow.class);
-        when(lobSTRdraft3.getID()).thenReturn("testID");
-        when(lobSTRdraft3.getRetrievedFrom()).thenReturn(lobSTRdraft3Details);
 
         // RO details
         GitDetails lobSTRdraft3RoDetails = new GitDetails("https://github.com/common-workflow-language/workflows.git",
