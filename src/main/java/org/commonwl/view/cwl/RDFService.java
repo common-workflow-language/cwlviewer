@@ -183,6 +183,7 @@ public class RDFService {
                 "        ?name sld:type ?arraytype .\n" +
                 "        ?arraytype sld:type ?type .\n" +
                 "        ?arraytype sld:items ?items \n" +
+                "        FILTER(?type != sld:null) \n" +
                 "      }\n" +
                 "    }\n" +
                 "    OPTIONAL { \n" +
@@ -220,6 +221,7 @@ public class RDFService {
                 "        ?name sld:type ?arraytype .\n" +
                 "        ?arraytype sld:type ?type .\n" +
                 "        ?arraytype sld:items ?items \n" +
+                "        FILTER(?type != sld:null) \n" +
                 "      }\n" +
                 "    }\n" +
                 "    OPTIONAL { \n" +
