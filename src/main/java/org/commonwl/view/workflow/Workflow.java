@@ -215,7 +215,7 @@ public class Workflow {
     public String getPermalink(String format) {
         String formatPart = (format != null && !format.isEmpty()) ? "?format=" + format : "";
         String packedPart = (retrievedFrom.getPackedId() != null) ? "#" + retrievedFrom.getPackedId() : "";
-        return "https://w3id.org/cwl/v/git/" + lastCommit +
+        return "https://w3id.org/cwl/view/git/" + lastCommit +
                 "/" + retrievedFrom.getPath() + formatPart + packedPart;
     }
 

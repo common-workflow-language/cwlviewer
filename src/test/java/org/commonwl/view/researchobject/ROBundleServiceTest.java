@@ -145,7 +145,7 @@ public class ROBundleServiceTest {
         // Check cwl aggregation information
         PathMetadata cwlAggregate = manifest.getAggregation(
                 bundleRoot.resolve("lobSTR-workflow.cwl"));
-        assertEquals("https://w3id.org/cwl/v/git/null/lobstr-draft3/lobSTR-workflow.cwl?format=raw",
+        assertEquals("https://w3id.org/cwl/view/git/null/lobstr-draft3/lobSTR-workflow.cwl?format=raw",
                 cwlAggregate.getRetrievedFrom().toString());
         assertEquals("Mark Robinson", cwlAggregate.getAuthoredBy().get(0).getName());
         assertEquals("mailto:mark@example.com", cwlAggregate.getAuthoredBy().get(0).getUri().toString());
@@ -209,7 +209,7 @@ public class ROBundleServiceTest {
         assertEquals(14, manifest.getAggregates().size());
 
         PathMetadata urlAggregate = manifest.getAggregation(
-                new URI("https://w3id.org/cwl/v/git/null/lobstr-draft3/models/illumina_v3.pcrfree.stepmodel?format=raw"));
+                new URI("https://w3id.org/cwl/view/git/null/lobstr-draft3/models/illumina_v3.pcrfree.stepmodel?format=raw"));
         assertEquals("Mark Robinson", urlAggregate.getAuthoredBy().get(0).getName());
 
     }

@@ -249,7 +249,7 @@ public class ROBundleService {
                         Path gitPath = Paths.get(gitDetails.getPath()).resolve(file.getName());
 
                         // Get direct URL permalink
-                        URI rawURI = new URI("https://w3id.org/cwl/v/git/" + workflow.getLastCommit() +
+                        URI rawURI = new URI("https://w3id.org/cwl/view/git/" + workflow.getLastCommit() +
                                 "/" + gitPath + "?format=raw");
 
                         // Variable to store file contents and aggregation
