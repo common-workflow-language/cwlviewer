@@ -275,7 +275,7 @@ public class CWLService {
         // Base workflow details
         String label = FilenameUtils.getName(url);
         String doc = null;
-        ResultSet labelAndDoc = rdfService.getLabelAndDoc(gitPath, url);
+        ResultSet labelAndDoc = rdfService.getLabelAndDoc(url);
         if (labelAndDoc.hasNext()) {
             QuerySolution labelAndDocSoln = labelAndDoc.nextSolution();
             if (labelAndDocSoln.contains("label")) {
@@ -288,7 +288,7 @@ public class CWLService {
 
         // Inputs
         Map<String, CWLElement> wfInputs = new HashMap<>();
-        ResultSet inputs = rdfService.getInputs(gitPath, url);
+        ResultSet inputs = rdfService.getInputs(url);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
             String inputName = rdfService.stepNameFromURI(gitPath, input.get("name").toString());
@@ -321,7 +321,7 @@ public class CWLService {
 
         // Outputs
         Map<String, CWLElement> wfOutputs = new HashMap<>();
-        ResultSet outputs = rdfService.getOutputs(gitPath, url);
+        ResultSet outputs = rdfService.getOutputs(url);
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
             CWLElement wfOutput = new CWLElement();
@@ -360,7 +360,7 @@ public class CWLService {
 
         // Steps
         Map<String, CWLStep> wfSteps = new HashMap<>();
-        ResultSet steps = rdfService.getSteps(gitPath, url);
+        ResultSet steps = rdfService.getSteps(url);
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
             String uri = rdfService.stepNameFromURI(gitPath, step.get("step").toString());
@@ -381,9 +381,7 @@ public class CWLService {
                 // Add new step
                 CWLStep wfStep = new CWLStep();
 
-                IRI wfStepUri = iriFactory.construct(step.get("wf").asResource().getURI());
-                IRI workflowPath = wfStepUri.resolve("./");
-
+                IRI workflowPath = iriFactory.construct(url).resolve("./");
                 IRI runPath = iriFactory.construct(step.get("run").asResource().getURI());
                 wfStep.setRun(workflowPath.relativize(runPath).toString());
                 wfStep.setRunType(rdfService.strToRuntype(step.get("runtype").toString()));
@@ -414,7 +412,7 @@ public class CWLService {
         }
 
         // Docker link
-        ResultSet dockerResult = rdfService.getDockerLink(gitPath, url);
+        ResultSet dockerResult = rdfService.getDockerLink(url);
         String dockerLink = null;
         if (dockerResult.hasNext()) {
             QuerySolution docker = dockerResult.nextSolution();

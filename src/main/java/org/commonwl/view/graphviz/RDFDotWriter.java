@@ -19,6 +19,8 @@
 
 package org.commonwl.view.graphviz;
 
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.commonwl.view.cwl.CWLProcess;
@@ -26,8 +28,6 @@ import org.commonwl.view.cwl.RDFService;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +37,8 @@ import java.util.Set;
  * Writes GraphViz DOT files from a workflow RDF model
  */
 public class RDFDotWriter extends DotWriter {
+
+    private final IRIFactory iriFactory = IRIFactory.iriImplementation();
 
     private RDFService rdfService;
     private String gitPath;
@@ -75,7 +77,7 @@ public class RDFDotWriter extends DotWriter {
         writeLine("    label = \"Workflow Inputs\";");
 
         // Write each of the inputs as a node
-        ResultSet inputs = rdfService.getInputs(gitPath, workflowUri);
+        ResultSet inputs = rdfService.getInputs(workflowUri);
         while (inputs.hasNext()) {
             QuerySolution input = inputs.nextSolution();
             writeInputOutput(input);
@@ -99,7 +101,7 @@ public class RDFDotWriter extends DotWriter {
         writeLine("    label = \"Workflow Outputs\";");
 
         // Write each of the outputs as a node
-        ResultSet outputs = rdfService.getOutputs(gitPath, workflowUri);
+        ResultSet outputs = rdfService.getOutputs(workflowUri);
         while (outputs.hasNext()) {
             QuerySolution output = outputs.nextSolution();
             writeInputOutput(output);
@@ -117,7 +119,7 @@ public class RDFDotWriter extends DotWriter {
      */
     private void writeSteps(String workflowUri, boolean subworkflow) throws IOException {
 
-        ResultSet steps = rdfService.getSteps(gitPath, workflowUri);
+        ResultSet steps = rdfService.getSteps(workflowUri);
         Set<String> addedSteps = new HashSet<>();
         while (steps.hasNext()) {
             QuerySolution step = steps.nextSolution();
@@ -153,7 +155,7 @@ public class RDFDotWriter extends DotWriter {
      */
     private void writeStepLinks(String workflowUri) throws IOException {
         // Write links between steps
-        ResultSet stepLinks = rdfService.getStepLinks(gitPath, workflowUri);
+        ResultSet stepLinks = rdfService.getStepLinks(workflowUri);
         int defaultCount = 1;
         while (stepLinks.hasNext()) {
             QuerySolution stepLink = stepLinks.nextSolution();
@@ -171,8 +173,8 @@ public class RDFDotWriter extends DotWriter {
                 if (stepLink.get("default").isLiteral()) {
                     label = rdfService.formatDefault(stepLink.get("default").toString());
                 } else if (stepLink.get("default").isURIResource()) {
-                    Path workflowPath = Paths.get(stepLink.get("wf").toString()).getParent();
-                    Path resourcePath = Paths.get(stepLink.get("default").toString());
+                    IRI workflowPath = iriFactory.construct(workflowUri).resolve("./");
+                    IRI resourcePath = iriFactory.construct(stepLink.get("default").asResource().getURI());
                     label = workflowPath.relativize(resourcePath).toString();
                 } else {
                     label = "[Complex Object]";
@@ -190,7 +192,7 @@ public class RDFDotWriter extends DotWriter {
         }
 
         // Write links between steps and outputs
-        ResultSet outputLinks = rdfService.getOutputLinks(gitPath, workflowUri);
+        ResultSet outputLinks = rdfService.getOutputLinks(workflowUri);
         while (outputLinks.hasNext()) {
             QuerySolution outputLink = outputLinks.nextSolution();
             String sourceID = nodeIDFromUri(outputLink.get("src").toString());
