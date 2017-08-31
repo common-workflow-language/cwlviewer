@@ -254,11 +254,12 @@ public class ROBundleService {
                         // Where to store the new file
                         Path bundleFilePath = bundlePath.resolve(file.getName());
                         Path gitFolder = Paths.get(gitDetails.getPath());
-                        Path gitPath = bundlePath.getRoot().resolve(gitFolder.resolve(file.getName()));
+                        String relativePath = gitFolder.resolve(file.getName()).toString();
+                        Path gitPath = bundlePath.getRoot().resolve(relativePath); // would start with /
                         
                         // Get direct URL permalink
                         URI rawURI = new URI("https://w3id.org/cwl/view/git/" + workflow.getLastCommit() +
-                                "/" + gitPath + "?format=raw");
+                                gitPath + "?format=raw");
 
                         // Variable to store file contents and aggregation
                         String fileContent = null;
