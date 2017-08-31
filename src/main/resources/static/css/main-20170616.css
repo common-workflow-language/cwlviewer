@@ -288,12 +288,27 @@ polygon.hover {
     margin-bottom: 30px;
 }
 
-#permalink {
-	overflow: hidden;
-	text-overflow: ellipsis;
+@media screen {
+	.permalink {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 }
 
-#permalink a { 
+.help {
+	color: #9af;
+}
+
+@media print {
+	.help {
+		display: none !important;
+	}
+}
+
+#permalink {
 	font-size: smaller;
-	font-family: Consolas, Inconsolata, monospace; 
+	font-family: Consolas, Inconsolata, monospace;
+
+    overflow: hidden;
+    white-space: nowrap;
 }

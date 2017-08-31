@@ -132,12 +132,14 @@ digraph G {
                 <img th:unless="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/gitlogo.png" th:src="@{/img/gitlogo.png}" width="30" height="30" />
             </a>
         <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
+          <span class="hidden-print">
                 <span th:if="${workflow.roBundlePath == null}" id="ajaxRequired"></span>
             <span th:class="${workflow.roBundlePath != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
             <span th:class="${workflow.roBundlePath == null} ? hide : ''" id="generated">
                     - <a th:href="@{${workflow.getRoBundleLink()}}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
-                    <a href="http://www.researchobject.org/" rel="noopener" target="_blank">[?]</a>
+                    <a href="http://www.researchobject.org/" rel="noopener" class="help" target="_blank">[?]</a>
                 </span>
+          </span>
         </div>
         <div class="col-md-6 text-right">
             <img class="verification_icon" src="../static/img/tick.svg" th:src="@{/img/tick.svg}" width="20" height="22" /> Verified with cwltool version <span th:text="${workflow.cwltoolVersion}">1.0.20170622090721</span>
@@ -147,18 +149,19 @@ digraph G {
         </div>
     </div>
     <div class="row">
-        <div class="col-md-8">
-        	<div id="permalink">
-        		Permalink: <a th:href="${workflow.permalink}" th:text="${workflow.permalink}"
-        		            href="#">https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/hello/hello.cwl</a>
-        	</div>
+        <div class="col-lg-9 col-md-8 col-sm-6">
+                <div class="permalink hidden-xs-down">
+                        Permalink:
+                          <a href="https://w3id.org/cwl/view/" rel="noopener" class="help" target="_blank">[?]</a>
+                          <a id="permalink" th:href="${workflow.permalink}" th:text="${workflow.permalink}"
+                                    href="#">https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/larger/test-hello.cwl</a>
+                </div>
         </div>    
-        <div class="col-md-4">
-            <div id="graph-menu" class="pull-right">
-                <strong>Graph: </strong>
-                <button id="view-dot" class="btn btn-primary" type="button" data-toggle="modal" data-target="#dotGraph">View DOT</button>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <div class="col-lg-3 col-md-4 col-sm-6">
+            <div id="graph-menu hidden-print" class="pull-right">
+                <button id="view-dot" class="hidden-print hidden-sm-down btn btn-primary" type="button" data-toggle="modal" data-target="#dotGraph">View DOT</button>
+                <div class="btn-group hidden-print">
+                    <button type="button " class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Download Image <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
@@ -171,14 +174,15 @@ digraph G {
     </div>
     <div class="row">
         <div class="col-md-12">
-            <div id="visualisation" class="jumbotron">
+            <div id="visualisation" class="jumbotron hidden-print">
                 <span id="fullscreen-open" data-toggle="modal" data-target="#fullScreenGraphModal" data-tooltip="true" class="glyphicon glyphicon-resize-full graphControl" title="Expand"></span>
                 <img id="selectChildren" class="graphControl" th:src="@{/img/children-logo.svg}" src="../static/img/children-logo.svg" alt="children" data-tooltip="true" title="Select All Children" />
                 <img id="selectParents" class="graphControl" th:src="@{/img/parents-logo.svg}" src="../static/img/parents-logo.svg" alt="parents" data-tooltip="true" title="Select All Parents" />
                 <div id="graph" data-th-attr="data-svgurl=@{${workflow.getVisualisationSvg()}}"></div>
             </div>
+            <img alt="Workflow as SVG" src="@{${workflow.getVisualisationSvg()}}" class="visible-print-block" />
             <ul class="legend">
-                <li><span class="selectednode"></span> Selected</li>
+                <li><span class="selectednode hidden-print"></span> Selected</li>
                 <li class="hidden-xs">|</li>
                 <li><span class="defaults"></span> Default Values</li>
                 <li><span class="nestedworkflows"></span> Nested Workflows</li>
