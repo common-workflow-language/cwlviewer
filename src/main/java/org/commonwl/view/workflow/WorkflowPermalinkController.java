@@ -98,10 +98,12 @@ public class WorkflowPermalinkController {
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "text/turtle")
     public byte[] getRdfAsTurtle(@PathVariable("commitid") String commitId,
-                                 HttpServletRequest request) {
+                                 HttpServletRequest request,
+                                 HttpServletResponse response) {
         Workflow workflow = getWorkflow(commitId, request);
         String rdfUrl = workflow.getPermalink();
         if (rdfService.graphExists(rdfUrl)) {
+            response.setHeader("Content-Disposition", "inline; filename=\"workflow.ttl\"");
             return rdfService.getModel(rdfUrl, "TURTLE");
         } else {
             throw new WorkflowNotFoundException();
@@ -116,10 +118,12 @@ public class WorkflowPermalinkController {
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "application/ld+json")
     public byte[] getRdfAsJsonLd(@PathVariable("commitid") String commitId,
-                                 HttpServletRequest request) {
+                                 HttpServletRequest request,
+                                 HttpServletResponse response) {
         Workflow workflow = getWorkflow(commitId, request);
         String rdfUrl = workflow.getPermalink();
         if (rdfService.graphExists(rdfUrl)) {
+            response.setHeader("Content-Disposition", "inline; filename=\"workflow.jsonld\"");
             return rdfService.getModel(rdfUrl, "JSON-LD");
         } else {
             throw new WorkflowNotFoundException();
@@ -134,10 +138,12 @@ public class WorkflowPermalinkController {
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "application/rdf+xml")
     public byte[] getRdfAsRdfXml(@PathVariable("commitid") String commitId,
-                                 HttpServletRequest request) {
+                                 HttpServletRequest request,
+                                 HttpServletResponse response) {
         Workflow workflow = getWorkflow(commitId, request);
         String rdfUrl = workflow.getPermalink();
         if (rdfService.graphExists(rdfUrl)) {
+            response.setHeader("Content-Disposition", "inline; filename=\"workflow.rdf\"");
             return rdfService.getModel(rdfUrl, "RDFXML");
         } else {
             throw new WorkflowNotFoundException();
