@@ -150,7 +150,7 @@ digraph G {
     </div>
     <div class="row">
         <div class="col-lg-9 col-md-8 col-sm-6">
-                <div class="permalink hidden-xs-down">
+                <div class="permalink hidden-xs-down" th:unless="${workflow.packed}">
                         Permalink:
                           <a href="https://w3id.org/cwl/view/" rel="noopener" class="help" target="_blank">[?]</a>
                           <a id="permalink" th:href="${workflow.permalink}" th:text="${workflow.permalink}"
@@ -161,7 +161,7 @@ digraph G {
             <div id="graph-menu hidden-print" class="pull-right">
                 <button id="view-dot" class="hidden-print hidden-sm-down btn btn-primary" type="button" data-toggle="modal" data-target="#dotGraph">View DOT</button>
                 <div class="btn-group hidden-print">
-                    <button type="button " class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Download Image <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
@@ -180,7 +180,7 @@ digraph G {
                 <img id="selectParents" class="graphControl" th:src="@{/img/parents-logo.svg}" src="../static/img/parents-logo.svg" alt="parents" data-tooltip="true" title="Select All Parents" />
                 <div id="graph" data-th-attr="data-svgurl=@{${workflow.getVisualisationSvg()}}"></div>
             </div>
-            <img alt="Workflow as SVG" src="@{${workflow.getVisualisationSvg()}}" class="visible-print-block" />
+            <img alt="Workflow as SVG" src="../static/img/workflow-compile.svg" th:src="@{${workflow.getVisualisationSvg()}}" class="visible-print-block" />
             <ul class="legend">
                 <li><span class="selectednode hidden-print"></span> Selected</li>
                 <li class="hidden-xs">|</li>
@@ -289,6 +289,14 @@ digraph G {
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="row hidden-print" th:unless="${workflow.packed}">
+    	<div class="col-md-12 text-center" id="formats">
+    	   <span th:each="format : ${formats}">    		
+            <a th:id="|format-${format}|" role="button" class="btn btn-default btn-sm" th:href="${workflow.getPermalink(format.name())}" th:text="${format}"
+                      href="#">html</a>
+           </span>
         </div>
     </div>
 </div>

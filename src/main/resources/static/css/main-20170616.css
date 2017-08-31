@@ -312,3 +312,17 @@ polygon.hover {
     overflow: hidden;
     white-space: nowrap;
 }
+
+/**
+ * Already showing HTML
+ */
+#format-html { 
+	display: none;
+}
+/**
+ * Workaround (not really) for
+ * https://github.com/common-workflow-language/cwlviewer/issues/166
+ */
+#format-json { 
+	display: none;
+}
