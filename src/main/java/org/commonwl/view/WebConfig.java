@@ -19,15 +19,24 @@
 
 package org.commonwl.view;
 
+import static org.springframework.http.MediaType.parseMediaType;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-import static org.springframework.http.MediaType.parseMediaType;
-
 @Configuration
 public class WebConfig extends WebMvcConfigurerAdapter {
+
+    /**
+     * Ordered list of formats as presented on Workflow page - must match the
+     * .mediaType() strings below.
+     *
+     */
+    public static enum formats {
+        html, json, turtle, jsonld, rdfxml, svg, png, dot, zip, ro, yaml, raw
+    }
 
     /**
      * Allows the use of the format query parameter to be used
@@ -36,16 +45,22 @@ public class WebConfig extends WebMvcConfigurerAdapter {
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
         configurer.favorParameter(true)
-            .mediaType("html", MediaType.TEXT_HTML)
+                // Browser
+                .mediaType("html", MediaType.TEXT_HTML)
+                // API
             .mediaType("json", MediaType.APPLICATION_JSON)
+                // RDF
             .mediaType("turtle", parseMediaType("text/turtle"))
             .mediaType("jsonld", parseMediaType("application/ld+json"))
             .mediaType("rdfxml", parseMediaType("application/rdf+xml"))
+                // Images
             .mediaType("svg", parseMediaType("image/svg+xml"))
             .mediaType("png", MediaType.IMAGE_PNG)
+                .mediaType("dot", parseMediaType("text/vnd+graphviz"))
+                // Archives
+                .mediaType("zip", parseMediaType("application/zip"))
             .mediaType("ro", parseMediaType("application/vnd.wf4ever.robundle+zip"))
-            .mediaType("zip", parseMediaType("application/zip"))
-            .mediaType("dot", parseMediaType("text/vnd+graphviz"))
+                // raw redirects
             .mediaType("yaml", parseMediaType("text/x-yaml"))
             .mediaType("raw", MediaType.APPLICATION_OCTET_STREAM);
     }

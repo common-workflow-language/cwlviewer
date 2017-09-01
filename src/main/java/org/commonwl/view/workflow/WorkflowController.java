@@ -19,7 +19,16 @@
 
 package org.commonwl.view.workflow;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+
 import org.apache.commons.lang.StringUtils;
+import org.commonwl.view.WebConfig;
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -36,17 +45,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 @Controller
 public class WorkflowController {
@@ -58,15 +64,19 @@ public class WorkflowController {
     private final GraphVizService graphVizService;
 
     /**
-     * Autowired constructor to initialise objects used by the controller
-     * @param workflowFormValidator Validator to validate the workflow form
-     * @param workflowService Builds new Workflow objects
-     * @param graphVizService Generates and stores imagess
+     * Autowired constructor to initialise objects used by the controller.
+     * 
+     * @param workflowFormValidator
+     *            Validator to validate the workflow form
+     * @param workflowService
+     *            Builds new Workflow objects
+     * @param graphVizService
+     *            Generates and stores images
      */
     @Autowired
     public WorkflowController(WorkflowFormValidator workflowFormValidator,
                               WorkflowService workflowService,
-                              GraphVizService graphVizService) {
+            GraphVizService graphVizService) {
         this.workflowFormValidator = workflowFormValidator;
         this.workflowService = workflowService;
         this.graphVizService = graphVizService;
@@ -532,7 +542,8 @@ public class WorkflowController {
             }
             return new ModelAndView("loading", "queued", queued);
         } else {
-            return new ModelAndView("workflow", "workflow", workflowModel);
+            return new ModelAndView("workflow", "workflow", workflowModel).addObject("formats",
+                    WebConfig.formats.values());
         }
     }
 }

@@ -287,3 +287,42 @@ polygon.hover {
     font-style: italic;
     margin-bottom: 30px;
 }
+
+@media screen {
+	.permalink {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+
+.help {
+	color: #9af;
+}
+
+@media print {
+	.help {
+		display: none !important;
+	}
+}
+
+#permalink {
+	font-size: smaller;
+	font-family: Consolas, Inconsolata, monospace;
+
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/**
+ * Already showing HTML
+ */
+#format-html { 
+	display: none;
+}
+/**
+ * Workaround (not really) for
+ * https://github.com/common-workflow-language/cwlviewer/issues/166
+ */
+#format-json { 
+	display: none;
+}

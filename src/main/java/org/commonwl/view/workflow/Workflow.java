@@ -19,8 +19,9 @@
 
 package org.commonwl.view.workflow;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.Date;
+import java.util.Map;
+
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.git.GitDetails;
@@ -29,8 +30,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * Representation of a workflow
@@ -221,6 +222,10 @@ public class Workflow {
 
     public String getPermalink() {
         return getPermalink(null);
+    }
+
+    public boolean isPacked() {
+        return retrievedFrom.getPackedId() != null;
     }
 
 }

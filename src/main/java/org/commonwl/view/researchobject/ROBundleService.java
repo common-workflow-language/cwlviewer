@@ -19,28 +19,7 @@
 
 package org.commonwl.view.researchobject;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
-import org.apache.taverna.robundle.Bundle;
-import org.apache.taverna.robundle.Bundles;
-import org.apache.taverna.robundle.manifest.*;
-import org.commonwl.view.cwl.CWLTool;
-import org.commonwl.view.cwl.CWLValidationException;
-import org.commonwl.view.cwl.RDFService;
-import org.commonwl.view.git.GitDetails;
-import org.commonwl.view.git.GitSemaphore;
-import org.commonwl.view.git.GitService;
-import org.commonwl.view.graphviz.GraphVizService;
-import org.commonwl.view.workflow.Workflow;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import static org.apache.commons.io.FileUtils.readFileToString;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,7 +35,32 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.apache.commons.io.FileUtils.readFileToString;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.taverna.robundle.Bundle;
+import org.apache.taverna.robundle.Bundles;
+import org.apache.taverna.robundle.manifest.Agent;
+import org.apache.taverna.robundle.manifest.Manifest;
+import org.apache.taverna.robundle.manifest.PathAnnotation;
+import org.apache.taverna.robundle.manifest.PathMetadata;
+import org.apache.taverna.robundle.manifest.Proxy;
+import org.commonwl.view.cwl.CWLTool;
+import org.commonwl.view.cwl.CWLValidationException;
+import org.commonwl.view.cwl.RDFService;
+import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitSemaphore;
+import org.commonwl.view.git.GitService;
+import org.commonwl.view.graphviz.GraphVizService;
+import org.commonwl.view.workflow.Workflow;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 /**
  * Service handling Research Object Bundles
@@ -197,8 +201,11 @@ public class ROBundleService {
 
             // Git2prov history
             List<Path> history = new ArrayList<>();
-            history.add(Paths.get("http://git2prov.org/git2prov?giturl=" +
-                    gitInfo.getRepoUrl() + "&serialization=PROV-JSON"));
+            // FIXME: Below is a a hack to pretend the URI is a Path
+            String git2prov = "http://git2prov.org/git2prov?giturl=" + gitInfo.getRepoUrl()
+                    + "&serialization=PROV-JSON";
+            Path git2ProvPath = bundle.getRoot().relativize(bundle.getRoot().resolve(git2prov));
+            history.add(git2ProvPath);
             bundle.getManifest().setHistory(history);
 
         } catch (URISyntaxException ex) {
@@ -246,11 +253,13 @@ public class ROBundleService {
                     try {
                         // Where to store the new file
                         Path bundleFilePath = bundlePath.resolve(file.getName());
-                        Path gitPath = Paths.get(gitDetails.getPath()).resolve(file.getName());
-
+                        Path gitFolder = Paths.get(gitDetails.getPath());
+                        String relativePath = gitFolder.resolve(file.getName()).toString();
+                        Path gitPath = bundlePath.getRoot().resolve(relativePath); // would start with /
+                        
                         // Get direct URL permalink
                         URI rawURI = new URI("https://w3id.org/cwl/view/git/" + workflow.getLastCommit() +
-                                "/" + gitPath + "?format=raw");
+                                gitPath + "?format=raw");
 
                         // Variable to store file contents and aggregation
                         String fileContent = null;
