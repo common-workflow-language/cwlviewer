@@ -89,16 +89,22 @@ public class WorkflowPermalinkController {
                             MediaType.APPLICATION_JSON_VALUE,
                             MediaType.APPLICATION_JSON_UTF8_VALUE})
     public void goToViewer(@PathVariable("commitid") String commitId,
+            @RequestParam(name = "part") Optional<String> part,
+            @RequestParam(name = "format") Optional<String> format,
                            HttpServletRequest request,
                            HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
-        response.setHeader("Location", workflow.getRetrievedFrom().getInternalUrl(commitId));
+        String location;
+        Workflow workflow = getWorkflow(commitId, request, part);
+        location = workflow.getRetrievedFrom().getInternalUrl(commitId) + format.map(f -> "?format=" + f).orElse("");
+        response.setHeader("Location", location);
         response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
     }
 
     /**
      * Redirect to the raw file if this exists
-     * @param commitId The commit ID of the workflow
+     *
+     * @param commitId
+     *            The commit ID of the workflow
      * @return A 302 redirect response to the raw URL or 406
      */
     @GetMapping(value = "/git/{commitid}/**",
