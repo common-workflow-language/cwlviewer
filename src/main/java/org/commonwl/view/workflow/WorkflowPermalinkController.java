@@ -129,10 +129,11 @@ public class WorkflowPermalinkController {
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "text/turtle")
     public byte[] getRdfAsTurtle(@PathVariable("commitid") String commitId,
+            @RequestParam(name = "part") Optional<String> part,
                                  HttpServletRequest request,
                                  HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
-        String rdfUrl = workflow.getPermalink();
+        Workflow workflow = getWorkflow(commitId, request, part);
+        String rdfUrl = workflow.getIdentifier();
         if (rdfService.graphExists(rdfUrl)) {
             response.setHeader("Content-Disposition", "inline; filename=\"workflow.ttl\"");
             return rdfService.getModel(rdfUrl, "TURTLE");
@@ -149,10 +150,11 @@ public class WorkflowPermalinkController {
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "application/ld+json")
     public byte[] getRdfAsJsonLd(@PathVariable("commitid") String commitId,
+            @RequestParam(name = "part") Optional<String> part,
                                  HttpServletRequest request,
                                  HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
-        String rdfUrl = workflow.getPermalink();
+        Workflow workflow = getWorkflow(commitId, request, part);
+        String rdfUrl = workflow.getIdentifier();
         if (rdfService.graphExists(rdfUrl)) {
             response.setHeader("Content-Disposition", "inline; filename=\"workflow.jsonld\"");
             return rdfService.getModel(rdfUrl, "JSON-LD");
@@ -169,10 +171,11 @@ public class WorkflowPermalinkController {
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "application/rdf+xml")
     public byte[] getRdfAsRdfXml(@PathVariable("commitid") String commitId,
+            @RequestParam(name = "part") Optional<String> part,
                                  HttpServletRequest request,
                                  HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
-        String rdfUrl = workflow.getPermalink();
+        Workflow workflow = getWorkflow(commitId, request, part);
+        String rdfUrl = workflow.getIdentifier();
         if (rdfService.graphExists(rdfUrl)) {
             response.setHeader("Content-Disposition", "inline; filename=\"workflow.rdf\"");
             return rdfService.getModel(rdfUrl, "RDFXML");
@@ -189,9 +192,10 @@ public class WorkflowPermalinkController {
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "image/svg+xml")
     public FileSystemResource getGraphAsSvg(@PathVariable("commitid") String commitId,
+            @RequestParam(name = "part") Optional<String> part,
                                             HttpServletRequest request,
                                             HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
+        Workflow workflow = getWorkflow(commitId, request, part);
         response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
         return workflowService.getWorkflowGraph("svg", workflow.getRetrievedFrom());
     }
@@ -204,9 +208,10 @@ public class WorkflowPermalinkController {
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "image/png")
     public FileSystemResource getGraphAsPng(@PathVariable("commitid") String commitId,
+            @RequestParam(name = "part") Optional<String> part,
                                             HttpServletRequest request,
                                             HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
+        Workflow workflow = getWorkflow(commitId, request, part);
         response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
         return workflowService.getWorkflowGraph("png", workflow.getRetrievedFrom());
     }
@@ -219,9 +224,10 @@ public class WorkflowPermalinkController {
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "text/vnd+graphviz")
     public FileSystemResource getGraphAsXDot(@PathVariable("commitid") String commitId,
+            @RequestParam(name = "part") Optional<String> part,
                                              HttpServletRequest request,
                                              HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
+        Workflow workflow = getWorkflow(commitId, request, part);
         response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
         return workflowService.getWorkflowGraph("xdot", workflow.getRetrievedFrom());
     }
@@ -235,9 +241,10 @@ public class WorkflowPermalinkController {
     @GetMapping(value = "/git/{commitid}/**",
                 produces = {"application/vnd.wf4ever.robundle+zip", "application/zip"})
     public FileSystemResource getROBundle(@PathVariable("commitid") String commitId,
+            @RequestParam(name = "part") Optional<String> part,
                                           HttpServletRequest request,
                                           HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
+        Workflow workflow = getWorkflow(commitId, request, part);
         File bundleDownload = workflowService.getROBundle(workflow.getRetrievedFrom());
         response.setHeader("Content-Disposition", "attachment; filename=bundle.zip;");
         return new FileSystemResource(bundleDownload);
@@ -245,14 +252,22 @@ public class WorkflowPermalinkController {
 
     /**
      * Get a workflow based on commit ID and extracting path from request
-     * @param commitId The commit ID of the repository
-     * @param request The HttpServletRequest from the controller to extract path
-     * @throws WorkflowNotFoundException If workflow could not be found (404)
+     *
+     * @param commitId
+     *            The commit ID of the repository
+     * @param request
+     *            The HttpServletRequest from the controller to extract path
+     * @param part2
+     * @throws WorkflowNotFoundException
+     *             If workflow could not be found (404)
+     * @throws MultipleWorkflowsException
+     *             If multiple workflow (parts) were found (300)
      */
-    private Workflow getWorkflow(String commitId, HttpServletRequest request) throws WorkflowNotFoundException {
+    private Workflow getWorkflow(String commitId, HttpServletRequest request, Optional<String> part)
+            throws WorkflowNotFoundException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = WorkflowController.extractPath(path, 3);
-        return workflowService.findByCommitAndPath(commitId, path);
+        return workflowService.findByCommitAndPath(commitId, path, part);
     }
 
 }
