@@ -19,11 +19,20 @@
 
 package org.commonwl.view.cwl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import static org.apache.commons.io.FileUtils.readFileToString;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.iri.IRI;
@@ -48,15 +57,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-
-import static org.apache.commons.io.FileUtils.readFileToString;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
@@ -244,7 +249,7 @@ public class CWLService {
         String packedWorkflowID = gitDetails.getPackedId();
 
         // Get paths to workflow
-        String url = basicModel.getPermalink();
+        String url = basicModel.getIdentifier();
         String localPath = workflowFile.toAbsolutePath().toString();
         String gitPath = gitDetails.getPath();
         if (packedWorkflowID != null) {

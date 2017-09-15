@@ -19,6 +19,23 @@
 
 package org.commonwl.view.researchobject;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.net.URI;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.jena.query.ResultSet;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
@@ -41,17 +58,6 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-
-import java.io.File;
-import java.net.URI;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.when;
 
 public class ROBundleServiceTest {
 
@@ -113,9 +119,9 @@ public class ROBundleServiceTest {
         when(lobSTRdraft3.getID()).thenReturn("testID");
         when(lobSTRdraft3.getRetrievedFrom()).thenReturn(lobSTRdraft3Details);
         when(lobSTRdraft3.getLastCommit()).thenReturn("933bf2a1a1cce32d88f88f136275535da9df0954");
-        when(lobSTRdraft3.getPermalink()).thenReturn("https://w3id.org/cwl/view/git/" +
+        when(lobSTRdraft3.getIdentifier()).thenReturn("https://w3id.org/cwl/view/git/" +
                 "933bf2a1a1cce32d88f88f136275535da9df0954/workflows/lobSTR/lobSTR-workflow.cwl");
-        when(lobSTRdraft3.getPermalink(anyString())).thenAnswer(new Answer<String>() {
+        when(lobSTRdraft3.getPermalink(any())).thenAnswer(new Answer<String>() {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();

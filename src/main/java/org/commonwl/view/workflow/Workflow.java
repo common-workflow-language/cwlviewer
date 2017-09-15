@@ -22,6 +22,8 @@ package org.commonwl.view.workflow;
 import java.util.Date;
 import java.util.Map;
 
+import org.commonwl.view.WebConfig;
+import org.commonwl.view.WebConfig.Format;
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.git.GitDetails;
@@ -32,6 +34,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Representation of a workflow
@@ -73,6 +76,8 @@ public class Workflow {
 
     // DOT graph of the contents
     private String visualisationDot;
+
+    private final String permaLinkBase = "https://w3id.org/cwl/view";
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
                     Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink) {
@@ -213,15 +218,52 @@ public class Workflow {
         return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/robundle");
     }
 
-    public String getPermalink(String format) {
-        String formatPart = (format == null || format.isEmpty()) ? "" : "?format=" + format;
-        String packedPart = (retrievedFrom.getPackedId() != null) ? "#" + retrievedFrom.getPackedId() : "";
-        return "https://w3id.org/cwl/view/git/" + lastCommit +
-                "/" + retrievedFrom.getPath() + formatPart + packedPart;
-    }
-
+    /**
+     * Permalink for this workflow. including packed part, but no format
+     *
+     * @return
+     */
     public String getPermalink() {
         return getPermalink(null);
+    }
+
+    /**
+     * Permalink for a particular representation of this workflow. Note that
+     * resolving the permalink will use the official deployment of the CWL Viewer.
+     *
+     * @see {@link https://w3id.org/cwl/view}
+     * @param format
+     *            Format of representation, or <code>null</code> for format-neutral
+     *            permalink that supports content negotiation.
+     * @return A Permalink identifying the representation of this workflow.
+     */
+    public String getPermalink(WebConfig.Format format) {
+
+        String packedPart = "";
+        String formatPartSep = "?";
+        String formatPart = "";
+        if (retrievedFrom.getPackedId() != null && !Format.raw.equals(format)) {
+            // No need for ?part= for ?format=raw
+            packedPart = "?part=" + retrievedFrom.getPackedId();
+            formatPartSep = "&";
+        }
+        if (format != null) {
+            formatPart = formatPartSep + "format=" + format.name();
+        }
+        return permaLinkBase + "/git/" + lastCommit +
+                "/" + retrievedFrom.getPath() + packedPart + formatPart;
+    }
+
+    /**
+     * RDF identifier, uses #hash for parts
+     *
+     * @return
+     */
+    @JsonProperty(value = "@id", index = 0)
+    public String getIdentifier() {
+        String packedPart = (retrievedFrom.getPackedId() != null) ? "#" + retrievedFrom.getPackedId() : "";
+        return permaLinkBase + "/git/" + lastCommit + "/" + retrievedFrom.getPath() + packedPart;
+
     }
 
     public boolean isPacked() {
