@@ -106,13 +106,19 @@ public class WorkflowPermalinkController {
     public void goToRawUrl(@PathVariable("commitid") String commitId,
                            HttpServletRequest request,
                            HttpServletResponse response) {
-        Workflow workflow = getWorkflow(commitId, request);
-        if (workflow.getRetrievedFrom().getType() == GitType.GENERIC) {
+        Optional<String> rawUrl = findRaw(commitId, request);
+        if (!rawUrl.isPresent()) {
             throw new RepresentationNotFoundException();
         } else {
-            response.setHeader("Location", workflow.getRetrievedFrom().getRawUrl(commitId));
+            response.setHeader("Location", rawUrl.get());
             response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
         }
+    }
+
+    private Optional<String> findRaw(String commitId, HttpServletRequest request) {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        final String filepath = WorkflowController.extractPath(path, 3);
+        return workflowService.findRawBaseForCommit(commitId).map(base -> base + filepath);
     }
 
     /**
