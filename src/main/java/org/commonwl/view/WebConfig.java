@@ -21,6 +21,8 @@ package org.commonwl.view;
 
 import static org.springframework.http.MediaType.parseMediaType;
 
+import org.commonwl.view.workflow.Workflow;
+import org.commonwl.view.workflow.WorkflowPermalinkController;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
@@ -30,38 +32,51 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 public class WebConfig extends WebMvcConfigurerAdapter {
 
     /**
-     * Ordered list of formats as presented on Workflow page - must match the
-     * .mediaType() strings below.
+     * Ordered list of formats as presented on Workflow page and supported for
+     * content negotiation.
+     * 
+     * @see Workflow#getPermalink(Format)
+     * @see WorkflowPermalinkController
      *
      */
-    public static enum formats {
-        html, json, turtle, jsonld, rdfxml, svg, png, dot, zip, ro, yaml, raw
+    public static enum Format {
+        // Browser
+        html(MediaType.TEXT_HTML),
+        // API
+        json(MediaType.APPLICATION_JSON),
+        // RDF
+        turtle("text/turtle"), jsonld("application/ld+json"), rdfxml("application/rdf+xml"),
+        // Images
+        svg("image/svg+xml"), png(MediaType.IMAGE_PNG), dot("text/vnd+graphviz"),
+        // Archives
+        zip("application/zip"), ro("application/vnd.wf4ever.robundle+zip"),
+        // raw redirects
+        yaml("text/x-yaml"), raw(MediaType.APPLICATION_OCTET_STREAM);
+
+        private final MediaType mediaType;
+
+        Format(MediaType mediaType) {
+            this.mediaType = mediaType;
+        }
+
+        Format(String mediaType) {
+            this.mediaType = parseMediaType(mediaType);
+        }
+
+        public MediaType mediaType() {
+            return mediaType;
+        }
     }
 
     /**
-     * Allows the use of the format query parameter to be used
-     * instead of the Accept HTTP header
+     * Allows the use of the format query parameter to be used instead of the Accept
+     * HTTP header
      */
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
-        configurer.favorParameter(true)
-                // Browser
-                .mediaType("html", MediaType.TEXT_HTML)
-                // API
-            .mediaType("json", MediaType.APPLICATION_JSON)
-                // RDF
-            .mediaType("turtle", parseMediaType("text/turtle"))
-            .mediaType("jsonld", parseMediaType("application/ld+json"))
-            .mediaType("rdfxml", parseMediaType("application/rdf+xml"))
-                // Images
-            .mediaType("svg", parseMediaType("image/svg+xml"))
-            .mediaType("png", MediaType.IMAGE_PNG)
-                .mediaType("dot", parseMediaType("text/vnd+graphviz"))
-                // Archives
-                .mediaType("zip", parseMediaType("application/zip"))
-            .mediaType("ro", parseMediaType("application/vnd.wf4ever.robundle+zip"))
-                // raw redirects
-            .mediaType("yaml", parseMediaType("text/x-yaml"))
-            .mediaType("raw", MediaType.APPLICATION_OCTET_STREAM);
+        ContentNegotiationConfigurer c = configurer.favorParameter(true);
+        for (Format f : Format.values()) {
+            c = c.mediaType(f.name(), f.mediaType());
+        }
     }
 }
