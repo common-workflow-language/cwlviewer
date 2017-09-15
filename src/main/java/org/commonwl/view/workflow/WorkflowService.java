@@ -19,6 +19,18 @@
 
 package org.commonwl.view.workflow;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
@@ -39,16 +51,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
 
 @Service
 public class WorkflowService {
@@ -532,4 +534,18 @@ public class WorkflowService {
         }
         return false;
     }
+
+    public Optional<String> findRawBaseForCommit(String commitId) {
+        for (Workflow w : workflowRepository.findByCommit(commitId)) {
+            String potentialRaw = w.getRetrievedFrom().getRawUrl(commitId);
+            String path = w.getRetrievedFrom().getPath();
+            if (potentialRaw.endsWith(path)) {
+                return Optional.of(potentialRaw.replace(path, ""));
+            }
+        }
+        // Not found, or not at GitHub/GitLab
+        return Optional.empty();
+
+    }
+
 }
