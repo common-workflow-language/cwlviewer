@@ -19,19 +19,21 @@
 
 package org.commonwl.view.workflow;
 
+import java.io.File;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.commonwl.view.cwl.RDFService;
-import org.commonwl.view.git.GitType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.HandlerMapping;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 
 /**
  * Allows permalinks in URIs across our RDF to identify a
@@ -55,8 +57,31 @@ public class WorkflowPermalinkController {
     }
 
     /**
+     * Generate a URI list of all representations available
+     */
+    @GetMapping(value = "/git/{commitid}/**",
+            produces = { "text/uri-list" })
+    public String uriList(@PathVariable("commitid") String commitId,
+            @RequestParam(name = "part") Optional<String> part, @RequestParam(name = "format") Optional<String> format,
+            HttpServletRequest request, HttpServletResponse response) {
+        // A bit of a hack - reuse the representation of MultipleWorkflowsException,
+        // without setting the Location header or returning 300 Multiple Choices
+        Workflow workflow;
+        try {
+            workflow = getWorkflow(commitId, request, part);
+        } catch (MultipleWorkflowsException ex) {
+            // No problem, we can use its text/uri-list as-is
+            return ex.toString();
+        }
+        // Return uri-list from a pretend MultipleWorkflowsException
+        return new MultipleWorkflowsException(workflow).toString();
+    }
+
+    /**
      * Redirect to the viewer for a web browser or API call
-     * @param commitId The commit ID of the workflow
+     *
+     * @param commitId
+     *            The commit ID of the workflow
      * @return A 302 redirect response to the viewer or 404
      */
     @GetMapping(value = "/git/{commitid}/**",
