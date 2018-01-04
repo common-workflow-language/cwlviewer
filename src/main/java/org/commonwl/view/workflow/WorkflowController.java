@@ -45,7 +45,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -90,7 +89,6 @@ public class WorkflowController {
      * @return The workflows view
      */
     @GetMapping(value="/workflows")
-    @CrossOrigin
     public String listWorkflows(Model model, @PageableDefault(size = 10) Pageable pageable) {
         model.addAttribute("workflows", workflowService.getPageOfWorkflows(pageable));
         model.addAttribute("pages", pageable);

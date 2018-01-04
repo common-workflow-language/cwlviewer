@@ -24,6 +24,7 @@ import static org.springframework.http.MediaType.parseMediaType;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 @Configuration
@@ -63,5 +64,10 @@ public class WebConfig extends WebMvcConfigurerAdapter {
                 // raw redirects
             .mediaType("yaml", parseMediaType("text/x-yaml"))
             .mediaType("raw", MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+	registry.addMapping("/**");  // .setMaxAge(Long.MAX_VALUE)
     }
 }
