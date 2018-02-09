@@ -90,6 +90,8 @@ $ mvn spring-boot:run
 
 Alternatively, you can run the application from your IDE as a simple Java application by importing the Maven project.
 
+You need to install [Graphviz](http://www.graphviz.org/) for all unit tests to pass.
+
 You can create an executable JAR file by using:
 
     mvn clean install
