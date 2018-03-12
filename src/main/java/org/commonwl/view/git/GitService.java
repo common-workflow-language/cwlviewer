@@ -23,6 +23,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -67,7 +68,7 @@ public class GitService {
      * Gets a repository, cloning into a local directory or
      * @param gitDetails The details of the Git repository
      * @param reuseDir Whether the cached repository can be used
-     * @returns The git object for the repository
+     * @return The git object for the repository
      */
     public Git getRepository(GitDetails gitDetails, boolean reuseDir)
             throws GitAPIException, IOException {
@@ -106,12 +107,33 @@ public class GitService {
         if (repo != null) {
             // Create a new local branch if it does not exist and not a commit ID
             String branchOrCommitId = gitDetails.getBranch();
-            if (!ObjectId.isId(branchOrCommitId)) {
+            final boolean isId = ObjectId.isId(branchOrCommitId);
+            if (!isId) {
                 branchOrCommitId = "refs/remotes/origin/" + branchOrCommitId;
             }
-            repo.checkout()
-                    .setName(branchOrCommitId)
-                    .call();
+            try {
+                repo.checkout()
+                        .setName(branchOrCommitId)
+                        .call();
+            }
+            catch (Exception ex) {
+                // Maybe it was a tag
+                if (!isId && ex instanceof RefNotFoundException) {
+                    final String tag = gitDetails.getBranch();
+                    try {
+                        repo.checkout()
+                                .setName(tag)
+                                .call();
+                    }
+                    catch (Exception ex2) {
+                        // Throw the first exception, to keep the same behavior as before.
+                        throw ex;
+                    }
+                }
+                else {
+                    throw ex;
+                }
+            }
         }
 
         return repo;
