@@ -44,5 +44,5 @@ RUN mvn clean package -DskipTests && cp target/cwlviewer-*.jar /usr/lib/cwlviewe
 WORKDIR /tmp
 
 EXPOSE 8080
-
+ENV LC_ALL C.UTF-8
 CMD ["/usr/bin/java", "-jar", "/usr/lib/cwlviewer.jar"]
