@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -85,22 +86,12 @@ public class GitService {
             } else {
                 // Create a folder and clone repository into it
                 Files.createDirectory(repoDir);
-                repo = Git.cloneRepository()
-                        .setCloneSubmodules(cloneSubmodules)
-                        .setURI(gitDetails.getRepoUrl())
-                        .setDirectory(repoDir.toFile())
-                        .setCloneAllBranches(true)
-                        .call();
+                repo = cloneRepo(gitDetails.getRepoUrl(), repoDir.toFile());
             }
         } else {
             // Another thread is already using the existing folder
             // Must create another temporary one
-            repo = Git.cloneRepository()
-                    .setCloneSubmodules(cloneSubmodules)
-                    .setURI(gitDetails.getRepoUrl())
-                    .setDirectory(createTempDir())
-                    .setCloneAllBranches(true)
-                    .call();
+            repo = cloneRepo(gitDetails.getRepoUrl(), createTempDir());
         }
 
         // Checkout the specific branch or commit ID
@@ -206,4 +197,19 @@ public class GitService {
         }
     }
 
+    /**
+     * Clones a Git repository
+     * @param repoUrl the url of the Git repository
+     * @param directory the directory to clone the repo into
+     * @return a Git instance
+     * @throws GitAPIException if any error occurs cloning the repo
+     */
+    protected Git cloneRepo(String repoUrl, File directory) throws GitAPIException {
+        return Git.cloneRepository()
+                .setCloneSubmodules(cloneSubmodules)
+                .setURI(repoUrl)
+                .setDirectory(directory)
+                .setCloneAllBranches(true)
+                .call();
+    }
 }
