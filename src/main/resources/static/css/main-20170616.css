@@ -326,3 +326,13 @@ polygon.hover {
 #format-json { 
 	display: none;
 }
+
+/**
+ * Light email-obfuscation 
+ */
+.obf-hide {
+  display: none;
+}
+.obf-at::before { 
+  content: "@" 
+ }
