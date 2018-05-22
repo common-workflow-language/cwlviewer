@@ -25,7 +25,7 @@
     <title>About - Common Workflow Language Viewer</title>
     <link rel="stylesheet" th:href="@{/bower_components/bootstrap/dist/css/bootstrap.min.css}" href="../static/bower_components/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" th:href="@{/bower_components/highlightjs/styles/github.css}" href="../static/bower_components/highlightjs/styles/default.css" />
-    <link rel="stylesheet" type="text/css" th:href="@{/css/main-20170616.css}" href="../static/css/main-20170616.css" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main-20180518.css}" href="../static/css/main-20180518.css" />
 </head>
 <body>
 
@@ -34,32 +34,104 @@
 <div class="container">
     <div class="row">
         <div class="col-md-12" role="main" id="main">
+
+		<section id="about">
             <h1>About</h1>
             <div style="position:relative;float:right;height:0;padding-bottom:30%;width:50%;margin-left:20px;">
                 <iframe src="https://www.youtube-nocookie.com/embed/_yjhVTmvxLU?rel=0?ecver=2" style="position:absolute;width:100%;height:100%;left:0" allowfullscreen="true"></iframe>
             </div>
 
             <p>CWL Viewer is a richly featured web visualisation suite for workflows written in the
-                <a href="http://www.commonwl.org/">Common Workflow Language</a> with an aim of facilitating sharing,
+                <a href="https://www.commonwl.org/">Common Workflow Language</a> with an aim of facilitating sharing,
                 understanding and discovery as well as encouraging best practices when writing workflows and their
                 tooling.</p>
 
             <p>Cite as: <code><a href="https://doi.org/10.7490/f1000research.1114375.1">https://doi.org/10.7490/f1000research.1114375.1</a></code></p>
+            <p>Technical Report: <a href="https://doi.org/10.5281/zenodo.848163">https://doi.org/10.5281/zenodo.848163</a></p>
 
-            <p>A <a href="https://doi.org/10.5281/zenodo.823535">Technical Report for this project can be viewed here</a>.</p>
-
-            <p>CWL Viewer also won the <a href="https://f1000research.com/">F1000Research</a> Best Poster Award at
+            <p>CWL Viewer also won the <a href="https://f1000research.com/">F1000Research</a> Best Poster 
+            	<a href="https://bioexcel.eu/poster-award-for-cwlviewer/"Award</a> at
                 <a href="https://www.iscb.org/ismbeccb2017">ISMB/ECCB 2017</a> for its
                 <a href="https://doi.org/10.7490/f1000research.1114375.1">poster submission.</a></p>
 
-            <p>This project was developed at the <a href="http://www.esciencelab.org.uk/">eScience Lab</a> at
-            <a href="http://www.manchester.ac.uk/">The University of Manchester</a>, with work supported by
-            <a href="http://bioexcel.eu/">Bioexcel</a>, funded by the European Union Horizon 2020 program under
-            <a href="http://cordis.europa.eu/projects/675728">grant agreement 675728.</a></p>
+            <p>This project was developed at the <a href="https://www.esciencelab.org.uk/">eScience Lab</a> at
+            <a href="https://www.manchester.ac.uk/">The University of Manchester</a>, with work supported by
+            <a href="https://bioexcel.eu/">Bioexcel</a>, funded by the European Union Horizon 2020 program under
+            <a href="https://cordis.europa.eu/projects/675728">grant agreement 675728.</a></p>
 
-            <p>Contributions are welcome in the form of issues and pull requests to the
+            <p>Contributions are welcome in the form of <em>issues</em> and 
+            	<em>pull requests</em> to the
                 <a href="https://github.com/common-workflow-language/cwlviewer">Github repository</a>.</p>
+		</section>
+			
 
+		<section id="privacy"> 
+            <h1>Privacy policy</h1>
+            <p>CWL Viewer publish visualizations of workflows from publicly available 
+            <em>git</em> repositories hosted by third-parties like <a href="https://github.com/">GitHub</a>
+            or <a href="https://about.gitlab.com/">GitLab</a>.             
+            Anyone can submit a workflow, which will be added 
+            to our <a href="/workflows">public listing</a>.                         
+            </p>
+            
+            <section id="track-use">            
+            <h2>Tracking usage</h2>
+            <p>
+            We do not track individual users of CWL Viewer, but we do record 
+            general usage (e.g. web server access log) 
+            for operational purposes and to prevent abuse.            
+            We may use HTTP session cookies in order to assist 
+            workflow submission, but do not use cookies to identify users.
+            </section>
+            </p>
+            <section id="what-info">            
+            <h2>What information is held?</h2>
+			<p>
+			We hold information about public open source workflows in order 
+			to visualize them graphically and textually, as well as making their 
+			declared metadata accessible to the public in different formats such as linked data.
+			This information may be held until explicitly requested for removal, however
+			we reserve the right to remove any workflow from listing without prior notice.
+			</p>
+            <p>
+            Metadata shown from the public workflows may include personal data, 
+            including authorship or as part of workflow descriptions. 
+            We retrieve this information from the submitted git repository.       
+            Downloading a workflow or its metadata may include 
+            information from the git repository not otherwise
+            shown in the CWL Viewer interface, e.g. authors from git commit history. 
+            </p>
+            <p>
+            For performance reasons the CWL Viewer may keep a copy of the 
+            checked out git repository and the derived metadata. 
+            We may at a later date retrieve published changes 
+            from the original repository to update the information held.            
+            </p>
+            </section>
+             
+            <section>
+            <h2>Data controller</h2>            
+            <p>            
+            The <em>Data Controller</em> for the
+            <a href="https://view.commonwl.org/">https://view.commonwl.org/</a> instance of CWL Viewer 
+            is The University of Manchester, contact             
+            <a href="javascript:window.location.href=atob('bWFpbHRvOmluZm9AZXNjaWVuY2VsYWIub3JnLnVr')"
+            <code><span class="obf-hide">NOT</span>info<span class="obf-at"></span><span class="obf-hide">()</span><span class="obf-hide">NONE</span>esciencelab.org.uk</code></a> for any enquiries.
+            If this viewer is accessed at a different URL, the data controller is likely someone else.
+            </p>
+            <p>            
+            <span class="obf-hide">(sorry non-css-non-JS folks, manual de-obfuscation needed above)</span>
+            You may contact the Data Controller to request access to data about yourself, 
+            or to request update or removal of your personally identifiable information.
+            You may also want to follow the <em>Shown Workflow</em> link at the bottom 
+            of any workflow page to locate the corresponding git repository from 
+            the original publisher.
+            </p>
+            
+		</section>                
+
+
+		<section id="best-practice">
             <h1>Best Practices</h1>
             <p>In order to ensure that your workflow is well presented in CWL Viewer, we recommend the following of
             <a href="http://www.commonwl.org/user_guide/rec-practices/">CWL Best Practices</a>. Those which are
@@ -67,6 +139,7 @@
                 many as possible to include the general quality and reproducibility of your workflows.</p>
             <p>Some limitations of the CWL Viewer which you may need to be aware of are also described here.</p>
 
+            <section id="label">
             <h2>Label Strings</h2>
             <p class="recommendation">Include a top level short <code>label</code> summarising each tool and workflow</p>
             <p class="why">Labels give the user an easy human-readable version of the name for the tool or workflow</p>
@@ -75,8 +148,10 @@
                 is given at the step level, it will take priority over the top level tool <code>label</code>. You can
                 use this to provide a more descriptive label of the tool's application in the particular step if
                 preferred.</p>
+			</section>                
 
-            <h2>Doc Strings</h2>
+			<section id="conceptual">
+            <h2 id="doc">Doc Strings</h2>
             <p class="recommendation">If useful, include a top level <code>doc</code> string providing a longer, more detailed description
                 than was provided in the <code>label</code> (see above)</p>
             <p class="why">Docs give the user a detailed description of the role a tool or workflow performs</p>
@@ -84,7 +159,9 @@
                 displayed in the table. If a <code>doc</code> string is given at the step level, it will take priority
                 over the top level tool doc. You can use this to provide a more descriptive label of the tool's
                 application in the particular step if preferred</p>
+            </section>
 
+			<section id="conceptual">
             <h2>Conceptual Identifiers</h2>
             <p class="recommendation">All <code>input</code> and <code>output</code> identifiers should reflect their conceptual identity.
                Generic and uninformative names such as <code>result</code> or <code>input</code>/<code>output</code>
@@ -92,7 +169,9 @@
             <p class="why">Helpful identifiers allow for the links between steps in the CWL file to be easily distinguished</p>
             <p class="use">Identifiers are displayed in the tables and are unique to the step. The <code>label</code> is also
             used as a replacement for the identifier in the visualisation if provided.</p>
+            </section>
 
+			<section id="format">
             <h2>Format Specification</h2>
             <p class="recommendation">The <code>format</code> field should be specified for all input and output <code>File</code>s</p>
             <p class="recommendation_more">
@@ -107,14 +186,16 @@
             for compatibility in formatting of files</p>
             <p class="use">Ontologies will be parsed and the name of and link to the format displayed in the table on workflow
                 pages. Plain formats will have the iana.org link given but will not display the name of the format.</p>
+			</section>
 
+			<section id="separation-of-concerns"> 
             <h2>Separation of Concerns</h2>
             <p class="recommendation">Each <code>CommandLineTool</code> description should focus on a single operation only, even if the
                 (sub)command is capable of more.</p>
             <p class="why">This allows for easier reuse of the tool in other workflows and understanding as to it's purpose</p>
             <p class="use">In CWL Viewer this ensures that steps are clear in purpose within the workflow and generated visualisation</p>
 
-            <h2>JavaScript Elimination</h2>
+            <h2 id="javascript">JavaScript Elimination</h2>
             <p class="recommendation">Evaluate all use of JavaScript for possible elimination or replacement. For instance, for the
                 manipulation of <code>File</code> names and paths, often one of the built in <code>File</code>
                 properties such as <code>basename</code>, <code>nameroot</code>, <code>nameext</code> etc
@@ -123,7 +204,9 @@
                 makes JavaScript expressions a last resort</p>
             <p class="use">CWL viewer does not take into account JavaScript expressions when extracting information about your
                 workflows</p>
+            </section>
 
+			<section id="subworkflows">
             <h2>Use of Subworkflows</h2>
             <p class="recommendation">CWL implementations which also implement <code>SubworkflowFeatureRequirement</code> can support nesting
             workflows as a step within others. Complex workflows with individual components which can be abstracted
@@ -132,7 +215,9 @@
                 them able to be understood more easily</p>
             <p class="use">Subworkflows are simplified in the visualisations and are linked as a different workflow in the
             <code>Step</code> tables on each workflow page</p>
+            </section>
 
+			<section id="attribution">
             <h2>Attribution</h2>
             <p class="recommendation">Include attribution information in your workflow and tool descriptions</p>
             <p class="recommendation_more">
@@ -155,7 +240,9 @@ s:author:
             <p class="use">CWLViewer parses attribution information for inclusion in the Research Object Manifest from
             both the Git commit logs and from the CWL descriptions themselves when expressed in the
             <a href="http://schema.org/author">http://schema.org/author</a> format as above</p>
+            </section>
 
+			<section  id="licensing">
             <h2>Licensing</h2>
             <p class="recommendation">Include a <a href="https://opensource.org/licenses">OSI approved open source license</a>
             in your workflow and tool descriptions</p>
@@ -167,34 +254,32 @@ $namespaces: { s: "http://schema.org/" }
 s:license: "https://www.apache.org/licenses/LICENSE-2.0"
 </pre>
             </p>
+            
             <p class="why">A permissive open source license allows others to remix and use your tooling and workflows
             to prevent the community from repeating development effort, allowing everyone to benefit</p>
             <p class="use">CWL Viewer is designed to allow people to locate and make use of the workflows developed by
             others as well as to share and demonstrate work, and open source licenses promote this goal</p>
+            </section>
+		</section>
 
+			
+		<section id="limitations"> 
             <h1>Limitations</h1>
-            <h2>Packed Workflows</h2>
-            <p>In the Common Workflow Language, multiple files can be combined into a single one to create a
-               self-contained document with all the components of a workflow. In the reference implementation
-               this is done by using <code>cwltool --pack</code>.</p>
-            <p>CWL Viewer treats each file as an independent workflow and although it can parse a workflow from the file,
-            it is not possible to choose which and any nested workflows are not able to be viewed.
-                (<a href="https://github.com/common-workflow-language/cwlviewer/issues/103">see Github issue</a>)</p>
-
             <h2>Research Objects</h2>
             <p>Research Objects are constructed from the containing directory of the workflow file. This means tooling
                 external to the directory but used by the workflow will not be included
                 (<a href="https://github.com/common-workflow-language/cwlviewer/issues/103">see Github issue</a>)</p>
             <p>We recommend that you keep all files in the containing folder for current use of CWL Viewer</p>
 
-            <h2>SSH Cloning</h2>
+            <h2 id="ssh">SSH Cloning</h2>
             <p>SSH URLs are not able to be cloned or used as submodules due to the need for SSH keys to be set up.</p>
             <p>We do not plan SSH support due to the impact on reproducibility from this being made a required
             step to download the workflow.</p>
 
-            <h2>Others</h2>
+            <h2 id="others">Others</h2>
             <p>Other limitations or unimplemented features can be viewed
                 <a href="https://github.com/common-workflow-language/cwlviewer">on the Github issues page</a></p>
+		</section>                
         </div>
     </div>
 </div>

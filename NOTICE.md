@@ -1,8 +1,8 @@
 # CWL Viewer
 https://github.com/common-workflow-language/cwlviewer/
 
-* Copyright (c) 2016-2017 Mark Robinson http://orcid.org/0000-0002-8184-7507
-* Copyright (c) 2016-2017 The University of Manchester
+* Copyright (c) 2016-2017 Mark Robinson https://orcid.org/0000-0002-8184-7507
+* Copyright (c) 2016-2018 The University of Manchester
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,8 +32,7 @@ This logo may be used only for attribution within the CWL Viewer project.
 img/BioExcel_logo_cropped.svg
 http://bioexcel.eu/
 
-Distributed under a Creative Commons Attribution 4.0 license.
-https://creativecommons.org/licenses/by/4.0/
+Distributed under a [Creative Commons Attribution 4.0 license](https://creativecommons.org/licenses/by/4.0/)
 
 -----------
 
