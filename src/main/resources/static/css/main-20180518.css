@@ -328,3 +328,20 @@ td.run, td.doc {
 #format-html { 
 	display: none;
 }
+/**
+ * Workaround (not really) for
+ * https://github.com/common-workflow-language/cwlviewer/issues/166
+ */
+#format-json { 
+	display: none;
+}
+
+/**
+ * Light email-obfuscation 
+ */
+.obf-hide {
+  display: none;
+}
+.obf-at::before { 
+  content: "@" 
+ }

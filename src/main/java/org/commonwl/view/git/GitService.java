@@ -23,6 +23,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -32,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -67,7 +69,7 @@ public class GitService {
      * Gets a repository, cloning into a local directory or
      * @param gitDetails The details of the Git repository
      * @param reuseDir Whether the cached repository can be used
-     * @returns The git object for the repository
+     * @return The git object for the repository
      */
     public Git getRepository(GitDetails gitDetails, boolean reuseDir)
             throws GitAPIException, IOException {
@@ -84,34 +86,45 @@ public class GitService {
             } else {
                 // Create a folder and clone repository into it
                 Files.createDirectory(repoDir);
-                repo = Git.cloneRepository()
-                        .setCloneSubmodules(cloneSubmodules)
-                        .setURI(gitDetails.getRepoUrl())
-                        .setDirectory(repoDir.toFile())
-                        .setCloneAllBranches(true)
-                        .call();
+                repo = cloneRepo(gitDetails.getRepoUrl(), repoDir.toFile());
             }
         } else {
             // Another thread is already using the existing folder
             // Must create another temporary one
-            repo = Git.cloneRepository()
-                    .setCloneSubmodules(cloneSubmodules)
-                    .setURI(gitDetails.getRepoUrl())
-                    .setDirectory(createTempDir())
-                    .setCloneAllBranches(true)
-                    .call();
+            repo = cloneRepo(gitDetails.getRepoUrl(), createTempDir());
         }
 
         // Checkout the specific branch or commit ID
         if (repo != null) {
             // Create a new local branch if it does not exist and not a commit ID
             String branchOrCommitId = gitDetails.getBranch();
-            if (!ObjectId.isId(branchOrCommitId)) {
+            final boolean isId = ObjectId.isId(branchOrCommitId);
+            if (!isId) {
                 branchOrCommitId = "refs/remotes/origin/" + branchOrCommitId;
             }
-            repo.checkout()
-                    .setName(branchOrCommitId)
-                    .call();
+            try {
+                repo.checkout()
+                        .setName(branchOrCommitId)
+                        .call();
+            }
+            catch (Exception ex) {
+                // Maybe it was a tag
+                if (!isId && ex instanceof RefNotFoundException) {
+                    final String tag = gitDetails.getBranch();
+                    try {
+                        repo.checkout()
+                                .setName(tag)
+                                .call();
+                    }
+                    catch (Exception ex2) {
+                        // Throw the first exception, to keep the same behavior as before.
+                        throw ex;
+                    }
+                }
+                else {
+                    throw ex;
+                }
+            }
         }
 
         return repo;
@@ -184,4 +197,19 @@ public class GitService {
         }
     }
 
+    /**
+     * Clones a Git repository
+     * @param repoUrl the url of the Git repository
+     * @param directory the directory to clone the repo into
+     * @return a Git instance
+     * @throws GitAPIException if any error occurs cloning the repo
+     */
+    protected Git cloneRepo(String repoUrl, File directory) throws GitAPIException {
+        return Git.cloneRepository()
+                .setCloneSubmodules(cloneSubmodules)
+                .setURI(repoUrl)
+                .setDirectory(directory)
+                .setCloneAllBranches(true)
+                .call();
+    }
 }
