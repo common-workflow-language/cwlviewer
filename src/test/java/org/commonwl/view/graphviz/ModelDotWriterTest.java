@@ -91,7 +91,7 @@ public class ModelDotWriterTest {
         outputs.put("output", output);
 
         // Save workflow model
-        testWorkflow = new Workflow("Example Workflow", "Description", inputs, outputs, steps, null);
+        testWorkflow = new Workflow("Example Workflow", "Description", inputs, outputs, steps);
     }
 
     /**

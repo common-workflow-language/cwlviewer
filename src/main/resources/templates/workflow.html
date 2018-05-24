@@ -144,7 +144,7 @@ digraph G {
         <div class="col-md-6 text-right hidden-xs">
             <img class="verification_icon" src="../static/img/tick.svg" th:src="@{/img/tick.svg}" width="20" height="22" /> Verified with cwltool version <samp th:text="${workflow.cwltoolVersion}">1.0.20170622090721</samp>
         </div>
-        
+
         <div class="col-md-12" style="margin-top:5px;" th:if="${workflow.doc != null}">
             <p id="workflow-doc" th:text="${workflow.doc}">This workflow documentation explains the purpose of the workflow and the main techniques used. Steps are documented individually further down. This is just an example documentation for the template, real documentation might be even longer than this!</p>
         </div>
@@ -157,8 +157,8 @@ digraph G {
                           <a id="permalink" th:href="${workflow.permalink}" th:text="${workflow.permalink}"
                              href="#">https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/larger/test-hello.cwl</a>
                 </div>
-            
-        </div>    
+
+        </div>
         <div class="col-lg-3 col-md-4 col-sm-6 hidden-xs">
             <div id="graph-menu hidden-print" class="pull-right">
                 <button id="view-dot" class="hidden-print hidden-sm-down btn btn-primary" type="button" data-toggle="modal" data-target="#dotGraph">View DOT</button>
@@ -198,6 +198,44 @@ digraph G {
                 </a>
                 <img th:if="${workflow.dockerLink == 'true'}" id="dockerLogo" th:src="@{/img/Docker-logo.png}" src="../static/img/Docker-logo.png" alt="docker logo" />
             </div>
+            <div th:if="${workflow.licenseLink != null}" class="alert alert-success" role="alert">
+            	<span class="hidden-xs">This workflow is Open Source and may be reused according to the terms of:</span>
+            	<a href="http://example.com/" th:href="@{${workflow.licenseLink}}" class="alert-link">
+        						<span th:remove="tag" th:switch="${workflow.licenseLink}">
+        							<!-- TODO: Move license 'registry' to controller? -->
+        							<span th:remove="tag" th:case="'https://www.apache.org/licenses/LICENSE-2.0'">
+        								Apache License, version 2.0
+        							</span>
+        							<span th:remove="tag" th:case="'http://www.apache.org/licenses/LICENSE-2.0'">
+        								Apache License, version 2.0
+        							</span>
+        							<span th:remove="tag" th:case="'https://spdx.org/licenses/Apache-2.0'">
+        								Apache License, version 2.0
+        							</span>
+        							<span th:remove="tag" th:case="'https://mit-license.org/'">
+        								MIT License
+        							</span>
+        							<span th:remove="tag" th:case="'https://spdx.org/licenses/AGPL-3.0'">
+        								GNU Affero General Public License v3.0
+        							</span>
+        							<span th:remove="tag" th:case="'http://www.gnu.org/licenses/agpl.txt'">
+        								GNU Affero General Public License
+        							</span>
+        							<span th:remove="tag" th:case="'http://www.opensource.org/licenses/AGPL-3.0'">
+        								GNU Affero General Public License v3.0
+        							</span>
+									<div th:remove="tag" th:case="*" th:text="${workflow.licenseLink}">
+        								<!--  FIXME: This may not be an open source license! -->
+										http://example.com/LICENSE
+        							</div>
+        						</span>
+				</a>
+				<div class="hidden-xs"><small>Note that the <em>tools</em> invoked by the workflow may have separate licenses.</small></div>
+			</div>
+			<div th:unless="${workflow.licenseLink}" class="alert alert-warning" role="alert">
+				Unknown workflow license, check
+				<a th:href="@{${workflow.retrievedFrom.getUrl()}}" href="#" rel="noopener" target="_blank">source repository</a>.
+			</div>
             <h2>Inputs</h2>
             <div th:if="${workflow.inputs.isEmpty()}" class="alert alert-info">
                 <p>There are no inputs in this workflow</p>
@@ -295,7 +333,7 @@ digraph G {
     </div>
     <div class="row hidden-print">
     	<div class="col-md-12 text-center" id="formats">
-    	   <span th:each="format : ${formats}">    		
+    	   <span th:each="format : ${formats}">
             <a th:id="|format-${format}|" role="button" class="btn btn-default btn-sm" th:href="${workflow.getPermalink(format.name())}" th:text="${format}"
                       href="#">html</a>
            </span>
@@ -305,7 +343,7 @@ digraph G {
       <address>Permalink:
       	<code th:text="${workflow.permalink}">https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/larger/test-hello.cwl</code>
       </address>
-    </div>        
+    </div>
 </div>
 
 <div th:replace="fragments/footer :: copy"></div>

@@ -119,7 +119,7 @@ public class WorkflowServiceTest {
                 "master", "dna.cwl");
 
         Workflow oldWorkflow = new Workflow("old", "This is the expired workflow",
-                new HashMap<>(), new HashMap<>(), new HashMap<>(), null);
+                new HashMap<>(), new HashMap<>(), new HashMap<>());
         oldWorkflow.setId("theworkflowid");
         oldWorkflow.setRetrievedOn(new Date());
         oldWorkflow.setRetrievedFrom(githubInfo);
@@ -127,7 +127,7 @@ public class WorkflowServiceTest {
         oldWorkflow.setRoBundlePath(roBundleFolder.newFile("robundle.zip").getAbsolutePath());
 
         Workflow updatedWorkflow = new Workflow("new", "This is the updated workflow",
-                new HashMap<>(), new HashMap<>(), new HashMap<>(), null);
+                new HashMap<>(), new HashMap<>(), new HashMap<>());
         updatedWorkflow.setId("newworkflowid");
 
         WorkflowRepository mockWorkflowRepo = Mockito.mock(WorkflowRepository.class);
@@ -174,7 +174,7 @@ public class WorkflowServiceTest {
     public void getROBundle() throws Exception {
 
         Workflow workflow = new Workflow("Label", "Doc for the workflow",
-                new HashMap<>(), new HashMap<>(), new HashMap<>(), null);
+                new HashMap<>(), new HashMap<>(), new HashMap<>());
         workflow.setRetrievedFrom(new GitDetails("url", "commitID", "path"));
         workflow.setLastCommit("commitID");
 
