@@ -25,9 +25,12 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -211,7 +214,7 @@ public class CWLService {
 
             // Construct the rest of the workflow model
             Workflow workflowModel = new Workflow(label, extractDoc(cwlFile), getInputs(cwlFile),
-                    getOutputs(cwlFile), getSteps(cwlFile), null);
+                    getOutputs(cwlFile), getSteps(cwlFile));
 
             workflowModel.setCwltoolVersion(cwlTool.getVersion());
 
@@ -251,7 +254,7 @@ public class CWLService {
         // Get paths to workflow
         String url = basicModel.getIdentifier();
         String workflowFileURI = workflowFile.toAbsolutePath().toUri().toString();
-        String workTreeUri = workTree.toAbsolutePath().toUri().toString();
+        URI workTreeUri = workTree.toAbsolutePath().toUri();
 		String localPath = workflowFileURI;
         String gitPath = gitDetails.getPath();
         if (packedWorkflowID != null) {
@@ -268,7 +271,7 @@ public class CWLService {
             String rdf = cwlTool.getRDF(localPath);
             // Replace /tmp/123123 with permalink base 
             // NOTE: We do not just replace workflowFileURI, all referenced files will also get rewritten
-			rdf = rdf.replace(workTreeUri,
+			rdf = rdf.replace(workTreeUri.toString(),
                     "https://w3id.org/cwl/view/git/" + latestCommit + "/");
             // Workaround for common-workflow-language/cwltool#427
             rdf = rdf.replace("<rdfs:>", "<http://www.w3.org/2000/01/rdf-schema#>");
@@ -419,6 +422,22 @@ public class CWLService {
                 wfSteps.put(rdfService.labelFromName(uri), wfStep);
             }
         }
+        // Try to determine license
+        ResultSet licenseResult = rdfService.getLicense(url);
+        String licenseLink = null;
+        if (licenseResult.hasNext()) {
+        	licenseLink = licenseResult.next().get("license").toString();
+        } else {
+        	// Check for "LICENSE"-like files in root of git repo
+        	for (String licenseCandidate : new String[]{"LICENSE", "LICENSE.txt", "LICENSE.md"}) {
+        		// FIXME: This might wrongly match lower-case "license.txt" in case-insensitive file systems
+        		// but the URL would not work
+        		if (Files.isRegularFile(workTree.resolve(licenseCandidate))) {
+        			// Link to it by raw URL
+        			licenseLink = basicModel.getRetrievedFrom().getRawUrl(null, licenseCandidate);
+        		}
+			}
+        }
 
         // Docker link
         ResultSet dockerResult = rdfService.getDockerLink(url);
@@ -434,7 +453,8 @@ public class CWLService {
 
         // Create workflow model
         Workflow workflowModel = new Workflow(label, doc,
-                wfInputs, wfOutputs, wfSteps, dockerLink);
+                wfInputs, wfOutputs, wfSteps, 
+                dockerLink, licenseLink);
 
         // Generate DOT graph
         StringWriter graphWriter = new StringWriter();

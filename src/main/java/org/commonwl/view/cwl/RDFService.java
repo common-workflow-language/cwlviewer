@@ -36,6 +36,8 @@ public class RDFService {
     private final String queryCtx = "PREFIX cwl: <https://w3id.org/cwl/cwl#>\n" +
             "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
             "PREFIX sld: <https://w3id.org/cwl/salad#>\n" +
+            "PREFIX dct: <http://purl.org/dc/terms/>\n" +
+            "PREFIX doap: <http://usefulinc.com/ns/doap#>\n" +
             "PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>\n" +
             "PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>\n" +
             "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
@@ -430,5 +432,21 @@ public class RDFService {
             return ResultSetFactory.copyResults(qexec.execSelect());
         }
     }
+
+	public ResultSet getLicense(String workflowURI) {
+        ParameterizedSparqlString licenseQuery = new ParameterizedSparqlString();
+        licenseQuery.setCommandText(queryCtx +
+                "SELECT ?license \n" +
+                "WHERE {\n" +
+                "  GRAPH ?wf {" +
+                "    ?wf rdf:type cwl:Workflow .\n" +
+                "    { ?wf s:license ?license } \n" +
+                "UNION { ?wf doap:license ?license } \n" +
+                "UNION { ?wf dct:license ?license } \n" +
+                "  }" +
+                "}");
+        licenseQuery.setIri("wf", workflowURI);
+        return runQuery(licenseQuery);
+	}
 
 }
