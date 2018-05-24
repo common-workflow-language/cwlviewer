@@ -250,7 +250,8 @@ public class CWLService {
 
         // Get paths to workflow
         String url = basicModel.getIdentifier();
-        String workflowFileURI = workflowFile.toUri().toString();
+        String workflowFileURI = workflowFile.toAbsolutePath().toUri().toString();
+        String workTreeUri = workTree.toAbsolutePath().toUri().toString();
 		String localPath = workflowFileURI;
         String gitPath = gitDetails.getPath();
         if (packedWorkflowID != null) {
@@ -265,8 +266,10 @@ public class CWLService {
         // Get RDF representation from cwltool
         if (!rdfService.graphExists(url)) {
             String rdf = cwlTool.getRDF(localPath);
-            rdf = rdf.replace(workflowFileURI,
-                    "https://w3id.org/cwl/view/git/" + latestCommit);
+            // Replace /tmp/123123 with permalink base 
+            // NOTE: We do not just replace workflowFileURI, all referenced files will also get rewritten
+			rdf = rdf.replace(workTreeUri,
+                    "https://w3id.org/cwl/view/git/" + latestCommit + "/");
             // Workaround for common-workflow-language/cwltool#427
             rdf = rdf.replace("<rdfs:>", "<http://www.w3.org/2000/01/rdf-schema#>");
 
