@@ -119,14 +119,15 @@ public class ROBundleServiceTest {
         when(lobSTRdraft3.getID()).thenReturn("testID");
         when(lobSTRdraft3.getRetrievedFrom()).thenReturn(lobSTRdraft3Details);
         when(lobSTRdraft3.getLastCommit()).thenReturn("933bf2a1a1cce32d88f88f136275535da9df0954");
-        when(lobSTRdraft3.getIdentifier()).thenReturn("https://w3id.org/cwl/view/git/" +
-                "933bf2a1a1cce32d88f88f136275535da9df0954/workflows/lobSTR/lobSTR-workflow.cwl");
+        final String permalink = "https://w3id.org/cwl/view/git/" +
+                "933bf2a1a1cce32d88f88f136275535da9df0954/workflows/lobSTR/lobSTR-workflow.cwl";
+		when(lobSTRdraft3.getIdentifier()).thenReturn(permalink);
+		when(lobSTRdraft3.getPermalink()).thenReturn(permalink);
         when(lobSTRdraft3.getPermalink(any())).thenAnswer(new Answer<String>() {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
-                return "https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/" +
-                        "workflows/lobSTR/lobSTR-workflow.cwl?format=" + args[0];
+                return permalink + "?format=" + args[0];
             }
         });
     }
