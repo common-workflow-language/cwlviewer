@@ -151,7 +151,7 @@ public class WorkflowJSONControllerTest {
     @Test
     public void getWorkflowByGithubDetailsJson() throws Exception {
 
-        Workflow workflow1 = new Workflow("label", "doc", null, null, null, null);
+        Workflow workflow1 = new Workflow("label", "doc", null, null, null);
         workflow1.setRetrievedFrom(new GitDetails("https://github.com/owner/repo.git",
                 "branch", "path/to/workflow.cwl"));
 
@@ -198,7 +198,7 @@ public class WorkflowJSONControllerTest {
 
         QueuedWorkflow qwfSuccess = new QueuedWorkflow();
         qwfSuccess.setCwltoolStatus(CWLToolStatus.SUCCESS);
-        Workflow wfSuccess = new Workflow(null, null, null, null, null, null);
+        Workflow wfSuccess = new Workflow(null, null, null, null, null);
         wfSuccess.setRetrievedFrom(new GitDetails("https://github.com/owner/repoName.git",
                 "branch", "path/to/workflow.cwl"));
         qwfSuccess.setTempRepresentation(wfSuccess);

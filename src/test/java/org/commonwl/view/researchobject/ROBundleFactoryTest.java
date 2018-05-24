@@ -44,7 +44,7 @@ public class ROBundleFactoryTest {
     public void bundleForValidWorkflow() throws Exception {
 
         Workflow validWorkflow = new Workflow("Valid Workflow", "Doc for Valid Workflow",
-                new HashMap<>(), new HashMap<>(), new HashMap<>(), null);
+                new HashMap<>(), new HashMap<>(), new HashMap<>());
         validWorkflow.setRetrievedFrom(Mockito.mock(GitDetails.class));
 
         // Mocked path to a RO bundle
