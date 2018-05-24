@@ -36,6 +36,8 @@ public class RDFService {
     private final String queryCtx = "PREFIX cwl: <https://w3id.org/cwl/cwl#>\n" +
             "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
             "PREFIX sld: <https://w3id.org/cwl/salad#>\n" +
+            "PREFIX dct: <http://purl.org/dc/terms/>\n" +
+            "PREFIX doap: <http://usefulinc.com/ns/doap#>\n" +
             "PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>\n" +
             "PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>\n" +
             "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
@@ -322,6 +324,39 @@ public class RDFService {
         return runQuery(dockerQuery);
     }
 
+    /**
+     * Get authors from schema.org creator fields for a workflow
+     * @param wfUri URI of the workflow
+     * @return The result set of step links
+     */
+    public ResultSet getWorkflowAuthors(String wfUri) {
+        ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
+        linkQuery.setCommandText(queryCtx +
+                "SELECT ?email ?name ?orcid\n" +
+                "WHERE {\n" +
+                "  GRAPH ?graphName {" +
+                "    ?wfUri s:author|s:contributor|s:creator ?author .\n" +
+                "    {\n" +
+                "      ?creator rdf:type s:Person .\n" +
+                "      OPTIONAL { ?author s:email ?email }\n" +
+                "      OPTIONAL { ?author s:name ?name }\n" +
+                "      OPTIONAL { ?author s:id|s:sameAs ?orcid }\n" +
+                "    } UNION {\n" +
+                "      ?author rdf:type s:Organization .\n" +
+                "      ?author s:department* ?dept .\n" +
+                "      ?dept s:member ?member\n" +
+                "      OPTIONAL { ?member s:email ?email }\n" +
+                "      OPTIONAL { ?member s:name ?name }\n" +
+                "      OPTIONAL { ?member s:id|s:sameAs ?orcid }\n" +
+                "    }\n" +
+                "    FILTER(regex(str(?orcid), \"^https?://orcid.org/\" ))\n" +
+                "  }" +
+                "}");
+        linkQuery.setIri("graphName", wfUri);
+        linkQuery.setIri("wfUri", wfUri);
+        return runQuery(linkQuery);
+    }
+    
     /**
      * Get authors from schema.org creator fields for a file
      * @param path The path within the Git repository to the file
