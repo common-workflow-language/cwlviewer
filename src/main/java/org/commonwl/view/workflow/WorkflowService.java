@@ -19,6 +19,18 @@
 
 package org.commonwl.view.workflow;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
@@ -39,16 +51,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
 
 @Service
 public class WorkflowService {
@@ -394,23 +396,46 @@ public class WorkflowService {
      * @return A workflow model with the above two parameters
      */
     public Workflow findByCommitAndPath(String commitID, String path) throws WorkflowNotFoundException {
+        return findByCommitAndPath(commitID, path, Optional.empty());
+    }
+
+    /**
+     * Find a workflow by commit ID and path
+     *
+     * @param commitID
+     *            The commit ID of the workflow
+     * @param path
+     *            The path to the workflow within the repository
+     * @param part
+     *            The #part within the workflow, or Optional.empty() for no part, or
+     *            <code>null</code> for any part
+     * @return A workflow model with the above two parameters
+     */
+    public Workflow findByCommitAndPath(String commitID, String path, Optional<String> part)
+            throws WorkflowNotFoundException, MultipleWorkflowsException {
         List<Workflow> matches = workflowRepository.findByCommitAndPath(commitID, path);
-        if (matches == null || matches.size() == 0) {
+        if (matches == null || matches.isEmpty()) {
             throw new WorkflowNotFoundException();
-        } else if (matches.size() == 1) {
+        } else if (part == null) {
+            // any part will do - so we'll pick the first one
             return matches.get(0);
         } else {
             // Multiple matches means either added by both branch and ID
             // Or packed workflow
             for (Workflow workflow : matches) {
-                if (workflow.getRetrievedFrom().getPackedId() != null) {
-                    // This is a packed file
-                    // TODO: return 300 multiple choices response for this in controller
-                    throw new WorkflowNotFoundException();
+                if (Objects.equals(part.orElse(null), workflow.getRetrievedFrom().getPackedId())) {
+                    // either both are null; or both are non-null and equal
+                    return workflow;
                 }
             }
-            // Not a packed workflow, just different references to the same ID
-            return matches.get(0);
+            if (part.isPresent()) {
+                // Sorry, don't know about your part!
+                throw new WorkflowNotFoundException();
+            } else {
+                // No part requested, let's show some alternate permalinks,
+                // in addition to the raw redirect
+                throw new MultipleWorkflowsException(matches);
+            }
         }
     }
 
@@ -532,4 +557,18 @@ public class WorkflowService {
         }
         return false;
     }
+
+    public Optional<String> findRawBaseForCommit(String commitId) {
+        for (Workflow w : workflowRepository.findByCommit(commitId)) {
+            String potentialRaw = w.getRetrievedFrom().getRawUrl(commitId);
+            String path = w.getRetrievedFrom().getPath();
+            if (potentialRaw.endsWith(path)) {
+                return Optional.of(potentialRaw.replace(path, ""));
+            }
+        }
+        // Not found, or not at GitHub/GitLab
+        return Optional.empty();
+
+    }
+
 }
