@@ -131,31 +131,31 @@ digraph G {
                 <img th:if="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="24" height="24" />
                 <img th:unless="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/gitlogo.png" th:src="@{/img/gitlogo.png}" width="30" height="30" />
             </a>
-        <i>Fetched <span th:text="${{workflow.retrievedOn}}">01/12/16 at 21:00</span></i>
+        <i>Fetched <span th:text="${{workflow.retrievedOn}}">2017-09-14 22:30:37 GMT</span></i>
           <span class="hidden-print hidden-sm hidden-xs">
                 <span th:if="${workflow.roBundlePath == null}" id="ajaxRequired"></span>
             <span th:class="${workflow.roBundlePath != null} ? hide : ''" id="generating"> - Generating download link <img alt="loading" src="../static/img/loading.svg" th:src="@{/img/loading.svg}" width="20" height="20" /></span>
             <span th:class="${workflow.roBundlePath == null} ? hide : ''" id="generated">
                     - <a th:href="@{${workflow.getRoBundleLink()}}" id="download" href="#" download="bundle.zip">Download as Research Object Bundle</a>
-                    <a href="http://www.researchobject.org/" rel="noopener" class="help" target="_blank">[?]</a>
+                    <a href="http://www.researchobject.org/" rel="noopener" class="help" target="_blank" >[?]</a>
                 </span>
           </span>
         </div>
         <div class="col-md-6 text-right hidden-xs">
-            <img class="verification_icon" src="../static/img/tick.svg" th:src="@{/img/tick.svg}" width="20" height="22" /> Verified with cwltool version <span th:text="${workflow.cwltoolVersion}">1.0.20170622090721</span>
+            <img class="verification_icon" src="../static/img/tick.svg" th:src="@{/img/tick.svg}" width="20" height="22" /> Verified with cwltool version <samp th:text="${workflow.cwltoolVersion}">1.0.20170622090721</samp>
         </div>
         
         <div class="col-md-12" style="margin-top:5px;" th:if="${workflow.doc != null}">
-            <p th:text="${workflow.doc}">Workflow Doc</p>
+            <p id="workflow-doc" th:text="${workflow.doc}">This workflow documentation explains the purpose of the workflow and the main techniques used. Steps are documented individually further down. This is just an example documentation for the template, real documentation might be even longer than this!</p>
         </div>
     </div>
     <div class="row">
         <div class="col-lg-9 col-md-8 col-sm-6">
-                <div class="permalink hidden-sm hidden-xs hidden-print" th:unless="${workflow.packed}">
+                <div class="permalink hidden-sm hidden-xs hidden-print">
                         Permalink:
                           <a href="https://w3id.org/cwl/view/" rel="noopener" class="help" target="_blank">[?]</a>
-                          <code><a id="permalink" th:href="${workflow.permalink}" th:text="${workflow.permalink}"
-                                    href="#">https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/larger/test-hello.cwl</a></code>
+                          <a id="permalink" th:href="${workflow.permalink}" th:text="${workflow.permalink}"
+                             href="#">https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/larger/test-hello.cwl</a>
                 </div>
             
         </div>    
@@ -204,7 +204,7 @@ digraph G {
             </div>
             <div th:unless="${workflow.inputs.isEmpty()}">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover input">
                         <thead>
                             <th>ID</th>
                             <th>Type</th>
@@ -213,14 +213,14 @@ digraph G {
                         </thead>
                         <tbody>
                             <tr th:each="input : ${workflow.inputs}">
-                                <td th:text="${input.key}">ID</td>
-                                <td>
+                                <td class="id" th:text="${input.key}">ID</td>
+                                <td class="type" >
                                     <a th:if="${input.value.format != null}" th:href="@{${input.value.format}}" th:text="${input.value.type}" target="_blank" rel="noopener">Type</a>
                                     <span th:if="${input.value.format == null}" th:text="${input.value.type}"></span>
                                 </td>
-                                <td th:text="${input.value.label}">Label</td>
-                                <td>
-                                    <p th:if="${input.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(input.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                                <td class="label"  th:text="${input.value.label}">Label</td>
+                                <td class="doc" >
+                                    <p th:if="${input.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(input.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description might be a bit longer</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -233,17 +233,17 @@ digraph G {
             </div>
             <div th:unless="${workflow.steps.isEmpty()}">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover steps">
                         <thead>
-                        <th>ID</th>
-                        <th>Runs</th>
-                        <th>Label</th>
-                        <th>Doc</th>
+	                        <th>ID</th>
+	                        <th>Runs</th>
+	                        <th>Label</th>
+	                        <th>Doc</th>
                         </thead>
                         <tbody>
                         <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{${workflow.retrievedFrom.getUrl()}}">
-                            <td th:text="${step.key}">ID</td>
-                            <td>
+                            <td class="id" th:text="${step.key}">ID</td>
+                            <td class="run">
                                 <div th:if="${step.value.runType != null}">
                                     <a th:if="${step.value.runType.name() == 'WORKFLOW'}" th:href="@{${step.value.run.replace('#', '%23')}}" th:text="${step.value.run}" class="subworkflow">workflow.cwl</a>
                                     <span th:unless="${step.value.runType.name() == 'WORKFLOW'}" th:text="${step.value.run}">cmdlinetool.cwl</span>
@@ -253,9 +253,9 @@ digraph G {
                                     <span th:text="${step.value.run} + ' (?)'" class="notFound" data-tooltip="true" title="Not Found - Must be somewhere within this repository">workflow.cwl (?)</span>
                                 </div>
                             </td>
-                            <td th:text="${step.value.label}">Label</td>
-                            <td>
-                                <p th:if="${step.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(step.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                            <td class="label" th:text="${step.value.label}">Label</td>
+                            <td class="doc">
+                                <p th:if="${step.value.doc != null}" th:utext="${#strings.replace( #strings.escapeXml(step.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description might be a bit longer</p>
                             </td>
                         </tr>
                         </tbody>
@@ -268,7 +268,7 @@ digraph G {
             </div>
             <div th:unless="${workflow.outputs.isEmpty()}">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover output">
                         <thead>
                             <th>ID</th>
                             <th>Type</th>
@@ -277,14 +277,14 @@ digraph G {
                         </thead>
                         <tbody>
                             <tr th:each="output : ${workflow.outputs}">
-                                <td th:text="${output.key}">ID</td>
-                                <td>
+                                <td class="id" th:text="${output.key}">ID</td>
+                                <td class="type">
                                     <a th:if="${output.value.format != null}" th:href="@{${output.value.format}}" th:text="${output.value.type}" target="_blank" rel="noopener">Type</a>
                                     <span th:if="${output.value.format == null}" th:text="${output.value.type}"></span>
                                 </td>
-                                <td th:text="${output.value.label}">Label</td>
-                                <td>
-                                    <p th:if="${output.value.doc != null}" th:utext="${#strings.replace(#strings.escapeXml(output.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description</p>
+                                <td class="label" th:text="${output.value.label}">Label</td>
+                                <td class="doc">
+                                    <p th:if="${output.value.doc != null}" th:utext="${#strings.replace(#strings.escapeXml(output.value.doc),T(java.lang.System).getProperty('line.separator')+T(java.lang.System).getProperty('line.separator'),'&lt;br /&gt;&lt;br /&gt;')}">Description might be a bit longer</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -293,7 +293,7 @@ digraph G {
             </div>
         </div>
     </div>
-    <div class="row hidden-print" th:unless="${workflow.packed}">
+    <div class="row hidden-print">
     	<div class="col-md-12 text-center" id="formats">
     	   <span th:each="format : ${formats}">    		
             <a th:id="|format-${format}|" role="button" class="btn btn-default btn-sm" th:href="${workflow.getPermalink(format.name())}" th:text="${format}"
@@ -301,7 +301,7 @@ digraph G {
            </span>
         </div>
     </div>
-    <div class="visible-print-block" th:unless="${workflow.packed}">
+    <div class="visible-print-block">
       <address>Permalink:
       	<code th:text="${workflow.permalink}">https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/larger/test-hello.cwl</code>
       </address>

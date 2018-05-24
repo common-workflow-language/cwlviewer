@@ -34,6 +34,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Optional;
 
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.when;
@@ -61,9 +62,15 @@ public class WorkflowPermalinkControllerTest {
                 .thenReturn(new GitDetails("https://github.com/MarkRobbo/workflows.git",
                         "master", "path/to/workflow.cwl"));
 
+        
+        
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.findByCommitAndPath(anyString(), anyString()))
-                .thenReturn(mockWorkflow);
+        when(mockWorkflowService.findByCommitAndPath(anyString(), anyString(), anyObject()))
+        	.thenReturn(mockWorkflow);
+
+        when(mockWorkflowService.findRawBaseForCommit(anyString())).thenReturn(
+        		Optional.of("https://raw.githubusercontent.com/MarkRobbo/workflows/commitidhere/"));
+        
         when(mockWorkflowService.getWorkflowGraph(eq("svg"), anyObject())).thenReturn(svg);
         when(mockWorkflowService.getWorkflowGraph(eq("png"), anyObject())).thenReturn(png);
         when(mockWorkflowService.getWorkflowGraph(eq("xdot"), anyObject())).thenReturn(dot);

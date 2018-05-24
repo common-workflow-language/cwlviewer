@@ -306,11 +306,20 @@ polygon.hover {
 }
 
 #permalink {
-	font-size: smaller;
-	font-family: Consolas, Inconsolata, monospace;
-
+	font-size: x-small;
+	color: #559cb7;
     overflow: hidden;
     white-space: nowrap;
+}
+
+#workflow-doc {
+	line-height: 1.9;
+	letter-spacing: -0.04em;
+}
+
+td.run, td.doc { 
+	letter-spacing: 0.02em;
+	font-size: small;
 }
 
 /**
