@@ -50,7 +50,7 @@
             <p>Technical Report: <a href="https://doi.org/10.5281/zenodo.848163">https://doi.org/10.5281/zenodo.848163</a></p>
 
             <p>CWL Viewer also won the <a href="https://f1000research.com/">F1000Research</a> Best Poster 
-            	<a href="https://bioexcel.eu/poster-award-for-cwlviewer/"Award</a> at
+            	<a href="https://bioexcel.eu/poster-award-for-cwlviewer/">Award</a> at
                 <a href="https://www.iscb.org/ismbeccb2017">ISMB/ECCB 2017</a> for its
                 <a href="https://doi.org/10.7490/f1000research.1114375.1">poster submission.</a></p>
 
@@ -82,8 +82,8 @@
             for operational purposes and to prevent abuse.            
             We may use HTTP session cookies in order to assist 
             workflow submission, but do not use cookies to identify users.
-            </section>
             </p>
+            </section>
             <section id="what-info">            
             <h2>What information is held?</h2>
 			<p>
@@ -108,14 +108,36 @@
             from the original repository to update the information held.            
             </p>
             </section>
+            <section id="where-to">
+            <h2>Where is information exposed?</h2>
+            <p>
+            Workflows and their metadata can be accessed in CWL Viewer through
+            the <a href="/workflows">public listing</a> by browsers, 
+            programmaticaly through the <a href="/apidocs">API</a>, and 
+            can be downloaded in multiple formats like ZIP, SVG or RDF.           
+            </p>
+            <p>            
+            CWL Viewer generates and exposes <a href="https://w3id.org/cwl/view/">permalinks</a>
+            which reference the git <em>commit</em> and the workflow <em>path</em> 
+            within the git repository, but not the git repository location or username.             
+            These permalinks are only resolvable with
+            the public <a href="https://view.commonwl.org/">https://view.commonwl.org/</a> 
+            if it has previously visualized a corresponding public git repository.
+            </p>
+            <p>
+            Metadata from public workflows may be published to the 
+            <a href="https://www.openaire.eu/">OpenAIRE</a> registry, 
+            including author names and workflow title. 
+            </p>
+            </section>
              
-            <section>
+            <section id="data-controller">
             <h2>Data controller</h2>            
             <p>            
             The <em>Data Controller</em> for the
             <a href="https://view.commonwl.org/">https://view.commonwl.org/</a> instance of CWL Viewer 
             is The University of Manchester, contact             
-            <a href="javascript:window.location.href=atob('bWFpbHRvOmluZm9AZXNjaWVuY2VsYWIub3JnLnVr')"
+            <a href="javascript:window.location.href=atob('bWFpbHRvOmluZm9AZXNjaWVuY2VsYWIub3JnLnVr')">
             <code><span class="obf-hide">NOT</span>info<span class="obf-at"></span><span class="obf-hide">()</span><span class="obf-hide">NONE</span>esciencelab.org.uk</code></a> for any enquiries.
             If this viewer is accessed at a different URL, the data controller is likely someone else.
             </p>
@@ -127,6 +149,7 @@
             of any workflow page to locate the corresponding git repository from 
             the original publisher.
             </p>
+            </section> 
             
 		</section>                
 
