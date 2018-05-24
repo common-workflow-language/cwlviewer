@@ -79,17 +79,29 @@ public class Workflow {
 
     private final String permaLinkBase = "https://w3id.org/cwl/view";
 
+	private String licenseLink;
+
     public Workflow(String label, String doc, Map<String, CWLElement> inputs,
-                    Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink) {
+                    Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink, String licenseLink) {
         this.label = label;
         this.doc = doc;
         this.inputs = inputs;
         this.outputs = outputs;
         this.steps = steps;
         this.dockerLink = dockerLink;
+		this.licenseLink = licenseLink;
     }
 
-    public String getID() { return id; }
+    public Workflow(String label, String doc, Map<String, CWLElement> inputs,
+            Map<String, CWLElement> outputs, Map<String, CWLStep> steps) {
+		this(label, doc, inputs, outputs, steps, null, null);
+	}
+
+	public Workflow() {
+		this(null, null, null, null,null, null, null);
+	}
+
+	public String getID() { return id; }
 
     public void setId(String id) {
         this.id = id;
@@ -269,5 +281,13 @@ public class Workflow {
     public boolean isPacked() {
         return retrievedFrom.getPackedId() != null;
     }
+
+	public String getLicenseLink() {
+		return licenseLink;
+	}
+
+	public void setLicenseLink(String licenseLink) {
+		this.licenseLink = licenseLink;
+	}
 
 }
