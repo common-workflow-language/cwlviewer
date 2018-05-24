@@ -171,22 +171,38 @@ public class GitDetails implements Serializable {
 
     /**
      * Get the URL directly to the resource
+     * @param branchOverride The branch to use, or <code>null</code> to use this instance's branch 
+     * @param pathOverride The path to use, or <code>null</code> to use this instance's path
+     * @return The URL
+     */
+    public String getRawUrl(String branchOverride, String pathOverride) {
+    	if (branchOverride == null) {
+    		branchOverride = branch;
+    	}
+    	if (pathOverride == null) {
+    		pathOverride = path;
+    	}
+        switch (getType()) {
+        case GITHUB:
+            return "https://raw.githubusercontent.com/" +
+                    normaliseUrl(repoUrl).replace("github.com/", "").replace(".git", "") +
+                    "/" + branchOverride + "/" + pathOverride;
+        case GITLAB:
+        case BITBUCKET:
+            return "https://" + normaliseUrl(repoUrl).replace(".git", "")
+                    + "/raw/" + branchOverride + "/" + pathOverride;
+        default:
+            return repoUrl;
+        }
+    }
+    
+    /**
+     * Get the URL directly to the resource
      * @param branchOverride The branch to use instead of the one in this instance
      * @return The URL
      */
     public String getRawUrl(String branchOverride) {
-        switch (getType()) {
-            case GITHUB:
-                return "https://raw.githubusercontent.com/" +
-                        normaliseUrl(repoUrl).replace("github.com/", "").replace(".git", "") +
-                        "/" + branchOverride + "/" + path;
-            case GITLAB:
-            case BITBUCKET:
-                return "https://" + normaliseUrl(repoUrl).replace(".git", "")
-                        + "/raw/" + branchOverride + "/" + path;
-            default:
-                return repoUrl;
-        }
+    	return getRawUrl(branchOverride, path);
     }
 
     /**
