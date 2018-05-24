@@ -250,7 +250,8 @@ public class CWLService {
 
         // Get paths to workflow
         String url = basicModel.getIdentifier();
-        String localPath = workflowFile.toAbsolutePath().toString();
+        String workflowFileURI = workflowFile.toUri().toString();
+		String localPath = workflowFileURI;
         String gitPath = gitDetails.getPath();
         if (packedWorkflowID != null) {
             if (packedWorkflowID.charAt(0) != '#') {
@@ -264,7 +265,7 @@ public class CWLService {
         // Get RDF representation from cwltool
         if (!rdfService.graphExists(url)) {
             String rdf = cwlTool.getRDF(localPath);
-            rdf = rdf.replace("file://" + workTree.toAbsolutePath().toString(),
+            rdf = rdf.replace(workflowFileURI,
                     "https://w3id.org/cwl/view/git/" + latestCommit);
             // Workaround for common-workflow-language/cwltool#427
             rdf = rdf.replace("<rdfs:>", "<http://www.w3.org/2000/01/rdf-schema#>");
