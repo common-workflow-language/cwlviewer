@@ -21,7 +21,7 @@ RUN apk add --update graphviz ttf-freefont py3-pip gcc python3-dev libc-dev node
 
 #wheel needed by ruamel.yaml for some reason
 RUN pip3 install wheel
-RUN pip3 install cwltool html5lib ruamel.yaml==0.12.4
+RUN pip3 install cwltool html5lib ruamel.yaml==0.14.12
 
 RUN cwltool --version
 
