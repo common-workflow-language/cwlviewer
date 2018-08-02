@@ -16,12 +16,23 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
   org.label-schema.schema-version="1.0"
 
 
-RUN apk add --update graphviz ttf-freefont py3-pip gcc python3-dev libc-dev nodejs && rm -rf /var/cache/apk/*
-
+RUN apk add --update \
+  graphviz \
+  ttf-freefont \
+  py3-pip \
+  gcc \
+  python3-dev \
+  libc-dev \
+  nodejs \
+  libc-dev \
+  linux-headers \
+  libxml2-dev \
+  libxslt-dev \
+  && rm -rf /var/cache/apk/*
 
 #wheel needed by ruamel.yaml for some reason
 RUN pip3 install wheel
-RUN pip3 install cwltool html5lib ruamel.yaml==0.14.12
+RUN pip3 install cwltool html5lib
 
 RUN cwltool --version
 
