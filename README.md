@@ -131,6 +131,26 @@ services:
 The properties can alternatively be provided as system properties on the
 command line, e.g. `-DcacheDays=1` or via a [variety of other methods supported by Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html)
 
+# Dump/restore
+
+While you can perform backup of the Docker volumes, 
+for larger upgrades of CWL Viewer it is recommended instead to do a JSON dump
+and re-load, which will force CWL Viewer to fetch and parse again.
+
+The script `dump.sh` can be used for regular backups, it will store the full
+output of /workflows as a timestamped gzip-compressed JSON file:
+
+    $ ./dump.sh https://view.commonwl.org/ /var/backups/cwl
+    /var/backups/cwl/2018-06-06T135133+0000.json.gz
+
+The script `load.py` (requires Python 3) can be used to restore from such JSON dumps:
+
+    ./load.py /var/backups/cwl/2018-06-06T135133+0000.json.gz https://view.commonwl.org/
+
+The optional parameter `--no-commits` can be added to skip those entries that
+look like a commit ID. Note that this might break previous permalinks.
+
+
 # Thanks
 
 Developers and [contributors](https://github.com/common-workflow-language/cwlviewer/graphs/contributors) include:
@@ -139,6 +159,8 @@ Developers and [contributors](https://github.com/common-workflow-language/cwlvie
 * Stian Soiland-Reyes http://orcid.org/0000-0001-9842-9718
 * Michael Crusoe http://orcid.org/0000-0002-2961-9670
 * Carole Goble http://orcid.org/0000-0003-1219-2137
+* Charles Overbeck https://github.com/coverbeck
+* Finn Bacall http://orcid.org/0000-0002-0048-3300
 
 Thanks to:  
 

@@ -27,6 +27,7 @@ RUN apk add --update \
   libc-dev \
   linux-headers \
   libxml2-dev \
+  libxml2-utils \
   libxslt-dev \
   && rm -rf /var/cache/apk/*
 
