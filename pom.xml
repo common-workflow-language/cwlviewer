@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -15,29 +16,34 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>1.5.16.RELEASE</version>
-		<relativePath/>
+		<relativePath />
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
+		<jena.version>3.9.0</jena.version>
+		<!-- BEGIN should correspond to https://repo1.maven.org/maven2/org/apache/jena/jena/3.9.0/jena-3.9.0.pom -->
+		<ver.jsonldjava>0.12.1</ver.jsonldjava>
+		<ver.jackson>2.9.6</ver.jackson>
+		<!-- END -->
 	</properties>
 
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-        <repository>
-            <id>apache.snapshots</id>
-            <name>Apache Snapshot Repository</name>
-            <url>http://repository.apache.org/snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
-    </repositories>
+	<repositories>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+		<repository>
+			<id>apache.snapshots</id>
+			<name>Apache Snapshot Repository</name>
+			<url>http://repository.apache.org/snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -62,51 +68,56 @@
 			<artifactId>snakeyaml</artifactId>
 			<version>1.23</version>
 		</dependency>
-        <dependency>
-            <groupId>com.github.jabbalaci</groupId>
-            <artifactId>graphviz-java-api</artifactId>
-            <version>f9bf94896776de6e98b5004e819b63fb4c15b15d</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.taverna.language</groupId>
-            <artifactId>taverna-robundle</artifactId>
-            <version>0.16.0-incubating-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>2.9.0.pr4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.jena</groupId>
-            <artifactId>jena-osgi</artifactId>
-            <version>3.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.jsonld-java</groupId>
-            <artifactId>jsonld-java</artifactId>
-            <version>0.9.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jgit</groupId>
-            <artifactId>org.eclipse.jgit</artifactId>
-            <version>4.8.0.201706111038-r</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.10.19</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>com.github.jabbalaci</groupId>
+			<artifactId>graphviz-java-api</artifactId>
+			<version>f9bf94896776de6e98b5004e819b63fb4c15b15d</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.taverna.language</groupId>
+			<artifactId>taverna-robundle</artifactId>
+			<version>0.16.0-incubating-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${ver.jackson}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jena</groupId>
+			<artifactId>jena-osgi</artifactId>
+			<version>${jena.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.jsonld-java</groupId>
+			<artifactId>jsonld-java</artifactId>
+			<version>${ver.jsonldjava}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jgit</groupId>
+			<artifactId>org.eclipse.jgit</artifactId>
+			<version>4.9.7.201810191756-r</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.10.19</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>1.18</version>
+		</dependency>
+	</dependencies>
 
-    <build>
+	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -115,35 +126,35 @@
 		</plugins>
 	</build>
 
-  <profiles>	
-    <profile>
-      <id>travis</id>
-      <activation>
-        <property>
-          <name>env.TRAVIS</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>cobertura-maven-plugin</artifactId>
-            <version>2.7</version>
-            <configuration>
-              <formats>
-                <format>xml</format>
-              </formats>
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.eluder.coveralls</groupId>
-            <artifactId>coveralls-maven-plugin</artifactId>
-            <version>4.3.0</version>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
-	
+	<profiles>
+		<profile>
+			<id>travis</id>
+			<activation>
+				<property>
+					<name>env.TRAVIS</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>cobertura-maven-plugin</artifactId>
+						<version>2.7</version>
+						<configuration>
+							<formats>
+								<format>xml</format>
+							</formats>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.eluder.coveralls</groupId>
+						<artifactId>coveralls-maven-plugin</artifactId>
+						<version>4.3.0</version>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 </project>
