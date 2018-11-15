@@ -20,8 +20,13 @@
 package org.commonwl.view.cwl;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.web.DatasetGraphAccessor;
+import org.apache.jena.web.DatasetGraphAccessorHTTP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -83,8 +88,10 @@ public class RDFService {
      * @param model The model to be stored
      */
     public void storeModel(String graphName, Model model) {
-        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(rdfService);
-        accessor.putModel(graphName, model);
+    	DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(rdfService);
+        accessor.setOutboundSyntax(RDFFormat.TURTLE);       
+        Node name = NodeFactory.createURI(graphName);
+		accessor.httpPut(name, model.getGraph());        
     }
 
     /**
