@@ -1,4 +1,4 @@
-FROM maven:3.5-jdk-8-alpine
+FROM maven:3.6-jdk-11-slim
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
 # Build-time metadata as defined at http://label-schema.org
@@ -16,24 +16,37 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
   org.label-schema.schema-version="1.0"
 
 
-RUN apk add --update \
-  graphviz \
-  ttf-freefont \
-  py3-pip \
-  gcc \
-  python3-dev \
-  libc-dev \
-  nodejs \
-  libc-dev \
-  linux-headers \
-  libxml2-dev \
-  libxml2-utils \
-  libxslt-dev \
-  && rm -rf /var/cache/apk/*
+# For Alpine
+##RUN apk add --update \
+##  graphviz \
+##  ttf-freefont \
+##  py3-pip \
+##  gcc \
+##  python3-dev \
+##  libc-dev \
+##  nodejs \
+##  libc-dev \
+##  linux-headers \
+##  libxml2-dev \
+##  py3-lxml \
+##  py3-libxml2 \
+##  libxml2-utils \
+##  libxslt-dev \
+##  && rm -rf /var/cache/apk/*
+
+# For Debian/Ubuntu
+RUN apt-get update && \
+    apt-get install -y \
+      graphviz \
+      fonts-freefont-ttf \
+      python3-pip \
+      nodejs \
+      python3-lxml \
+      python3-libxml2 \
+    && rm -rf /var/lib/apt/lists/*
 
 #wheel needed by ruamel.yaml for some reason
-RUN pip3 install wheel
-RUN pip3 install cwltool html5lib
+RUN pip3 install wheel cwltool html5lib
 
 RUN cwltool --version
 
