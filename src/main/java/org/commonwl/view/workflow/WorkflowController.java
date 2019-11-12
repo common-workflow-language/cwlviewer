@@ -24,12 +24,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.io.InputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.WebConfig;
@@ -405,16 +409,20 @@ public class WorkflowController {
     @PostMapping(value="/graph/png", produces="image/png")
     @ResponseBody
     public FileSystemResource downloadGraphPngFromFile(InputStream in,
-                                                      HttpServletResponse response) throws IOException {
+                                                      HttpServletResponse response) throws IOException, NoSuchAlgorithmException {
         final File tempFile = File.createTempFile("cwl", ".cwl");
         tempFile.deleteOnExit();
+
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        DigestInputStream dis = new DigestInputStream(in, md);
         try (FileOutputStream out = new FileOutputStream(tempFile)) {
-            IOUtils.copy(in, out);
+            IOUtils.copy(dis, out);
         }
-        System.out.println(tempFile.toPath());
+        String sha256 = Hex.encodeHexString(dis.getMessageDigest().digest());
+        logger.info("Reading: " + tempFile.toPath() + " (SHA-256: " + sha256 + ")");
         Workflow workflow = cwlService.parseWorkflowNative(tempFile.toPath(), null);
         response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
-        Path out = graphVizService.getGraphPath(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
+        Path out = graphVizService.getGraphPath(sha256 + ".png", workflow.getVisualisationDot(), "png");
         return new FileSystemResource(out.toFile());
     }
 
