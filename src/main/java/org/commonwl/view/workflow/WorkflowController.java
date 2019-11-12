@@ -20,15 +20,19 @@
 package org.commonwl.view.workflow;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.WebConfig;
+import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -45,11 +49,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -61,6 +61,7 @@ public class WorkflowController {
 
     private final WorkflowFormValidator workflowFormValidator;
     private final WorkflowService workflowService;
+    private final CWLService cwlService;
     private final GraphVizService graphVizService;
 
     /**
@@ -76,10 +77,11 @@ public class WorkflowController {
     @Autowired
     public WorkflowController(WorkflowFormValidator workflowFormValidator,
                               WorkflowService workflowService,
-            GraphVizService graphVizService) {
+            GraphVizService graphVizService, CWLService cwlService) {
         this.workflowFormValidator = workflowFormValidator;
         this.workflowService = workflowService;
         this.graphVizService = graphVizService;
+        this.cwlService = cwlService;
     }
 
     /**
@@ -390,6 +392,26 @@ public class WorkflowController {
         File out = graphVizService.getGraph(queued.getId() + ".png",
                 queued.getTempRepresentation().getVisualisationDot(), "png");
         response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
+        return new FileSystemResource(out);
+    }
+
+    /**
+     * Take a CWL workflow from the POST body and generate a PNG graph for it.
+     * @param in The workflow CWL
+     */
+    @PostMapping(value="/graph/png", produces="image/png")
+    @ResponseBody
+    public FileSystemResource downloadGraphPngFromFile(InputStream in,
+                                                      HttpServletResponse response) throws IOException {
+        final File tempFile = File.createTempFile("cwl", ".cwl");
+        tempFile.deleteOnExit();
+        try (FileOutputStream out = new FileOutputStream(tempFile)) {
+            IOUtils.copy(in, out);
+        }
+        System.out.println(tempFile.toPath());
+        Workflow workflow = cwlService.parseWorkflowNative(tempFile.toPath(), null);
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
+        File out = graphVizService.getGraph(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
         return new FileSystemResource(out);
     }
 

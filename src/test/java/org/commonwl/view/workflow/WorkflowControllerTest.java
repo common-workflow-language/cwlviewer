@@ -19,6 +19,7 @@
 
 package org.commonwl.view.workflow;
 
+import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
@@ -77,7 +78,8 @@ public class WorkflowControllerTest {
         WorkflowController workflowController = new WorkflowController(
                 Mockito.mock(WorkflowFormValidator.class),
                 Mockito.mock(WorkflowService.class),
-                Mockito.mock(GraphVizService.class));
+                Mockito.mock(GraphVizService.class),
+                Mockito.mock(CWLService.class));
 
         // Lots of hassle to make Spring Data Pageable work
         PageableHandlerMethodArgumentResolver pageableArgumentResolver =
@@ -132,7 +134,9 @@ public class WorkflowControllerTest {
         WorkflowController workflowController = new WorkflowController(
                 mockValidator,
                 mockWorkflowService,
-                Mockito.mock(GraphVizService.class));
+                Mockito.mock(GraphVizService.class),
+                Mockito.mock(CWLService.class)
+                );
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(workflowController)
                 .build();
@@ -217,7 +221,8 @@ public class WorkflowControllerTest {
         WorkflowController workflowController = new WorkflowController(
                 Mockito.mock(WorkflowFormValidator.class),
                 mockWorkflowService,
-                Mockito.mock(GraphVizService.class));
+                Mockito.mock(GraphVizService.class),
+                Mockito.mock(CWLService.class));
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(workflowController)
                 .build();
@@ -285,7 +290,8 @@ public class WorkflowControllerTest {
         WorkflowController workflowController = new WorkflowController(
                 Mockito.mock(WorkflowFormValidator.class),
                 mockWorkflowService,
-                Mockito.mock(GraphVizService.class));
+                Mockito.mock(GraphVizService.class),
+                Mockito.mock(CWLService.class));
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(workflowController)
                 .build();
@@ -327,7 +333,8 @@ public class WorkflowControllerTest {
         WorkflowController workflowController = new WorkflowController(
                 Mockito.mock(WorkflowFormValidator.class),
                 mockWorkflowService,
-                Mockito.mock(GraphVizService.class));
+                Mockito.mock(GraphVizService.class),
+                Mockito.mock(CWLService.class));
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(workflowController)
                 .build();
