@@ -408,22 +408,22 @@ public class WorkflowController {
      */
     @PostMapping(value="/graph/png", produces="image/png")
     @ResponseBody
-    public FileSystemResource downloadGraphPngFromFile(InputStream in,
-                                                      HttpServletResponse response) throws IOException, NoSuchAlgorithmException {
-        final File tempFile = File.createTempFile("cwl", ".cwl");
-        tempFile.deleteOnExit();
-
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        DigestInputStream dis = new DigestInputStream(in, md);
-        try (FileOutputStream out = new FileOutputStream(tempFile)) {
-            IOUtils.copy(dis, out);
-        }
-        String sha256 = Hex.encodeHexString(dis.getMessageDigest().digest());
-        logger.info("Reading: " + tempFile.toPath() + " (SHA-256: " + sha256 + ")");
-        Workflow workflow = cwlService.parseWorkflowNative(tempFile.toPath(), null);
+    public FileSystemResource downloadGraphPngFromFile(InputStream in, HttpServletResponse response)
+            throws IOException, NoSuchAlgorithmException {
         response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
-        Path out = graphVizService.getGraphPath(sha256 + ".png", workflow.getVisualisationDot(), "png");
-        return new FileSystemResource(out.toFile());
+        return getGraphFromInputStream(in, "png");
+    }
+
+    /**
+     * Take a CWL workflow from the POST body and generate a SVG graph for it.
+     * @param in The workflow CWL
+     */
+    @PostMapping(value="/graph/svg", produces="image/svg+xml")
+    @ResponseBody
+    public FileSystemResource downloadGraphSvgFromFile(InputStream in, HttpServletResponse response)
+            throws IOException, NoSuchAlgorithmException {
+        response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
+        return getGraphFromInputStream(in, "svg");
     }
 
 
@@ -577,6 +577,26 @@ public class WorkflowController {
         } else {
             return new ModelAndView("workflow", "workflow", workflowModel).addObject("formats",
                     WebConfig.Format.values());
+        }
+    }
+
+    private FileSystemResource getGraphFromInputStream(InputStream in, String format)
+            throws IOException, NoSuchAlgorithmException {
+        final File tempFile = File.createTempFile("cwl", ".cwl");
+        tempFile.deleteOnExit();
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            DigestInputStream dis = new DigestInputStream(in, md);
+            try (FileOutputStream out = new FileOutputStream(tempFile)) {
+                IOUtils.copy(dis, out);
+            }
+            String sha256 = Hex.encodeHexString(dis.getMessageDigest().digest());
+            logger.info("Generating " + format + " graph for: " + tempFile.toPath() + " (SHA-256: " + sha256 + ")");
+            Workflow workflow = cwlService.parseWorkflowNative(tempFile.toPath(), null);
+            Path out = graphVizService.getGraphPath(sha256 + "." + format, workflow.getVisualisationDot(), format);
+            return new FileSystemResource(out.toFile());
+        } finally {
+            tempFile.delete();
         }
     }
 }
