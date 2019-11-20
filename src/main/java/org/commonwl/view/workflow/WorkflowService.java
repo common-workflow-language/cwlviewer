@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.PathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -445,9 +446,10 @@ public class WorkflowService {
      * @param gitDetails The Git details of the workflow
      * @return A FileSystemResource representing the graph
      * @throws WorkflowNotFoundException Error getting the workflow or format
+     * @throws IOException 
      */
-    public FileSystemResource getWorkflowGraph(String format, GitDetails gitDetails)
-            throws WorkflowNotFoundException {
+    public PathResource getWorkflowGraph(String format, GitDetails gitDetails)
+            throws WorkflowNotFoundException, IOException {
         // Determine file extension from format
         String extension;
         switch (format) {
@@ -469,8 +471,8 @@ public class WorkflowService {
         }
 
         // Generate graph and serve the file
-        File out = graphVizService.getGraph(workflow.getID() + "." + extension, workflow.getVisualisationDot(), format);
-        return new FileSystemResource(out);
+        Path out = graphVizService.getGraphPath(workflow.getID() + "." + extension, workflow.getVisualisationDot(), format);
+        return new PathResource(out);
     }
 
     /**

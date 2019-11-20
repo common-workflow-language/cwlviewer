@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -84,9 +85,9 @@ public class ROBundleServiceTest {
 
         // Mock Graphviz service
         GraphVizService mockGraphvizService = Mockito.mock(GraphVizService.class);
-        when(mockGraphvizService.getGraph(anyString(), anyString(), anyString()))
-                .thenReturn(new File("src/test/resources/graphviz/testVis.png"))
-                .thenReturn(new File("src/test/resources/graphviz/testVis.svg"));
+        when(mockGraphvizService.getGraphPath(anyString(), anyString(), anyString()))
+                .thenReturn(Paths.get("src/test/resources/graphviz/testVis.png"))
+                .thenReturn(Paths.get("src/test/resources/graphviz/testVis.svg"));
 
         // Mock CWLTool
         CWLTool mockCwlTool = Mockito.mock(CWLTool.class);
