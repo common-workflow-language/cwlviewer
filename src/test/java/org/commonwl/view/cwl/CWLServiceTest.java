@@ -89,7 +89,7 @@ public class CWLServiceTest {
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void parsePackedWorkflowNative() throws Exception {
+    public void parsePackedWorkflowNativePath() throws Exception {
         CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 5242880);
         Workflow dna = cwlService.parseWorkflowNative(
                 Paths.get("src/test/resources/cwl/make_to_cwl/dna.cwl"), "main");
@@ -101,6 +101,20 @@ public class CWLServiceTest {
 
     }
 
+    @Test
+    public void parsePackedWorkflowNativeStream() throws Exception {
+        CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 5242880);        
+        Workflow dna = cwlService.parseWorkflowNative(
+        		getClass().getResourceAsStream("/cwl/make_to_cwl/dna.cwl"), "main", "dna.cwl");
+        assertNotNull(dna);
+        assertEquals("dna.cwl", dna.getLabel());
+        assertEquals(1, dna.getInputs().size());
+        assertEquals(1, dna.getOutputs().size());
+        assertEquals(3, dna.getSteps().size());
+
+    }
+
+    
     /**
      * Test native loading parsing of a the LobSTR workflow CWL version draft-3
      */
