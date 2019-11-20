@@ -15,22 +15,26 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.16.RELEASE</version>
-		<relativePath />
+		<version>1.5.21.RELEASE</version>
+		<relativePath/>
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<jena.version>3.9.0</jena.version>
+		<jena.version>3.13.1</jena.version>
 		<!-- BEGIN should correspond to https://repo1.maven.org/maven2/org/apache/jena/jena/3.9.0/jena-3.9.0.pom -->
-		<ver.jsonldjava>0.12.1</ver.jsonldjava>
-		<ver.jackson>2.9.6</ver.jackson>
+		<ver.jsonldjava>0.12.5</ver.jsonldjava>
+		<ver.jackson>2.10.1</ver.jackson>
 		<!-- END -->
 	</properties>
 
 	<repositories>
+		<repository>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+		</repository>
 		<repository>
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
@@ -66,7 +70,7 @@
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
-			<version>1.23</version>
+			<version>1.25</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.jabbalaci</groupId>
@@ -102,7 +106,7 @@
 		<dependency>
 			<groupId>org.eclipse.jgit</groupId>
 			<artifactId>org.eclipse.jgit</artifactId>
-			<version>4.9.7.201810191756-r</version>
+			<version>5.5.1.201910021850-r</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
@@ -113,7 +117,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
-			<version>1.18</version>
+			<version>1.19</version>
 		</dependency>
 	</dependencies>
 
