@@ -595,7 +595,7 @@ public class CWLService {
 
     /**
      * Converts a yaml String to JsonNode
-     * @param yaml A String containing the yaml content
+     * @param path A Path to a file containing the yaml content
      * @return A JsonNode with the content of the document
      * @throws IOException 
      */
@@ -612,7 +612,7 @@ public class CWLService {
     
     /**
      * Converts a yaml String to JsonNode
-     * @param yaml A String containing the yaml content
+     * @param yamlStream An InputStream containing the yaml content
      * @return A JsonNode with the content of the document
      */
     private JsonNode yamlStreamToJson(InputStream yamlStream) {
