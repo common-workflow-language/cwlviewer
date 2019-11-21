@@ -407,7 +407,8 @@ public class WorkflowController {
      * Take a CWL workflow from the POST body and generate a PNG graph for it.
      * @param in The workflow CWL
      */
-    @PostMapping(value="/graph/png", produces="image/png")
+    @PostMapping(value="/graph/png", produces="image/png", 
+    		consumes={"text/yaml", "text/x-yaml", "text/plain", "application/octet-stream"}))
     @ResponseBody
     public Resource downloadGraphPngFromFile(InputStream in, HttpServletResponse response)
             throws IOException, NoSuchAlgorithmException {
@@ -417,9 +418,10 @@ public class WorkflowController {
 
     /**
      * Take a CWL workflow from the POST body and generate a SVG graph for it.
-     * @param in The workflow CWL
+     * @param in The workflow CWL as YAML text
      */
-    @PostMapping(value="/graph/svg", produces="image/svg+xml")
+    @PostMapping(value="/graph/svg", produces="image/svg+xml", 
+    		consumes={"text/yaml", "text/x-yaml", "text/plain", "application/octet-stream"})
     @ResponseBody
     public Resource downloadGraphSvgFromFile(InputStream in, HttpServletResponse response)
             throws IOException, NoSuchAlgorithmException {
