@@ -88,7 +88,11 @@ public class ROBundleServiceTest {
         when(mockGraphvizService.getGraphPath(anyString(), anyString(), anyString()))
                 .thenReturn(Paths.get("src/test/resources/graphviz/testVis.png"))
                 .thenReturn(Paths.get("src/test/resources/graphviz/testVis.svg"));
+        when(mockGraphvizService.getGraphStream(anyString(), anyString()))
+        .thenReturn(getClass().getResourceAsStream("/graphviz/testVis.png"))
+        .thenReturn(getClass().getResourceAsStream("/graphviz/testVis.svg"));
 
+        
         // Mock CWLTool
         CWLTool mockCwlTool = Mockito.mock(CWLTool.class);
         when(mockCwlTool.getPackedVersion(anyString()))
