@@ -247,7 +247,7 @@ public class CWLService {
         if (fileSizeBytes <= singleFileSizeLimit) {
         	try (InputStream in = Files.newInputStream(workflowFile)) {
         		return parseWorkflowNative(in, packedWorkflowId, 
-        				workflowFile.getName(-1).toString());
+        				workflowFile.getName(workflowFile.getNameCount()-1).toString());
         	}
         } else {
             throw new IOException("File '" + workflowFile.getFileName() +  "' is over singleFileSizeLimit - " +
