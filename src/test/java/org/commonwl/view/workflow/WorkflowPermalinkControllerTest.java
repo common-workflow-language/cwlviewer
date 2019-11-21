@@ -19,6 +19,20 @@
 
 package org.commonwl.view.workflow;
 
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.file.Paths;
+import java.util.Optional;
+
 import org.apache.commons.io.IOUtils;
 import org.commonwl.view.cwl.RDFService;
 import org.commonwl.view.git.GitDetails;
@@ -27,19 +41,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.PathResource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.Optional;
-
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Tests the controller for workflow related functionality
@@ -50,9 +55,9 @@ public class WorkflowPermalinkControllerTest {
 
     private MockMvc mockMvc;
     private byte[] rdfResponse;
-    private FileSystemResource png = new FileSystemResource("src/test/resources/graphviz/testVis.png");
-    private FileSystemResource svg = new FileSystemResource("src/test/resources/graphviz/testVis.svg");
-    private FileSystemResource dot = new FileSystemResource("src/test/resources/graphviz/testWorkflow.dot");
+    private PathResource png = new PathResource(Paths.get("src/test/resources/graphviz/testVis.png"));
+    private PathResource svg = new PathResource(Paths.get("src/test/resources/graphviz/testVis.svg"));
+    private PathResource dot = new PathResource(Paths.get("src/test/resources/graphviz/testWorkflow.dot"));
 
     @Before
     public void setUp() throws Exception {

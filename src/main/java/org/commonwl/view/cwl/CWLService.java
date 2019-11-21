@@ -24,13 +24,12 @@ import static org.apache.commons.io.FileUtils.readFileToString;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -142,7 +141,7 @@ public class CWLService {
         if (packedFile.length() <= singleFileSizeLimit) {
             List<WorkflowOverview> overviews = new ArrayList<>();
 
-            JsonNode packedJson = yamlStringToJson(readFileToString(packedFile));
+            JsonNode packedJson = yamlPathToJson(packedFile.toPath());
 
             if (packedJson.has(DOC_GRAPH)) {
                 for (JsonNode jsonNode : packedJson.get(DOC_GRAPH)) {
@@ -166,7 +165,77 @@ public class CWLService {
     }
 
     /**
-     * Gets the Workflow object from internal parsing
+     * Gets the Workflow object from internal parsing. 
+     * Note, the length of the stream is not checked.
+     *  
+     * @param workflowStream The workflow stream to be parsed
+     * @param packedWorkflowId The ID of the workflow object if the file is packed
+     * @param defaultLabel Label to give workflow if not set
+     * @return The constructed workflow object
+     */
+    public Workflow parseWorkflowNative(InputStream workflowStream, String packedWorkflowId, String defaultLabel) throws IOException {
+        // Parse file as yaml
+        JsonNode cwlFile = yamlStreamToJson(workflowStream);
+
+        // Check packed workflow occurs
+        if (packedWorkflowId != null) {
+            boolean found = false;
+            if (cwlFile.has(DOC_GRAPH)) {
+                for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
+                    if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
+                        String currentId = jsonNode.get(ID).asText();
+                        if (currentId.startsWith("#")) {
+                            currentId = currentId.substring(1);
+                        }
+                        if (currentId.equals(packedWorkflowId)) {
+                            cwlFile = jsonNode;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!found) throw new WorkflowNotFoundException();
+        } else {
+            // Check the current json node is a workflow
+            if (extractProcess(cwlFile) != CWLProcess.WORKFLOW) {
+                throw new WorkflowNotFoundException();
+            }
+        }
+
+        // Use filename for label if there is no defined one
+        String label = extractLabel(cwlFile);
+        if (label == null) {
+            label = defaultLabel;
+        }
+
+        // Construct the rest of the workflow model
+        Workflow workflowModel = new Workflow(label, extractDoc(cwlFile), getInputs(cwlFile),
+                getOutputs(cwlFile), getSteps(cwlFile));
+
+        workflowModel.setCwltoolVersion(cwlTool.getVersion());
+
+        // Generate DOT graph
+        StringWriter graphWriter = new StringWriter();
+        ModelDotWriter dotWriter = new ModelDotWriter(graphWriter);
+        try {
+            dotWriter.writeGraph(workflowModel);
+            workflowModel.setVisualisationDot(graphWriter.toString());
+        } catch (IOException ex) {
+            logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
+        }
+
+        return workflowModel;
+
+
+    }
+
+    
+    /**
+     * Gets the Workflow object from internal parsing.
+     * The size of the workflow file must be below the configured 
+     * singleFileSizeLimit in the constructor/spring config.
+     * 
      * @param workflowFile The workflow file to be parsed
      * @param packedWorkflowId The ID of the workflow object if the file is packed
      * @return The constructed workflow object
@@ -176,60 +245,10 @@ public class CWLService {
         // Check file size limit before parsing
         long fileSizeBytes = Files.size(workflowFile);
         if (fileSizeBytes <= singleFileSizeLimit) {
-
-            // Parse file as yaml
-            JsonNode cwlFile = yamlStringToJson(readFileToString(workflowFile.toFile()));
-
-            // Check packed workflow occurs
-            if (packedWorkflowId != null) {
-                boolean found = false;
-                if (cwlFile.has(DOC_GRAPH)) {
-                    for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
-                        if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
-                            String currentId = jsonNode.get(ID).asText();
-                            if (currentId.startsWith("#")) {
-                                currentId = currentId.substring(1);
-                            }
-                            if (currentId.equals(packedWorkflowId)) {
-                                cwlFile = jsonNode;
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (!found) throw new WorkflowNotFoundException();
-            } else {
-                // Check the current json node is a workflow
-                if (extractProcess(cwlFile) != CWLProcess.WORKFLOW) {
-                    throw new WorkflowNotFoundException();
-                }
-            }
-
-            // Use filename for label if there is no defined one
-            String label = extractLabel(cwlFile);
-            if (label == null) {
-                label = workflowFile.getFileName().toString();
-            }
-
-            // Construct the rest of the workflow model
-            Workflow workflowModel = new Workflow(label, extractDoc(cwlFile), getInputs(cwlFile),
-                    getOutputs(cwlFile), getSteps(cwlFile));
-
-            workflowModel.setCwltoolVersion(cwlTool.getVersion());
-
-            // Generate DOT graph
-            StringWriter graphWriter = new StringWriter();
-            ModelDotWriter dotWriter = new ModelDotWriter(graphWriter);
-            try {
-                dotWriter.writeGraph(workflowModel);
-                workflowModel.setVisualisationDot(graphWriter.toString());
-            } catch (IOException ex) {
-                logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
-            }
-
-            return workflowModel;
-
+        	try (InputStream in = Files.newInputStream(workflowFile)) {
+        		return parseWorkflowNative(in, packedWorkflowId, 
+        				workflowFile.getName(workflowFile.getNameCount()-1).toString());
+        	}
         } else {
             throw new IOException("File '" + workflowFile.getFileName() +  "' is over singleFileSizeLimit - " +
                     FileUtils.byteCountToDisplaySize(fileSizeBytes) + "/" +
@@ -486,7 +505,7 @@ public class CWLService {
         if (fileSizeBytes <= singleFileSizeLimit) {
 
             // Parse file as yaml
-            JsonNode cwlFile = yamlStringToJson(readFileToString(file));
+            JsonNode cwlFile = yamlPathToJson(file.toPath());
 
             // If the CWL file is packed there can be multiple workflows in a file
             int packedCount = 0;
@@ -576,13 +595,30 @@ public class CWLService {
 
     /**
      * Converts a yaml String to JsonNode
-     * @param yaml A String containing the yaml content
+     * @param path A Path to a file containing the yaml content
      * @return A JsonNode with the content of the document
+     * @throws IOException 
      */
-    private JsonNode yamlStringToJson(String yaml) {
+    private JsonNode yamlPathToJson(Path path) throws IOException {
         Yaml reader = new Yaml();
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.valueToTree(reader.load(yaml));
+        Path p;
+        
+        try (InputStream in = Files.newInputStream(path)) {
+        	return mapper.valueToTree(reader.load(in));
+        }
+    }
+
+    
+    /**
+     * Converts a yaml String to JsonNode
+     * @param yamlStream An InputStream containing the yaml content
+     * @return A JsonNode with the content of the document
+     */
+    private JsonNode yamlStreamToJson(InputStream yamlStream) {
+        Yaml reader = new Yaml();
+        ObjectMapper mapper = new ObjectMapper();
+		return mapper.valueToTree(reader.load(yamlStream));
     }
 
     /**

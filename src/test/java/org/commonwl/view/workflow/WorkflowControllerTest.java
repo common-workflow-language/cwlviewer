@@ -19,6 +19,25 @@
 
 package org.commonwl.view.workflow;
 
+import static org.hamcrest.core.Is.is;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
@@ -32,27 +51,13 @@ import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.PathResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static org.hamcrest.core.Is.is;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Tests the controller for workflow related functionality
@@ -321,12 +326,12 @@ public class WorkflowControllerTest {
         // Mock service to return mock workflow
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
         when(mockWorkflowService.getWorkflowGraph(anyString(), anyObject()))
-                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.svg"))
-                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.png"))
-                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testWorkflow.dot"))
-                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.svg"))
-                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.png"))
-                .thenReturn(new FileSystemResource("src/test/resources/graphviz/testWorkflow.dot"))
+                .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testVis.svg")))
+                .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testVis.png")))
+                .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testWorkflow.dot")))
+                .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testVis.svg")))
+                .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testVis.png")))
+                .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testWorkflow.dot")))
                 .thenThrow(new WorkflowNotFoundException());
 
         // Mock controller/MVC

@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.nio.file.Path;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -47,6 +48,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.PathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
@@ -227,7 +230,7 @@ public class WorkflowController {
                        "/robundle/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
                 produces = {"application/vnd.wf4ever.robundle+zip", "application/zip"})
     @ResponseBody
-    public FileSystemResource getROBundle(@PathVariable("domain") String domain,
+    public Resource getROBundle(@PathVariable("domain") String domain,
                                           @PathVariable("owner") String owner,
                                           @PathVariable("repoName") String repoName,
                                           @PathVariable("branch") String branch,
@@ -248,7 +251,7 @@ public class WorkflowController {
     @GetMapping(value="/robundle/**/*.git/{branch}/**",
                 produces = "application/vnd.wf4ever.robundle+zip")
     @ResponseBody
-    public FileSystemResource getROBundleGeneric(@PathVariable("branch") String branch,
+    public Resource getROBundleGeneric(@PathVariable("branch") String branch,
                                                  HttpServletRequest request,
                                                  HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
@@ -270,7 +273,7 @@ public class WorkflowController {
                        "/graph/svg/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
                 produces="image/svg+xml")
     @ResponseBody
-    public FileSystemResource downloadGraphSvg(@PathVariable("domain") String domain,
+    public Resource downloadGraphSvg(@PathVariable("domain") String domain,
                                                @PathVariable("owner") String owner,
                                                @PathVariable("repoName") String repoName,
                                                @PathVariable("branch") String branch,
@@ -290,7 +293,7 @@ public class WorkflowController {
     @GetMapping(value="/graph/svg/**/*.git/{branch}/**",
                 produces="image/svg+xml")
     @ResponseBody
-    public FileSystemResource downloadGraphSvgGeneric(@PathVariable("branch") String branch,
+    public Resource downloadGraphSvgGeneric(@PathVariable("branch") String branch,
                                                       HttpServletRequest request,
                                                       HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
@@ -310,7 +313,7 @@ public class WorkflowController {
                        "/graph/png/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
                 produces="image/png")
     @ResponseBody
-    public FileSystemResource downloadGraphPng(@PathVariable("domain") String domain,
+    public Resource downloadGraphPng(@PathVariable("domain") String domain,
                                                @PathVariable("owner") String owner,
                                                @PathVariable("repoName") String repoName,
                                                @PathVariable("branch") String branch,
@@ -330,7 +333,7 @@ public class WorkflowController {
     @GetMapping(value="/graph/png/**/*.git/{branch}/**",
                 produces="image/png")
     @ResponseBody
-    public FileSystemResource downloadGraphPngGeneric(@PathVariable("branch") String branch,
+    public Resource downloadGraphPngGeneric(@PathVariable("branch") String branch,
                                                       HttpServletRequest request,
                                                       HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
@@ -350,7 +353,7 @@ public class WorkflowController {
                        "/graph/xdot/{domain}.com/{owner}/{repoName}/blob/{branch}/**"},
                 produces="text/vnd.graphviz")
     @ResponseBody
-    public FileSystemResource downloadGraphDot(@PathVariable("domain") String domain,
+    public Resource downloadGraphDot(@PathVariable("domain") String domain,
                                                @PathVariable("owner") String owner,
                                                @PathVariable("repoName") String repoName,
                                                @PathVariable("branch") String branch,
@@ -370,7 +373,7 @@ public class WorkflowController {
     @GetMapping(value="/graph/xdot/**/*.git/{branch}/**",
                 produces="text/vnd.graphviz")
     @ResponseBody
-    public FileSystemResource downloadGraphDotGeneric(@PathVariable("branch") String branch,
+    public Resource downloadGraphDotGeneric(@PathVariable("branch") String branch,
                                                       HttpServletRequest request,
                                                       HttpServletResponse response) throws IOException {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
@@ -387,16 +390,16 @@ public class WorkflowController {
     @GetMapping(value={"/queue/{queueID}/tempgraph.png"},
             produces = "image/png")
     @ResponseBody
-    public FileSystemResource getTempGraphAsPng(@PathVariable("queueID") String queueID,
+    public PathResource getTempGraphAsPng(@PathVariable("queueID") String queueID,
                                                 HttpServletResponse response) throws IOException {
         QueuedWorkflow queued = workflowService.getQueuedWorkflow(queueID);
         if (queued == null) {
             throw new WorkflowNotFoundException();
         }
-        File out = graphVizService.getGraph(queued.getId() + ".png",
+        Path out = graphVizService.getGraphPath(queued.getId() + ".png",
                 queued.getTempRepresentation().getVisualisationDot(), "png");
         response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
-        return new FileSystemResource(out);
+        return new PathResource(out);
     }
 
     /**
