@@ -19,22 +19,7 @@
 
 package org.commonwl.view.workflow;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.nio.file.Path;
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.cwl.CWLService;
@@ -60,6 +45,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 @Controller
 public class WorkflowController {
@@ -408,7 +405,7 @@ public class WorkflowController {
      */
     @PostMapping(value="/graph/png", produces="image/png")
     @ResponseBody
-    public FileSystemResource downloadGraphPngFromFile(InputStream in, HttpServletResponse response)
+    public PathResource downloadGraphPngFromFile(InputStream in, HttpServletResponse response)
             throws IOException, NoSuchAlgorithmException {
         response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
         return getGraphFromInputStream(in, "png");
@@ -420,7 +417,7 @@ public class WorkflowController {
      */
     @PostMapping(value="/graph/svg", produces="image/svg+xml")
     @ResponseBody
-    public FileSystemResource downloadGraphSvgFromFile(InputStream in, HttpServletResponse response)
+    public PathResource downloadGraphSvgFromFile(InputStream in, HttpServletResponse response)
             throws IOException, NoSuchAlgorithmException {
         response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
         return getGraphFromInputStream(in, "svg");
@@ -580,23 +577,14 @@ public class WorkflowController {
         }
     }
 
-    private FileSystemResource getGraphFromInputStream(InputStream in, String format)
+    private PathResource getGraphFromInputStream(InputStream in, String format)
             throws IOException, NoSuchAlgorithmException {
-        final File tempFile = File.createTempFile("cwl", ".cwl");
-        tempFile.deleteOnExit();
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            DigestInputStream dis = new DigestInputStream(in, md);
-            try (FileOutputStream out = new FileOutputStream(tempFile)) {
-                IOUtils.copy(dis, out);
-            }
-            String sha256 = Hex.encodeHexString(dis.getMessageDigest().digest());
-            logger.info("Generating " + format + " graph for: " + tempFile.toPath() + " (SHA-256: " + sha256 + ")");
-            Workflow workflow = cwlService.parseWorkflowNative(tempFile.toPath(), null);
-            File out = graphVizService.getGraph(sha256 + "." + format, workflow.getVisualisationDot(), format);
-            return new FileSystemResource(out);
-        } finally {
-            tempFile.delete();
-        }
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        DigestInputStream dis = new DigestInputStream(in, md);
+        String sha256 = Hex.encodeHexString(dis.getMessageDigest().digest());
+        logger.info("Generating " + format + " graph for SHA-256: " + sha256 + "");
+        Workflow workflow = cwlService.parseWorkflowNative(dis, null, sha256);
+        Path out = graphVizService.getGraphPath(sha256 + "." + format, workflow.getVisualisationDot(), format);
+        return new PathResource(out);
     }
 }
