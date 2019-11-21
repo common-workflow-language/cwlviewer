@@ -408,7 +408,7 @@ public class WorkflowController {
      * @param in The workflow CWL
      */
     @PostMapping(value="/graph/png", produces="image/png", 
-    		consumes={"text/yaml", "text/x-yaml", "text/plain", "application/octet-stream"}))
+    		consumes={"text/yaml", "text/x-yaml", "text/plain", "application/octet-stream"})
     @ResponseBody
     public Resource downloadGraphPngFromFile(InputStream in, HttpServletResponse response)
             throws IOException, NoSuchAlgorithmException {
