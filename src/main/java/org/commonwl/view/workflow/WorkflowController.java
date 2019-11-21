@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
@@ -408,7 +409,7 @@ public class WorkflowController {
      */
     @PostMapping(value="/graph/png", produces="image/png")
     @ResponseBody
-    public FileSystemResource downloadGraphPngFromFile(InputStream in, HttpServletResponse response)
+    public Resource downloadGraphPngFromFile(InputStream in, HttpServletResponse response)
             throws IOException, NoSuchAlgorithmException {
         response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
         return getGraphFromInputStream(in, "png");
@@ -420,7 +421,7 @@ public class WorkflowController {
      */
     @PostMapping(value="/graph/svg", produces="image/svg+xml")
     @ResponseBody
-    public FileSystemResource downloadGraphSvgFromFile(InputStream in, HttpServletResponse response)
+    public Resource downloadGraphSvgFromFile(InputStream in, HttpServletResponse response)
             throws IOException, NoSuchAlgorithmException {
         response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
         return getGraphFromInputStream(in, "svg");
@@ -580,23 +581,10 @@ public class WorkflowController {
         }
     }
 
-    private FileSystemResource getGraphFromInputStream(InputStream in, String format)
+    private Resource getGraphFromInputStream(InputStream in, String format)
             throws IOException, NoSuchAlgorithmException {
-        final File tempFile = File.createTempFile("cwl", ".cwl");
-        tempFile.deleteOnExit();
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            DigestInputStream dis = new DigestInputStream(in, md);
-            try (FileOutputStream out = new FileOutputStream(tempFile)) {
-                IOUtils.copy(dis, out);
-            }
-            String sha256 = Hex.encodeHexString(dis.getMessageDigest().digest());
-            logger.info("Generating " + format + " graph for: " + tempFile.toPath() + " (SHA-256: " + sha256 + ")");
-            Workflow workflow = cwlService.parseWorkflowNative(tempFile.toPath(), null);
-            Path out = graphVizService.getGraphPath(sha256 + "." + format, workflow.getVisualisationDot(), format);
-            return new FileSystemResource(out.toFile());
-        } finally {
-            tempFile.delete();
-        }
+        Workflow workflow = cwlService.parseWorkflowNative(in, "", "workflow"); // first workflow will do
+        InputStream out = graphVizService.getGraphStream(workflow.getVisualisationDot(), format);
+        return new InputStreamResource(out);
     }
 }
