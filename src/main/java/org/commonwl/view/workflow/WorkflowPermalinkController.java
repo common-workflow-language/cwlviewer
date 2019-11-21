@@ -20,6 +20,7 @@
 package org.commonwl.view.workflow;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.commonwl.view.cwl.RDFService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -194,13 +196,15 @@ public class WorkflowPermalinkController {
      * Get the generated graph for a workflow in SVG format
      * @param commitId The commit ID of the workflow
      * @return The SVG image
+     * @throws IOException 
+     * @throws WorkflowNotFoundException 
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "image/svg+xml")
-    public FileSystemResource getGraphAsSvg(@PathVariable("commitid") String commitId,
+    public Resource getGraphAsSvg(@PathVariable("commitid") String commitId,
             @RequestParam(name = "part") Optional<String> part,
                                             HttpServletRequest request,
-                                            HttpServletResponse response) {
+                                            HttpServletResponse response) throws WorkflowNotFoundException, IOException {
         Workflow workflow = getWorkflow(commitId, request, part);
         response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
         return workflowService.getWorkflowGraph("svg", workflow.getRetrievedFrom());
@@ -210,13 +214,15 @@ public class WorkflowPermalinkController {
      * Get the generated graph for a workflow in PNG format
      * @param commitId The commit ID of the workflow
      * @return The PNG image
+     * @throws IOException 
+     * @throws WorkflowNotFoundException 
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "image/png")
-    public FileSystemResource getGraphAsPng(@PathVariable("commitid") String commitId,
+    public Resource getGraphAsPng(@PathVariable("commitid") String commitId,
             @RequestParam(name = "part") Optional<String> part,
                                             HttpServletRequest request,
-                                            HttpServletResponse response) {
+                                            HttpServletResponse response) throws WorkflowNotFoundException, IOException {
         Workflow workflow = getWorkflow(commitId, request, part);
         response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
         return workflowService.getWorkflowGraph("png", workflow.getRetrievedFrom());
@@ -226,13 +232,15 @@ public class WorkflowPermalinkController {
      * Get the generated graph for a workflow in XDOT format
      * @param commitId The commit ID of the workflow
      * @return The XDOT source
+     * @throws IOException 
+     * @throws WorkflowNotFoundException 
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = "text/vnd+graphviz")
-    public FileSystemResource getGraphAsXDot(@PathVariable("commitid") String commitId,
+    public Resource getGraphAsXDot(@PathVariable("commitid") String commitId,
             @RequestParam(name = "part") Optional<String> part,
                                              HttpServletRequest request,
-                                             HttpServletResponse response) {
+                                             HttpServletResponse response) throws WorkflowNotFoundException, IOException {
         Workflow workflow = getWorkflow(commitId, request, part);
         response.setHeader("Content-Disposition", "inline; filename=\"graph.dot\"");
         return workflowService.getWorkflowGraph("xdot", workflow.getRetrievedFrom());
@@ -246,7 +254,7 @@ public class WorkflowPermalinkController {
      */
     @GetMapping(value = "/git/{commitid}/**",
                 produces = {"application/vnd.wf4ever.robundle+zip", "application/zip"})
-    public FileSystemResource getROBundle(@PathVariable("commitid") String commitId,
+    public Resource getROBundle(@PathVariable("commitid") String commitId,
             @RequestParam(name = "part") Optional<String> part,
                                           HttpServletRequest request,
                                           HttpServletResponse response) {

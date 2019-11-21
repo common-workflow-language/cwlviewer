@@ -23,6 +23,7 @@ import static org.apache.commons.io.FileUtils.readFileToString;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -162,13 +163,16 @@ public class ROBundleService {
             manifest.setAuthoredBy(new ArrayList<>(authors));
 
             // Add visualisation images
-            File png = graphVizService.getGraph(workflow.getID() + ".png", workflow.getVisualisationDot(), "png");
-            Files.copy(png.toPath(), bundleRoot.resolve("visualisation.png"));
+            try (InputStream png = graphVizService.getGraphStream(workflow.getVisualisationDot(), "png")) {
+            	Files.copy(png, bundleRoot.resolve("visualisation.png"));
+            }
             PathMetadata pngAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.png"));
             pngAggr.setRetrievedFrom(new URI(workflow.getPermalink(Format.png)));
 
-            File svg = graphVizService.getGraph(workflow.getID() + ".svg", workflow.getVisualisationDot(), "svg");
-            Files.copy(svg.toPath(), bundleRoot.resolve("visualisation.svg"));
+            try (InputStream svg = graphVizService.getGraphStream(workflow.getVisualisationDot(), "svg")) {
+            	Files.copy(svg, bundleRoot.resolve("visualisation.svg"));
+        	}
+            		
             PathMetadata svgAggr = bundle.getManifest().getAggregation(bundleRoot.resolve("visualisation.svg"));
             svgAggr.setRetrievedFrom(new URI(workflow.getPermalink(Format.svg)));
 
