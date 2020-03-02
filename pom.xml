@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.22.RELEASE</version>
+		<version>2.0.9.RELEASE</version>
 		<relativePath/>
 	</parent>
 
@@ -24,9 +24,9 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
 		<jena.version>3.14.0</jena.version>
-		<!-- BEGIN should correspond to https://repo1.maven.org/maven2/org/apache/jena/jena/3.9.0/jena-3.9.0.pom -->
-		<ver.jsonldjava>0.13.0</ver.jsonldjava>
-		<ver.jackson>2.10.3</ver.jackson>
+		<!-- BEGIN should correspond to https://repo1.maven.org/maven2/org/apache/jena/jena/3.14.0/jena-3.14.0.pom -->
+		<ver.jsonldjava>0.12.5</ver.jsonldjava>
+		<ver.jackson>2.10.1</ver.jackson>
 		<!-- END -->
 	</properties>
 
@@ -107,12 +107,6 @@
 			<groupId>org.eclipse.jgit</groupId>
 			<artifactId>org.eclipse.jgit</artifactId>
 			<version>5.6.1.202002131546-r</version>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.10.19</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
