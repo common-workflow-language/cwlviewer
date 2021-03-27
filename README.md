@@ -22,9 +22,11 @@ or join the [gitter chat for cwlviewer](https://gitter.im/common-workflow-langua
 
 # Using CWL Viewer
 
-You are recommended to use the **production instance** of CWL Viewer at https://view.commonwl.org/ which runs the latest [release](https://github.com/common-workflow-language/cwlviewer/releases). Any downtime should be reported on the [gitter chat for cwlviewer](https://gitter.im/common-workflow-language/cwlviewer). 
+You are recommended to use the **production instance** of CWL Viewer at https://view.commonwl.org/ which runs the latest [release](https://github.com/common-workflow-language/cwlviewer/releases). Any downtime should be reported on the [gitter chat for cwlviewer](https://gitter.im/common-workflow-language/cwlviewer).
 
+<!--- I don't think this is a thing any more.
 The **dev instance** at http://view.commonwl.org:8082/ corresponds to the current `master` branch, and is updated every 6 minutes to run the latest [commonworkflowlanguage/cwlviewer docker image](https://hub.docker.com/r/commonworkflowlanguage/cwlviewer/builds/). Note that this instance is NOT secured and might break at any time.
+-->
 
 # Running
 
@@ -42,7 +44,7 @@ To stop and remove:
 
     docker-compose down
 
-If you change the source code, then use this `docker-compose.override.yml` and 
+If you change the source code, then use this `docker-compose.override.yml` and
 re-build with `docker-compose build`:
 
 ```yaml
@@ -73,7 +75,7 @@ system properties like `-Dspring.data.mongodb.host=mongo.example.org` and
 
 #### Apache Jena Fuseki (or alternative SPARQL server)
 
-You will also need to have a SPARQL server such as [Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) running, 
+You will also need to have a SPARQL server such as [Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) running,
 by default on `localhost:3030`
 
 ## Compiling and Running
@@ -133,7 +135,7 @@ command line, e.g. `-DcacheDays=1` or via a [variety of other methods supported 
 
 # Dump/restore
 
-While you can perform backup of the Docker volumes, 
+While you can perform backup of the Docker volumes,
 for larger upgrades of CWL Viewer it is recommended instead to do a JSON dump
 and re-load, which will force CWL Viewer to fetch and parse again.
 
@@ -155,14 +157,14 @@ look like a commit ID. Note that this might break previous permalinks.
 
 Developers and [contributors](https://github.com/common-workflow-language/cwlviewer/graphs/contributors) include:
 
-* **Mark Robinson** http://orcid.org/0000-0002-8184-7507 
+* **Mark Robinson** http://orcid.org/0000-0002-8184-7507
 * Stian Soiland-Reyes http://orcid.org/0000-0001-9842-9718
 * Michael Crusoe http://orcid.org/0000-0002-2961-9670
 * Carole Goble http://orcid.org/0000-0003-1219-2137
 * Charles Overbeck https://github.com/coverbeck
 * Finn Bacall http://orcid.org/0000-0002-0048-3300
 
-Thanks to:  
+Thanks to:
 
 * [eScience Lab](http://www.esciencelab.org.uk/) at [The University of Manchester](http://www.cs.manchester.ac.uk/)
 * [BioExcel Center of Excellence for Computational Biomolecular Research](http://bioexcel.eu/)
