@@ -34,9 +34,9 @@ If you are a developer, or you want to use the CWL Viewer in a closed environmen
 
 ## Recommended - Running with Docker
 
-This application can be started with [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/) so get them installed already.
+This application can be started with [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/) and Docker Compose is the recommended method of running or developing this codebase.
 
-Then run the following commands to clone the project in your local system and direct to cwlviewer directory.
+Then run the following commands to clone the project in your local system.
 
    ``` 
     git clone https://github.com/common-workflow-language/cwlviewer.git
@@ -47,7 +47,9 @@ In the project directory, to start CWLViewer exposed on port `8080`, run:
 
     docker-compose up
      
-The web server will connect to a local host, you'll see the message saying "Tomacat started on port(s):8080". Then you can see the appliaction already running.   
+The web server will connect to a local host, you'll see the message saying "Tomacat started on port(s):8080". 
+
+To see the locally running CWL Viewer app, visit https://localhost:8080 in your web browser.  
    
 To stop and remove:
 
