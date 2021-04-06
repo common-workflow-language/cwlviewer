@@ -49,7 +49,7 @@ In the project directory, to start CWLViewer exposed on port `8080`, run:
      
 The web server will connect to a local host, you'll see the message saying "Tomacat started on port(s):8080". 
 
-To see the locally running CWL Viewer app, visit https://localhost:8080 in your web browser.  
+To see the locally running CWL Viewer app, visit http://localhost:8080/ in your web browser.  
    
 To stop and remove:
 
