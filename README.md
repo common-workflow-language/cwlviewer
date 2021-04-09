@@ -170,8 +170,6 @@ look like a commit ID. Note that this might break previous permalinks.
 
 2017 Video overview https://youtu.be/_yjhVTmvxLU
 
-2017 Technical Report: https://doi.org/10.5281/zenodo.848163
-
 # Thanks
 
 Developers and [contributors](https://github.com/common-workflow-language/cwlviewer/graphs/contributors) include:
