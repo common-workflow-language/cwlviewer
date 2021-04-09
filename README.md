@@ -164,6 +164,13 @@ The script `load.py` (requires Python 3) can be used to restore from such JSON d
 The optional parameter `--no-commits` can be added to skip those entries that
 look like a commit ID. Note that this might break previous permalinks.
 
+# Documentation
+
+2017 Poster https://f1000research.com/posters/6-1075
+
+2017 Video overview https://youtu.be/_yjhVTmvxLU
+
+2017 Technical Report: https://doi.org/10.5281/zenodo.848163
 
 # Thanks
 
