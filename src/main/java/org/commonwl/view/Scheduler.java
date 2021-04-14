@@ -32,7 +32,7 @@ public class Scheduler {
 
     /**
      * A Scheduled function to delete old queued workflow entries
-     * from the queue. Age is determined by DELETE_INTERVAL_HOUR
+     * from the queue. Age is determined by QUEUED_WORKFLOW_AGE_LIMIT_HOURS
      */
     @Scheduled(cron = "${cron.deleteOldQueuedWorkflows}")
     public void removeOldQueuedWorkflowEntries() {
