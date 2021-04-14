@@ -166,9 +166,11 @@ look like a commit ID. Note that this might break previous permalinks.
 
 # Documentation
 
-2017 Poster https://f1000research.com/posters/6-1075
+2017 Poster https://doi.org/10.7490/f1000research.1114375.1
 
 2017 Video overview https://youtu.be/_yjhVTmvxLU
+
+2017 Technical Report https://doi.org/10.5281/zenodo.823295
 
 # Thanks
 
