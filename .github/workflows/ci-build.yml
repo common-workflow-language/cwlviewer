@@ -48,6 +48,7 @@ jobs:
       - name: Coverage report
         run: |
           mvn prepare-package -DskipTests=true
-          mvn cobertura:cobertura coveralls:report --no-transfer-progress -DrepoToken=${{ secrets.GITHUB_TOKEN }} -DpullRequest=${{ github.event.number }}
+          mvn cobertura:cobertura coveralls:report --no-transfer-progress -DrepoToken=$COVERALLS_SECRET -DpullRequest=${{ github.event.number }}
         env:
           CI_NAME: github
+          COVERALLS_SECRET: ${{ secrets.GITHUB_TOKEN }}
