@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 public class QueuedWorkflowRepositoryTest {
 
     @Autowired
-    public QueuedWorkflowRepository repository;
+    QueuedWorkflowRepository repository;
 
     @Test
     public void deleteQueuedWorkflowByRetrievedFromTest() {
