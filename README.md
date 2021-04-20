@@ -164,10 +164,10 @@ The script `load.py` (requires Python 3) can be used to restore from such JSON d
 The optional parameter `--no-commits` can be added to skip those entries that
 look like a commit ID. Note that this might break previous permalinks.
 
-# CONNECTING JAVA DEBUGGER WITH DOCKER COMPOSE
+# CONNECTING JAVA DEBUGGER WITH DOCKER COMPOSE USING INTELLIJ IDE
 
 Connecting to a java debugger can be broken down into the following steps:
-###1. Run the application using docker-compose
+### 1. Run the application using docker-compose
 Create a Dockerfile_debug at the root of the directory with the same content as the Dockerfile of the application
 
 Create a docker-compose-debug.yml file with the same content as the docker-compose.yml file at the root of the directory replacing this in the docker-compose-debug.yml
@@ -211,7 +211,7 @@ you can access the application on localhost port 8080(which is the default port 
 
 You can make HTTP requests on it and expect it to work
 
-###2. Create a remote debug config
+### 2. Create a remote debug config
 In the docker-compose-debug.yml, click on the “insect looking image”, ![img_1.png](img_1.png)  on the side gutters
 
 Select the module in the Use module classpath list, in this case “cwlviewer”
@@ -227,12 +227,12 @@ Also check the Custom Command field: it should contain the -agentlib option and 
     java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -Djava.security.egd=file:/dev/./urandom -jar /usr/lib/cwlviewer.jar
 
 
-####NB
+#### NB
 If the default port is allocated to something else, change the container port for the Java debugger to connect to and make sure that the port in the remote debug configuration is the same.
 
 If the application is already running, do not run the debug configuration. Apply the settings and click Cancel.
 
-###3. Launch the debug configuration﻿
+### 3. Launch the debug configuration﻿
 If the application is already running, stop it. 
 
 This can be done by selecting the Docker Compose node in the Services tool window below and click  ![img.png](img.png)in the toolbar.
