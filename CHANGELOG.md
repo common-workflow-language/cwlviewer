@@ -35,7 +35,7 @@ WIP
 - Brings API documentation up to date with the current state of the JSON API
 
 ## v1.2.0 [22 Aug 2017]
-- This release contains no changes - please use [v1.2.1]() instead
+- This release contains no changes - please use [v1.2.1](https://github.com/common-workflow-language/cwlviewer/releases/tag/v1.2.1) instead
 - [References](https://doi.org/10.5281/zenodo.846747)
 
 ## v1.1.1 [11-08-2017]
