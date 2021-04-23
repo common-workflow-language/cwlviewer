@@ -173,7 +173,7 @@ provide a [pull request](https://github.com/common-workflow-language/cwlviewer/p
 or join the [gitter chat for cwlviewer](https://gitter.im/common-workflow-language/cwlviewer)!
 
 ## Changelog
-See Changelog(https://github.com/common-workflow-language/cwlviewer/blob/main/CHANGELOG.md)
+See [Changes](https://github.com/common-workflow-language/cwlviewer/blob/main/CHANGELOG.md)
 
 # Thanks
 
