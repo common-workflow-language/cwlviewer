@@ -71,12 +71,12 @@
                                         <p><i th:text="${workflow.doc}">Description</i></p>
                                     </td>
                                     <td>
-                                        <a th:href="@{${workflow.retrievedFrom.getUrl()}}" rel="noopener" target="_blank">
+                                        <a th:href="@{${workflow.retrievedFrom.repoUrl}}" rel="noopener" target="_blank">
                                             <img th:if="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/GitHub-Mark-32px.png" th:src="@{/img/GitHub-Mark-32px.png}" width="20" height="20" />
                                             <img th:unless="${workflow.retrievedFrom.getType().name() == 'GITHUB'}" id="gitLogo" src="../static/img/gitlogo.png" th:src="@{/img/gitlogo.png}" width="24" height="24" />
                                             <span th:text="@{${workflow.retrievedFrom.repoUrl}}">https://github.com/test/test2/repo.git</span>
                                         </a>
-                                        <p th:if="${workflow.retrievedFrom.path != null}">Path: <i th:text="${workflow.retrievedFrom.path}">/path/to/workflow.cwl</i></p>
+                                        <p th:if="${workflow.retrievedFrom.path != null}">Path:  <a th:href="@{${workflow.retrievedFrom.getUrl()}}" rel="noopener" target="_blank"><i th:text="${workflow.retrievedFrom.path}">/path/to/workflow.cwl</i></a></p>
                                         <p>Branch/Commit ID: <i th:text="${workflow.retrievedFrom.branch}">master</i></p>
                                         <p th:if="${workflow.retrievedFrom.packedId != null}">Packed ID: <i th:text="${workflow.retrievedFrom.packedId}">#main</i></p>
                                     </td>
