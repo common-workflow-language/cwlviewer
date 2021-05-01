@@ -15,13 +15,13 @@ WIP
 - Support [git tags](https://github.com/common-workflow-language/cwlviewer/pull/192) 
 - UI: [Shrink description text](https://github.com/common-workflow-language/cwlviewer/pull/178)
 
-## v1.2.2 [ 24-08-2017]
+## v1.2.2 [24-08-2017]
 ### Fixed
 - Fix for invalid branch names being accepted in some circumstances
 - Fix regression in supporting slashes in branch names
 - [References](https://doi.org/10.5281/zenodo.848163)
 
-## v1.2.1 [ 22-08-2017]
+## v1.2.1 [22-08-2017]
 ### Added
 - Adds directory listing functionality
 ### Fixed
@@ -34,7 +34,7 @@ WIP
 - Fix for a concurrency issue
 - Brings API documentation up to date with the current state of the JSON API
 
-## v1.2.0 [22 Aug 2017]
+## v1.2.0 [22-08-2017]
 - This release contains no changes - please use [v1.2.1](https://github.com/common-workflow-language/cwlviewer/releases/tag/v1.2.1) instead
 - [References](https://doi.org/10.5281/zenodo.846747)
 
