@@ -25,19 +25,19 @@ This application can be started with [Docker](https://www.docker.com/) and [Dock
 
 Then run the following commands to clone the project in your local system.
 
-   ``` 
+   ```
     git clone https://github.com/common-workflow-language/cwlviewer.git
-    cd cwlviewer 
+    cd cwlviewer
   ```
 
 In the project directory, to start CWLViewer exposed on port `8080`, run:
 
     docker-compose up
-     
-The web server will connect to a local host, you'll see the message saying "Tomacat started on port(s):8080". 
 
-To see the locally running CWL Viewer app, visit http://localhost:8080/ in your web browser.  
-   
+The web server will connect to a local host, you'll see the message saying "Tomacat started on port(s):8080".
+
+To see the locally running CWL Viewer app, visit http://localhost:8080/ in your web browser.
+
 To stop and remove:
 
     docker-compose down
@@ -58,6 +58,44 @@ See the [docker-compose.yml](docker-compose.yml) file for details.
 If you have modified the source code, then you may want to build the docker image locally first:
 
     docker build -t commonworkflowlanguage/cwlviewer .
+
+## Running Spring Boot locally for development, with MongoDB and Jena Fuseki in Docker
+
+Create `docker-compose.override.yml`:
+
+```
+version: '3.2'
+services:
+  mongo:
+    ports:
+     - "27017:27017"
+  sparql:
+    ports:
+     - "3030:3030"
+```
+
+Then start the containers:
+
+```
+docker-compose up
+```
+
+Then start Spring Boot locally:
+
+```
+mvn spring-boot:run -Dserver.port=7999
+```
+
+Now you can connect to http://localhost:7999 in your browser.
+
+## Deleting the data volumes to reset state
+
+To completely reset the state, you must delete the data volumes:
+
+```
+docker-compose down
+docker volume rm  cwlviewer_bundle cwlviewer_git cwlviewer_graphviz cwlviewer_mongo cwlviewer_sparql
+```
 
 ## Running without Docker
 
