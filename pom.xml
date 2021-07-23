@@ -23,10 +23,10 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<jena.version>4.0.0</jena.version>
+		<jena.version>4.1.0</jena.version>
 		<!-- BEGIN should correspond to https://repo1.maven.org/maven2/org/apache/jena/jena/3.9.0/jena-3.9.0.pom -->
 		<ver.jsonldjava>0.13.3</ver.jsonldjava>
-		<ver.jackson>2.12.3</ver.jackson>
+		<ver.jackson>2.12.4</ver.jackson>
 		<!-- END -->
 	</properties>
 
@@ -70,7 +70,7 @@
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
-			<version>1.28</version>
+			<version>1.29</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.jabbalaci</groupId>
@@ -106,7 +106,7 @@
 		<dependency>
 			<groupId>org.eclipse.jgit</groupId>
 			<artifactId>org.eclipse.jgit</artifactId>
-			<version>5.11.1.202105131744-r</version>
+			<version>5.12.0.202106070339-r</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
@@ -117,7 +117,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
-			<version>1.20</version>
+			<version>1.21</version>
 		</dependency>
 	</dependencies>
 
