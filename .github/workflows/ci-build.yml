@@ -45,10 +45,16 @@ jobs:
         run: |
           ./mvnw test -B
 
-      - name: Coverage report
-        run: |
-          mvn prepare-package -DskipTests=true
-          mvn cobertura:cobertura coveralls:report --no-transfer-progress -DrepoToken=$COVERALLS_SECRET -DpullRequest=${{ github.event.number }}
-        env:
-          CI_NAME: github
-          COVERALLS_SECRET: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Coverage report
+      #   run: |
+      #     mvn prepare-package -DskipTests=true
+      #     mvn cobertura:cobertura coveralls:report --no-transfer-progress -DrepoToken=$COVERALLS_SECRET -DpullRequest=${{ github.event.number }}
+      #   env:
+      #     CI_NAME: github
+      #     COVERALLS_SECRET: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate coverage Report
+        run: mvn cobertura:cobertura
+
+      - name: Upload coverage to Codecov
+        run: bash <(curl -s https://codecov.io/bash)
