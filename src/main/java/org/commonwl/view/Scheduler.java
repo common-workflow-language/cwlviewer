@@ -24,6 +24,9 @@ public class Scheduler {
     @Value("${queuedWorkflowAgeLimitHours}")
     private Integer QUEUED_WORKFLOW_AGE_LIMIT_HOURS;
 
+    @Value("${tmpDirAgeLimitHours}")
+    private Integer TMP_DIR_AGE_LIMIT_HOURS;
+
     @Autowired
     public Scheduler(QueuedWorkflowRepository queuedWorkflowRepository) {
         this.queuedWorkflowRepository = queuedWorkflowRepository;
@@ -54,5 +57,20 @@ public class Scheduler {
 
         logger.info(queuedWorkflowRepository.deleteByTempRepresentation_RetrievedOnLessThanEqual(removeTime)
                 + " Old queued workflows removed");
+    }
+
+
+    @Scheduled(cron = "${cron.clearTmpDir}")
+    public void clearTmpDir() {
+        Calendar calendar = Calendar.getInstance();
+        Date now = new Date();
+        calendar.setTime(now);
+
+        // calculate time QUEUED_WORKFLOW_AGE_LIMIT_HOURS before now
+        calendar.add(Calendar.HOUR, -TMP_DIR_AGE_LIMIT_HOURS);
+        Date removeTime = calendar.getTime();
+
+        // access path to tmp dir
+        // wipe tmp dir and log info
     }
 }
