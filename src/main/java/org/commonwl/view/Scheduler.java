@@ -91,7 +91,7 @@ public class Scheduler {
             } else {
                 errorGobbler.join();
                 logger.info("Could not clear /tmp directory");
-                logger.error(errorGobbler.getContent());
+                logger.warn(errorGobbler.getContent());
             
             }
         } catch (IOException|InterruptedException e) {
