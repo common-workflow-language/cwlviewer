@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+
+import java.io.IOException;
+
 import java.util.Calendar;
 import java.util.Date;
 
@@ -87,11 +90,12 @@ public class Scheduler {
                 logger.info("Successfully Cleared /tmp directory");
             } else {
                 errorGobbler.join();
-                throw new Exception(errorGobbler.getContent());
+                logger.info("Could not clear /tmp directory");
+                logger.error(errorGobbler.getContent());
+            
             }
         } catch (IOException|InterruptedException e) {
             logger.error("Error running clear /tmp dir process", e);
-            throw new Exception("Error running /tmp dir clearing process");
         }
     }
 }
