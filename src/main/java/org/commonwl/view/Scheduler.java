@@ -19,7 +19,7 @@ import java.util.Date;
 @Component
 public class Scheduler {
 
-    private final java.util.logging.Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final QueuedWorkflowRepository queuedWorkflowRepository;
 
     @Value("${queuedWorkflowAgeLimitHours}")
@@ -69,9 +69,9 @@ public class Scheduler {
         try {
             // Run command
             String[] command = {"find", "/tmp", "-ctime", "+" + TMP_DIR_AGE_LIMIT_DAYS, "-exec", "rm", "-rf", "{}", "+"};
-            ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
+            ProcessBuilder clearProcess = new ProcessBuilder(command);
             logger.info("Clearing /tmp directory for content older than " + TMP_DIR_AGE_LIMIT_DAYS + " day" + (TMP_DIR_AGE_LIMIT_DAYS > 1 ? "s" : "") + "...");
-            Process process = cwlToolProcess.start();
+            Process process = clearProcess.start();
 
             // Read output from the process using threads
             StreamGobbler inputGobbler = new StreamGobbler(process.getInputStream());
