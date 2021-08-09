@@ -1,6 +1,7 @@
 package org.commonwl.view;
 
 
+import org.commonwl.view.util.StreamGobbler;
 import org.commonwl.view.workflow.QueuedWorkflowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ import java.util.Date;
 @Component
 public class Scheduler {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final java.util.logging.Logger logger = LoggerFactory.getLogger(this.getClass());
     private final QueuedWorkflowRepository queuedWorkflowRepository;
 
     @Value("${queuedWorkflowAgeLimitHours}")
@@ -62,15 +63,33 @@ public class Scheduler {
 
     @Scheduled(cron = "${cron.clearTmpDir}")
     public void clearTmpDir() {
-        Calendar calendar = Calendar.getInstance();
-        Date now = new Date();
-        calendar.setTime(now);
+        // TODO: find source of tmp dir creation and delete from there
 
-        // calculate time QUEUED_WORKFLOW_AGE_LIMIT_HOURS before now
-        calendar.add(Calendar.HOUR, -TMP_DIR_AGE_LIMIT_HOURS);
-        Date removeTime = calendar.getTime();
-
-        // access path to tmp dir
         // wipe tmp dir and log info
+        try {
+            // Run command
+            String[] command = {"find", "/tmp", "-ctime", "+10", "-exec", "rm", "-rf", "{}", "+"};
+            ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
+            Process process = cwlToolProcess.start();
+
+            // Read output from the process using threads
+            StreamGobbler inputGobbler = new StreamGobbler(process.getInputStream());
+            StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream());
+            errorGobbler.start();
+            inputGobbler.start();
+
+            // Wait for process to complete
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                inputGobbler.join();
+                logger.info(inputGobbler.getContent());
+            } else {
+                errorGobbler.join();
+                throw new Exception(errorGobbler.getContent());
+            }
+        } catch (IOException|InterruptedException e) {
+            logger.error("Error running clear /tmp dir process", e);
+            throw new Exception("Error running /tmp dir clearing process");
+        }
     }
 }
