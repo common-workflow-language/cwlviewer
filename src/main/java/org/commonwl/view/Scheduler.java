@@ -90,7 +90,7 @@ public class Scheduler {
                 logger.info("Successfully Cleared /tmp directory");
             } else {
                 errorGobbler.join();
-                logger.info("Could not clear /tmp directory");
+                logger.warn("Could not clear /tmp directory");
                 logger.warn(errorGobbler.getContent());
             
             }
