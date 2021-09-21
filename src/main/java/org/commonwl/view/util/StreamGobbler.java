@@ -32,7 +32,7 @@ public class StreamGobbler extends Thread {
     private final String lineSeparator = System.getProperty("line.separator");
 
     private InputStream is;
-    private String content = "";
+    private String content = ""; // TODO: update to string builder
 
     public StreamGobbler(InputStream is) {
         this.is = is;
