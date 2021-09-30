@@ -197,7 +197,7 @@ public class CWLService {
             }
             if (!found && ! packedWorkflowId.isEmpty()) throw new WorkflowNotFoundException();
         }
-        if (! found && extractProcess(cwlFile) != CWLProcess.WORKFLOW) {
+        if (! found && extractProcess(cwlFile) == CWLProcess.WORKFLOW) {
         	// Check the current json node is a workflow
         	found = true;
         }
