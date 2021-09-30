@@ -585,7 +585,7 @@ public class WorkflowController {
 
     private Resource getGraphFromInputStream(InputStream in, String format)
             throws IOException, NoSuchAlgorithmException {
-        Workflow workflow = cwlService.parseWorkflowNative(in, "", "workflow"); // first workflow will do
+        Workflow workflow = cwlService.parseWorkflowNative(in, null, "workflow"); // first workflow will do
         InputStream out = graphVizService.getGraphStream(workflow.getVisualisationDot(), format);
         return new InputStreamResource(out);
     }
