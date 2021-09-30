@@ -64,6 +64,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
@@ -602,10 +603,8 @@ public class CWLService {
      * @throws IOException 
      */
     private JsonNode yamlPathToJson(Path path) throws IOException {
-        Yaml reader = new Yaml();
+        Yaml reader = new Yaml(new SafeConstructor());
         ObjectMapper mapper = new ObjectMapper();
-        Path p;
-        
         try (InputStream in = Files.newInputStream(path)) {
         	return mapper.valueToTree(reader.load(in));
         }
@@ -618,7 +617,7 @@ public class CWLService {
      * @return A JsonNode with the content of the document
      */
     private JsonNode yamlStreamToJson(InputStream yamlStream) {
-        Yaml reader = new Yaml();
+        Yaml reader = new Yaml(new SafeConstructor());
         ObjectMapper mapper = new ObjectMapper();
 		return mapper.valueToTree(reader.load(yamlStream));
     }
