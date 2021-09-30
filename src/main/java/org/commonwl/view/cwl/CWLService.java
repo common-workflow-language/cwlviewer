@@ -169,7 +169,7 @@ public class CWLService {
      * Note, the length of the stream is not checked.
      *  
      * @param workflowStream The workflow stream to be parsed
-     * @param packedWorkflowId The ID of the workflow object if the file is packed. <code>null</code> means the workflow is not expected to be packecd, while "" means the first workflow found is used, packed or non-packed.
+     * @param packedWorkflowId The ID of the workflow object if the file is packed. <code>null</code> means the workflow is not expected to be packed, while "" means the first workflow found is used, packed or non-packed.
      * @param defaultLabel Label to give workflow if not set
      * @return The constructed workflow object
      */

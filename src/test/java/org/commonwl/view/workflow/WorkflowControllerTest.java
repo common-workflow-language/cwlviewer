@@ -386,16 +386,16 @@ public class WorkflowControllerTest {
 
         // Mock controller/MVC
         CWLService mockCWLService = Mockito.mock(CWLService.class);
-		GraphVizService graphVizService = Mockito.mock(GraphVizService.class);
-		
-		when(graphVizService.getGraphStream(anyString(), eq("svg")))
-				.thenReturn(getClass().getResourceAsStream("/graphviz/testWorkflow.dot"));
-		Workflow mockWorkflow = Mockito.mock(Workflow.class);
-		when(mockWorkflow.getVisualisationDot()).thenReturn("");// Not actually dot
-		when(mockCWLService.parseWorkflowNative(Matchers.any(InputStream.class), eq(null), anyString()))
-				.thenReturn(mockWorkflow);
-		
-		WorkflowController workflowController = new WorkflowController(
+        GraphVizService graphVizService = Mockito.mock(GraphVizService.class);
+        
+        when(graphVizService.getGraphStream(anyString(), eq("svg")))
+                .thenReturn(getClass().getResourceAsStream("/graphviz/testWorkflow.dot"));
+        Workflow mockWorkflow = Mockito.mock(Workflow.class);
+        when(mockWorkflow.getVisualisationDot()).thenReturn("");// Not actually dot
+        when(mockCWLService.parseWorkflowNative(Matchers.any(InputStream.class), eq(null), anyString()))
+                .thenReturn(mockWorkflow);
+        
+        WorkflowController workflowController = new WorkflowController(
                 Mockito.mock(WorkflowFormValidator.class),
                 mockWorkflowService,
                 graphVizService,
@@ -418,16 +418,16 @@ public class WorkflowControllerTest {
 
         // Mock controller/MVC
         CWLService mockCWLService = Mockito.mock(CWLService.class);
-		GraphVizService graphVizService = Mockito.mock(GraphVizService.class);
-		
-		when(graphVizService.getGraphStream(anyString(), eq("png")))
-				.thenReturn(getClass().getResourceAsStream("/graphviz/testWorkflow.dot"));
-		Workflow mockWorkflow = Mockito.mock(Workflow.class);
-		when(mockWorkflow.getVisualisationDot()).thenReturn("");// Not actually dot
-		when(mockCWLService.parseWorkflowNative(Matchers.any(InputStream.class), eq(null), anyString()))
-				.thenReturn(mockWorkflow);
-		
-		WorkflowController workflowController = new WorkflowController(
+        GraphVizService graphVizService = Mockito.mock(GraphVizService.class);
+        
+        when(graphVizService.getGraphStream(anyString(), eq("png")))
+                .thenReturn(getClass().getResourceAsStream("/graphviz/testWorkflow.dot"));
+        Workflow mockWorkflow = Mockito.mock(Workflow.class);
+        when(mockWorkflow.getVisualisationDot()).thenReturn("");// Not actually dot
+        when(mockCWLService.parseWorkflowNative(Matchers.any(InputStream.class), eq(null), anyString()))
+                .thenReturn(mockWorkflow);
+        
+        WorkflowController workflowController = new WorkflowController(
                 Mockito.mock(WorkflowFormValidator.class),
                 mockWorkflowService,
                 graphVizService,
