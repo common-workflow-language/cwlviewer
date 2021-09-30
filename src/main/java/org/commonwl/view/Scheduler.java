@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+
 
 import java.io.IOException;
 
@@ -75,7 +77,7 @@ public class Scheduler {
             FileUtils.deleteWithinDirectory(file, TMP_DIR_AGE_LIMIT_DAYS);
 
             //FileUtils.deleteWithinDirectoryCMD("/tmp", TMP_DIR_AGE_LIMIT_DAYS);
-        } catch (IOException|InterruptedException e) {
+        } catch (IOException e) {
             logger.error("Error running clear /tmp dir process", e);
         }
     }

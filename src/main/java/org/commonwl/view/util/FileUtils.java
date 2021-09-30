@@ -1,5 +1,11 @@
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
 import java.io.IOException;
-import java.io.IOException;
+import java.time.Instant;
+import java.time.Clock;
+import java.time.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.commonwl.view.util.StreamGobbler;
@@ -24,7 +30,7 @@ public abstract class FileUtils {
         if (files != null) {
             for (File subfile : files) {
                 if (subfile.isDirectory()) {
-                deleteWithinDirectory(subfile);
+                deleteWithinDirectory(subfile, days);
                 }    
 
                 long daysOld = fileAge(subfile);
@@ -47,7 +53,7 @@ public abstract class FileUtils {
         }
     }
 
-    public static void deleteWithinDirectoryCMD(Strig directoryPath, int days) throws IOException, InterruptedException {
+    public static void deleteWithinDirectoryCMD(String directoryPath, int days) throws IOException, InterruptedException {
 
         String[] command = {"find", directoryPath, "-ctime", "+" + days, "-exec", "rm", "-rf", "{}", "+"};
         ProcessBuilder clearProcess = new ProcessBuilder(command);
