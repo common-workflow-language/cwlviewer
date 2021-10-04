@@ -64,6 +64,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 /**
  * Provides CWL parsing for workflows to gather an overview
@@ -169,7 +170,7 @@ public class CWLService {
      * Note, the length of the stream is not checked.
      *  
      * @param workflowStream The workflow stream to be parsed
-     * @param packedWorkflowId The ID of the workflow object if the file is packed
+     * @param packedWorkflowId The ID of the workflow object if the file is packed. <code>null</code> means the workflow is not expected to be packed, while "" means the first workflow found is used, packed or non-packed.
      * @param defaultLabel Label to give workflow if not set
      * @return The constructed workflow object
      */
@@ -178,8 +179,8 @@ public class CWLService {
         JsonNode cwlFile = yamlStreamToJson(workflowStream);
 
         // Check packed workflow occurs
+        boolean found = false;
         if (packedWorkflowId != null) {
-            boolean found = false;
             if (cwlFile.has(DOC_GRAPH)) {
                 for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
                     if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
@@ -187,7 +188,7 @@ public class CWLService {
                         if (currentId.startsWith("#")) {
                             currentId = currentId.substring(1);
                         }
-                        if (currentId.equals(packedWorkflowId)) {
+                        if (packedWorkflowId.isEmpty() || currentId.equals(packedWorkflowId)) {
                             cwlFile = jsonNode;
                             found = true;
                             break;
@@ -195,12 +196,14 @@ public class CWLService {
                     }
                 }
             }
-            if (!found) throw new WorkflowNotFoundException();
-        } else {
-            // Check the current json node is a workflow
-            if (extractProcess(cwlFile) != CWLProcess.WORKFLOW) {
-                throw new WorkflowNotFoundException();
-            }
+            if (!found && ! packedWorkflowId.isEmpty()) throw new WorkflowNotFoundException();
+        }
+        if (! found && extractProcess(cwlFile) == CWLProcess.WORKFLOW) {
+        	// Check the current json node is a workflow
+        	found = true;
+        }
+        if (! found) {
+            throw new WorkflowNotFoundException();
         }
 
         // Use filename for label if there is no defined one
@@ -600,10 +603,8 @@ public class CWLService {
      * @throws IOException 
      */
     private JsonNode yamlPathToJson(Path path) throws IOException {
-        Yaml reader = new Yaml();
+        Yaml reader = new Yaml(new SafeConstructor());
         ObjectMapper mapper = new ObjectMapper();
-        Path p;
-        
         try (InputStream in = Files.newInputStream(path)) {
         	return mapper.valueToTree(reader.load(in));
         }
@@ -616,7 +617,7 @@ public class CWLService {
      * @return A JsonNode with the content of the document
      */
     private JsonNode yamlStreamToJson(InputStream yamlStream) {
-        Yaml reader = new Yaml();
+        Yaml reader = new Yaml(new SafeConstructor());
         ObjectMapper mapper = new ObjectMapper();
 		return mapper.valueToTree(reader.load(yamlStream));
     }
