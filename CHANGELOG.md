@@ -1,10 +1,77 @@
 
 # Changelog 
 
-## v1.3.1 [unreleased]
+## v1.4.1 [unreleased]
 WIP
 
-## v1.3.0 [6-07-2018]
+## v1.4.0 [2021-10-04]
+Many updates since 2018, but the most important is the fix (#355) for [CVE-2021-41110](https://github.com/common-workflow-language/cwlviewer/security/advisories/GHSA-7g7j-f5g3-fqp7) courtesy of @kinow 
+
+New features:
+- Streamable CWL graph images #240 @stain 
+- Schedule recurrent CWL Viewer maintained cron-job for purging of old queued workflows from database #326 @obasekiosa 
+
+Smaller changes:
+-  Separate workflow URL from repository URL in "retrieved from" column of workflows page #316 @obasekiosa 
+-  Fix replace non working deleteByRetrievedFrom function with working delete function #321 @obasekiosa 
+
+Documentation updates:
+- Update README.md to explain better how to get started #308 @Anushka-shukla
+- README.d: correct example URL to use port 8080 #311 @yichiehc
+- Add links to the 2017 Video overview & Mark's report 612f5b4  b83b4fd 3380d44 @mr-c  @stain 
+- Notes on running Mongo/Jena in Docker, and spring boot on host #334 @tetron 
+- Typos in README.md #349 @kinow 
+
+Misc fixes:
+- Update jena & switch to Turtle syntax for SPARQL connection #213 @stain 
+- fix reversed class & id attributes #235 @mr-c & fixed by @kinow in #352 #353 
+- Use HTTPS instead of HTTP to resolve dependencies #250 [security update!] @JLLeitschuh 
+- Indexing retrievedOn in mongo to fix  "Clicking 'Last' on the Explore page gives ISE" (#270) 922b434 @stain 
+- Update copyright year (#286) @stain 
+- add skip-schemas to the `cwltool` invocation so we are more lenient 
+
+Changes related to the migration of view.commonwl.org from University of Manchester to Curii, Inc (Many thanks to @stain and UNIMAN for their years of service to the public!)
+- Add restart:always in docker-compose.yml #294 @cure 
+- Update the data controller for the https://view.commonwl.org instance. #297 @cure 
+- Tweaks for the docker-compose.yml file & set a larger internalQueryExecMaxBlockingSortBytes value for mongod #298  @cure 
+- Remove mention of dev instance 51a7d38 @tetron 
+
+Dependencies upgrade:
+- Dependency upgrades  to patch security vulnerabilities in transitive dependencies (Fixes CVE-2017-5929 CVE-2018-7489 CVE-2017-7525 CVE-2017-15095 CVE-2017-17485 CVE-2018-5968 CVE-2017-5651 CVE-2016-3093 CVE-2017-5648 CVE-2017-5650 CVE-2017-5647) #209 @MarkRobbo 
+- More dependency upgrades via @snyk-bot #223 #225 #289 #342 
+  - https://snyk.io/vuln/SNYK-JAVA-ORGAPACHETHRIFT-173706
+  - https://snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-451342
+  - https://snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-451343
+  - https://snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-451458
+  - https://snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-451459
+  - https://snyk.io/vuln/SNYK-JAVA-ORGAPACHECOMMONS-460507
+  - https://snyk.io/vuln/SNYK-RUBY-FFI-22037
+  - https://snyk.io/vuln/SNYK-RUBY-JEKYLL-451462
+  - https://snyk.io/vuln/SNYK-RUBY-KRAMDOWN-585939
+  - https://snyk.io/vuln/SNYK-RUBY-ADDRESSABLE-1316242
+  - https://snyk.io/vuln/SNYK-RUBY-KRAMDOWN-1087436
+  - https://snyk.io/vuln/SNYK-RUBY-REXML-1244518
+- Even more dependency updates, courtesy of @dependabot-preview
+  - Bump snakeyaml from 1.23 to 1.29 #233 #253 #276 #300 #340 
+  - Bump jsonld-java from 0.12.1 to 0.13.3 #232 #242 #277 #315 
+  - Bump jackson-core from 2.9.6 to 2.12.5 #229 #238 #246 #256 #267 #272 #278 #317 #241 #346 
+  - Bump org.eclipse.jgit from 4.9.7.201810191756-r to 5.11.0.202103091610-r  #230 #245 #251 #258 #259 #266 #271 #275#302 
+  - Bump jena-osgi from 3.11.0 to 4.1.0 #237 #248 #264 #269 #309 #338 
+  - Bump commons-compress from 1.19 to 1.21 #330 #343
+- spring-boot 1.5.22 @mr-c ea1e273 
+
+CI updates:
+- stop double testing PRs with Travis (#234) @mr-c 
+- speed up Travis by caching maven ea47b4a76fb9072f8aa4d2847edfc48a4f11d825 @mr-c 
+- Install codeql-analysis.yml #268 @mr-c (this helped @kinow and I find CVE-2021-41110; thanks https://github.com/github/codeql-action !)
+- Update primary branch name to `main` 3e3865c3f5b779458f8395f1cfc6c0589e89cb59 @mr-c 
+- Mergify: configuration update a867bd3 1178ed2 @mr-c 
+- Upgrade to GitHub-native Dependabot 0a5b427 @mr-c 
+- Update codeql-analysis.yml to run less often 50401a5 @mr-c 
+- codeql: git checkout HEAD^2 is no longer necessary 2502986 @mr-c 
+
+
+## v1.3.0 [2018-07-06]
 ### Added
 - [Permalinks](https://github.com/common-workflow-language/cwlviewer/pull/175) with content negotiation
 - Show workflow [license](https://github.com/common-workflow-language/cwlviewer/pull/198)
@@ -15,13 +82,13 @@ WIP
 - Support [git tags](https://github.com/common-workflow-language/cwlviewer/pull/192) 
 - UI: [Shrink description text](https://github.com/common-workflow-language/cwlviewer/pull/178)
 
-## v1.2.2 [24-08-2017]
+## v1.2.2 [2017-08-24]
 ### Fixed
 - Fix for invalid branch names being accepted in some circumstances
 - Fix regression in supporting slashes in branch names
 - [References](https://doi.org/10.5281/zenodo.848163)
 
-## v1.2.1 [22-08-2017]
+## v1.2.1 [2017-08-22]
 ### Added
 - Adds directory listing functionality
 ### Fixed
@@ -34,16 +101,16 @@ WIP
 - Fix for a concurrency issue
 - Brings API documentation up to date with the current state of the JSON API
 
-## v1.2.0 [22-08-2017]
+## v1.2.0 [2017-08-22]
 - This release contains no changes - please use [v1.2.1](https://github.com/common-workflow-language/cwlviewer/releases/tag/v1.2.1) instead
 - [References](https://doi.org/10.5281/zenodo.846747)
 
-## v1.1.1 [11-08-2017]
+## v1.1.1 [2017-08-11]
 ### Fixed
 - This patch release of CWL Viewer fixes documentation and a potential git checkout issue.
 - [References](https://doi.org/10.5281/zenodo.841782)
 
-## v.1.1.0 [11-08-2017]
+## v.1.1.0 [2017-08-11]
 - Support for any workflow stored in a Git repository
    * Specific additional features eg linking directly to files for Github, Gitlab, Bitbucket
 - Adds cwltool use for parsing - uses RDF representation with triple store
@@ -63,11 +130,11 @@ WIP
 - Various bug fixes
 - [References](https://doi.org/10.7490/f1000research.1114375.1)
 
-## v1.0.1 [11-08-2017]
+## v1.0.1 [2017-08-11]
 ### Fixed
 - Bug fixes and attribution.
 - [References](https://doi.org/10.5281/zenodo.841680)
 
-## v1.0 [06-07-2017]
+## v1.0 [2017-07-06]
 - [References](https://doi.org/10.5281/zenodo.823295)
 
