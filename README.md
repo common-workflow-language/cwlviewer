@@ -47,7 +47,7 @@ In the project directory, to start CWLViewer exposed on port `8080`, run:
 
     docker-compose up
 
-The web server will connect to a local host, you'll see the message saying "Tomacat started on port(s):8080".
+The web server will connect to a local host, you'll see the message saying "Tomcat started on port(s):8080".
 
 To see the locally running CWL Viewer app, visit http://localhost:8080/ in your web browser.
 
@@ -168,7 +168,7 @@ Now check out http://localhost:8080/ to access CWL Viewer.
 
 There are a variety of configuration options detailed in the [application configuration file](https://github.com/common-workflow-language/cwlviewer/blob/master/src/main/resources/application.properties) which can be adjusted.
 
-When deploying with docker, these can be overriden externally by creating/modifying `docker-compose.override.yml` as follows:
+When deploying with docker, these can be overridden externally by creating/modifying `docker-compose.override.yml` as follows:
 
 ```yaml
 version: '3.2'
