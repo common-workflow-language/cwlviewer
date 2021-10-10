@@ -213,6 +213,52 @@ or join the [gitter chat for cwlviewer](https://gitter.im/common-workflow-langua
 ## Changelog
 See [CHANGELOG](https://github.com/common-workflow-language/cwlviewer/blob/main/CHANGELOG.md)
 
+## Making a development snapshot container image
+(and optionally publishing that image to DockerHub)
+
+```shell
+# confirm the build arguments
+# if these don't look correct, troubleshoot before continuing.
+BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') VCS_REF=$(git rev-parse HEAD) VERSION=$(git describe)
+echo BUILD_DATE=${BUILD_DATE} VCS_REF=${VCS_REF} VERSION=${VERSION}
+# build the container image
+docker build --build-arg BUILD_DATE=${BUILD_DATE} --build-arg VCS_REF=${VCS_REF} \
+  --build-arg VERSION=${VERSION} \
+  -t docker.io/commonworkflowlanguage/cwlviewer:v${VERSION} .
+# (optionally) push the development snapshot container image to Docker Hub
+docker push docker.io/commonworkflowlanguage/cwlviewer:v${new_version}
+```
+
+## Making a release and publishing to GitHub and DockerHub
+
+After CHANGELOG.md has been updated, run the following:
+
+```shell
+new_version=1.4.1  # CHANGEME
+# create an annotated git tag
+git tag -a -m "release version ${new_version}" v${new_version}
+# confirm the build arguments
+# if these don't look correct, troubleshoot before continuing.
+# for example, was your tag an annotated (-a) tag?
+BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') VCS_REF=$(git rev-parse HEAD) VERSION=$(git describe)
+echo BUILD_DATE=${BUILD_DATE} VCS_REF=${VCS_REF} VERSION=${VERSION}
+# build the container image
+docker build --build-arg BUILD_DATE=${BUILD_DATE} --build-arg VCS_REF=${VCS_REF} \
+  --build-arg VERSION=${VERSION} \
+  -t docker.io/commonworkflowlanguage/cwlviewer:v${VERSION} .
+# push the container image to Docker Hub
+docker push docker.io/commonworkflowlanguage/cwlviewer:v${VERSION}
+# tag this container image as :latest and push to Docker Hub
+docker tag docker.io/commonworkflowlanguage/cwlviewer:v{VERSION} \
+  docker.io/commonworkflowlanguage/cwlviewer:latest
+docker push docker.io/commonworkflowlanguage/cwlviewer:latest
+# upload the annotated tag to GitHub
+git push --tags
+```
+
+Then copy the changelog into https://github.com/common-workflow-language/cwlviewer/releases/new
+using the tag you just pushed
+
 # Thanks
 
 Developers and [contributors](https://github.com/common-workflow-language/cwlviewer/graphs/contributors) include:
