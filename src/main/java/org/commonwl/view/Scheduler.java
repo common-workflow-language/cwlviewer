@@ -69,13 +69,12 @@ public class Scheduler {
 
     @Scheduled(cron = "${cron.clearTmpDir}")
     public void clearTmpDir() {
-        // TODO: find source of tmp dir creation and delete from there
 
         // wipe tmp dir and log info
         try {
             File file = new File("/tmp");
-            FileUtils.deleteWithinDirectory(file, TMP_DIR_AGE_LIMIT_DAYS);
-
+            FileUtils utils = new FileUtils(logger);
+            utils.deleteWithinDirectory(file, TMP_DIR_AGE_LIMIT_DAYS);
             //FileUtils.deleteWithinDirectoryCMD("/tmp", TMP_DIR_AGE_LIMIT_DAYS);
         } catch (IOException e) {
             logger.error("Error running clear /tmp dir process", e);

@@ -1,3 +1,6 @@
+package org.commonwl.view.util;
+
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.attribute.FileTime;
@@ -10,10 +13,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.commonwl.view.util.StreamGobbler;
 
-public abstract class FileUtils {
+public class FileUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
-    private static long fileAge(File file) throws IOException {
+    private final Logger logger;
+
+    public FileUtils(Logger logger) {
+        this.logger = logger;
+    }
+
+    private long fileAge(File file) throws IOException {
         
         FileTime t =  Files.getLastModifiedTime(file.toPath());
         Instant fileInstant = t.toInstant();
@@ -24,7 +32,7 @@ public abstract class FileUtils {
     
     }
 
-    public static void deleteWithinDirectory(File file, long days) throws IOException{
+    public void deleteWithinDirectory(File file, long days) throws IOException{
         File[] files = file.listFiles();
 
         if (files != null) {
@@ -53,7 +61,7 @@ public abstract class FileUtils {
         }
     }
 
-    public static void deleteWithinDirectoryCMD(String directoryPath, int days) throws IOException, InterruptedException {
+    public void deleteWithinDirectoryCMD(String directoryPath, int days) throws IOException, InterruptedException {
 
         String[] command = {"find", directoryPath, "-ctime", "+" + days, "-exec", "rm", "-rf", "{}", "+"};
         ProcessBuilder clearProcess = new ProcessBuilder(command);
