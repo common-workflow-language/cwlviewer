@@ -69,15 +69,8 @@ public class Scheduler {
 
     @Scheduled(cron = "${cron.clearTmpDir}")
     public void clearTmpDir() {
-
         // wipe tmp dir and log info
-        try {
-            File file = new File("/tmp");
-            FileUtils utils = new FileUtils(logger);
-            utils.deleteWithinDirectory(file, TMP_DIR_AGE_LIMIT_DAYS);
-            //FileUtils.deleteWithinDirectoryCMD("/tmp", TMP_DIR_AGE_LIMIT_DAYS);
-        } catch (IOException e) {
-            logger.error("Error running clear /tmp dir process", e);
-        }
+        FileUtils utils = new FileUtils(logger);
+        utils.clearDirectory("/tmp", TMP_DIR_AGE_LIMIT_DAYS);
     }
 }

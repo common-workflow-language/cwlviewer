@@ -21,18 +21,22 @@ public class FileUtils {
         this.logger = logger;
     }
 
-    private long fileAge(File file) throws IOException {
+
+    public void clearDirectory(Stirng directoryPath, long days) {
+        try {
+            logger.info("Clearing "+ directoryPath + " directory for content older than " + days + " day" + (days > 1 ? "s" : "") + "...");
+            File file = new File(directoryPath);
+            deleteWithinDirectory(file, days);
+            logger.info("Successfully cleared " + directoryPath + " directory");
+        } catch(IOException e) {
+            logger.warn("Could not clear " + directoryPath + " directory");
+            logger.error("Error running clear " + directoryPath + " dir process", e);
+        }
         
-        FileTime t =  Files.getLastModifiedTime(file.toPath());
-        Instant fileInstant = t.toInstant();
-        Instant now = (Clock.systemUTC()).instant();
-        Duration difference = Duration.between(fileInstant, now);
-        long days = difference.toDays();
-        return days;
-    
     }
 
-    public void deleteWithinDirectory(File file, long days) throws IOException{
+
+    private void deleteWithinDirectory(File file, long days) throws IOException{
         File[] files = file.listFiles();
 
         if (files != null) {
@@ -45,15 +49,15 @@ public class FileUtils {
 
                 if (daysOld >= days ) {
                     if (!subfile.isDirectory()) {
-                        logger.info("deleting file " + subfile.getPath());
+                        logger.info("Deleting file " + subfile.getPath());
                         subfile.delete();
-                        logger.info("deleted file " + subfile.getPath());
+                        logger.info("Deleted file " + subfile.getPath());
                     } else {
                         File[] contents = subfile.listFiles();
                         if (contents != null && contents.length == 0) {
-                            logger.info("deteting Directory " + subfile.getPath());
+                            logger.info("Deleting directory " + subfile.getPath());
                             subfile.delete();
-                            logger.info("deleted Directory " + subfile.getPath());
+                            logger.info("Deleted directory " + subfile.getPath());
                         }
                     }
                 }
@@ -61,11 +65,21 @@ public class FileUtils {
         }
     }
 
-    public void deleteWithinDirectoryCMD(String directoryPath, int days) throws IOException, InterruptedException {
+    private long fileAge(File file) throws IOException {
+        
+        FileTime t =  Files.getLastModifiedTime(file.toPath());
+        Instant fileInstant = t.toInstant();
+        Instant now = (Clock.systemUTC()).instant();
+        Duration difference = Duration.between(fileInstant, now);
+        long days = difference.toDays();
+        return days;
+    
+    }
+
+    private void deleteWithinDirectoryCMD(String directoryPath, int days) throws IOException, InterruptedException {
 
         String[] command = {"find", directoryPath, "-ctime", "+" + days, "-exec", "rm", "-rf", "{}", "+"};
         ProcessBuilder clearProcess = new ProcessBuilder(command);
-        logger.info("Clearing /tmp directory for content older than " + days + " day" + (days > 1 ? "s" : "") + "...");
         Process process = clearProcess.start();
 
         // Read output from the process using threads
@@ -79,7 +93,7 @@ public class FileUtils {
         if (exitCode == 0) {
             inputGobbler.join();
             logger.info(inputGobbler.getContent());
-            logger.info("Successfully Cleared " + directoryPath + " directory");
+            logger.info("Successfully cleared " + directoryPath + " directory");
         } else {
             errorGobbler.join();
             logger.warn("Could not clear " + directoryPath + " directory");
