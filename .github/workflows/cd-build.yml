@@ -1,12 +1,14 @@
 name: Docker Image Build
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["CWL Viewer Build"]
+    branches: [main]
+    types:
+      - completed
 
 jobs:
-  build:
+  build-image:
     runs-on: ubuntu-20.04
 
     steps:
@@ -15,44 +17,11 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
 
-      - name: MongoDB in GitHub Actions
-        uses: supercharge/mongodb-github-action@1.3.0
-
-      - name: Restore dependency cache
-        uses: actions/cache@v2.1.4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      - name: Set up Java
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: '8'
-
-      - name: Install system packages
+      - name: Docker Image Build and Push
         run: |
-          sudo apt-get -qq update
-          sudo apt-get install graphviz python3-pip
-          sudo pip install cwltool
-
-      - name: Build and test with Maven
-        run: |
-          ./mvnw test -B
-
-      - name: Coverage report
-        run: |
-          mvn prepare-package -DskipTests=true
-          mvn cobertura:cobertura coveralls:report --no-transfer-progress -DrepoToken=$COVERALLS_SECRET -DpullRequest=${{ github.event.number }}
-        env:
-          CI_NAME: github
-          COVERALLS_SECRET: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and Push
-        run: |
-          VERSION=$(date +%s)
+          DATE=$(date +%s)
+          GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
+          VERSION= ${GIT_HASH}-${DATE}
           docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
           docker build . --file Dockerfile --tag ${{ secrets.DOCKER_HUB_USERNAME }}/cwlviewer:${VERSION}
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/cwlviewer:${VERSION}
