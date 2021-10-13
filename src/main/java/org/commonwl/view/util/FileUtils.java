@@ -22,7 +22,7 @@ public class FileUtils {
     }
 
 
-    public void clearDirectory(Stirng directoryPath, long days) {
+    public void clearDirectory(String directoryPath, long days) {
         try {
             logger.info("Clearing "+ directoryPath + " directory for content older than " + days + " day" + (days > 1 ? "s" : "") + "...");
             File file = new File(directoryPath);
