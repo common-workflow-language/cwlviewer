@@ -2,6 +2,7 @@ package org.commonwl.view;
 
 
 import org.commonwl.view.util.StreamGobbler;
+import org.commonwl.view.util.FileUtils;
 import org.commonwl.view.workflow.QueuedWorkflowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.io.File;
 
 
 import java.io.IOException;
@@ -66,35 +69,14 @@ public class Scheduler {
 
     @Scheduled(cron = "${cron.clearTmpDir}")
     public void clearTmpDir() {
-        // TODO: find source of tmp dir creation and delete from there
 
         // wipe tmp dir and log info
         try {
-            // Run command
-            String[] command = {"find", "/tmp", "-ctime", "+" + TMP_DIR_AGE_LIMIT_DAYS, "-exec", "rm", "-rf", "{}", "+"};
-            ProcessBuilder clearProcess = new ProcessBuilder(command);
-            logger.info("Clearing /tmp directory for content older than " + TMP_DIR_AGE_LIMIT_DAYS + " day" + (TMP_DIR_AGE_LIMIT_DAYS > 1 ? "s" : "") + "...");
-            Process process = clearProcess.start();
-
-            // Read output from the process using threads
-            StreamGobbler inputGobbler = new StreamGobbler(process.getInputStream());
-            StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream());
-            errorGobbler.start();
-            inputGobbler.start();
-
-            // Wait for process to complete
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                inputGobbler.join();
-                logger.info(inputGobbler.getContent());
-                logger.info("Successfully Cleared /tmp directory");
-            } else {
-                errorGobbler.join();
-                logger.warn("Could not clear /tmp directory");
-                logger.warn(errorGobbler.getContent());
-            
-            }
-        } catch (IOException|InterruptedException e) {
+            File file = new File("/tmp");
+            FileUtils utils = new FileUtils(logger);
+            utils.deleteWithinDirectory(file, TMP_DIR_AGE_LIMIT_DAYS);
+            //FileUtils.deleteWithinDirectoryCMD("/tmp", TMP_DIR_AGE_LIMIT_DAYS);
+        } catch (IOException e) {
             logger.error("Error running clear /tmp dir process", e);
         }
     }
