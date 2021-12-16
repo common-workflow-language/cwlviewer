@@ -19,10 +19,10 @@
 
 package org.commonwl.view.researchobject;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -52,10 +52,9 @@ import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.workflow.Workflow;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -66,7 +65,7 @@ public class ROBundleServiceTest {
     private static ROBundleService roBundleServiceZeroSizeLimit;
     private static Workflow lobSTRdraft3;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         Repository mockRepo = Mockito.mock(Repository.class);
         when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/"));
@@ -109,11 +108,11 @@ public class ROBundleServiceTest {
                 .thenReturn("@prefix cwl: <https://w3id.org/cwl/cwl#> .".getBytes());
 
         // Create new RO bundle
-        roBundleService = new ROBundleService(roBundleFolder.getRoot().toPath(),
+        roBundleService = new ROBundleService(roBundleFolder.toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 5242880,
                 mockGraphvizService, mockGitService, mockRdfService,
                 Mockito.mock(GitSemaphore.class), mockCwlTool);
-        roBundleServiceZeroSizeLimit = new ROBundleService(roBundleFolder.getRoot().toPath(),
+        roBundleServiceZeroSizeLimit = new ROBundleService(roBundleFolder.toPath(),
                 "CWL Viewer", "https://view.commonwl.org", 0,
                 mockGraphvizService, mockGitService, mockRdfService,
                 Mockito.mock(GitSemaphore.class), mockCwlTool);
@@ -140,8 +139,8 @@ public class ROBundleServiceTest {
     /**
      * Use a temporary directory for testing
      */
-    @Rule
-    public TemporaryFolder roBundleFolder = new TemporaryFolder();
+    @TempDir
+    public File roBundleFolder;
 
     /**
      * Generate a Research Object bundle from lobstr and check it
@@ -204,7 +203,7 @@ public class ROBundleServiceTest {
 
         // Save and check it exists in the temporary folder
         roBundleService.saveToFile(bundle);
-        File[] fileList =  roBundleFolder.getRoot().listFiles();
+        File[] fileList =  roBundleFolder.listFiles();
         assertTrue(fileList.length == 1);
         for (File ro : fileList) {
             assertTrue(ro.getName().endsWith(".zip"));

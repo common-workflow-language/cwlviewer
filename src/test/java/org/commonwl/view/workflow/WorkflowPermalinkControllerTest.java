@@ -19,6 +19,24 @@
 
 package org.commonwl.view.workflow;
 
+import org.apache.commons.io.IOUtils;
+import org.commonwl.view.cwl.RDFService;
+import org.commonwl.view.git.GitDetails;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.PathResource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.file.Paths;
+import java.util.Optional;
+
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -28,28 +46,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.nio.file.Paths;
-import java.util.Optional;
-
-import org.apache.commons.io.IOUtils;
-import org.commonwl.view.cwl.RDFService;
-import org.commonwl.view.git.GitDetails;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.PathResource;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 /**
  * Tests the controller for workflow related functionality
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 public class WorkflowPermalinkControllerTest {
 
@@ -59,7 +59,7 @@ public class WorkflowPermalinkControllerTest {
     private PathResource svg = new PathResource(Paths.get("src/test/resources/graphviz/testVis.svg"));
     private PathResource dot = new PathResource(Paths.get("src/test/resources/graphviz/testWorkflow.dot"));
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         Workflow mockWorkflow = Mockito.mock(Workflow.class);

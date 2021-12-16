@@ -19,11 +19,11 @@
 
 package org.commonwl.view.docker;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class DockerServiceTest {
 
@@ -32,7 +32,7 @@ public class DockerServiceTest {
     /**
      * New instance of DockerService
      */
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         dockerService = new DockerService();
     }

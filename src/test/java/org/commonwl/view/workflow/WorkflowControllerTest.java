@@ -46,16 +46,15 @@ import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.PathResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -64,15 +63,15 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 /**
  * Tests the controller for workflow related functionality
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 public class WorkflowControllerTest {
 
     /**
      * Use a temporary directory for testing
      */
-    @Rule
-    public TemporaryFolder roBundleFolder = new TemporaryFolder();
+    @TempDir
+    public File roBundleFolder;
 
     /**
      * Get the full list of workflows
@@ -287,7 +286,7 @@ public class WorkflowControllerTest {
 
         // Mock service to return a bundle file and then throw ROBundleNotFoundException
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        File bundle = roBundleFolder.newFile("bundle.zip").getAbsoluteFile();
+        File bundle = new File(roBundleFolder, "bundle.zip").getAbsoluteFile();
         when(mockWorkflowService.getROBundle(anyObject()))
                 .thenReturn(bundle)
                 .thenReturn(bundle)
