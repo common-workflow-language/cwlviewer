@@ -28,9 +28,8 @@ import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 
 import java.io.File;
@@ -38,8 +37,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
@@ -49,8 +48,8 @@ public class WorkflowServiceTest {
     /**
      * Folder for test research object bundles
      */
-    @Rule
-    public TemporaryFolder roBundleFolder = new TemporaryFolder();
+    @TempDir
+    public File roBundleFolder;
 
     /**
      * Retry the running of cwltool
@@ -124,7 +123,7 @@ public class WorkflowServiceTest {
         oldWorkflow.setRetrievedOn(new Date());
         oldWorkflow.setRetrievedFrom(githubInfo);
         oldWorkflow.setLastCommit("d46ce365f1a10c4c4d6b0caed51c6f64b84c2f63");
-        oldWorkflow.setRoBundlePath(roBundleFolder.newFile("robundle.zip").getAbsolutePath());
+        oldWorkflow.setRoBundlePath(new File(roBundleFolder, "robundle.zip").getAbsolutePath());
 
         Workflow updatedWorkflow = new Workflow("new", "This is the updated workflow",
                 new HashMap<>(), new HashMap<>(), new HashMap<>());
@@ -178,7 +177,7 @@ public class WorkflowServiceTest {
         workflow.setRetrievedFrom(new GitDetails("url", "commitID", "path"));
         workflow.setLastCommit("commitID");
 
-        String roBundlePath = roBundleFolder.newFile("bundle.zip").getAbsolutePath();
+        String roBundlePath = new File(roBundleFolder, "bundle.zip").getAbsolutePath();
         workflow.setRoBundlePath(roBundlePath);
 
         WorkflowRepository mockWorkflowRepo = Mockito.mock(WorkflowRepository.class);
