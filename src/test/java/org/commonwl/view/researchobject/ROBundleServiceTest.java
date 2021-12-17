@@ -19,24 +19,6 @@
 
 package org.commonwl.view.researchobject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
-
-import java.io.File;
-import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.jena.query.ResultSet;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
@@ -59,6 +41,21 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.io.File;
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 public class ROBundleServiceTest {
 
     private static ROBundleService roBundleService;
@@ -75,36 +72,36 @@ public class ROBundleServiceTest {
 
         // Get mock Git service
         GitService mockGitService = Mockito.mock(GitService.class);
-        when(mockGitService.getRepository(anyObject(), anyBoolean())).thenReturn(gitRepo);
+        when(mockGitService.getRepository(any(GitDetails.class), any(Boolean.class))).thenReturn(gitRepo);
 
         Set<HashableAgent> authors = new HashSet<>();
         authors.add(new HashableAgent("Mark Robinson", null, new URI("mailto:mark@example.com")));
-        when(mockGitService.getAuthors(anyObject(), anyObject()))
+        when(mockGitService.getAuthors(any(Git.class), any(String.class)))
                 .thenReturn(authors);
 
         // Mock Graphviz service
         GraphVizService mockGraphvizService = Mockito.mock(GraphVizService.class);
-        when(mockGraphvizService.getGraphPath(anyString(), anyString(), anyString()))
+        when(mockGraphvizService.getGraphPath(any(String.class), any(String.class), any(String.class)))
                 .thenReturn(Paths.get("src/test/resources/graphviz/testVis.png"))
                 .thenReturn(Paths.get("src/test/resources/graphviz/testVis.svg"));
-        when(mockGraphvizService.getGraphStream(anyString(), anyString()))
+        when(mockGraphvizService.getGraphStream(any(), any(String.class)))
         .thenReturn(getClass().getResourceAsStream("/graphviz/testVis.png"))
         .thenReturn(getClass().getResourceAsStream("/graphviz/testVis.svg"));
 
         
         // Mock CWLTool
         CWLTool mockCwlTool = Mockito.mock(CWLTool.class);
-        when(mockCwlTool.getPackedVersion(anyString()))
+        when(mockCwlTool.getPackedVersion(any(String.class)))
                 .thenReturn("cwlVersion: v1.0");
 
         // Mock RDF Service
         ResultSet emptyResult = Mockito.mock(ResultSet.class);
         when(emptyResult.hasNext()).thenReturn(false);
         RDFService mockRdfService = Mockito.mock(RDFService.class);
-        when(mockRdfService.getAuthors(anyString(), anyString())).thenReturn(emptyResult);
-        when(mockRdfService.graphExists(anyString()))
+        when(mockRdfService.getAuthors(any(String.class), any(String.class))).thenReturn(emptyResult);
+        when(mockRdfService.graphExists(any(String.class)))
                 .thenReturn(true);
-        when(mockRdfService.getModel(anyObject(), anyObject()))
+        when(mockRdfService.getModel(any(String.class), any(String.class)))
                 .thenReturn("@prefix cwl: <https://w3id.org/cwl/cwl#> .".getBytes());
 
         // Create new RO bundle

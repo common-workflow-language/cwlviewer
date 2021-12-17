@@ -19,6 +19,9 @@
 
 package org.commonwl.view.cwl;
 
+import org.commonwl.view.CwlViewerApplication;
+import org.commonwl.view.MongoConfig;
+import org.commonwl.view.WebConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +31,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@SpringBootTest(classes=RDFService.class)
 public class RDFServiceTest {
 
     /**

@@ -1,17 +1,17 @@
 package org.commonwl.view.workflow;
 
+import org.commonwl.view.MongoConfig;
 import org.commonwl.view.git.GitDetails;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DataMongoTest
-@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes={MongoConfig.class})
 public class QueuedWorkflowRepositoryTest {
 
     @Autowired

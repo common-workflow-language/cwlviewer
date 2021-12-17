@@ -35,12 +35,9 @@ import org.commonwl.view.workflow.WorkflowOverview;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -54,12 +51,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
 public class CWLServiceTest {
 
     /**
@@ -87,8 +81,8 @@ public class CWLServiceTest {
         };
 
         this.rdfService = Mockito.spy(new RDFService("http://localhost:3030/cwlviewer/"));
-        Mockito.doAnswer(queryRdf).when(rdfService).runQuery(anyObject());
-        Mockito.doReturn(true).when(rdfService).graphExists(anyString());
+        Mockito.doAnswer(queryRdf).when(rdfService).runQuery(any());
+        Mockito.doReturn(true).when(rdfService).graphExists(any(String.class));
     }
 
     @Test
@@ -149,7 +143,7 @@ public class CWLServiceTest {
         // Mock CWLTool
         CWLTool mockCwlTool = Mockito.mock(CWLTool.class);
         File packedWorkflowRdf = new File("src/test/resources/cwl/make_to_cwl/dna.ttl");
-        when(mockCwlTool.getRDF(anyString()))
+        when(mockCwlTool.getRDF(any(String.class)))
                 .thenReturn(readFileToString(packedWorkflowRdf));
 
         // CWLService to test
