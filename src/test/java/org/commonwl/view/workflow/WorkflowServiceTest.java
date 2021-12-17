@@ -33,14 +33,15 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
 public class WorkflowServiceTest {
@@ -49,7 +50,7 @@ public class WorkflowServiceTest {
      * Folder for test research object bundles
      */
     @TempDir
-    public File roBundleFolder;
+    public Path roBundleFolder;
 
     /**
      * Retry the running of cwltool
@@ -67,7 +68,7 @@ public class WorkflowServiceTest {
 
         // Mock CWL service which returns simple overview once simulating 1 workflow found
         CWLService mockCWLService = Mockito.mock(CWLService.class);
-        when(mockCWLService.getWorkflowOverview(anyObject()))
+        when(mockCWLService.getWorkflowOverview(any()))
                 .thenReturn(new WorkflowOverview("workflow.cwl", "label", "doc"))
                 .thenReturn(new WorkflowOverview("workflow2.cwl", "label2", "doc2"))
                 .thenReturn(null);
@@ -79,7 +80,7 @@ public class WorkflowServiceTest {
         when(mockGitRepo.getRepository()).thenReturn(mockRepo);
 
         GitService mockGitService = Mockito.mock(GitService.class);
-        when(mockGitService.getRepository(anyObject(), anyBoolean())).thenReturn(mockGitRepo);
+        when(mockGitService.getRepository(any(GitDetails.class), any(Boolean.class))).thenReturn(mockGitRepo);
 
         // Create service under test
         WorkflowService testWorkflowService = new WorkflowService(
@@ -96,7 +97,7 @@ public class WorkflowServiceTest {
                 new GitDetails(null, null, "/"));
 
         // 1 workflow should be found
-        assertTrue(list.size() == 2);
+        assertEquals(2, list.size());
         assertEquals("workflow.cwl", list.get(0).getFileName());
         assertEquals("label", list.get(0).getLabel());
         assertEquals("doc", list.get(0).getDoc());
@@ -123,17 +124,17 @@ public class WorkflowServiceTest {
         oldWorkflow.setRetrievedOn(new Date());
         oldWorkflow.setRetrievedFrom(githubInfo);
         oldWorkflow.setLastCommit("d46ce365f1a10c4c4d6b0caed51c6f64b84c2f63");
-        oldWorkflow.setRoBundlePath(new File(roBundleFolder, "robundle.zip").getAbsolutePath());
+        oldWorkflow.setRoBundlePath(Files.createFile(roBundleFolder.resolve("robundle.zip")).toAbsolutePath().toString());
 
         Workflow updatedWorkflow = new Workflow("new", "This is the updated workflow",
                 new HashMap<>(), new HashMap<>(), new HashMap<>());
         updatedWorkflow.setId("newworkflowid");
 
         WorkflowRepository mockWorkflowRepo = Mockito.mock(WorkflowRepository.class);
-        when(mockWorkflowRepo.findByRetrievedFrom(anyObject())).thenReturn(oldWorkflow);
+        when(mockWorkflowRepo.findByRetrievedFrom(any())).thenReturn(oldWorkflow);
 
         CWLService mockCWLService = Mockito.mock(CWLService.class);
-        when(mockCWLService.parseWorkflowNative(anyObject(), anyObject())).thenReturn(updatedWorkflow);
+        when(mockCWLService.parseWorkflowNative(any(), any())).thenReturn(updatedWorkflow);
 
         Repository mockRepo = Mockito.mock(Repository.class);
         when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/make_to_cwl"));
@@ -142,8 +143,8 @@ public class WorkflowServiceTest {
         when(mockGitRepo.getRepository()).thenReturn(mockRepo);
 
         GitService mockGitService = Mockito.mock(GitService.class);
-        when(mockGitService.getRepository(anyObject(), anyBoolean())).thenReturn(mockGitRepo);
-        when(mockGitService.getCurrentCommitID(anyObject())).thenReturn("newCommitId");
+        when(mockGitService.getRepository(any(GitDetails.class), any(Boolean.class))).thenReturn(mockGitRepo);
+        when(mockGitService.getCurrentCommitID(any())).thenReturn("newCommitId");
 
         // Create service under test with negative cache time (always create new workflow)
         WorkflowService testWorkflowService = new WorkflowService(
@@ -161,7 +162,7 @@ public class WorkflowServiceTest {
 
         // Check the old workflow was deleted
         // TODO: check new workflow was queued
-        assertEquals(workflow, null);
+        assertNull(workflow);
 
     }
 
@@ -177,11 +178,11 @@ public class WorkflowServiceTest {
         workflow.setRetrievedFrom(new GitDetails("url", "commitID", "path"));
         workflow.setLastCommit("commitID");
 
-        String roBundlePath = new File(roBundleFolder, "bundle.zip").getAbsolutePath();
+        String roBundlePath = Files.createFile(roBundleFolder.resolve("bundle.zip")).toAbsolutePath().toString();
         workflow.setRoBundlePath(roBundlePath);
 
         WorkflowRepository mockWorkflowRepo = Mockito.mock(WorkflowRepository.class);
-        when(mockWorkflowRepo.findByRetrievedFrom(anyObject())).thenReturn(workflow);
+        when(mockWorkflowRepo.findByRetrievedFrom(any())).thenReturn(workflow);
 
         // Create service under test
         WorkflowService testWorkflowService = new WorkflowService(
@@ -192,7 +193,7 @@ public class WorkflowServiceTest {
                 Mockito.mock(CWLToolRunner.class),
                 Mockito.mock(GitSemaphore.class), -1);
 
-        File fetchedBundle = testWorkflowService.getROBundle(Mockito.mock(GitDetails.class));
+        File fetchedBundle = testWorkflowService.getROBundle(null);
         assertEquals(roBundlePath, fetchedBundle.getAbsolutePath());
 
     }

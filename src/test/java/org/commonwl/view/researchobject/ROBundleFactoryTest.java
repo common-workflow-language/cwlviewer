@@ -19,6 +19,7 @@
 
 package org.commonwl.view.researchobject;
 
+import org.apache.taverna.robundle.Bundle;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
@@ -29,7 +30,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
@@ -49,12 +50,12 @@ public class ROBundleFactoryTest {
 
         // Mocked path to a RO bundle
         ROBundleService mockROBundleService = Mockito.mock(ROBundleService.class);
-        when(mockROBundleService.saveToFile(anyObject()))
+        when(mockROBundleService.saveToFile(any()))
                 .thenReturn(Paths.get("test/path/to/check/for.zip"));
 
         // Test method retries multiple times to get workflow model before success
         WorkflowRepository mockRepository = Mockito.mock(WorkflowRepository.class);
-        when(mockRepository.findByRetrievedFrom(anyObject()))
+        when(mockRepository.findByRetrievedFrom(any(GitDetails.class)))
                 .thenReturn(null)
                 .thenReturn(null)
                 .thenReturn(validWorkflow);

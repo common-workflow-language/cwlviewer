@@ -22,14 +22,18 @@ package org.commonwl.view;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@SpringBootTest(classes={WebConfig.class})
 public class CwlViewerApplicationTests {
 
 	@Test
-	public void contextLoads() {
+	public void contextLoads(ApplicationContext context) {
+		assertThat(context).isNotNull();
 	}
 
 }
