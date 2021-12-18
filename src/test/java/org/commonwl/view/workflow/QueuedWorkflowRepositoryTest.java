@@ -6,10 +6,7 @@ import org.commonwl.view.WebConfig;
 import org.commonwl.view.git.GitDetails;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -17,7 +14,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 // N.B. "To use embedded mongo, the spring.mongodb.embedded.version property must now be set."
 // https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.6-Release-Notes#embedded-mongo
 @SpringBootTest(
-        properties={"spring.mongodb.embedded.version=3.2.2"},
+        properties={
+                "spring.mongodb.embedded.version=3.2.2",
+                "spring.data.mongodb.port=0"
+        },
         classes={MongoConfig.class, WebConfig.class, CwlViewerApplication.class, QueuedWorkflowRepository.class}
 )
 public class QueuedWorkflowRepositoryTest {
