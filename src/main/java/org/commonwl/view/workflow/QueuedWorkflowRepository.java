@@ -17,7 +17,7 @@ public interface QueuedWorkflowRepository extends PagingAndSortingRepository<Que
      * @param retrievedFrom Details of where the queued workflow is from
      * @return The queued workflow
      */
-    @Query("{tempRepresentation.retrievedFrom: ?0}")
+    @Query("{\"tempRepresentation.retrievedFrom\": ?0}")
     QueuedWorkflow findByRetrievedFrom(GitDetails retrievedFrom);
 
     /**
