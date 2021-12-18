@@ -23,7 +23,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<jena.version>4.1.0</jena.version>
+		<jena.version>4.3.1</jena.version>
 		<!-- BEGIN should correspond to https://repo1.maven.org/maven2/org/apache/jena/jena/3.9.0/jena-3.9.0.pom -->
 		<ver.jsonldjava>0.13.4</ver.jsonldjava>
 		<ver.jackson>2.13.0</ver.jackson>
@@ -50,6 +50,7 @@
 	</repositories>
 
 	<dependencies>
+		<!-- SpringBoot -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
@@ -62,16 +63,25 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+		<!-- Spring Data -->
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-commons</artifactId>
+			<version>2.6.0</version>
+		</dependency>
+		<!-- YAML -->
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
 			<version>1.30</version>
 		</dependency>
+		<!-- GraphViz/dot -->
 		<dependency>
 			<groupId>com.github.jabbalaci</groupId>
 			<artifactId>graphviz-java-api</artifactId>
 			<version>f9bf94896776de6e98b5004e819b63fb4c15b15d</version>
 		</dependency>
+		<!-- For Research Objects -->
 		<dependency>
 			<groupId>org.apache.taverna.language</groupId>
 			<artifactId>taverna-robundle</artifactId>
@@ -83,14 +93,16 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<!-- JSON parsing -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
 			<version>${ver.jackson}</version>
 		</dependency>
+		<!-- Jena, turtle -->
 		<dependency>
 			<groupId>org.apache.jena</groupId>
-			<artifactId>jena-osgi</artifactId>
+			<artifactId>jena-core</artifactId>
 			<version>${jena.version}</version>
 		</dependency>
 		<dependency>
@@ -98,21 +110,19 @@
 			<artifactId>jsonld-java</artifactId>
 			<version>${ver.jsonldjava}</version>
 		</dependency>
+		<!-- Git in Java -->
 		<dependency>
 			<groupId>org.eclipse.jgit</groupId>
 			<artifactId>org.eclipse.jgit</artifactId>
 			<version>5.13.0.202109080827-r</version>
 		</dependency>
+		<!-- Compress -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
 			<version>1.21</version>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.data</groupId>
-			<artifactId>spring-data-commons</artifactId>
-			<version>2.6.0</version>
-		</dependency>
+		<!-- For JSR-303, javax.validation -->
 		<dependency>
 			<groupId>org.hibernate.validator</groupId>
 			<artifactId>hibernate-validator</artifactId>
