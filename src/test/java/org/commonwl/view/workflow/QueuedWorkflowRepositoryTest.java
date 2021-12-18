@@ -1,20 +1,25 @@
 package org.commonwl.view.workflow;
 
-import org.apache.jena.base.Sys;
+import org.commonwl.view.CwlViewerApplication;
+import org.commonwl.view.MongoConfig;
+import org.commonwl.view.WebConfig;
 import org.commonwl.view.git.GitDetails;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-@DataMongoTest
-@RunWith(SpringRunner.class)
+// N.B. "To use embedded mongo, the spring.mongodb.embedded.version property must now be set."
+// https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.6-Release-Notes#embedded-mongo
+@SpringBootTest(
+        properties={
+                "spring.mongodb.embedded.version=3.2.2",
+                "spring.data.mongodb.port=0"
+        },
+        classes={MongoConfig.class, WebConfig.class, CwlViewerApplication.class, QueuedWorkflowRepository.class}
+)
 public class QueuedWorkflowRepositoryTest {
 
     @Autowired
@@ -52,6 +57,24 @@ public class QueuedWorkflowRepositoryTest {
                 .findByRetrievedFrom(queuedWorkflow.getTempRepresentation().getRetrievedFrom());
         assertNull(retrievedQueuedWorkflowAfterDelete);
 
+    }
+
+    @Test
+    public void deleteQueuedWorkflowByRetrievedFromTest2() {
+        // create stub queued workflow
+        GitDetails gitDetails = new GitDetails("test_repo_url", "test_branch", "test_path");
+        gitDetails.setPackedId("test_packedId");
+
+        Workflow workflow = new Workflow();
+        workflow.setRetrievedFrom(gitDetails);
+
+        QueuedWorkflow queuedWorkflow = new QueuedWorkflow();
+        queuedWorkflow.setTempRepresentation(workflow);
+
+        // save queued workflow
+        repository.save(queuedWorkflow);
+
+        assertNotNull(workflow);
     }
 
 }

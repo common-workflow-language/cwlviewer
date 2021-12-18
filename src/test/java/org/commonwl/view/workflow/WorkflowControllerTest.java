@@ -19,10 +19,36 @@
 
 package org.commonwl.view.workflow;
 
+import org.commonwl.view.cwl.CWLService;
+import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.graphviz.GraphVizService;
+import org.commonwl.view.researchobject.ROBundleNotFoundException;
+import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
+import org.springframework.core.io.PathResource;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.Errors;
+import org.springframework.web.servlet.view.InternalResourceViewResolver;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static org.hamcrest.core.Is.is;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,47 +58,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.commonwl.view.cwl.CWLService;
-import org.commonwl.view.git.GitDetails;
-import org.commonwl.view.graphviz.GraphVizService;
-import org.commonwl.view.researchobject.ROBundleNotFoundException;
-import org.eclipse.jgit.api.errors.TransportException;
-import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.PathResource;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.servlet.view.InternalResourceViewResolver;
-
 /**
  * Tests the controller for workflow related functionality
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest
 public class WorkflowControllerTest {
 
     /**
      * Use a temporary directory for testing
      */
-    @Rule
-    public TemporaryFolder roBundleFolder = new TemporaryFolder();
+    @TempDir
+    public Path roBundleFolder;
 
     /**
      * Get the full list of workflows
@@ -115,7 +110,7 @@ public class WorkflowControllerTest {
 
         // Validator pass or fail
         WorkflowFormValidator mockValidator = Mockito.mock(WorkflowFormValidator.class);
-        when(mockValidator.validateAndParse(anyObject(), anyObject()))
+        when(mockValidator.validateAndParse(Mockito.any(WorkflowForm.class), Mockito.any(Errors.class)))
                 .thenReturn(null)
                 .thenReturn(new GitDetails("https://github.com/owner/repoName.git", "branch", "path/within"))
                 .thenReturn(new GitDetails("https://github.com/owner/repoName.git", "branch", "path/workflow.cwl"));
@@ -130,7 +125,7 @@ public class WorkflowControllerTest {
 
         // Mock workflow service returning valid workflow
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.createQueuedWorkflow(anyObject()))
+        when(mockWorkflowService.createQueuedWorkflow(Mockito.any(GitDetails.class)))
                 .thenThrow(new WorkflowNotFoundException())
                 .thenThrow(new WrongRepositoryStateException("Some Error"))
                 .thenThrow(new TransportException("No SSH Key"))
@@ -208,10 +203,10 @@ public class WorkflowControllerTest {
 
         // Mock service
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getWorkflow(Matchers.<GitDetails>anyObject()))
+        when(mockWorkflowService.getWorkflow(Mockito.any(GitDetails.class)))
                 .thenReturn(mockWorkflow)
                 .thenReturn(null);
-        when(mockWorkflowService.createQueuedWorkflow(anyObject()))
+        when(mockWorkflowService.createQueuedWorkflow(Mockito.any(GitDetails.class)))
                 .thenReturn(mockQueuedWorkflow)
                 .thenThrow(new WorkflowNotFoundException())
                 .thenThrow(new WrongRepositoryStateException("Some Error"))
@@ -220,7 +215,7 @@ public class WorkflowControllerTest {
         List<WorkflowOverview> listOfTwoOverviews = new ArrayList<>();
         listOfTwoOverviews.add(new WorkflowOverview("/workflow1.cwl", "label", "doc"));
         listOfTwoOverviews.add(new WorkflowOverview("/workflow2.cwl", "label2", "doc2"));
-        when(mockWorkflowService.getWorkflowsFromDirectory(anyObject()))
+        when(mockWorkflowService.getWorkflowsFromDirectory(Mockito.any(GitDetails.class)))
                 .thenReturn(listOfTwoOverviews)
                 .thenReturn(Collections.singletonList(new WorkflowOverview("/workflow1.cwl", "label", "doc")));
 
@@ -287,8 +282,8 @@ public class WorkflowControllerTest {
 
         // Mock service to return a bundle file and then throw ROBundleNotFoundException
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        File bundle = roBundleFolder.newFile("bundle.zip").getAbsoluteFile();
-        when(mockWorkflowService.getROBundle(anyObject()))
+        File bundle = Files.createFile(roBundleFolder.resolve("bundle.zip")).toAbsolutePath().toFile();
+        when(mockWorkflowService.getROBundle(Mockito.any(GitDetails.class)))
                 .thenReturn(bundle)
                 .thenReturn(bundle)
                 .thenThrow(new ROBundleNotFoundException());
@@ -327,7 +322,7 @@ public class WorkflowControllerTest {
 
         // Mock service to return mock workflow
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getWorkflowGraph(anyString(), anyObject()))
+        when(mockWorkflowService.getWorkflowGraph(any(String.class), Mockito.any(GitDetails.class)))
                 .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testVis.svg")))
                 .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testVis.png")))
                 .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testWorkflow.dot")))
@@ -388,11 +383,11 @@ public class WorkflowControllerTest {
         CWLService mockCWLService = Mockito.mock(CWLService.class);
         GraphVizService graphVizService = Mockito.mock(GraphVizService.class);
         
-        when(graphVizService.getGraphStream(anyString(), eq("svg")))
+        when(graphVizService.getGraphStream(any(String.class), eq("svg")))
                 .thenReturn(getClass().getResourceAsStream("/graphviz/testWorkflow.dot"));
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
         when(mockWorkflow.getVisualisationDot()).thenReturn("");// Not actually dot
-        when(mockCWLService.parseWorkflowNative(Matchers.any(InputStream.class), eq(null), anyString()))
+        when(mockCWLService.parseWorkflowNative(any(InputStream.class), eq(null), any(String.class)))
                 .thenReturn(mockWorkflow);
         
         WorkflowController workflowController = new WorkflowController(
@@ -420,11 +415,11 @@ public class WorkflowControllerTest {
         CWLService mockCWLService = Mockito.mock(CWLService.class);
         GraphVizService graphVizService = Mockito.mock(GraphVizService.class);
         
-        when(graphVizService.getGraphStream(anyString(), eq("png")))
+        when(graphVizService.getGraphStream(any(), eq("png")))
                 .thenReturn(getClass().getResourceAsStream("/graphviz/testWorkflow.dot"));
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
         when(mockWorkflow.getVisualisationDot()).thenReturn("");// Not actually dot
-        when(mockCWLService.parseWorkflowNative(Matchers.any(InputStream.class), eq(null), anyString()))
+        when(mockCWLService.parseWorkflowNative(any(InputStream.class), eq(null), any(String.class)))
                 .thenReturn(mockWorkflow);
         
         WorkflowController workflowController = new WorkflowController(
