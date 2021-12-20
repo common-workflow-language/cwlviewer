@@ -6,7 +6,7 @@
 
   <groupId>org.commonwl.view</groupId>
   <artifactId>cwlviewer</artifactId>
-  <version>1.4.1</version>
+  <version>1.4.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>CWLViewer</name>
