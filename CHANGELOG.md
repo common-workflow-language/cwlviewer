@@ -1,6 +1,8 @@
 
 # Changelog 
 
+## v1.4.2 [202?-??-??]
+
 ## v1.4.1 [2021-12-21]
 This version started using SpringBoot 2.6.1, and had other small code changes, and many dependencies upgraded.
 
