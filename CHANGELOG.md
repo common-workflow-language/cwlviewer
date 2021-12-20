@@ -1,8 +1,26 @@
 
 # Changelog 
 
-## v1.4.1 [unreleased]
-WIP
+## v1.4.1 [2021-12-21]
+This version started using SpringBoot 2.6.1, and had other small code changes, and many dependencies upgraded.
+
+Smaller changes:
+- Convert label-schema to OCI annotations #361 @mr-c
+
+Misc fixes:
+- Added plug-in configuration for avoiding any usages of outdated log4j2 versions, some of which are subject to the RCE CVE-2021-44228 ("Log4Shell") and CVE-2021-45046 20c58b9d782802de04cdce3e975198940900a504 @mr-c
+
+Dependencies upgrade:
+- Upgrade to SpringBoot 2.6.1 #284 @mr-c @etzanis @kinow
+- update pip & setuptools #364 @mr-c
+- Dependency updates, courtesy of @dependabot-bot
+  - Bump jackson-core from 2.12.5 to 2.13.0 #358
+  - Bump jsonld-java from 0.13.3 to 0.13.4 #365
+  - Bump snakeyaml from 1.29 to 1.30 #366
+  - Bump hibernate-validator from 6.0.13.Final to 6.0.20.Final #370
+  - Bump jena-core from 4.3.1 to 4.3.2 #372
+  - Bump hibernate-validator from 6.0.20.Final to 7.0.1.Final #373
+  - Bump jackson-core from 2.13.0 to 2.13.1 #374
 
 ## v1.4.0 [2021-10-04]
 Many updates since 2018, but the most important is the fix (#355) for [CVE-2021-41110](https://github.com/common-workflow-language/cwlviewer/security/advisories/GHSA-7g7j-f5g3-fqp7) courtesy of @kinow 
