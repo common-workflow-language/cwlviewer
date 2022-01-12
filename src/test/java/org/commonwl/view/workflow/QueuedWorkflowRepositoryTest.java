@@ -1,7 +1,6 @@
 package org.commonwl.view.workflow;
 
 import org.commonwl.view.CwlViewerApplication;
-import org.commonwl.view.MongoConfig;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.git.GitDetails;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
                 "spring.mongodb.embedded.version=3.2.2",
                 "spring.data.mongodb.port=0"
         },
-        classes={MongoConfig.class, WebConfig.class, CwlViewerApplication.class, QueuedWorkflowRepository.class}
+        classes={WebConfig.class, CwlViewerApplication.class, QueuedWorkflowRepository.class}
 )
 public class QueuedWorkflowRepositoryTest {
 
