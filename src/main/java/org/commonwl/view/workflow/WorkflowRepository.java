@@ -19,13 +19,13 @@
 
 package org.commonwl.view.workflow;
 
-import java.util.List;
-
 import org.commonwl.view.git.GitDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.Query;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 
 /**
  * Stores and retrieved workflow objects from the database
@@ -33,7 +33,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  * See Spring Data MongoDB docs:
  * https://docs.spring.io/spring-data/data-mongo/docs/current/reference/html/
  */
-public interface WorkflowRepository extends PagingAndSortingRepository<Workflow, String> {
+public interface WorkflowRepository extends JpaRepository<Workflow, String> {
 
     /**
      * Finds a workflow model in the database based on where it was retrieved from
@@ -48,7 +48,7 @@ public interface WorkflowRepository extends PagingAndSortingRepository<Workflow,
      * @param path The path to the workflow within the repository
      * @return The workflow model
      */
-    @Query("{\"lastCommit\": ?0, \"retrievedFrom.path\": ?1}")
+    @Query(value = "select * from workflow w where w.lastCommit = ?1 and w.retrievedFrom->>path = ?2", nativeQuery = true)
     List<Workflow> findByCommitAndPath(String commitId, String path);
 
     /**
@@ -58,7 +58,7 @@ public interface WorkflowRepository extends PagingAndSortingRepository<Workflow,
      *            The latest commit ID of the workflow
      * @return The workflow model
      */
-    @Query("{\"lastCommit\": ?0}")
+    @Query("select w from Workflow w where w.lastCommit = ?1")
     List<Workflow> findByCommit(String commitId);
 
     /**
