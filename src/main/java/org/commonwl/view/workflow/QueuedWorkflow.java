@@ -3,31 +3,59 @@ package org.commonwl.view.workflow;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.commonwl.view.cwl.CWLToolStatus;
-import org.springframework.data.annotation.Id;
+import org.commonwl.view.util.BaseEntity;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A workflow pending completion of cwltool
  */
 @JsonIgnoreProperties(value = {"id", "tempRepresentation", "workflowList"})
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class QueuedWorkflow {
+@Entity
+@Table(name = "queued_workflow")
+@SuppressWarnings("JpaAttributeTypeInspection")
+public class QueuedWorkflow extends BaseEntity implements Serializable {
 
     // ID for database
     @Id
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "uuid2")
+    @Column(length = 36, nullable = false, updatable = false)
     public String id;
 
     // Very barebones workflow to build loading thumbnail and overview
+    @Column(columnDefinition = "jsonb", length = 10000)
+    @Type(type = "json")
+    @Convert(disableConversion = true)
     private Workflow tempRepresentation;
 
     // List of packed workflows for packed workflows
     // TODO: Refactor so this is not necessary
+    @Column(columnDefinition = "jsonb", length = 10000)
+    @Type(type = "json")
+    @Convert(disableConversion = true)
     private List<WorkflowOverview> workflowList;
 
     // Cwltool details
+    @Column(columnDefinition = "jsonb", length = 10000)
+    @Type(type = "json")
+    @Convert(disableConversion = true)
     private CWLToolStatus cwltoolStatus = CWLToolStatus.RUNNING;
+    @Column(length = 1000)
     private String cwltoolVersion = "";
+    @Column(length = 1000)
     private String message;
 
     public String getId() {
@@ -72,5 +100,23 @@ public class QueuedWorkflow {
 
     public void setWorkflowList(List<WorkflowOverview> workflowList) {
         this.workflowList = workflowList;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        QueuedWorkflow that = (QueuedWorkflow) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(tempRepresentation, that.tempRepresentation) &&
+                Objects.equals(workflowList, that.workflowList) &&
+                cwltoolStatus == that.cwltoolStatus &&
+                Objects.equals(cwltoolVersion, that.cwltoolVersion) &&
+                Objects.equals(message, that.message);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, tempRepresentation, workflowList, cwltoolStatus, cwltoolVersion, message);
     }
 }

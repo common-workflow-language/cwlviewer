@@ -19,6 +19,8 @@
 
 package org.commonwl.view.workflow;
 
+import java.util.Objects;
+
 /**
  * Gives an overview of a workflow
  */
@@ -46,4 +48,18 @@ public class WorkflowOverview {
         return doc;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WorkflowOverview that = (WorkflowOverview) o;
+        return Objects.equals(fileName, that.fileName) &&
+                Objects.equals(label, that.label) &&
+                Objects.equals(doc, that.doc);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fileName, label, doc);
+    }
 }
