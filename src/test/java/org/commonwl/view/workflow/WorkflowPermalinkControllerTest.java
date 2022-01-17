@@ -19,47 +19,46 @@
 
 package org.commonwl.view.workflow;
 
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import org.apache.commons.io.IOUtils;
+import org.commonwl.view.cwl.RDFService;
+import org.commonwl.view.git.GitDetails;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
+import org.springframework.core.io.PathResource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.nio.file.Paths;
-import java.util.Optional;
-
-import org.apache.commons.io.IOUtils;
-import org.commonwl.view.cwl.RDFService;
-import org.commonwl.view.git.GitDetails;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.PathResource;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 /**
  * Tests the controller for workflow related functionality
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest
 public class WorkflowPermalinkControllerTest {
 
+    @TempDir
+    private Path tempDir;
     private MockMvc mockMvc;
     private byte[] rdfResponse;
-    private PathResource png = new PathResource(Paths.get("src/test/resources/graphviz/testVis.png"));
-    private PathResource svg = new PathResource(Paths.get("src/test/resources/graphviz/testVis.svg"));
-    private PathResource dot = new PathResource(Paths.get("src/test/resources/graphviz/testWorkflow.dot"));
+    private final PathResource png = new PathResource(Paths.get("src/test/resources/graphviz/testVis.png"));
+    private final PathResource svg = new PathResource(Paths.get("src/test/resources/graphviz/testVis.svg"));
+    private final PathResource dot = new PathResource(Paths.get("src/test/resources/graphviz/testWorkflow.dot"));
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         Workflow mockWorkflow = Mockito.mock(Workflow.class);
@@ -67,27 +66,27 @@ public class WorkflowPermalinkControllerTest {
                 .thenReturn(new GitDetails("https://github.com/MarkRobbo/workflows.git",
                         "master", "path/to/workflow.cwl"));
 
-        
-        
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.findByCommitAndPath(anyString(), anyString(), anyObject()))
+        when(mockWorkflowService.findByCommitAndPath(any(String.class), any(String.class), any(Optional.class)))
         	.thenReturn(mockWorkflow);
 
-        when(mockWorkflowService.findRawBaseForCommit(anyString())).thenReturn(
+        when(mockWorkflowService.findRawBaseForCommit(any(String.class))).thenReturn(
         		Optional.of("https://raw.githubusercontent.com/MarkRobbo/workflows/commitidhere/"));
         
-        when(mockWorkflowService.getWorkflowGraph(eq("svg"), anyObject())).thenReturn(svg);
-        when(mockWorkflowService.getWorkflowGraph(eq("png"), anyObject())).thenReturn(png);
-        when(mockWorkflowService.getWorkflowGraph(eq("xdot"), anyObject())).thenReturn(dot);
-        when(mockWorkflowService.getROBundle(anyObject())).thenReturn(new File("src/test/resources/nonsense.zip"));
+        when(mockWorkflowService.getWorkflowGraph(eq("svg"), any(GitDetails.class))).thenReturn(svg);
+        when(mockWorkflowService.getWorkflowGraph(eq("png"), any(GitDetails.class))).thenReturn(png);
+        when(mockWorkflowService.getWorkflowGraph(eq("xdot"), any(GitDetails.class))).thenReturn(dot);
+        Path path = Files.createFile(tempDir.resolve("nonsense.zip"));
+        when(mockWorkflowService.getROBundle(any())).thenReturn(new File(path.toAbsolutePath().toString()));
 
         RDFService mockRdfService = Mockito.mock(RDFService.class);
-        when(mockRdfService.graphExists(anyString())).thenReturn(true);
+        when(mockRdfService.graphExists(any())).thenReturn(true);
 
         File turtleFile = new File("src/test/resources/cwl/make_to_cwl/dna.ttl");
-        FileInputStream fileInputStream = new FileInputStream(turtleFile);
-        rdfResponse = IOUtils.toByteArray(fileInputStream);
-        when(mockRdfService.getModel(anyString(), anyString()))
+        try (FileInputStream fileInputStream = new FileInputStream(turtleFile)) {
+            rdfResponse = IOUtils.toByteArray(fileInputStream);
+        }
+        when(mockRdfService.getModel(any(), any(String.class)))
                 .thenReturn(rdfResponse);
 
         // Mock controller/MVC

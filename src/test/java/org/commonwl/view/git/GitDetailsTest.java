@@ -19,10 +19,10 @@
 
 package org.commonwl.view.git;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.commonwl.view.git.GitDetails.normaliseUrl;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GitDetailsTest {
 

@@ -19,8 +19,8 @@
 
 package org.commonwl.view.graphviz;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -35,10 +35,9 @@ import java.nio.file.Paths;
 
 import javax.imageio.ImageIO;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 
 public class GraphVizServiceTest {
@@ -48,15 +47,15 @@ public class GraphVizServiceTest {
     /**
      * Use a temporary directory for testing
      */
-    @Rule
-    public TemporaryFolder graphvizFolder = new TemporaryFolder();
+    @TempDir
+    public File graphvizFolder;
 
     /**	
      * Generate a service for testing using the temporary folder
      */
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-        graphVizService = new GraphVizService(graphvizFolder.getRoot().getAbsolutePath());
+        graphVizService = new GraphVizService(graphvizFolder.getAbsolutePath());
     }
 
     /**
@@ -177,9 +176,9 @@ public class GraphVizServiceTest {
     @Test
     public void deleteCache() throws Exception {
 
-        File png = graphvizFolder.newFile("exampleid.png");
-        File svg = graphvizFolder.newFile("exampleid.svg");
-        File dot = graphvizFolder.newFile("exampleid.dot");
+        File png = new File(graphvizFolder, "exampleid.png");
+        File svg = new File(graphvizFolder, "exampleid.svg");
+        File dot = new File(graphvizFolder, "exampleid.dot");
 
         graphVizService.deleteCache("exampleid");
 

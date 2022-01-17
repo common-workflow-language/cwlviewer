@@ -19,9 +19,9 @@
 
 package org.commonwl.view.workflow;
 
-import java.util.Date;
-import java.util.Map;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.WebConfig.Format;
 import org.commonwl.view.cwl.CWLElement;
@@ -32,9 +32,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * Representation of a workflow
@@ -78,7 +77,7 @@ public class Workflow {
     // DOT graph of the contents
     private String visualisationDot;
 
-    private final String permaLinkBase = "https://w3id.org/cwl/view";
+    private static final String PERMANENT_LINK_BASE_URL = "https://w3id.org/cwl/view";
 
 	private String licenseLink;
 
@@ -244,7 +243,7 @@ public class Workflow {
      * Permalink for a particular representation of this workflow. Note that
      * resolving the permalink will use the official deployment of the CWL Viewer.
      *
-     * @see {@link https://w3id.org/cwl/view}
+     * @see <a href="https://w3id.org/cwl/view">https://w3id.org/cwl/view</a>
      * @param format
      *            Format of representation, or <code>null</code> for format-neutral
      *            permalink that supports content negotiation.
@@ -263,7 +262,7 @@ public class Workflow {
         if (format != null) {
             formatPart = formatPartSep + "format=" + format.name();
         }
-        return permaLinkBase + "/git/" + lastCommit +
+        return PERMANENT_LINK_BASE_URL + "/git/" + lastCommit +
                 "/" + retrievedFrom.getPath() + packedPart + formatPart;
     }
 
@@ -275,7 +274,7 @@ public class Workflow {
     @JsonProperty(value = "@id", index = 0)
     public String getIdentifier() {
         String packedPart = (retrievedFrom.getPackedId() != null) ? "#" + retrievedFrom.getPackedId() : "";
-        return permaLinkBase + "/git/" + lastCommit + "/" + retrievedFrom.getPath() + packedPart;
+        return PERMANENT_LINK_BASE_URL + "/git/" + lastCommit + "/" + retrievedFrom.getPath() + packedPart;
 
     }
 
