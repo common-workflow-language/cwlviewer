@@ -59,16 +59,16 @@ If you have modified the source code, then you may want to build the docker imag
 
     docker build -t commonworkflowlanguage/cwlviewer .
 
-## Running Spring Boot locally for development, with MongoDB and Jena Fuseki in Docker
+## Running Spring Boot locally for development, with PostgreSQL and Jena Fuseki in Docker
 
 Create `docker-compose.override.yml`:
 
 ```
 version: '3.2'
 services:
-  mongo:
+  postgres:
     ports:
-     - "27017:27017"
+     - "5432:5432"
   sparql:
     ports:
      - "3030:3030"
@@ -94,21 +94,21 @@ To completely reset the state, you must delete the data volumes:
 
 ```
 docker-compose down
-docker volume rm  cwlviewer_bundle cwlviewer_git cwlviewer_graphviz cwlviewer_mongo cwlviewer_sparql
+docker volume rm  cwlviewer_bundle cwlviewer_git cwlviewer_graphviz cwlviewer_postgres cwlviewer_sparql
 ```
 
 ## Running without Docker
 
 ### Requirements
 
-#### MongoDB
+#### PostgreSQL
 
-You will need to have [MongoDB](https://www.mongodb.com/) running,
-by default on `localhost:27017`
+You will need to have [PostgreSQL](https://www.postgresql.org/) running,
+by default on `localhost:5432`
 
 If you are running from the command line, you can override this by supplying
-system properties like `-Dspring.data.mongodb.host=mongo.example.org` and
-`-Dspring.data.mongodb.port=1337`
+system properties like `-Dspring.datasource.url=jdbc:postgresql://localhost:5432/cwlviewer` and
+`-Dspring.datasource.password=sa`
 
 #### Apache Jena Fuseki (or alternative SPARQL server)
 
