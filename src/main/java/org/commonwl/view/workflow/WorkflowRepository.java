@@ -30,8 +30,8 @@ import java.util.List;
 /**
  * Stores and retrieved workflow objects from the database
  *
- * See Spring Data MongoDB docs:
- * https://docs.spring.io/spring-data/data-mongo/docs/current/reference/html/
+ * See Spring Data JPA docs:
+ * https://docs.spring.io/spring-data/jpa/docs/current/reference/html/
  */
 public interface WorkflowRepository extends JpaRepository<Workflow, String> {
 
@@ -48,7 +48,7 @@ public interface WorkflowRepository extends JpaRepository<Workflow, String> {
      * @param path The path to the workflow within the repository
      * @return The workflow model
      */
-    @Query(value = "select * from workflow w where w.lastCommit = ?1 and w.retrievedFrom->>path = ?2", nativeQuery = true)
+    @Query(value = "SELECT w.* FROM workflow w WHERE w.lastCommit = ?1 AND w.retrievedFrom ->> 'path' = ?2", nativeQuery = true)
     List<Workflow> findByCommitAndPath(String commitId, String path);
 
     /**
@@ -58,7 +58,7 @@ public interface WorkflowRepository extends JpaRepository<Workflow, String> {
      *            The latest commit ID of the workflow
      * @return The workflow model
      */
-    @Query("select w from Workflow w where w.lastCommit = ?1")
+    @Query("SELECT w FROM Workflow w WHERE w.lastCommit = ?1")
     List<Workflow> findByCommit(String commitId);
 
     /**
