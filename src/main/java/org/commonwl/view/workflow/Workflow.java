@@ -67,7 +67,7 @@ public class Workflow extends BaseEntity implements Serializable {
     public String id;
 
     // Metadata
-    @Column(columnDefinition = "jsonb", length = 10000)
+    @Column(columnDefinition = "jsonb")
     @Type(type = "json")
     @Convert(disableConversion = true)
     private GitDetails retrievedFrom;
@@ -77,46 +77,46 @@ public class Workflow extends BaseEntity implements Serializable {
 
     // The last commit from the branch at the time of fetching
     // Used for caching purposes
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String lastCommit;
 
     // A String which represents the path to a RO bundle
     // Path types cannot be stored using Spring Data, unfortunately
-    @Column(length=1000)
+    @Column(columnDefinition = "TEXT")
     private String roBundlePath;
 
     // Contents of the workflow
-    @Column(length=1000)
+    @Column(columnDefinition = "TEXT")
     private String label;
-    @Column(length=1000)
+    @Column(columnDefinition = "TEXT")
     private String doc;
-    @Column(columnDefinition = "jsonb", length = 10000)
+    @Column(columnDefinition = "jsonb")
     @Type(type = "json")
     @Convert(disableConversion = true)
     private Map<String, CWLElement> inputs;
-    @Column(columnDefinition = "jsonb", length = 10000)
+    @Column(columnDefinition = "jsonb")
     @Type(type = "json")
     @Convert(disableConversion = true)
     private Map<String, CWLElement> outputs;
-    @Column(columnDefinition = "jsonb", length = 10000)
+    @Column(columnDefinition = "jsonb")
     @Type(type = "json")
     @Convert(disableConversion = true)
     private Map<String, CWLStep> steps;
 
     // Currently only DockerRequirement is parsed for this
-    @Column(length=1000)
+    @Column(columnDefinition = "TEXT")
     private String dockerLink;
 
-    @Column(length=1000)
+    @Column(columnDefinition = "TEXT")
     private String cwltoolVersion = "";
 
     // DOT graph of the contents
-    @Column(length=1000)
+    @Column(columnDefinition = "TEXT")
     private String visualisationDot;
 
     private static final String PERMANENT_LINK_BASE_URL = "https://w3id.org/cwl/view";
 
-    @Column(length=1000)
+    @Column(columnDefinition = "TEXT")
 	private String licenseLink;
 
     public Workflow(String label, String doc, Map<String, CWLElement> inputs, Map<String, CWLElement> outputs,

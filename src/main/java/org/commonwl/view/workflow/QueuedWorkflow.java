@@ -36,26 +36,26 @@ public class QueuedWorkflow extends BaseEntity implements Serializable {
     public String id;
 
     // Very barebones workflow to build loading thumbnail and overview
-    @Column(columnDefinition = "jsonb", length = 10000)
+    @Column(columnDefinition = "jsonb")
     @Type(type = "json")
     @Convert(disableConversion = true)
     private Workflow tempRepresentation;
 
     // List of packed workflows for packed workflows
     // TODO: Refactor so this is not necessary
-    @Column(columnDefinition = "jsonb", length = 10000)
+    @Column(columnDefinition = "jsonb")
     @Type(type = "json")
     @Convert(disableConversion = true)
     private List<WorkflowOverview> workflowList;
 
     // Cwltool details
-    @Column(columnDefinition = "jsonb", length = 10000)
+    @Column(columnDefinition = "jsonb")
     @Type(type = "json")
     @Convert(disableConversion = true)
     private CWLToolStatus cwltoolStatus = CWLToolStatus.RUNNING;
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String cwltoolVersion = "";
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String message;
 
     public String getId() {
