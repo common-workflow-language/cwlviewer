@@ -48,7 +48,7 @@ public interface WorkflowRepository extends JpaRepository<Workflow, String> {
      * @param path The path to the workflow within the repository
      * @return The workflow model
      */
-    @Query(value = "SELECT w.* FROM workflow w WHERE w.lastCommit = ?1 AND w.retrievedFrom ->> 'path' = ?2", nativeQuery = true)
+    @Query(value = "SELECT w.* FROM workflow w WHERE w.last_commit = ?1 AND w.retrieved_from ->> 'path' = ?2", nativeQuery = true)
     List<Workflow> findByCommitAndPath(String commitId, String path);
 
     /**

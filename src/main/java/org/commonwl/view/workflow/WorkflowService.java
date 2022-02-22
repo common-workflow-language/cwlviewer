@@ -47,7 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.PathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -446,7 +445,7 @@ public class WorkflowService {
      * @param gitDetails The Git details of the workflow
      * @return A FileSystemResource representing the graph
      * @throws WorkflowNotFoundException Error getting the workflow or format
-     * @throws IOException 
+     * @throws IOException Error reading the workflow files
      */
     public PathResource getWorkflowGraph(String format, GitDetails gitDetails)
             throws WorkflowNotFoundException, IOException {
