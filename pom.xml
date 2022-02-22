@@ -75,6 +75,16 @@
       <artifactId>hibernate-types-55</artifactId>
       <version>2.14.0</version>
     </dependency>
+    <!-- Liquibase; note that Flyway, while probably having more documentation and users,
+         changed its license model. Similarly to mongo, we prefer an open license that
+         won't lock users or developers from updating or modifying the code if necessary.
+         Hence our choice for liquibase. Feel free to suggest alternatives, but keep in
+         mind the license.
+    -->
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+    </dependency>
     <!-- Postgres -->
     <dependency>
       <groupId>org.postgresql</groupId>
