@@ -1,6 +1,6 @@
 #!/bin/sh
 export TZ=C 
-#set -e
+#set -ex
 
 BASE=$1
 if [ -z "$BASE" ]; then
@@ -16,8 +16,8 @@ if [ -z "$DIR" ]; then
 	DIR=`pwd`
 fi
 
-URL="${BASE}/workflows.json?page=0&size=100000000"
+URL="${BASE}/workflows?page=0&size=100000000"
 FILE=${DIR}/`date --iso-8601=seconds | sed s/://g`.json
-curl --silent --show-error --output $FILE $URL 
+curl --silent --show-error --header "accept: application/json" --output $FILE $URL
 gzip $FILE
 echo $FILE
