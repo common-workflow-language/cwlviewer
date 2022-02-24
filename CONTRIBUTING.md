@@ -78,8 +78,8 @@ Java annotation based.
 Templates for the view use [Thymeleaf](http://www.thymeleaf.org/), 
 which allows them to be displayed in browsers as static prototypes.
 
-MongoDB is used to store information about `Workflow` and `QueuedWorkflow` 
-objects using [Spring Data JPA](https://docs.spring.io/spring-data/mongodb/docs/current/reference/html/).
+PostgreSQL is used to store information about `Workflow` and `QueuedWorkflow` 
+objects using [Spring Data JPA](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/).
 
 The application also uses a triple store to keep the RDF representing 
 workflows (gathered from [cwltool](https://github.com/common-workflow-language/cwltool)'s 

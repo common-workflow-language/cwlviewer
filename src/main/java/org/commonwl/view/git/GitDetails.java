@@ -24,11 +24,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Objects;
 
 /**
  * Represents all the parameters necessary to access a file/directory with Git
  */
-@JsonIgnoreProperties(value = {"internalUrl"})
+@JsonIgnoreProperties(value = {"internalUrl"}, ignoreUnknown = true)
 public class GitDetails implements Serializable {
 
     private String repoUrl;
@@ -226,4 +227,19 @@ public class GitDetails implements Serializable {
                   .replace("www.", "");
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GitDetails that = (GitDetails) o;
+        return Objects.equals(repoUrl, that.repoUrl) &&
+                Objects.equals(branch, that.branch) &&
+                Objects.equals(path, that.path) &&
+                Objects.equals(packedId, that.packedId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(repoUrl, branch, path, packedId);
+    }
 }

@@ -83,6 +83,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-	registry.addMapping("/**").exposedHeaders("Location");  // .setMaxAge(Long.MAX_VALUE)
+        registry.addMapping("/**").exposedHeaders("Location");  // .setMaxAge(Long.MAX_VALUE)
     }
 }
