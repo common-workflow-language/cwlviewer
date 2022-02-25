@@ -191,11 +191,11 @@ look like a commit ID. Note that this might break previous permalinks.
 
 # Documentation
 
-2017 Poster https://doi.org/10.7490/f1000research.1114375.1
+2017 Poster <https://doi.org/10.7490/f1000research.1114375.1?>
 
-2017 Video overview https://youtu.be/_yjhVTmvxLU
+2017 Video overview <https://youtu.be/_yjhVTmvxLU>
 
-2017 Technical Report https://doi.org/10.5281/zenodo.823295
+2017 Technical Report <https://doi.org/10.5281/zenodo.823295>
 
 
 ## License
@@ -234,12 +234,12 @@ docker push quay.io/commonwl/cwlviewer:v${VERSION}
 
 ## Making a release and publishing to GitHub, DockerHub, and Quay.io
 
-After CHANGELOG.md has been updated, run the following:
+After CHANGELOG.md has been updated and the `-SNAPSHOT` suffix removed from `pom.xml`, run the following:
 
 ```shell
 git checkout main
 git pull
-new_version=1.4.1  # CHANGEME
+new_version=1.4.3  # CHANGEME
 # create an annotated git tag
 git tag -a -m "release version ${new_version}" v${new_version}
 # confirm the build arguments
@@ -267,7 +267,9 @@ git push
 ```
 
 Then copy the changelog into https://github.com/common-workflow-language/cwlviewer/releases/new
-using the tag you just pushed
+using the tag you just pushed.
+
+Finally make a new PR to bump the version and restore the `-SNAPSHOT` suffix in `pom.xml`.
 
 # Thanks
 
