@@ -191,11 +191,11 @@ look like a commit ID. Note that this might break previous permalinks.
 
 # Documentation
 
-2017 Poster https://doi.org/10.7490/f1000research.1114375.1
+2017 Poster <https://doi.org/10.7490/f1000research.1114375.1?>
 
-2017 Video overview https://youtu.be/_yjhVTmvxLU
+2017 Video overview <https://youtu.be/_yjhVTmvxLU>
 
-2017 Technical Report https://doi.org/10.5281/zenodo.823295
+2017 Technical Report <https://doi.org/10.5281/zenodo.823295>
 
 
 ## License
@@ -234,10 +234,12 @@ docker push quay.io/commonwl/cwlviewer:v${VERSION}
 
 ## Making a release and publishing to GitHub, DockerHub, and Quay.io
 
-After CHANGELOG.md has been updated, run the following:
+After CHANGELOG.md has been updated and the `-SNAPSHOT` suffix removed from `pom.xml`, run the following:
 
 ```shell
-new_version=1.4.1  # CHANGEME
+git checkout main
+git pull
+new_version=1.4.3  # CHANGEME
 # create an annotated git tag
 git tag -a -m "release version ${new_version}" v${new_version}
 # confirm the build arguments
@@ -248,23 +250,26 @@ echo BUILD_DATE=${BUILD_DATE} VCS_REF=${VCS_REF} VERSION=${VERSION}
 # build the container image
 docker build --build-arg BUILD_DATE=${BUILD_DATE} --build-arg VCS_REF=${VCS_REF} \
   --build-arg VERSION=${VERSION} \
-  -t cwlviewer:v${VERSION} .
+  -t cwlviewer:${VERSION} .
 # tag this container image in preparation for pushing to Docker Hub and Quay.io
-docker tag cwlviewer:v${VERSION} docker.io/commonworkflowlanguage/cwlviewer:v${VERSION}
+docker tag cwlviewer:v${VERSION} docker.io/commonworkflowlanguage/cwlviewer:${VERSION}
 docker tag cwlviewer:v${VERSION} docker.io/commonworkflowlanguage/cwlviewer:latest
-docker tag cwlviewer:v${VERSION} quay.io/commonwl/cwlviewer:v${VERSION}
+docker tag cwlviewer:v${VERSION} quay.io/commonwl/cwlviewer:${VERSION}
 docker tag cwlviewer:v${VERSION} quay.io/commonwl/cwlviewer:latest
 # push the container image to Docker Hub and Quay.io
-docker push docker.io/commonworkflowlanguage/cwlviewer:v${VERSION}
+docker push docker.io/commonworkflowlanguage/cwlviewer:${VERSION}
 docker push docker.io/commonworkflowlanguage/cwlviewer:latest
-docker push quay.io/commonwl/cwlviewer:v${VERSION}
+docker push quay.io/commonwl/cwlviewer:${VERSION}
 docker push quay.io/commonwl/cwlviewer:latest
 # upload the annotated tag to GitHub
 git push --tags
+git push
 ```
 
 Then copy the changelog into https://github.com/common-workflow-language/cwlviewer/releases/new
-using the tag you just pushed
+using the tag you just pushed.
+
+Finally make a new PR to bump the version and restore the `-SNAPSHOT` suffix in `pom.xml`.
 
 # Thanks
 
