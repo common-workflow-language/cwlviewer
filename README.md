@@ -237,6 +237,8 @@ docker push quay.io/commonwl/cwlviewer:v${VERSION}
 After CHANGELOG.md has been updated, run the following:
 
 ```shell
+git checkout main
+git pull
 new_version=1.4.1  # CHANGEME
 # create an annotated git tag
 git tag -a -m "release version ${new_version}" v${new_version}
@@ -261,6 +263,7 @@ docker push quay.io/commonwl/cwlviewer:v${VERSION}
 docker push quay.io/commonwl/cwlviewer:latest
 # upload the annotated tag to GitHub
 git push --tags
+git push
 ```
 
 Then copy the changelog into https://github.com/common-workflow-language/cwlviewer/releases/new
