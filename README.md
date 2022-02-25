@@ -250,16 +250,16 @@ echo BUILD_DATE=${BUILD_DATE} VCS_REF=${VCS_REF} VERSION=${VERSION}
 # build the container image
 docker build --build-arg BUILD_DATE=${BUILD_DATE} --build-arg VCS_REF=${VCS_REF} \
   --build-arg VERSION=${VERSION} \
-  -t cwlviewer:v${VERSION} .
+  -t cwlviewer:${VERSION} .
 # tag this container image in preparation for pushing to Docker Hub and Quay.io
-docker tag cwlviewer:v${VERSION} docker.io/commonworkflowlanguage/cwlviewer:v${VERSION}
+docker tag cwlviewer:v${VERSION} docker.io/commonworkflowlanguage/cwlviewer:${VERSION}
 docker tag cwlviewer:v${VERSION} docker.io/commonworkflowlanguage/cwlviewer:latest
-docker tag cwlviewer:v${VERSION} quay.io/commonwl/cwlviewer:v${VERSION}
+docker tag cwlviewer:v${VERSION} quay.io/commonwl/cwlviewer:${VERSION}
 docker tag cwlviewer:v${VERSION} quay.io/commonwl/cwlviewer:latest
 # push the container image to Docker Hub and Quay.io
-docker push docker.io/commonworkflowlanguage/cwlviewer:v${VERSION}
+docker push docker.io/commonworkflowlanguage/cwlviewer:${VERSION}
 docker push docker.io/commonworkflowlanguage/cwlviewer:latest
-docker push quay.io/commonwl/cwlviewer:v${VERSION}
+docker push quay.io/commonwl/cwlviewer:${VERSION}
 docker push quay.io/commonwl/cwlviewer:latest
 # upload the annotated tag to GitHub
 git push --tags
