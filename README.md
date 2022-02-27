@@ -281,6 +281,8 @@ Developers and [contributors](https://github.com/common-workflow-language/cwlvie
 * Carole Goble http://orcid.org/0000-0003-1219-2137
 * Charles Overbeck https://github.com/coverbeck
 * Finn Bacall http://orcid.org/0000-0002-0048-3300
+* Osakpolor Obaseki https://github.com/obasekiosa
+* Bruno P. Kinoshita https://orcid.org/0000-0001-8250-4074
 
 Thanks to:
 
