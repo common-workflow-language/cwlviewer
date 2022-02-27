@@ -59,16 +59,16 @@ If you have modified the source code, then you may want to build the docker imag
 
     docker build -t commonworkflowlanguage/cwlviewer .
 
-## Running Spring Boot locally for development, with MongoDB and Jena Fuseki in Docker
+## Running Spring Boot locally for development, with PostgreSQL and Jena Fuseki in Docker
 
 Create `docker-compose.override.yml`:
 
 ```
 version: '3.2'
 services:
-  mongo:
+  postgres:
     ports:
-     - "27017:27017"
+     - "5432:5432"
   sparql:
     ports:
      - "3030:3030"
@@ -94,21 +94,21 @@ To completely reset the state, you must delete the data volumes:
 
 ```
 docker-compose down
-docker volume rm  cwlviewer_bundle cwlviewer_git cwlviewer_graphviz cwlviewer_mongo cwlviewer_sparql
+docker volume rm  cwlviewer_bundle cwlviewer_git cwlviewer_graphviz cwlviewer_postgres cwlviewer_sparql
 ```
 
 ## Running without Docker
 
 ### Requirements
 
-#### MongoDB
+#### PostgreSQL
 
-You will need to have [MongoDB](https://www.mongodb.com/) running,
-by default on `localhost:27017`
+You will need to have [PostgreSQL](https://www.postgresql.org/) running,
+by default on `localhost:5432`
 
 If you are running from the command line, you can override this by supplying
-system properties like `-Dspring.data.mongodb.host=mongo.example.org` and
-`-Dspring.data.mongodb.port=1337`
+system properties like `-Dspring.datasource.url=jdbc:postgresql://localhost:5432/cwlviewer` and
+`-Dspring.datasource.password=sa`
 
 #### Apache Jena Fuseki (or alternative SPARQL server)
 
@@ -191,11 +191,11 @@ look like a commit ID. Note that this might break previous permalinks.
 
 # Documentation
 
-2017 Poster https://doi.org/10.7490/f1000research.1114375.1
+2017 Poster <https://doi.org/10.7490/f1000research.1114375.1?>
 
-2017 Video overview https://youtu.be/_yjhVTmvxLU
+2017 Video overview <https://youtu.be/_yjhVTmvxLU>
 
-2017 Technical Report https://doi.org/10.5281/zenodo.823295
+2017 Technical Report <https://doi.org/10.5281/zenodo.823295>
 
 
 ## License
@@ -212,6 +212,64 @@ or join the [gitter chat for cwlviewer](https://gitter.im/common-workflow-langua
 
 ## Changelog
 See [CHANGELOG](https://github.com/common-workflow-language/cwlviewer/blob/main/CHANGELOG.md)
+
+## Making a development snapshot container image
+(and optionally publishing that image to DockerHub)
+
+```shell
+# confirm the build arguments
+# if these don't look correct, troubleshoot before continuing.
+BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') VCS_REF=$(git rev-parse HEAD) VERSION=$(git describe)
+echo BUILD_DATE=${BUILD_DATE} VCS_REF=${VCS_REF} VERSION=${VERSION}
+# build the container image
+docker build --build-arg BUILD_DATE=${BUILD_DATE} --build-arg VCS_REF=${VCS_REF} \
+  --build-arg VERSION=${VERSION} \
+  -t cwlviewer:v${VERSION} .
+# the rest is optional
+docker tag cwlviewer:v${VERSION} docker.io/commonworkflowlanguage/cwlviewer:v${VERSION}
+docker tag cwlviewer:v${VERSION} quay.io/commonwl/cwlviewer:v${VERSION}
+docker push docker.io/commonworkflowlanguage/cwlviewer:v${VERSION}
+docker push quay.io/commonwl/cwlviewer:v${VERSION}
+```
+
+## Making a release and publishing to GitHub, DockerHub, and Quay.io
+
+After CHANGELOG.md has been updated and the `-SNAPSHOT` suffix removed from `pom.xml`, run the following:
+
+```shell
+git checkout main
+git pull
+new_version=1.4.3  # CHANGEME
+# create an annotated git tag
+git tag -a -m "release version ${new_version}" v${new_version}
+# confirm the build arguments
+# if these don't look correct, troubleshoot before continuing.
+# for example, was your tag an annotated (-a) tag?
+BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') VCS_REF=$(git rev-parse HEAD) VERSION=$(git describe)
+echo BUILD_DATE=${BUILD_DATE} VCS_REF=${VCS_REF} VERSION=${VERSION}
+# build the container image
+docker build --build-arg BUILD_DATE=${BUILD_DATE} --build-arg VCS_REF=${VCS_REF} \
+  --build-arg VERSION=${VERSION} \
+  -t cwlviewer:${VERSION} .
+# tag this container image in preparation for pushing to Docker Hub and Quay.io
+docker tag cwlviewer:v${VERSION} docker.io/commonworkflowlanguage/cwlviewer:${VERSION}
+docker tag cwlviewer:v${VERSION} docker.io/commonworkflowlanguage/cwlviewer:latest
+docker tag cwlviewer:v${VERSION} quay.io/commonwl/cwlviewer:${VERSION}
+docker tag cwlviewer:v${VERSION} quay.io/commonwl/cwlviewer:latest
+# push the container image to Docker Hub and Quay.io
+docker push docker.io/commonworkflowlanguage/cwlviewer:${VERSION}
+docker push docker.io/commonworkflowlanguage/cwlviewer:latest
+docker push quay.io/commonwl/cwlviewer:${VERSION}
+docker push quay.io/commonwl/cwlviewer:latest
+# upload the annotated tag to GitHub
+git push --tags
+git push
+```
+
+Then copy the changelog into https://github.com/common-workflow-language/cwlviewer/releases/new
+using the tag you just pushed.
+
+Finally make a new PR to bump the version and restore the `-SNAPSHOT` suffix in `pom.xml`.
 
 # Thanks
 

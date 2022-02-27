@@ -1,7 +1,23 @@
 
 # Changelog 
 
-## v1.4.2 [202?-??-??]
+## v1.4.2 [2022-02-25]
+The database model has been migrated from MongoDB to PostgreSQL. README instructions
+and Docker images updated. New version will be deployed to <https://view.commonwl.org>
+soon.
+
+Smaller changes:
+- Added Maven default build goal #377 @kinow
+
+Misc fixes:
+- Document Git, GitHub, Docker Hub, and Quay.io release process #360 @mr-c
+- Migrate from MongoDB to PostgreSQL #378 @kinow
+
+Dependencies upgrade:
+- Bump spring-data-commons from 2.6.0 to 2.6.1 #383 @mr-c
+- Bump jena-core from 4.3.2 to 4.4.0 #382 @mr-c
+- Bump hibernate-validator from 7.0.1.Final to 7.0.2.Final #381 @kinow
+- Bump spring-data-commons from 2.6.1 to 2.6.2 #380 @mr-c
 
 ## v1.4.1 [2021-12-21]
 This version started using SpringBoot 2.6.1, and had other small code changes, and many dependencies upgraded.

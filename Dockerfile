@@ -45,7 +45,7 @@ ADD pom.xml LICENSE.md NOTICE.md README.md /usr/src/app/
 
 # add src/ (which often change)
 ADD src /usr/src/app/src
-# Skip tests while building as that requires a local mongodb
+# Skip tests while building as that requires a local postgres
 RUN mvn clean package -DskipTests && cp target/cwlviewer-*.jar /usr/lib/cwlviewer.jar && rm -rf target
 
 # NOTE: ~/.m2/repository is a VOLUME and so will be deleted anyway
