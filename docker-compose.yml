@@ -3,7 +3,7 @@ volumes:
   bundle:
   git:
   graphviz:
-  mongo:
+  postgres:
   sparql:
 services:
   spring:
@@ -15,7 +15,7 @@ services:
     ports:
      - "8080:8080"
     links:
-     - mongo
+     - postgres
      - sparql
     volumes:
      - type: volume
@@ -29,19 +29,26 @@ services:
        target: /data/graphviz
     environment:
      - SPARQL_ENDPOINT=http://sparql:3030/cwlviewer/
-     - SPRING_DATA_MONGODB_HOST=mongo
-     - SPRING_DATA_MONGODB_PORT=27017
+     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/cwlviewer
+     - SPRING_DATASOURCE_USERNAME=sa
+     - SPRING_DATASOURCE_PASSWORD=sa
      - BUNDLESTORAGE=/data/bundle
      - GITSTORAGE=/data/git
      - GRAPHVIZSTORAGE=/data/graphviz
-  mongo:
+  postgres:
     restart: always
-    image: mongo:3.4
-    command: mongod --setParameter="internalQueryExecMaxBlockingSortBytes=335544320"
+    image: postgres:14-alpine
+    command: postgres -c listen_addresses='*' -c log_statement=all
+    environment:
+      - POSTGRES_USER=sa
+      - POSTGRES_PASSWORD=sa
+      - POSTGRES_DB=cwlviewer
+      - PGDATA=/var/lib/postgresql/data/cwlviewer/
     volumes:
       - type: volume
-        source: mongo
-        target: /data/db
+        source: postgres
+        target: /var/lib/postgresql/data
+      - ./pg_hba.conf/:/var/lib/postgresql/data/pg_hba.conf
   sparql:
     restart: always
 ## For debugging, expose the Fuseki port by enabling:

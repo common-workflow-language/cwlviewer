@@ -271,7 +271,8 @@ public class WorkflowPermalinkController {
      *            The commit ID of the repository
      * @param request
      *            The HttpServletRequest from the controller to extract path
-     * @param part2
+     * @param part
+     *            The workflow part
      * @throws WorkflowNotFoundException
      *             If workflow could not be found (404)
      * @throws MultipleWorkflowsException

@@ -24,15 +24,15 @@ import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLProcess;
 import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.workflow.Workflow;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ModelDotWriterTest {
 
@@ -43,7 +43,7 @@ public class ModelDotWriterTest {
      * nested workflow etc to test DOT generation
      * TODO: This is a pain, can it be made simpler?
      */
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         // Inputs

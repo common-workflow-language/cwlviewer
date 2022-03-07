@@ -19,71 +19,108 @@
 
 package org.commonwl.view.workflow;
 
-import java.util.Date;
-import java.util.Map;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.WebConfig.Format;
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.git.GitDetails;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.commonwl.view.util.BaseEntity;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
+import java.io.Serializable;
+import java.util.Date;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Representation of a workflow
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(value = {"id", "roBundlePath", "roBundleLink"})
-@Document
-public class Workflow {
+@JsonIgnoreProperties(value = {"id", "roBundlePath", "roBundleLink"}, ignoreUnknown = true)
+@Entity
+@Table(name = "workflow",
+        indexes = {
+                @Index(columnList = "retrievedFrom", unique = true),
+                @Index(columnList = "retrievedOn")
+        })
+@SuppressWarnings("deprecation")
+public class Workflow extends BaseEntity implements Serializable {
 
     // ID for database
     @Id
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "uuid2")
+    @Column(length = 36, nullable = false, updatable = false)
     public String id;
 
     // Metadata
-    @Indexed(unique = true)
+    @Column(columnDefinition = "jsonb")
+    @Type(type = "json")
+    @Convert(disableConversion = true)
     private GitDetails retrievedFrom;
+
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss z")
-    @Indexed
     private Date retrievedOn;
 
     // The last commit from the branch at the time of fetching
     // Used for caching purposes
+    @Column(columnDefinition = "TEXT")
     private String lastCommit;
 
     // A String which represents the path to a RO bundle
     // Path types cannot be stored using Spring Data, unfortunately
+    @Column(columnDefinition = "TEXT")
     private String roBundlePath;
 
     // Contents of the workflow
+    @Column(columnDefinition = "TEXT")
     private String label;
+    @Column(columnDefinition = "TEXT")
     private String doc;
+    @Column(columnDefinition = "jsonb")
+    @Type(type = "json")
+    @Convert(disableConversion = true)
     private Map<String, CWLElement> inputs;
+    @Column(columnDefinition = "jsonb")
+    @Type(type = "json")
+    @Convert(disableConversion = true)
     private Map<String, CWLElement> outputs;
+    @Column(columnDefinition = "jsonb")
+    @Type(type = "json")
+    @Convert(disableConversion = true)
     private Map<String, CWLStep> steps;
 
     // Currently only DockerRequirement is parsed for this
+    @Column(columnDefinition = "TEXT")
     private String dockerLink;
 
+    @Column(columnDefinition = "TEXT")
     private String cwltoolVersion = "";
 
     // DOT graph of the contents
+    @Column(columnDefinition = "TEXT")
     private String visualisationDot;
 
-    private final String permaLinkBase = "https://w3id.org/cwl/view";
+    private static final String PERMANENT_LINK_BASE_URL = "https://w3id.org/cwl/view";
 
+    @Column(columnDefinition = "TEXT")
 	private String licenseLink;
 
-    public Workflow(String label, String doc, Map<String, CWLElement> inputs,
-                    Map<String, CWLElement> outputs, Map<String, CWLStep> steps, String dockerLink, String licenseLink) {
+    public Workflow(String label, String doc, Map<String, CWLElement> inputs, Map<String, CWLElement> outputs,
+                    Map<String, CWLStep> steps, String dockerLink, String licenseLink) {
         this.label = label;
         this.doc = doc;
         this.inputs = inputs;
@@ -234,7 +271,7 @@ public class Workflow {
     /**
      * Permalink for this workflow. including packed part, but no format
      *
-     * @return
+     * @return the permalink
      */
     public String getPermalink() {
         return getPermalink(null);
@@ -244,7 +281,7 @@ public class Workflow {
      * Permalink for a particular representation of this workflow. Note that
      * resolving the permalink will use the official deployment of the CWL Viewer.
      *
-     * @see {@link https://w3id.org/cwl/view}
+     * @see <a href="https://w3id.org/cwl/view">https://w3id.org/cwl/view</a>
      * @param format
      *            Format of representation, or <code>null</code> for format-neutral
      *            permalink that supports content negotiation.
@@ -263,20 +300,19 @@ public class Workflow {
         if (format != null) {
             formatPart = formatPartSep + "format=" + format.name();
         }
-        return permaLinkBase + "/git/" + lastCommit +
+        return PERMANENT_LINK_BASE_URL + "/git/" + lastCommit +
                 "/" + retrievedFrom.getPath() + packedPart + formatPart;
     }
 
     /**
      * RDF identifier, uses #hash for parts
      *
-     * @return
+     * @return the RDF identifier
      */
     @JsonProperty(value = "@id", index = 0)
     public String getIdentifier() {
         String packedPart = (retrievedFrom.getPackedId() != null) ? "#" + retrievedFrom.getPackedId() : "";
-        return permaLinkBase + "/git/" + lastCommit + "/" + retrievedFrom.getPath() + packedPart;
-
+        return PERMANENT_LINK_BASE_URL + "/git/" + lastCommit + "/" + retrievedFrom.getPath() + packedPart;
     }
 
     public boolean isPacked() {
@@ -291,4 +327,29 @@ public class Workflow {
 		this.licenseLink = licenseLink;
 	}
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Workflow workflow = (Workflow) o;
+        return Objects.equals(id, workflow.id) &&
+                Objects.equals(retrievedFrom, workflow.retrievedFrom) &&
+                Objects.equals(retrievedOn, workflow.retrievedOn) &&
+                Objects.equals(lastCommit, workflow.lastCommit) &&
+                Objects.equals(roBundlePath, workflow.roBundlePath) &&
+                Objects.equals(label, workflow.label) &&
+                Objects.equals(doc, workflow.doc) &&
+                Objects.equals(inputs, workflow.inputs) &&
+                Objects.equals(outputs, workflow.outputs) &&
+                Objects.equals(steps, workflow.steps) &&
+                Objects.equals(dockerLink, workflow.dockerLink) &&
+                Objects.equals(cwltoolVersion, workflow.cwltoolVersion) &&
+                Objects.equals(visualisationDot, workflow.visualisationDot) &&
+                Objects.equals(licenseLink, workflow.licenseLink);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, retrievedFrom, retrievedOn, lastCommit, roBundlePath, label, doc, inputs, outputs, steps, dockerLink, cwltoolVersion, visualisationDot, licenseLink);
+    }
 }

@@ -20,11 +20,11 @@
 package org.commonwl.view.workflow;
 
 import org.commonwl.view.git.GitDetails;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests the validator. Parsing is already checked in GithubServiceTest

@@ -19,22 +19,25 @@
 
 package org.commonwl.view.cwl;
 
-import org.apache.jena.query.*;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowOverview;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -44,13 +47,13 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.io.FileUtils.readFileToString;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
 public class CWLServiceTest {
 
     /**
@@ -58,7 +61,7 @@ public class CWLServiceTest {
      */
     private RDFService rdfService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         File packedWorkflowRdf = new File("src/test/resources/cwl/make_to_cwl/dna.ttl");
         Model workflowModel = ModelFactory.createDefaultModel();
@@ -78,15 +81,9 @@ public class CWLServiceTest {
         };
 
         this.rdfService = Mockito.spy(new RDFService("http://localhost:3030/cwlviewer/"));
-        Mockito.doAnswer(queryRdf).when(rdfService).runQuery(anyObject());
-        Mockito.doReturn(true).when(rdfService).graphExists(anyString());
+        Mockito.doAnswer(queryRdf).when(rdfService).runQuery(any());
+        Mockito.doReturn(true).when(rdfService).graphExists(any(String.class));
     }
-
-    /**
-     * Used for expected IOExceptions for filesize limits
-     */
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void parsePackedWorkflowNativePath() throws Exception {
@@ -146,7 +143,7 @@ public class CWLServiceTest {
         // Mock CWLTool
         CWLTool mockCwlTool = Mockito.mock(CWLTool.class);
         File packedWorkflowRdf = new File("src/test/resources/cwl/make_to_cwl/dna.ttl");
-        when(mockCwlTool.getRDF(anyString()))
+        when(mockCwlTool.getRDF(any(String.class)))
                 .thenReturn(readFileToString(packedWorkflowRdf));
 
         // CWLService to test
@@ -180,13 +177,12 @@ public class CWLServiceTest {
     public void workflowOverSingleFileSizeLimitThrowsIOException() throws Exception {
 
         // Should throw IOException due to oversized files
-        thrown.expect(IOException.class);
-        thrown.expectMessage("File 'lobSTR-workflow.cwl' is over singleFileSizeLimit - 2 KB/0 bytes");
-
-        CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 0);
-        cwlService.parseWorkflowNative(
-                Paths.get("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
-
+        Exception thrown = Assertions.assertThrows(IOException.class, () -> {
+            CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 0);
+            cwlService.parseWorkflowNative(
+                    Paths.get("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
+        });
+        assertEquals("File 'lobSTR-workflow.cwl' is over singleFileSizeLimit - 2 KB/0 bytes", thrown.getMessage());
     }
 
     /**
@@ -216,19 +212,17 @@ public class CWLServiceTest {
      */
     @Test
     public void workflowOverviewOverSingleFileSizeLimitThrowsIOException() throws Exception {
-
-        // Test cwl service
-        CWLService cwlService = new CWLService(Mockito.mock(RDFService.class),
-                Mockito.mock(CWLTool.class), 0);
-
         // File to test
         File helloWorkflow = new File("src/test/resources/cwl/hello/hello.cwl");
 
-        // Should throw IOException due to oversized file
-        thrown.expect(IOException.class);
-        thrown.expectMessage(String.format("File 'hello.cwl' is over singleFileSizeLimit - %s bytes/0 bytes", 
-                helloWorkflow.length()));
-        cwlService.getWorkflowOverview(helloWorkflow);
+        // Test cwl service
+        Exception thrown = Assertions.assertThrows(IOException.class, () -> {
+            CWLService cwlService = new CWLService(Mockito.mock(RDFService.class),
+                    Mockito.mock(CWLTool.class), 0);
+            cwlService.getWorkflowOverview(helloWorkflow);
+        });
+        assertEquals(String.format("File 'hello.cwl' is over singleFileSizeLimit - %s bytes/0 bytes",
+                helloWorkflow.length()), thrown.getMessage());
 
     }
 

@@ -20,12 +20,9 @@
 package org.commonwl.view.workflow;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.io.InputStream;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
@@ -33,8 +30,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.cwl.CWLService;
@@ -236,7 +231,7 @@ public class WorkflowController {
                                           @PathVariable("repoName") String repoName,
                                           @PathVariable("branch") String branch,
                                           HttpServletRequest request,
-                                          HttpServletResponse response) throws IOException {
+                                          HttpServletResponse response) {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         path = extractPath(path, 7);
         GitDetails gitDetails = getGitDetails(domain, owner, repoName, branch, path);
@@ -254,7 +249,7 @@ public class WorkflowController {
     @ResponseBody
     public Resource getROBundleGeneric(@PathVariable("branch") String branch,
                                                  HttpServletRequest request,
-                                                 HttpServletResponse response) throws IOException {
+                                                 HttpServletResponse response) {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         GitDetails gitDetails = getGitDetails(10, path, branch);
         File bundleDownload = workflowService.getROBundle(gitDetails);
@@ -584,7 +579,7 @@ public class WorkflowController {
     }
 
     private Resource getGraphFromInputStream(InputStream in, String format)
-            throws IOException, NoSuchAlgorithmException {
+            throws IOException {
         Workflow workflow = cwlService.parseWorkflowNative(in, null, "workflow"); // first workflow will do
         InputStream out = graphVizService.getGraphStream(workflow.getVisualisationDot(), format);
         return new InputStreamResource(out);

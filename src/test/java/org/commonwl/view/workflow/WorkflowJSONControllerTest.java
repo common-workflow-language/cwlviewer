@@ -22,12 +22,9 @@ package org.commonwl.view.workflow;
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -36,18 +33,19 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.mockito.ArgumentMatchers.any;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * API testing
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest
 public class WorkflowJSONControllerTest {
 
     @Test
@@ -55,7 +53,7 @@ public class WorkflowJSONControllerTest {
 
         // Validator pass or fail
         WorkflowFormValidator mockValidator = Mockito.mock(WorkflowFormValidator.class);
-        when(mockValidator.validateAndParse(anyObject(), anyObject()))
+        when(mockValidator.validateAndParse(any(), any()))
                 .thenReturn(null)
                 .thenReturn(new GitDetails("https://github.com/owner/repoName.git",
                         "branch", "path/workflow.cwl"))
@@ -86,7 +84,7 @@ public class WorkflowJSONControllerTest {
         when(mockWorkflowService.getWorkflow(any(GitDetails.class)))
                 .thenReturn(mockWorkflow)
                 .thenReturn(null);
-        when(mockWorkflowService.createQueuedWorkflow(anyObject()))
+        when(mockWorkflowService.createQueuedWorkflow(any()))
                 .thenThrow(new CWLValidationException("Error"))
                 .thenReturn(mockQueuedWorkflow);
 
@@ -204,7 +202,7 @@ public class WorkflowJSONControllerTest {
         qwfSuccess.setTempRepresentation(wfSuccess);
 
         WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
-        when(mockWorkflowService.getQueuedWorkflow(anyString()))
+        when(mockWorkflowService.getQueuedWorkflow(any(String.class)))
                 .thenReturn(null)
                 .thenReturn(qwfRunning)
                 .thenReturn(qwfError)
