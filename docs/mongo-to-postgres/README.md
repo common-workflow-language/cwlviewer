@@ -32,6 +32,9 @@ what was done, or to modify it for other use cases. The Python script with
 the same name (but `.py` extension) was created based on the Notebook, to
 be used in the command line.
 
-To install the dependencies, use `pip install -r requirements.txt
+To install the dependencies, use `pip install -r requirements.txt`
 in a virtual environment to get the dependencies to run both the
 Notebook and the Python script.
+
+There is also a replacement for `dump.sh`, the `dump.py` script that can
+paginate the requests to retrieve the complete database in a single command.

@@ -176,11 +176,20 @@ While you can perform backup of the Docker volumes,
 for larger upgrades of CWL Viewer it is recommended instead to do a JSON dump
 and re-load, which will force CWL Viewer to fetch and parse again.
 
-The script `dump.sh` can be used for regular backups, it will store the full
-output of /workflows as a timestamped gzip-compressed JSON file:
+The script `dump.py` can be used for regular backups, it will store the full
+output of /workflows as one or multiple timestamped JSON files (you can use
+`gzip` to compress them):
 
-    $ ./dump.sh https://view.commonwl.org/ /var/backups/cwl
-    /var/backups/cwl/2018-06-06T135133+0000.json.gz
+    $ python dump.py --viewer https://view.commonwl.org/ --output /var/backups --page 0 --size 100
+      INFO:Viewer URL: https://view.commonwl.org/
+      INFO:Output: /var/backups
+      INFO:Dumping workflows from https://view.commonwl.org/, page 0, size 100 to /var/backups
+
+    $ python dump.py -o /var/backups -a
+      INFO:Viewer URL: https://view.commonwl.org/
+      INFO:Output: /var/backups
+      INFO:Dumping all the workflows from https://view.commonwl.org/ to /var/backups
+      100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 16/16 [04:39<00:00, 17.49s/it]
 
 The script `load.py` (requires Python 3) can be used to restore from such JSON dumps:
 

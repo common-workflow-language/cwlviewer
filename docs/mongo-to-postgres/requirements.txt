@@ -1,4 +1,4 @@
 jupyterlab
 numpy
 pandas
-tqdm
+requests==2.27.*
