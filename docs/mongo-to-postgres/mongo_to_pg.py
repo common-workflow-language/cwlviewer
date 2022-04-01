@@ -10,7 +10,6 @@ from uuid import uuid4
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 
 
 def _to_camel_case(snake_str):
@@ -62,7 +61,7 @@ def mongo_to_pg(file, out):
     # from: https://stackoverflow.com/a/68258386
     chunks = np.array_split(df.index, 100)  # chunks of 100 rows
 
-    for chunk, subset in enumerate(tqdm(chunks)):
+    for chunk, subset in enumerate(chunks):
         if chunk == 0:  # first row
             df.loc[subset].to_csv(out, mode='w', index=True)
         else:
