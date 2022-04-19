@@ -1,6 +1,35 @@
 
 # Changelog 
 
+## v1.4.3 [2022-04-19]
+A few workflows were not rendering correctly after the upgrade from MongoDB to
+PostgreSQL. The reason was a security update in Thymeleaf that stopped Java
+static methods from being invoked in templates. Only a few workflows triggered
+the part of the code with static calls, and the production instance of CWL Viewer,
+<https://view.commonwl.org>, was not migrated yet - this issue should only affect
+users using v1.4.2 locally.
+
+Smaller changes:
+- Small fixes for issues found during dev/prod deployment (includes Thymeleaf fix) #391 @kinow
+
+Misc fixes:
+- Add mongo_to_pg Python script and notebook, replace `dump.sh` by `dump.py` (supports pagination) #396 @kinow
+
+Dependencies upgrade:
+- Bump junit-jupiter from 1.16.2 to 1.16.3 #387 @mr-c
+- Bump postgresql from 1.16.2 to 1.16.3 #386 @mr-c
+- Bump jackson-core from 2.13.1 to 2.13.2 #390 @kinow
+- Bump spring-data-commons from 2.6.2 to 2.6.3 #392 @kinow
+- Bump hibernate-types-55 from 2.14.0 to 2.14.1 #393 @kinow
+- Bump hibernate-types-55 from 2.14.0 to 2.14.1 #393 @kinow
+- Bump hibernate-types-55 from 2.14.1 to 2.15.2 #400 @kinow
+- Bump postgresql from 1.16.3 to 1.17.0 #401 @kinow
+- Bump hibernate-types-55 from 2.15.2 to 2.16.0 #403 @kinow
+- Bump junit-jupiter from 1.16.3 to 1.17.0 #402 @kinow
+- Bump postgresql from 1.17.0 to 1.17.1 #404 @kinow
+- Bump junit-jupiter from 1.17.0 to 1.17.1 #405 @kinow
+- Bump hibernate-types-55 from 2.16.0 to 2.16.1 #406 @kinow
+
 ## v1.4.2 [2022-02-25]
 The database model has been migrated from MongoDB to PostgreSQL. README instructions
 and Docker images updated. New version will be deployed to <https://view.commonwl.org>
