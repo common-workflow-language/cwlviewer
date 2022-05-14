@@ -5,8 +5,6 @@ This is a [Spring Boot](http://projects.spring.io/spring-boot/) MVC application 
 [![Build Status](https://github.com/common-workflow-language/cwlviewer/workflows/CWL%20Viewer%20Build/badge.svg?branch=main)](https://github.com/common-workflow-language/cwlviewer/actions?query=workflow%3A%22CWL%20Viewer%20Build%22) [![Coverage Status](https://coveralls.io/repos/github/common-workflow-language/cwlviewer/badge.svg)](https://coveralls.io/github/common-workflow-language/cwlviewer) [![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/common-workflow-language/cwlviewer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![](https://images.microbadger.com/badges/image/commonworkflowlanguage/cwlviewer.svg)](https://microbadger.com/images/commonworkflowlanguage/cwlviewer "MicroBadger commonworkflowlanguage/cwlviewer") [![Docker image commonworkflowlanguage/cwlviewer](https://images.microbadger.com/badges/version/commonworkflowlanguage/cwlviewer.svg)](https://hub.docker.com/r/commonworkflowlanguage/cwlviewer/ "Docker Hub commonworkflowlanguage/cwlviewer")
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.823534.svg)](https://doi.org/10.5281/zenodo.823534)
 
-
-
 # Using CWL Viewer
 
 You are recommended to use the **production instance** of CWL Viewer at https://view.commonwl.org/ which runs the latest [release](https://github.com/common-workflow-language/cwlviewer/releases). Any downtime should be reported on the [gitter chat for cwlviewer](https://gitter.im/common-workflow-language/cwlviewer).
@@ -117,15 +115,15 @@ by default on `localhost:3030`
 
 ## Compiling and Running
 
-To compile you will need [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html) or OpenJDK 8 (`apt install openjdk-8-jdk`),
-as well as [Apache Maven 3](https://maven.apache.org/download.cgi) (`apt install maven`).
+To compile you will need [Java 17](https://www.oracle.com/java/technologies/downloads/) or a compatible distribution
+(e.g. [Eclipse Adoptium](https://projects.eclipse.org/projects/adoptium)) and version, as well as
+[Apache Maven 3](https://maven.apache.org/download.cgi) (`apt install maven`).
 
 Spring Boot uses an embedded HTTP server. The Spring Boot Maven plugin includes a run goal which can be used to quickly compile and run it:
 
 ```
 $ mvn spring-boot:run
 ```
-
 
 Alternatively, you can run the application from your IDE as a simple Java application by importing the Maven project.
 
@@ -206,7 +204,6 @@ look like a commit ID. Note that this might break previous permalinks.
 
 2017 Technical Report <https://doi.org/10.5281/zenodo.823295>
 
-
 ## License
 
 Distributed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
@@ -278,7 +275,7 @@ git push
 Then copy the changelog into https://github.com/common-workflow-language/cwlviewer/releases/new
 using the tag you just pushed.
 
-Finally make a new PR to bump the version and restore the `-SNAPSHOT` suffix in `pom.xml`.
+Finally, make a new PR to bump the version and restore the `-SNAPSHOT` suffix in `pom.xml`.
 
 # Thanks
 
