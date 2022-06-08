@@ -573,8 +573,9 @@ public class WorkflowController {
             }
             return new ModelAndView("loading", "queued", queued);
         } else {
-            return new ModelAndView("workflow", "workflow", workflowModel).addObject("formats",
-                    WebConfig.Format.values());
+            return new ModelAndView("workflow", "workflow", workflowModel)
+                    .addObject("lineSeparator", System.getProperty("line.separator"))
+                    .addObject("formats", WebConfig.Format.values());
         }
     }
 

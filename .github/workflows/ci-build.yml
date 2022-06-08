@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
-          java-version: '8'
+          java-version: '17'
 
       - name: Install system packages
         run: |
@@ -45,7 +45,7 @@ jobs:
       - name: Coverage report
         run: |
           mvn prepare-package -DskipTests=true
-          mvn cobertura:cobertura coveralls:report --no-transfer-progress -DrepoToken=$COVERALLS_SECRET -DpullRequest=${{ github.event.number }}
+          mvn jacoco:report coveralls:report --no-transfer-progress -DrepoToken=$COVERALLS_SECRET -DpullRequest=${{ github.event.number }}
         env:
           CI_NAME: github
           COVERALLS_SECRET: ${{ secrets.GITHUB_TOKEN }}

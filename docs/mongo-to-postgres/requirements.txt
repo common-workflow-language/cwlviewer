@@ -1,0 +1,4 @@
+jupyterlab
+numpy
+pandas
+requests==2.27.*

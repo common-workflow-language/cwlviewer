@@ -1,4 +1,4 @@
-FROM maven:3.6-jdk-8-alpine
+FROM maven:3-eclipse-temurin-17-alpine
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
 # Build-time metadata as defined at https://github.com/opencontainers/image-spec/blob/main/annotations.md
@@ -55,4 +55,4 @@ WORKDIR /tmp
 
 EXPOSE 8080
 ENV LC_ALL C.UTF-8
-CMD ["/usr/bin/java", "-jar", "/usr/lib/cwlviewer.jar"]
+CMD ["/opt/java/openjdk/bin/java", "-jar", "/usr/lib/cwlviewer.jar"]

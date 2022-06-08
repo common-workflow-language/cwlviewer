@@ -26,4 +26,4 @@
 ## Your Environment
 <!--- Include as many relevant details about the environment you experienced the bug in -->
 * Version used:
-* Environment name and version (e.g. Chrome 39, Java 1.8):
+* Environment name and version (e.g. Chrome 39, Java 17):
