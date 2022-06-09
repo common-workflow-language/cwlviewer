@@ -55,4 +55,4 @@ WORKDIR /tmp
 
 EXPOSE 8080
 ENV LC_ALL C.UTF-8
-CMD ["/opt/java/openjdk/bin/java", "-jar", "/usr/lib/cwlviewer.jar"]
+CMD ["java", "-jar", "/usr/lib/cwlviewer.jar"]

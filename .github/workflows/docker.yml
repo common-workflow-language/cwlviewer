@@ -1,0 +1,27 @@
+name: docker
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build the CWLViewer Java Maven docker image
+        run: docker build -f Dockerfile -t cwlviewer-gh-actions .
+      - name: Confirm we can execute java in the container
+        run: docker run cwlviewer-gh-actions java -version
+      - name: Validate docker-compose
+        run: docker-compose -f docker-compose.yml config
+      - name: Create the docker-compose services
+        run: docker-compose -f docker-compose.yml up --no-start
+      - name: Start the docker-compose services
+        run: docker-compose -f docker-compose.yml start
+      - name: Stop the docker-compose services
+        run: docker-compose -f docker-compose.yml stop
