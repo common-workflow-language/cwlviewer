@@ -14,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build the CWLViewer Java Maven docker image
-        run: docker build -f Dockerfile -t cwlviewer-gh-actions .
+        run: docker build -f Dockerfile -t commonworkflowlanguage/cwlviewer:latest .
       - name: Confirm we can execute java in the container
         run: docker run cwlviewer-gh-actions java -version
       - name: Validate docker-compose
