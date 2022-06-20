@@ -24,6 +24,7 @@ import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitSemaphore;
 import org.commonwl.view.git.GitService;
 import org.commonwl.view.researchobject.ROBundleFactory;
+import org.commonwl.view.util.FileUtils;
 import org.commonwl.view.workflow.QueuedWorkflow;
 import org.commonwl.view.workflow.QueuedWorkflowRepository;
 import org.commonwl.view.workflow.Workflow;
@@ -78,9 +79,10 @@ public class CWLToolRunner {
         GitDetails gitInfo = tempWorkflow.getRetrievedFrom();
         final String repoUrl = gitInfo.getRepoUrl();
         // Parse using cwltool and replace in database
+        Git repo = null;
         try {
             boolean safeToAccess = gitSemaphore.acquire(repoUrl);
-            Git repo = gitService.getRepository(gitInfo, safeToAccess);
+            repo = gitService.getRepository(gitInfo, safeToAccess);
             Path localPath = repo.getRepository().getWorkTree().toPath();
             Path workflowFile = localPath.resolve(gitInfo.getPath()).normalize().toAbsolutePath();
             Workflow newWorkflow = cwlService.parseWorkflowWithCwltool(
@@ -106,16 +108,19 @@ public class CWLToolRunner {
             logger.error("Jena query exception ", ex);
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
             queuedWorkflow.setMessage("An error occurred when executing a query on the SPARQL store");
+            FileUtils.deleteGitRepository(repo);
         } catch (CWLValidationException ex) {
             logger.error(ex.getMessage(), ex);
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
             queuedWorkflow.setMessage(ex.getMessage());
+            FileUtils.deleteGitRepository(repo);
         } catch (Exception ex) {
             logger.error("Unexpected error", ex);
             queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
             queuedWorkflow.setMessage("Whoops! Cwltool ran successfully, but an unexpected " +
                     "error occurred in CWLViewer!\n" +
                     "Help us by reporting it on Gitter or a Github issue\n");
+            FileUtils.deleteGitRepository(repo);
         } finally {
             gitSemaphore.release(repoUrl);
             queuedWorkflowRepository.save(queuedWorkflow);
