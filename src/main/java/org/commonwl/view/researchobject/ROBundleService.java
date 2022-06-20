@@ -128,6 +128,7 @@ public class ROBundleService {
         Bundle bundle = Bundles.createBundle();
         Manifest manifest = bundle.getManifest();
 
+        Path bundlePath = null;
         // Simplified attribution for RO bundle
         try {
             manifest.setId(new URI(workflow.getPermalink()));
@@ -143,18 +144,23 @@ public class ROBundleService {
 
             // Make a directory in the RO bundle to store the files
             Path bundleRoot = bundle.getRoot();
-            Path bundlePath = bundleRoot.resolve("workflow");
+            bundlePath = bundleRoot.resolve("workflow");
             Files.createDirectory(bundlePath);
 
             // Add the files from the repo to this workflow
             Set<HashableAgent> authors = new HashSet<>();
 
             boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
+            Git gitRepo = null;
             try {
-                Git gitRepo = gitService.getRepository(workflow.getRetrievedFrom(), safeToAccess);
+                gitRepo = gitService.getRepository(workflow.getRetrievedFrom(), safeToAccess);
                 Path relativePath = Paths.get(FilenameUtils.getPath(gitInfo.getPath()));
                 Path gitPath = gitRepo.getRepository().getWorkTree().toPath().resolve(relativePath);
                 addFilesToBundle(gitInfo, bundle, bundlePath, gitRepo, gitPath, authors, workflow);
+            } catch (GitAPIException | IOException e) {
+                org.commonwl.view.util.FileUtils.deleteGitRepository(gitRepo);
+                FileUtils.forceDelete(bundlePath.toFile());
+                throw e;
             } finally {
                 gitSemaphore.release(gitInfo.getRepoUrl());
             }
@@ -217,6 +223,7 @@ public class ROBundleService {
             logger.error("Error creating URI for RO Bundle", ex);
         } catch (GitAPIException ex) {
             logger.error("Error getting repository to create RO Bundle", ex);
+            FileUtils.forceDelete(bundlePath.toFile());
         }
 
         // Return the completed bundle
