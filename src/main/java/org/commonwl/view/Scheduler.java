@@ -1,6 +1,9 @@
 package org.commonwl.view;
 
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.file.AccumulatorPathVisitor;
+import org.apache.commons.io.filefilter.AgeFileFilter;
 import org.commonwl.view.workflow.QueuedWorkflowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,8 +12,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Scheduler class for recurrent processes.
@@ -23,6 +39,16 @@ public class Scheduler {
 
     @Value("${queuedWorkflowAgeLimitHours}")
     private Integer QUEUED_WORKFLOW_AGE_LIMIT_HOURS;
+
+    @Value("${tmpDirAgeLimitDays}")
+    private Integer TMP_DIR_AGE_LIMIT_DAYS;
+
+    @Value("${bundleStorage}")
+    private String bundleStorage;
+    @Value("${graphvizStorage}")
+    private String graphvizStorage;
+    @Value("${gitStorage}")
+    private String gitStorage;
 
     @Autowired
     public Scheduler(QueuedWorkflowRepository queuedWorkflowRepository) {
@@ -54,5 +80,71 @@ public class Scheduler {
 
         logger.info(queuedWorkflowRepository.deleteByTempRepresentation_RetrievedOnLessThanEqual(removeTime)
                 + " Old queued workflows removed");
+    }
+
+    /**
+     * Scheduled function to delete old temporary directories.
+     *
+     * <p>Will scan each temporary directory (graphviz, RO, git), searching
+     * for files exceeding a specified threshold.</p>
+     *
+     * <p>It scans the first level directories, i.e. it does not recursively
+     * scans directories. So it will delete any RO or Git repository directories
+     * that exceed the threshold. Similarly, it will delete any graph (svg, png,
+     * etc) that also exceed it.</p>
+     *
+     * <p>Errors logged through Logger. Settings in Spring application properties
+     * file.</p>
+     *
+     * @since 1.4.5
+     */
+    @Scheduled(cron = "${cron.clearTmpDir}")
+    public void clearTmpDir() {
+        // Temporary files used for graphviz, RO, and git may be stored in different
+        // locations, so we will collect all of them here.
+        List<String> temporaryDirectories = Stream.of(bundleStorage, graphvizStorage, gitStorage)
+                .distinct()
+                .toList();
+        temporaryDirectories.forEach(this::clearDirectory);
+    }
+
+    /**
+     * For a given temporary directory, scans it (not recursively) for files and
+     * directories exceeding the age limit threshold.
+     *
+     * @since 1.4.5
+     * @see <a href="https://commons.apache.org/proper/commons-io/apidocs/org/apache/commons/io/filefilter/AgeFileFilter.html">https://commons.apache.org/proper/commons-io/apidocs/org/apache/commons/io/filefilter/AgeFileFilter.html</a>
+     * @param temporaryDirectory temporary directory
+     */
+    private void clearDirectory(String temporaryDirectory) {
+        final Path dir = Paths.get(temporaryDirectory);
+        final Instant cutoff = Instant.now().minus(Duration.ofDays(TMP_DIR_AGE_LIMIT_DAYS));
+        // TODO: Commons IO 2.12 has a constructor that takes an Instant; drop the Date#from call here when we upgrade.
+        final AgeFileFilter fileAndDirFilter = new AgeFileFilter(Date.from(cutoff));
+        final AccumulatorPathVisitor visitor = AccumulatorPathVisitor.withLongCounters(fileAndDirFilter, fileAndDirFilter);
+
+        // Walk the files.
+        try {
+            Files.walkFileTree(dir, Collections.emptySet(), /* maxDepth */ 1, visitor);
+        } catch (IOException e) {
+            // Really unexpected. walkFileTree should throw an IllegalArgumentException for negative maxDepth (clearly
+            // not happening here), a SecurityException if the security manager denies access, or this IOException in
+            // the cases where an I/O error happened (disk error, OS error, file not found, etc.). So just a warning.
+            logger.warn(String.format("Unexpected I/O error was thrown walking directory [%s]: %s", dir.toString(), e.getMessage()), e);
+        }
+
+        // Delete the directories accumulated by the visitor.
+        final List<Path> dirList = visitor.getDirList();
+        dirList.forEach(tooOldDeleteMe -> {
+            File fileToDelete = tooOldDeleteMe.toFile();
+            try {
+                FileUtils.forceDelete(fileToDelete);
+            } catch (IOException e) {
+                // Here we probably have a more serious case. Since the Git repository, RO directory, or graphs are
+                // not expected to be in use, and the application must have access, I/O errors are not expected and
+                // must be treated as errors.
+                logger.error(String.format("Failed to delete old temporary file or directory [%s]: %s", fileToDelete.getAbsolutePath(), e.getMessage()), e);
+            }
+        });
     }
 }
