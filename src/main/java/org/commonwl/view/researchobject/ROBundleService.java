@@ -19,23 +19,6 @@
 
 package org.commonwl.view.researchobject;
 
-import static org.apache.commons.io.FileUtils.readFileToString;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.query.QuerySolution;
@@ -64,6 +47,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.apache.commons.io.FileUtils.readFileToString;
+
 /**
  * Service handling Research Object Bundles
  */
@@ -73,16 +75,16 @@ public class ROBundleService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // Services
-    private GraphVizService graphVizService;
-    private GitService gitService;
-    private RDFService rdfService;
-    private CWLTool cwlTool;
-    private GitSemaphore gitSemaphore;
+    private final GraphVizService graphVizService;
+    private final GitService gitService;
+    private final RDFService rdfService;
+    private final CWLTool cwlTool;
+    private final GitSemaphore gitSemaphore;
 
     // Configuration variables
-    private Agent appAgent;
-    private int singleFileSizeLimit;
-    private Path bundleStorage;
+    private final Agent appAgent;
+    private final int singleFileSizeLimit;
+    private final Path bundleStorage;
 
     // Pattern for extracting version from a cwl file
     private final String CWL_VERSION_REGEX = "cwlVersion:\\s*\"?(?:cwl:)?([^\\s\"]+)\"?";
@@ -128,7 +130,6 @@ public class ROBundleService {
         Bundle bundle = Bundles.createBundle();
         Manifest manifest = bundle.getManifest();
 
-        Path bundlePath = null;
         // Simplified attribution for RO bundle
         try {
             manifest.setId(new URI(workflow.getPermalink()));
@@ -144,7 +145,7 @@ public class ROBundleService {
 
             // Make a directory in the RO bundle to store the files
             Path bundleRoot = bundle.getRoot();
-            bundlePath = bundleRoot.resolve("workflow");
+            Path bundlePath = bundleRoot.resolve("workflow");
             Files.createDirectory(bundlePath);
 
             // Add the files from the repo to this workflow
@@ -158,8 +159,8 @@ public class ROBundleService {
                 Path gitPath = gitRepo.getRepository().getWorkTree().toPath().resolve(relativePath);
                 addFilesToBundle(gitInfo, bundle, bundlePath, gitRepo, gitPath, authors, workflow);
             } catch (GitAPIException | IOException e) {
-                org.commonwl.view.util.FileUtils.deleteGitRepository(gitRepo);
-                FileUtils.forceDelete(bundlePath.toFile());
+                org.commonwl.view.util.FileUtils.deleteBundleTemporaryDirectory(bundle);
+                org.commonwl.view.util.FileUtils.deleteBundleParentDirectory(bundle);
                 throw e;
             } finally {
                 gitSemaphore.release(gitInfo.getRepoUrl());
@@ -202,7 +203,7 @@ public class ROBundleService {
                 addAggregation(bundle, manifestAnnotations,
                         "merged.cwl", cwlTool.getPackedVersion(rawUrl));
             } catch (CWLValidationException ex) {
-                logger.error("Could not pack workflow when creating Research Object", ex.getMessage());
+                logger.error(String.format("Could not pack workflow when creating Research Object: %s", ex.getMessage()), ex);
             }
             String rdfUrl = workflow.getIdentifier();
             if (rdfService.graphExists(rdfUrl)) {
@@ -222,13 +223,15 @@ public class ROBundleService {
 
         } catch (URISyntaxException ex) {
             logger.error("Error creating URI for RO Bundle", ex);
-            if (bundlePath != null) {
-                FileUtils.forceDelete(bundlePath.toFile());
-            }
+            org.commonwl.view.util.FileUtils.deleteBundleTemporaryDirectory(bundle);
+            org.commonwl.view.util.FileUtils.deleteBundleParentDirectory(bundle);
         } catch (GitAPIException ex) {
             logger.error("Error getting repository to create RO Bundle", ex);
-            FileUtils.forceDelete(bundlePath.toFile());
+            org.commonwl.view.util.FileUtils.deleteBundleTemporaryDirectory(bundle);
+            org.commonwl.view.util.FileUtils.deleteBundleParentDirectory(bundle);
         }
+        // TODO: Why are we not re-throwing the exceptions above? It looks like we should
+        //       so users/admins are aware of the problem.
 
         // Return the completed bundle
         return bundle;
@@ -249,118 +252,121 @@ public class ROBundleService {
                                   Workflow workflow)
             throws IOException {
         File[] files = repoPath.toFile().listFiles();
-        for (File file : files) {
-            if (!file.getName().equals(".git")) {
-                if (file.isDirectory()) {
+        if (files != null) {
+            for (File file : files) {
+                if (!file.getName().equals(".git")) {
+                    BasicFileAttributes basicFileAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+                    if (basicFileAttributes.isDirectory()) {
 
-                    // Create a new folder in the RO for this directory
-                    Path newBundlePath = bundlePath.resolve(file.getName());
-                    Files.createDirectory(newBundlePath);
+                        // Create a new folder in the RO for this directory
+                        Path newBundlePath = bundlePath.resolve(file.getName());
+                        Files.createDirectory(newBundlePath);
 
-                    // Create git details object for subfolder
-                    GitDetails subfolderGitDetails = new GitDetails(gitDetails.getRepoUrl(), gitDetails.getBranch(),
-                            Paths.get(gitDetails.getPath()).resolve(file.getName()).toString());
+                        // Create git details object for subfolder
+                        GitDetails subfolderGitDetails = new GitDetails(gitDetails.getRepoUrl(), gitDetails.getBranch(),
+                                Paths.get(gitDetails.getPath()).resolve(file.getName()).toString());
 
-                    // Add all files in the subdirectory to this new folder
-                    addFilesToBundle(subfolderGitDetails, bundle, newBundlePath, gitRepo,
-                            repoPath.resolve(file.getName()), authors, workflow);
+                        // Add all files in the subdirectory to this new folder
+                        addFilesToBundle(subfolderGitDetails, bundle, newBundlePath, gitRepo,
+                                repoPath.resolve(file.getName()), authors, workflow);
 
-                } else {
-                    try {
-                        // Where to store the new file
-                        Path bundleFilePath = bundlePath.resolve(file.getName());
-                        Path gitFolder = Paths.get(gitDetails.getPath());
-                        String relativePath = gitFolder.resolve(file.getName()).toString();
-                        Path gitPath = bundlePath.getRoot().resolve(relativePath); // would start with /
-                        
-                        // Get direct URL permalink
-                        URI rawURI = new URI("https://w3id.org/cwl/view/git/" + workflow.getLastCommit() +
-                                gitPath + "?format=raw");
+                    } else {
+                        try {
+                            // Where to store the new file
+                            Path bundleFilePath = bundlePath.resolve(file.getName());
+                            Path gitFolder = Paths.get(gitDetails.getPath());
+                            String relativePath = gitFolder.resolve(file.getName()).toString();
+                            Path gitPath = bundlePath.getRoot().resolve(relativePath); // would start with /
 
-                        // Variable to store file contents and aggregation
-                        String fileContent = null;
-                        PathMetadata aggregation;
+                            // Get direct URL permalink
+                            URI rawURI = new URI("https://w3id.org/cwl/view/git/" + workflow.getLastCommit() +
+                                    gitPath + "?format=raw");
 
-                        // Download or externally link if oversized
-                        if (file.length() <= singleFileSizeLimit) {
-                            // Save file to research object bundle
-                            fileContent = readFileToString(file);
-                            Bundles.setStringValue(bundleFilePath, fileContent);
+                            // Variable to store file contents and aggregation
+                            String fileContent = null;
+                            PathMetadata aggregation;
+
+                            // Download or externally link if oversized
+                            if (basicFileAttributes.size() <= singleFileSizeLimit) {
+                                // Save file to research object bundle
+                                fileContent = readFileToString(file, Charset.defaultCharset());
+                                Bundles.setStringValue(bundleFilePath, fileContent);
+
+                                // Set retrieved information for this file in the manifest
+                                aggregation = bundle.getManifest().getAggregation(bundleFilePath);
+                                aggregation.setRetrievedFrom(rawURI);
+                                aggregation.setRetrievedBy(appAgent);
+                                aggregation.setRetrievedOn(aggregation.getCreatedOn());
+                            } else {
+                                logger.info("File " + file.getName() + " is too large to download - " +
+                                        FileUtils.byteCountToDisplaySize(basicFileAttributes.size()) + "/" +
+                                        FileUtils.byteCountToDisplaySize(singleFileSizeLimit) +
+                                        ", linking externally to RO bundle");
+
+                                // Set information for this file in the manifest
+                                aggregation = bundle.getManifest().getAggregation(rawURI);
+                                Proxy bundledAs = new Proxy();
+                                bundledAs.setURI();
+                                bundledAs.setFolder(repoPath);
+                                aggregation.setBundledAs(bundledAs);
+                            }
+
+                            // Special handling for cwl files
+                            boolean cwl = FilenameUtils.getExtension(file.getName()).equals("cwl");
+                            if (cwl) {
+                                // Correct mime type (no official standard for yaml)
+                                aggregation.setMediatype("text/x-yaml");
+
+                                // Add conformsTo for version extracted from regex
+                                if (fileContent != null) {
+                                    Matcher m = cwlVersionPattern.matcher(fileContent);
+                                    if (m.find()) {
+                                        aggregation.setConformsTo(new URI("https://w3id.org/cwl/" + m.group(1)));
+                                    }
+                                }
+                            }
+
+                            try {
+                                // Add authors from git commits to the file
+                                Set<HashableAgent> fileAuthors = gitService.getAuthors(gitRepo,
+                                        gitPath.toString());
+
+                                if (cwl) {
+                                    // Attempt to get authors from cwl description - takes priority
+                                    ResultSet descAuthors = rdfService.getAuthors(bundlePath
+                                                    .resolve(file.getName()).toString().substring(10),
+                                            workflow.getIdentifier());
+                                    if (descAuthors.hasNext()) {
+                                        QuerySolution authorSolution = descAuthors.nextSolution();
+                                        HashableAgent newAuthor = new HashableAgent();
+                                        if (authorSolution.contains("name")) {
+                                            newAuthor.setName(authorSolution.get("name").toString());
+                                        }
+                                        if (authorSolution.contains("email")) {
+                                            newAuthor.setUri(new URI(authorSolution.get("email").toString()));
+                                        }
+                                        if (authorSolution.contains("orcid")) {
+                                            newAuthor.setOrcid(new URI(authorSolution.get("orcid").toString()));
+                                        }
+                                        fileAuthors.remove(newAuthor);
+                                        fileAuthors.add(newAuthor);
+                                    }
+                                }
+
+                                authors.addAll(fileAuthors);
+                                aggregation.setAuthoredBy(new ArrayList<>(fileAuthors));
+                            } catch (GitAPIException ex) {
+                                logger.error("Could not get commits for file " + repoPath, ex);
+                            }
 
                             // Set retrieved information for this file in the manifest
-                            aggregation = bundle.getManifest().getAggregation(bundleFilePath);
                             aggregation.setRetrievedFrom(rawURI);
                             aggregation.setRetrievedBy(appAgent);
                             aggregation.setRetrievedOn(aggregation.getCreatedOn());
-                        } else {
-                            logger.info("File " + file.getName() + " is too large to download - " +
-                                    FileUtils.byteCountToDisplaySize(file.length()) + "/" +
-                                    FileUtils.byteCountToDisplaySize(singleFileSizeLimit) +
-                                    ", linking externally to RO bundle");
 
-                            // Set information for this file in the manifest
-                            aggregation = bundle.getManifest().getAggregation(rawURI);
-                            Proxy bundledAs = new Proxy();
-                            bundledAs.setURI();
-                            bundledAs.setFolder(repoPath);
-                            aggregation.setBundledAs(bundledAs);
+                        } catch (URISyntaxException ex) {
+                            logger.error("Error creating URI for RO Bundle", ex);
                         }
-
-                        // Special handling for cwl files
-                        boolean cwl = FilenameUtils.getExtension(file.getName()).equals("cwl");
-                        if (cwl) {
-                            // Correct mime type (no official standard for yaml)
-                            aggregation.setMediatype("text/x-yaml");
-
-                            // Add conformsTo for version extracted from regex
-                            if (fileContent != null) {
-                                Matcher m = cwlVersionPattern.matcher(fileContent);
-                                if (m.find()) {
-                                    aggregation.setConformsTo(new URI("https://w3id.org/cwl/" + m.group(1)));
-                                }
-                            }
-                        }
-
-                        try {
-                            // Add authors from git commits to the file
-                            Set<HashableAgent> fileAuthors = gitService.getAuthors(gitRepo,
-                                    gitPath.toString());
-
-                            if (cwl) {
-                                // Attempt to get authors from cwl description - takes priority
-                                ResultSet descAuthors = rdfService.getAuthors(bundlePath
-                                        .resolve(file.getName()).toString().substring(10),
-                                        workflow.getIdentifier());
-                                if (descAuthors.hasNext()) {
-                                    QuerySolution authorSoln = descAuthors.nextSolution();
-                                    HashableAgent newAuthor = new HashableAgent();
-                                    if (authorSoln.contains("name")) {
-                                        newAuthor.setName(authorSoln.get("name").toString());
-                                    }
-                                    if (authorSoln.contains("email")) {
-                                        newAuthor.setUri(new URI(authorSoln.get("email").toString()));
-                                    }
-                                    if (authorSoln.contains("orcid")) {
-                                        newAuthor.setOrcid(new URI(authorSoln.get("orcid").toString()));
-                                    }
-                                    fileAuthors.remove(newAuthor);
-                                    fileAuthors.add(newAuthor);
-                                }
-                            }
-
-                            authors.addAll(fileAuthors);
-                            aggregation.setAuthoredBy(new ArrayList<>(fileAuthors));
-                        } catch (GitAPIException ex) {
-                            logger.error("Could not get commits for file " + repoPath, ex);
-                        }
-
-                        // Set retrieved information for this file in the manifest
-                        aggregation.setRetrievedFrom(rawURI);
-                        aggregation.setRetrievedBy(appAgent);
-                        aggregation.setRetrievedOn(aggregation.getCreatedOn());
-
-                    } catch (URISyntaxException ex) {
-                        logger.error("Error creating URI for RO Bundle", ex);
                     }
                 }
             }

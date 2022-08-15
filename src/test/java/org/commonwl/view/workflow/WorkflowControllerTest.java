@@ -21,10 +21,15 @@ package org.commonwl.view.workflow;
 
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitSemaphore;
+import org.commonwl.view.git.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
+import org.eclipse.jgit.lib.Repository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
@@ -47,8 +52,12 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -189,6 +198,39 @@ public class WorkflowControllerTest {
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/workflows/github.com/owner/repoName/blob/branch/path/workflow.cwl"));
 
+    }
+
+    @Test
+    public void errorCreatingQueuedWorkflowDeletesTemporaryFiles() throws GitAPIException, IOException {
+        GitService gitService = Mockito.mock(GitService.class);
+        WorkflowService service = new WorkflowService(
+                gitService,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                new GitSemaphore(),
+                1
+        );
+
+        final GitDetails gitDetails = new GitDetails("https://github.com/common-workflow-language/", "main", "/");
+        Git git = mock(Git.class);
+        when(gitService.getRepository(Mockito.any(GitDetails.class), Mockito.anyBoolean())).thenReturn(git);
+
+        Repository repository = Mockito.mock(Repository.class);
+        File temporaryFile = roBundleFolder.resolve("repository/.git").toFile();
+        assertTrue(temporaryFile.mkdirs());
+        when(repository.getDirectory()).thenReturn(temporaryFile);
+        when(git.getRepository())
+                .thenThrow(RuntimeException.class)
+                .thenReturn(repository);
+        assertTrue(temporaryFile.exists());
+        assertThrows(RuntimeException.class, () -> {
+            service.createQueuedWorkflow(gitDetails);
+        });
+        assertFalse(temporaryFile.exists());
     }
 
     /**

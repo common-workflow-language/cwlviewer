@@ -174,10 +174,11 @@
       <version>1.17.6</version>
       <scope>test</scope>
     </dependency>
+    <!-- We use mockito-inline as it supports mocking static methods -->
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
-      <version>1.10.19</version>
+      <artifactId>mockito-inline</artifactId>
+      <version>4.7.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
