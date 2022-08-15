@@ -115,34 +115,23 @@ public class Scheduler {
      * @param temporaryDirectory temporary directory
      */
     private void clearDirectory(String temporaryDirectory) {
-        final Path dir = Paths.get(temporaryDirectory);
         final Instant cutoff = Instant.now().minus(Duration.ofDays(TMP_DIR_AGE_LIMIT_DAYS));
-        // TODO: Commons IO 2.12 has a constructor that takes an Instant; drop the Date#from call here when we upgrade.
-        final AgeFileFilter fileAndDirFilter = new AgeFileFilter(Date.from(cutoff));
-        final AccumulatorPathVisitor visitor = AccumulatorPathVisitor.withLongCounters(fileAndDirFilter, fileAndDirFilter);
 
-        // Walk the files.
-        try {
-            Files.walkFileTree(dir, Collections.emptySet(), /* maxDepth */ 1, visitor);
-        } catch (IOException e) {
-            // Really unexpected. walkFileTree should throw an IllegalArgumentException for negative maxDepth (clearly
-            // not happening here), a SecurityException if the security manager denies access, or this IOException in
-            // the cases where an I/O error happened (disk error, OS error, file not found, etc.). So just a warning.
-            logger.warn(String.format("Unexpected I/O error was thrown walking directory [%s]: %s", dir, e.getMessage()), e);
-        }
+        File temporaryDirectoryFile = new File(temporaryDirectory);
+        String[] files = temporaryDirectoryFile.list(new AgeFileFilter(Date.from(cutoff)));
 
-        // Delete the directories accumulated by the visitor.
-        final List<Path> dirList = visitor.getDirList();
-        dirList.forEach(tooOldDeleteMe -> {
-            File fileToDelete = tooOldDeleteMe.toFile();
-            try {
-                FileUtils.forceDelete(fileToDelete);
-            } catch (IOException e) {
-                // Here we probably have a more serious case. Since the Git repository, RO directory, or graphs are
-                // not expected to be in use, and the application must have access, I/O errors are not expected and
-                // must be treated as errors.
-                logger.error(String.format("Failed to delete old temporary file or directory [%s]: %s", fileToDelete.getAbsolutePath(), e.getMessage()), e);
+        if (files != null && files.length > 0) {
+            for (String fileName : files) {
+                File fileToDelete = new File(temporaryDirectoryFile, fileName);
+                try {
+                    FileUtils.forceDelete(fileToDelete);
+                } catch (IOException e) {
+                    // Here we probably have a more serious case. Since the Git repository, RO directory, or graphs are
+                    // not expected to be in use, and the application must have access, I/O errors are not expected and
+                    // must be treated as errors.
+                    logger.error(String.format("Failed to delete old temporary file or directory [%s]: %s", fileToDelete.getAbsolutePath(), e.getMessage()), e);
+                }
             }
-        });
+        }
     }
 }
