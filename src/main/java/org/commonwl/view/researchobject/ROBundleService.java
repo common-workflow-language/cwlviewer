@@ -163,6 +163,7 @@ public class ROBundleService {
                 throw e;
             } finally {
                 gitSemaphore.release(gitInfo.getRepoUrl());
+                org.commonwl.view.util.FileUtils.deleteGitRepository(gitRepo);
             }
 
             // Add combined authors
@@ -221,6 +222,9 @@ public class ROBundleService {
 
         } catch (URISyntaxException ex) {
             logger.error("Error creating URI for RO Bundle", ex);
+            if (bundlePath != null) {
+                FileUtils.forceDelete(bundlePath.toFile());
+            }
         } catch (GitAPIException ex) {
             logger.error("Error getting repository to create RO Bundle", ex);
             FileUtils.forceDelete(bundlePath.toFile());

@@ -19,8 +19,10 @@
 
 package org.commonwl.view.researchobject;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
+import org.apache.taverna.robundle.fs.BundleFileSystem;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
@@ -31,7 +33,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
 /**
@@ -77,6 +81,26 @@ public class ROBundleFactory {
 
         // Save the bundle to the storage location in properties
         Path bundleLocation = roBundleService.saveToFile(bundle);
+        // The RoBundleService#saveToFile call above will delegate to Taverna's
+        // Bundles.closeAndSaveBundle, which empties the bundle temporary
+        // directory without deleting the directory itself. The following call is
+        // just for cleaning it up.
+        if (bundle != null) {
+            try {
+                BundleFileSystem fs = (BundleFileSystem) bundle.getFileSystem();
+                File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+                // The file system source will be something like /tmp/bundles_dir/hash/bundle.zip,
+                // and we want /tmp/hash to be deleted. N.B. Taverna uses the temporary directory
+                // for the temporary bundles' directory, not the bundles file specified by Spring.
+                String bundleTmpDirName = fs.getSource().toAbsolutePath().getParent().getFileName().toString();
+                File bundleTmpDir = new File(tmpDir, bundleTmpDirName);
+                if (bundleTmpDir.exists() && bundleTmpDir.isDirectory()) {
+                    FileUtils.forceDelete(bundleTmpDir);
+                }
+            } catch (IOException e) {
+                logger.warn(String.format("Failed to delete temporary directory for bundle [%s]: %s", bundle.getSource(), e.getMessage()), e);
+            }
+        }
 
         // Add RO Bundle to associated workflow model
         workflow.setRoBundlePath(bundleLocation.toString());
