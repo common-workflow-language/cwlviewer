@@ -2,6 +2,7 @@ package org.commonwl.view.util;
 
 import org.eclipse.jgit.api.Git;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -15,8 +16,16 @@ public class FileUtils {
     private FileUtils() {}
 
     public static void deleteGitRepository(Git repo) throws IOException {
-        if (repo != null && repo.getRepository() != null && repo.getRepository().getDirectory().exists()) {
-            org.apache.commons.io.FileUtils.forceDelete(repo.getRepository().getDirectory());
+        if (
+                repo != null &&
+                repo.getRepository() != null &&
+                repo.getRepository().getDirectory() != null &&
+                repo.getRepository().getDirectory().exists()
+        ) {
+            // This is literally the git directory, i.e. /some/hierarchy/repository/.git,
+            // but we want to delete its parent directory.
+            File gitDirectory = repo.getRepository().getDirectory();
+            org.apache.commons.io.FileUtils.forceDelete(gitDirectory.getParentFile());
         }
     }
 }

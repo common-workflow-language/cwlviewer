@@ -19,13 +19,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -43,8 +40,9 @@ public class Scheduler {
     @Value("${tmpDirAgeLimitDays}")
     private Integer TMP_DIR_AGE_LIMIT_DAYS;
 
-    @Value("${bundleStorage}")
-    private String bundleStorage;
+    // We do not want to remove the bundles, as we use the disk as a sort of
+    // cache. Whenever a workflow page is displayed in the browser the UI
+    // fires a request to re-generate it. We skip that by keeping files on disk.
     @Value("${graphvizStorage}")
     private String graphvizStorage;
     @Value("${gitStorage}")
@@ -102,7 +100,7 @@ public class Scheduler {
     public void clearTmpDir() {
         // Temporary files used for graphviz, RO, and git may be stored in different
         // locations, so we will collect all of them here.
-        List<String> temporaryDirectories = Stream.of(bundleStorage, graphvizStorage, gitStorage)
+        List<String> temporaryDirectories = Stream.of(graphvizStorage, gitStorage)
                 .distinct()
                 .toList();
         temporaryDirectories.forEach(this::clearDirectory);
@@ -130,7 +128,7 @@ public class Scheduler {
             // Really unexpected. walkFileTree should throw an IllegalArgumentException for negative maxDepth (clearly
             // not happening here), a SecurityException if the security manager denies access, or this IOException in
             // the cases where an I/O error happened (disk error, OS error, file not found, etc.). So just a warning.
-            logger.warn(String.format("Unexpected I/O error was thrown walking directory [%s]: %s", dir.toString(), e.getMessage()), e);
+            logger.warn(String.format("Unexpected I/O error was thrown walking directory [%s]: %s", dir, e.getMessage()), e);
         }
 
         // Delete the directories accumulated by the visitor.
