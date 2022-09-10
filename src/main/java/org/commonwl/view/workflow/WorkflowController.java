@@ -174,8 +174,8 @@ public class WorkflowController {
     }
 
     /**
-     * Display a page for a particular workflow from Github or Github format URL
-     * @param domain The domain of the hosting site, Github or Gitlab
+     * Display a page for a particular workflow from github.com or gitlab.com format URL
+     * @param domain The domain of the hosting site, github.com or gitlab.com
      * @param owner The owner of the repository
      * @param repoName The name of the repository
      * @param branch The branch of repository
@@ -217,7 +217,7 @@ public class WorkflowController {
 
     /**
      * Download the Research Object Bundle for a particular workflow
-     * @param domain The domain of the hosting site, Github or Gitlab
+     * @param domain The domain of the hosting site, github.com or gitlab.com
      * @param owner The owner of the repository
      * @param repoName The name of the repository
      * @param branch The branch of repository
@@ -260,7 +260,7 @@ public class WorkflowController {
 
     /**
      * Download a generated graph for a workflow in SVG format
-     * @param domain The domain of the hosting site, Github or Gitlab
+     * @param domain The domain of the hosting site, github.com or gitlab.com
      * @param owner The owner of the repository
      * @param repoName The name of the repository
      * @param branch The branch of repository
@@ -300,7 +300,7 @@ public class WorkflowController {
 
     /**
      * Download a generated graph for a workflow in PNG format
-     * @param domain The domain of the hosting site, Github or Gitlab
+     * @param domain The domain of the hosting site, github.com or gitlab.com
      * @param owner The owner of the repository
      * @param repoName The name of the repository
      * @param branch The branch of repository
@@ -340,7 +340,7 @@ public class WorkflowController {
 
     /**
      * Download a generated graph for a workflow in XDOT format
-     * @param domain The domain of the hosting site, Github or Gitlab
+     * @param domain The domain of the hosting site, github.com or gitlab.com
      * @param owner The owner of the repository
      * @param repoName The name of the repository
      * @param branch The branch of repository
@@ -441,8 +441,8 @@ public class WorkflowController {
     }
 
     /**
-     * Constructs a GitDetails object for Github/Gitlab details
-     * @param domain The domain name (always .com)
+     * Constructs a GitDetails object for github.com/gitlab.com details
+     * @param domain The domain name ("github" or "gitlab", without .com)
      * @param owner The owner of the repository
      * @param repoName The name of the repository
      * @param branch The branch of the repository

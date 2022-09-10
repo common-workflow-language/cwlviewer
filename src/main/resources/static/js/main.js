@@ -94,7 +94,7 @@ require(['jquery'],
                 }
                 return success;
             } else if (!githubPattern.test(input) && !gitlabPattern.test(input)) {
-                addWarning("url", "Must be a URL to a workflow or directory of workflows on Gitlab or Github, or a Git repository URL");
+                addWarning("url", "Must be a URL to a workflow or directory of workflows on gitlab.com or github.com, or a Git repository URL");
                 return false;
             }
         });

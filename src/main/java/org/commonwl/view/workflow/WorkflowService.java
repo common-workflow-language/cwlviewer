@@ -567,7 +567,7 @@ public class WorkflowService {
                 return Optional.of(potentialRaw.replace(path, ""));
             }
         }
-        // Not found, or not at GitHub/GitLab
+        // Not found, or not at github.com/gitlab.com
         return Optional.empty();
 
     }
