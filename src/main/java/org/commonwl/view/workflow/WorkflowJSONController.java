@@ -166,8 +166,8 @@ public class WorkflowJSONController {
     }
 
     /**
-     * Get the JSON representation of a workflow from Github or Gitlab details
-     * @param domain The domain of the hosting site, Github or Gitlab
+     * Get the JSON representation of a workflow from github.com or gitlab.com details
+     * @param domain The domain of the hosting site, github.com or gitlab.com
      * @param owner The owner of the Github repository
      * @param repoName The name of the repository
      * @param branch The branch of repository

@@ -38,19 +38,19 @@ public class WorkflowFormValidator {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    // URL validation for cwl files on Github
+    // URL validation for cwl files on github.com
     private static final String GITHUB_CWL_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
     private static final Pattern githubCwlPattern = Pattern.compile(GITHUB_CWL_REGEX);
 
-    // URL validation for directories on Github
+    // URL validation for directories on github.com
     private static final String GITHUB_DIR_REGEX = "^https?:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)\\/?(.*)?)?$";
     private static final Pattern githubDirPattern = Pattern.compile(GITHUB_DIR_REGEX);
 
-    // URL validation for cwl files on Gitlab
+    // URL validation for cwl files on gitlab.com
     private static final String GITLAB_CWL_REGEX = "^https?:\\/\\/gitlab\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:tree|blob)\\/([^/]+)(?:\\/(.+\\.cwl))$";
     private static final Pattern gitlabCwlPattern = Pattern.compile(GITLAB_CWL_REGEX);
 
-    // URL validation for directories on Gitlab
+    // URL validation for directories on gitlab.com
     private static final String GITLAB_DIR_REGEX = "^https?:\\/\\/gitlab\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/?(?:(?:tree|blob)\\/([^/]+)\\/?(.*)?)?$";
     private static final Pattern gitlabDirPattern = Pattern.compile(GITLAB_DIR_REGEX);
 
@@ -84,7 +84,7 @@ public class WorkflowFormValidator {
                 packedId = form.getPackedId();
             }
 
-            // Github URL
+            // github.com URL
             Matcher m = githubCwlPattern.matcher(form.getUrl());
             if (m.find()) {
                 repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
@@ -92,7 +92,7 @@ public class WorkflowFormValidator {
                 if (path == null) path = m.group(4);
             }
 
-            // Gitlab URL
+            // gitlab.com URL
             m = gitlabCwlPattern.matcher(form.getUrl());
             if (m.find()) {
                 repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";
@@ -100,7 +100,7 @@ public class WorkflowFormValidator {
                 if (path == null) path = m.group(4);
             }
 
-            // Github Dir URL
+            // github.com Dir URL
             m = githubDirPattern.matcher(form.getUrl());
             if (m.find() && ! m.group(2).endsWith(".git")) {
                 repoUrl = "https://github.com/" + m.group(1) + "/" + m.group(2) + ".git";
@@ -108,7 +108,7 @@ public class WorkflowFormValidator {
                 if (path == null) path = m.group(4);
             }
 
-            // Gitlab Dir URL
+            // gitlab.com Dir URL
             m = gitlabDirPattern.matcher(form.getUrl());
             if (m.find() && ! m.group(2).endsWith(".git")) {
                 repoUrl = "https://gitlab.com/" + m.group(1) + "/" + m.group(2) + ".git";

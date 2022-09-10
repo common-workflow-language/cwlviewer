@@ -109,7 +109,7 @@ are used when they would otherwise not be required.
 ### Basic Application Flow
 
 1. User fills in the form on the front page. This is represented by 
-`workflow.WorkflowForm` and consists of just a URL to Github/Gitlab, 
+`workflow.WorkflowForm` and consists of just a URL to github.com/gitlab.com,
 or a URL to a git repository as well as the branch and path of a 
 workflow within the repository.
 
