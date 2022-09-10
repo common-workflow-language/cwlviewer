@@ -31,7 +31,7 @@ RUN apk add --update \
 
 #wheel needed by ruamel.yaml for some reason
 RUN pip3 install -U wheel setuptools pip
-RUN pip3 install cwltool html5lib
+RUN pip3 install cwltool
 
 RUN cwltool --version
 
