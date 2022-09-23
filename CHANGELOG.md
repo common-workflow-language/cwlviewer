@@ -1,6 +1,10 @@
 
 # Changelog 
 
+## v1.4.5 [unreleased]
+
+Switch to snakeyaml-engine (YAML 1.2) from snakeyaml (YAML 1.1)
+
 ## v1.4.4 [2022-06-08]
 
 Rebuild container to pull in newer version of Python (3.6.9)
