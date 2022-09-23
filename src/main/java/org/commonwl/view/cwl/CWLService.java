@@ -31,9 +31,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -54,17 +55,11 @@ import org.commonwl.view.workflow.WorkflowNotFoundException;
 import org.commonwl.view.workflow.WorkflowOverview;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snakeyaml.engine.v2.api.Load;
+import org.snakeyaml.engine.v2.api.LoadSettings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.yaml.snakeyaml.Yaml;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 /**
  * Provides CWL parsing for workflows to gather an overview for display and
@@ -144,13 +139,13 @@ public class CWLService {
 		if (packedFile.length() <= singleFileSizeLimit) {
 			List<WorkflowOverview> overviews = new ArrayList<>();
 
-			JsonNode packedJson = yamlPathToJson(packedFile.toPath());
+			Map<String, Object> packedJson = yamlPathToJson(packedFile.toPath());
 
-			if (packedJson.has(DOC_GRAPH)) {
-				for (JsonNode jsonNode : packedJson.get(DOC_GRAPH)) {
-					if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
-						WorkflowOverview overview = new WorkflowOverview(jsonNode.get(ID).asText(),
-								extractLabel(jsonNode), extractDoc(jsonNode));
+			if (packedJson.containsKey(DOC_GRAPH)) {
+				for (Map<String, Object> node : (Iterable<Map<String, Object>>) packedJson.get(DOC_GRAPH)) {
+					if (extractProcess(node) == CWLProcess.WORKFLOW) {
+						WorkflowOverview overview = new WorkflowOverview((String) node.get(ID), extractLabel(node),
+								extractDoc(node));
 						overviews.add(overview);
 					}
 				}
@@ -182,20 +177,20 @@ public class CWLService {
 	public Workflow parseWorkflowNative(InputStream workflowStream, String packedWorkflowId, String defaultLabel)
 			throws IOException {
 		// Parse file as yaml
-		JsonNode cwlFile = yamlStreamToJson(workflowStream);
+		Map<String, Object> cwlFile = yamlStreamToJson(workflowStream);
 
 		// Check packed workflow occurs
 		boolean found = false;
 		if (packedWorkflowId != null) {
-			if (cwlFile.has(DOC_GRAPH)) {
-				for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
-					if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
-						String currentId = jsonNode.get(ID).asText();
+			if (cwlFile.containsKey(DOC_GRAPH)) {
+				for (Map<String, Object> node : (Iterable<Map<String, Object>>) cwlFile.get(DOC_GRAPH)) {
+					if (extractProcess(node) == CWLProcess.WORKFLOW) {
+						String currentId = (String) node.get(ID);
 						if (currentId.startsWith("#")) {
 							currentId = currentId.substring(1);
 						}
 						if (packedWorkflowId.isEmpty() || currentId.equals(packedWorkflowId)) {
-							cwlFile = jsonNode;
+							cwlFile = node;
 							found = true;
 							break;
 						}
@@ -506,15 +501,15 @@ public class CWLService {
 		if (fileSizeBytes <= singleFileSizeLimit) {
 
 			// Parse file as yaml
-			JsonNode cwlFile = yamlPathToJson(file.toPath());
+			Map<String, Object> cwlFile = yamlPathToJson(file.toPath());
 
 			// If the CWL file is packed there can be multiple workflows in a file
 			int packedCount = 0;
-			if (cwlFile.has(DOC_GRAPH)) {
+			if (cwlFile.containsKey(DOC_GRAPH)) {
 				// Packed CWL, find the first subelement which is a workflow and take it
-				for (JsonNode jsonNode : cwlFile.get(DOC_GRAPH)) {
-					if (extractProcess(jsonNode) == CWLProcess.WORKFLOW) {
-						cwlFile = jsonNode;
+				for (Map<String, Object> node : (Iterable<Map<String, Object>>) cwlFile.get(DOC_GRAPH)) {
+					if (extractProcess(node) == CWLProcess.WORKFLOW) {
+						cwlFile = node;
 						packedCount++;
 					}
 				}
@@ -603,11 +598,11 @@ public class CWLService {
 	 * @return A JsonNode with the content of the document
 	 * @throws IOException
 	 */
-	private JsonNode yamlPathToJson(Path path) throws IOException {
-		Yaml reader = new Yaml(new SafeConstructor());
-		ObjectMapper mapper = new ObjectMapper();
+	private Map<String, Object> yamlPathToJson(Path path) throws IOException {
+		LoadSettings settings = LoadSettings.builder().build();
+		Load load = new Load(settings);
 		try (InputStream in = Files.newInputStream(path)) {
-			return mapper.valueToTree(reader.load(in));
+			return (Map<String, Object>) load.loadFromInputStream(in);
 		}
 	}
 
@@ -617,10 +612,10 @@ public class CWLService {
 	 * @param yamlStream An InputStream containing the yaml content
 	 * @return A JsonNode with the content of the document
 	 */
-	private JsonNode yamlStreamToJson(InputStream yamlStream) {
-		Yaml reader = new Yaml(new SafeConstructor());
-		ObjectMapper mapper = new ObjectMapper();
-		return mapper.valueToTree(reader.load(yamlStream));
+	private Map<String, Object> yamlStreamToJson(InputStream yamlStream) {
+		LoadSettings settings = LoadSettings.builder().build();
+		Load load = new Load(settings);
+		return (Map<String, Object>) load.loadFromInputStream(yamlStream);
 	}
 
 	/**
@@ -629,9 +624,9 @@ public class CWLService {
 	 * @param node The node to have the label extracted from
 	 * @return The string for the label of the node
 	 */
-	private String extractLabel(JsonNode node) {
-		if (node != null && node.has(LABEL)) {
-			return node.get(LABEL).asText();
+	private String extractLabel(Map<String, Object> node) {
+		if (node != null && node.containsKey(LABEL)) {
+			return (String) node.get(LABEL);
 		}
 		return null;
 	}
@@ -639,13 +634,13 @@ public class CWLService {
 	/**
 	 * Extract the class parameter from a node representing a document
 	 * 
-	 * @param rootNode The root node of a cwl document
+	 * @param node The root node of a cwl document
 	 * @return Which process this document represents
 	 */
-	private CWLProcess extractProcess(JsonNode rootNode) {
-		if (rootNode != null) {
-			if (rootNode.has(CLASS)) {
-				switch (rootNode.get(CLASS).asText()) {
+	private CWLProcess extractProcess(Map<String, Object> node) {
+		if (node != null) {
+			if (node.containsKey(CLASS)) {
+				switch ((String) node.get(CLASS)) {
 				case WORKFLOW:
 					return CWLProcess.WORKFLOW;
 				case COMMANDLINETOOL:
@@ -664,27 +659,26 @@ public class CWLService {
 	 * @param cwlDoc The document to get steps for
 	 * @return A map of step IDs and details related to them
 	 */
-	private Map<String, CWLStep> getSteps(JsonNode cwlDoc) {
-		if (cwlDoc != null && cwlDoc.has(STEPS)) {
+	private Map<String, CWLStep> getSteps(Map<String, Object> cwlDoc) {
+		if (cwlDoc != null && cwlDoc.containsKey(STEPS)) {
 			Map<String, CWLStep> returnMap = new HashMap<>();
 
-			JsonNode steps = cwlDoc.get(STEPS);
-			if (steps.getClass() == ArrayNode.class) {
+			Object steps = cwlDoc.get(STEPS);
+			if (List.class.isAssignableFrom(steps.getClass())) {
 				// Explicit ID and other fields within each input list
-				for (JsonNode step : steps) {
+				for (Map<String, Object> step : (List<Map<String, Object>>) steps) {
 					CWLStep stepObject = new CWLStep(extractLabel(step), extractDoc(step), extractRun(step),
 							getInputs(step));
 					returnMap.put(extractID(step), stepObject);
 				}
-			} else if (steps.getClass() == ObjectNode.class) {
+			} else if (Map.class.isAssignableFrom(steps.getClass())) {
 				// ID is the key of each object
-				Iterator<Map.Entry<String, JsonNode>> iterator = steps.fields();
-				while (iterator.hasNext()) {
-					Map.Entry<String, JsonNode> stepNode = iterator.next();
-					JsonNode stepJson = stepNode.getValue();
-					CWLStep stepObject = new CWLStep(extractLabel(stepJson), extractDoc(stepJson), extractRun(stepJson),
-							getInputs(stepJson));
-					returnMap.put(stepNode.getKey(), stepObject);
+				for (Entry<String, Map<String, Object>> stepEntry : ((Map<String, Map<String, Object>>) steps)
+						.entrySet()) {
+					Map<String, Object> step = stepEntry.getValue();
+					CWLStep stepObject = new CWLStep(extractLabel(step), extractDoc(step), extractRun(step),
+							getInputs(step));
+					returnMap.put(stepEntry.getKey(), stepObject);
 				}
 			}
 
@@ -699,12 +693,12 @@ public class CWLService {
 	 * @param cwlDoc The document to get inputs for
 	 * @return A map of input IDs and details related to them
 	 */
-	private Map<String, CWLElement> getInputs(JsonNode cwlDoc) {
+	private Map<String, CWLElement> getInputs(Map<String, Object> cwlDoc) {
 		if (cwlDoc != null) {
-			if (cwlDoc.has(INPUTS)) {
+			if (cwlDoc.containsKey(INPUTS)) {
 				// For all version workflow inputs/outputs and draft steps
 				return getInputsOutputs(cwlDoc.get(INPUTS));
-			} else if (cwlDoc.has(IN)) {
+			} else if (cwlDoc.containsKey(IN)) {
 				// For V1.0 steps
 				return getStepInputsOutputs(cwlDoc.get(IN));
 			}
@@ -718,10 +712,10 @@ public class CWLService {
 	 * @param cwlDoc The document to get outputs for
 	 * @return A map of output IDs and details related to them
 	 */
-	private Map<String, CWLElement> getOutputs(JsonNode cwlDoc) {
+	private Map<String, CWLElement> getOutputs(Map<String, Object> cwlDoc) {
 		if (cwlDoc != null) {
 			// For all version workflow inputs/outputs and draft steps
-			if (cwlDoc.has(OUTPUTS)) {
+			if (cwlDoc.containsKey(OUTPUTS)) {
 				return getInputsOutputs(cwlDoc.get(OUTPUTS));
 			}
 			// Outputs are not gathered for v1 steps
@@ -735,46 +729,44 @@ public class CWLService {
 	 * @param inOut The in or out node
 	 * @return A map of input IDs and details related to them
 	 */
-	private Map<String, CWLElement> getStepInputsOutputs(JsonNode inOut) {
+	private Map<String, CWLElement> getStepInputsOutputs(Object inOut) {
 		Map<String, CWLElement> returnMap = new HashMap<>();
 
-		if (inOut.getClass() == ArrayNode.class) {
+		if (List.class.isAssignableFrom(inOut.getClass())) {
 			// array<WorkflowStepInput>
-			for (JsonNode inOutNode : inOut) {
-				if (inOutNode.getClass() == ObjectNode.class) {
-					CWLElement inputOutput = new CWLElement();
-					List<String> sources = extractSource(inOutNode);
-					if (sources.size() > 0) {
-						for (String source : sources) {
-							inputOutput.addSourceID(stepIDFromSource(source));
-						}
-					} else {
-						inputOutput.setDefaultVal(extractDefault(inOutNode));
-					}
-					returnMap.put(extractID(inOutNode), inputOutput);
-				}
-			}
-		} else if (inOut.getClass() == ObjectNode.class) {
-			// map<WorkflowStepInput.id, WorkflowStepInput.source>
-			Iterator<Map.Entry<String, JsonNode>> iterator = inOut.fields();
-			while (iterator.hasNext()) {
-				Map.Entry<String, JsonNode> inOutNode = iterator.next();
+			for (Map<String, Object> inOutNode : (List<Map<String, Object>>) inOut) {
 				CWLElement inputOutput = new CWLElement();
-				if (inOutNode.getValue().getClass() == ObjectNode.class) {
-					JsonNode properties = inOutNode.getValue();
-					if (properties.has(SOURCE)) {
-						inputOutput.addSourceID(stepIDFromSource(properties.get(SOURCE).asText()));
+				List<String> sources = extractSource(inOutNode);
+				if (sources.size() > 0) {
+					for (String source : sources) {
+						inputOutput.addSourceID(stepIDFromSource(source));
+					}
+				} else {
+					inputOutput.setDefaultVal(extractDefault(inOutNode));
+				}
+				returnMap.put(extractID(inOutNode), inputOutput);
+			}
+		} else if (Map.class.isAssignableFrom(inOut.getClass())) {
+			// map<WorkflowStepInput.id, WorkflowStepInput.source>
+			Set<Entry<String, Object>> iterator = ((Map<String, Object>) inOut).entrySet();
+			for (Entry<String, Object> entry : iterator) {
+				Object inOutNode = entry.getValue();
+				CWLElement inputOutput = new CWLElement();
+				if (Map.class.isAssignableFrom(inOutNode.getClass())) {
+					Map<String, Object> properties = (Map<String, Object>) inOutNode;
+					if (properties.containsKey(SOURCE)) {
+						inputOutput.addSourceID(stepIDFromSource((String) properties.get(SOURCE)));
 					} else {
 						inputOutput.setDefaultVal(extractDefault(properties));
 					}
-				} else if (inOutNode.getValue().getClass() == ArrayNode.class) {
-					for (JsonNode key : inOutNode.getValue()) {
-						inputOutput.addSourceID(stepIDFromSource(key.asText()));
+				} else if (List.class.isAssignableFrom(inOutNode.getClass())) {
+					for (String key : (List<String>) inOutNode) {
+						inputOutput.addSourceID(stepIDFromSource(key));
 					}
 				} else {
-					inputOutput.addSourceID(stepIDFromSource(inOutNode.getValue().asText()));
+					inputOutput.addSourceID(stepIDFromSource((String) inOutNode));
 				}
-				returnMap.put(inOutNode.getKey(), inputOutput);
+				returnMap.put(entry.getKey(), inputOutput);
 			}
 		}
 
@@ -784,26 +776,25 @@ public class CWLService {
 	/**
 	 * Get inputs or outputs from an inputs or outputs node
 	 * 
-	 * @param inputsOutputs The inputs or outputs node
+	 * @param object The inputs or outputs node
 	 * @return A map of input IDs and details related to them
 	 */
-	private Map<String, CWLElement> getInputsOutputs(JsonNode inputsOutputs) {
+	private Map<String, CWLElement> getInputsOutputs(Object object) {
 		Map<String, CWLElement> returnMap = new HashMap<>();
 
-		if (inputsOutputs.getClass() == ArrayNode.class) {
+		if (List.class.isAssignableFrom(object.getClass())) {
 			// Explicit ID and other fields within each list
-			for (JsonNode inputOutput : inputsOutputs) {
-				String id = inputOutput.get(ID).asText();
+			for (Map<String, Object> inputOutput : (List<Map<String, Object>>) object) {
+				String id = (String) inputOutput.get(ID);
 				if (id.charAt(0) == '#') {
 					id = id.substring(1);
 				}
 				returnMap.put(id, getDetails(inputOutput));
 			}
-		} else if (inputsOutputs.getClass() == ObjectNode.class) {
+		} else if (Map.class.isAssignableFrom(object.getClass())) {
 			// ID is the key of each object
-			Iterator<Map.Entry<String, JsonNode>> iterator = inputsOutputs.fields();
-			while (iterator.hasNext()) {
-				Map.Entry<String, JsonNode> inputOutputNode = iterator.next();
+			Set<Entry<String, Object>> iterator = ((Map<String, Object>) object).entrySet();
+			for (Entry<String, Object> inputOutputNode : iterator) {
 				returnMap.put(inputOutputNode.getKey(), getDetails(inputOutputNode.getValue()));
 			}
 		}
@@ -817,22 +808,22 @@ public class CWLService {
 	 * @param inputOutput The node of the particular input or output
 	 * @return An CWLElement object with the label, doc and type extracted
 	 */
-	private CWLElement getDetails(JsonNode inputOutput) {
+	private CWLElement getDetails(Object inputOutput) {
 		if (inputOutput != null) {
 			CWLElement details = new CWLElement();
 
 			// Shorthand notation "id: type" - no label/doc/other params
-			if (inputOutput.getClass() == TextNode.class) {
-				details.setType(inputOutput.asText());
+			if (inputOutput.getClass() == String.class) {
+				details.setType((String) inputOutput);
 			} else {
-				details.setLabel(extractLabel(inputOutput));
-				details.setDoc(extractDoc(inputOutput));
-				extractSource(inputOutput).forEach(details::addSourceID);
-				details.setDefaultVal(extractDefault(inputOutput));
+				details.setLabel(extractLabel((Map<String, Object>) inputOutput));
+				details.setDoc(extractDoc((Map<String, Object>) inputOutput));
+				extractSource((Map<String, Object>) inputOutput).forEach(details::addSourceID);
+				details.setDefaultVal(extractDefault((Map<String, Object>) inputOutput));
 
 				// Type is only for inputs
-				if (inputOutput.has(TYPE)) {
-					details.setType(extractTypes(inputOutput.get(TYPE)));
+				if (((Map<String, Object>) inputOutput).containsKey(TYPE)) {
+					details.setType(extractTypes(((Map<String, Object>) inputOutput).get(TYPE)));
 				}
 			}
 
@@ -844,12 +835,12 @@ public class CWLService {
 	/**
 	 * Extract the id from a node
 	 * 
-	 * @param node The node to have the id extracted from
+	 * @param step The node to have the id extracted from
 	 * @return The string for the id of the node
 	 */
-	private String extractID(JsonNode node) {
-		if (node != null && node.has(ID)) {
-			String id = node.get(ID).asText();
+	private String extractID(Map<String, Object> step) {
+		if (step != null && step.containsKey(ID)) {
+			String id = (String) step.get(ID);
 			if (id.startsWith("#")) {
 				return id.substring(1);
 			}
@@ -861,15 +852,17 @@ public class CWLService {
 	/**
 	 * Extract the default value from a node
 	 * 
-	 * @param node The node to have the label extracted from
+	 * @param inputOutput The node to have the label extracted from
 	 * @return The string for the default value of the node
 	 */
-	private String extractDefault(JsonNode node) {
-		if (node != null && node.has(DEFAULT)) {
-			if (node.get(DEFAULT).has(LOCATION)) {
-				return node.get(DEFAULT).get(LOCATION).asText();
+	private String extractDefault(Map<String, Object> inputOutput) {
+		if (inputOutput != null && inputOutput.containsKey(DEFAULT)) {
+			Object default_value = ((Map<String, Object>) inputOutput).get(DEFAULT);
+			if (Map.class.isAssignableFrom(default_value.getClass())
+					&& ((Map<String, Object>) default_value).containsKey(LOCATION)) {
+				return (String) ((Map<String, Object>) default_value).get(LOCATION);
 			} else {
-				return "\\\"" + node.get(DEFAULT).asText() + "\\\"";
+				return "\\\"" + default_value + "\\\"";
 			}
 		}
 		return null;
@@ -878,30 +871,30 @@ public class CWLService {
 	/**
 	 * Extract the source or outputSource from a node
 	 * 
-	 * @param node The node to have the sources extracted from
+	 * @param inputOutput The node to have the sources extracted from
 	 * @return A list of strings for the sources
 	 */
-	private List<String> extractSource(JsonNode node) {
-		if (node != null) {
+	private List<String> extractSource(Map<String, Object> inputOutput) {
+		if (inputOutput != null) {
 			List<String> sources = new ArrayList<String>();
-			JsonNode sourceNode = null;
+			Object sourceNode = null;
 
 			// outputSource and source treated the same
-			if (node.has(OUTPUT_SOURCE)) {
-				sourceNode = node.get(OUTPUT_SOURCE);
-			} else if (node.has(SOURCE)) {
-				sourceNode = node.get(SOURCE);
+			if (inputOutput.containsKey(OUTPUT_SOURCE)) {
+				sourceNode = inputOutput.get(OUTPUT_SOURCE);
+			} else if (inputOutput.containsKey(SOURCE)) {
+				sourceNode = inputOutput.get(SOURCE);
 			}
 
 			if (sourceNode != null) {
 				// Single source
-				if (sourceNode.getClass() == TextNode.class) {
-					sources.add(stepIDFromSource(sourceNode.asText()));
+				if (String.class.isAssignableFrom(sourceNode.getClass())) {
+					sources.add(stepIDFromSource((String) sourceNode));
 				}
 				// Can be an array of multiple sources
-				if (sourceNode.getClass() == ArrayNode.class) {
-					for (JsonNode source : sourceNode) {
-						sources.add(stepIDFromSource(source.asText()));
+				if (List.class.isAssignableFrom(sourceNode.getClass())) {
+					for (String source : (List<String>) sourceNode) {
+						sources.add(stepIDFromSource(source));
 					}
 				}
 			}
@@ -942,17 +935,17 @@ public class CWLService {
 	/**
 	 * Extract the doc or description from a node
 	 * 
-	 * @param node The node to have the doc/description extracted from
+	 * @param cwlFile The node to have the doc/description extracted from
 	 * @return The string for the doc/description of the node
 	 */
-	private String extractDoc(JsonNode node) {
-		if (node != null) {
-			if (node.has(DOC)) {
-				return node.get(DOC).asText();
-			} else if (node.has(DESCRIPTION)) {
+	private String extractDoc(Map<String, Object> cwlFile) {
+		if (cwlFile != null) {
+			if (cwlFile.containsKey(DOC)) {
+				return (String) cwlFile.get(DOC);
+			} else if (cwlFile.containsKey(DESCRIPTION)) {
 				// This is to support older standards of cwl which use description instead of
 				// doc
-				return node.get(DESCRIPTION).asText();
+				return (String) cwlFile.get(DESCRIPTION);
 			}
 		}
 		return null;
@@ -964,34 +957,34 @@ public class CWLService {
 	 * @param typeNode The root node representing an input or output
 	 * @return A string with the types listed
 	 */
-	private String extractTypes(JsonNode typeNode) {
+	private String extractTypes(Object typeNode) {
 		if (typeNode != null) {
-			if (typeNode.getClass() == TextNode.class) {
+			if (typeNode.getClass() == String.class) {
 				// Single type
-				return typeNode.asText();
-			} else if (typeNode.getClass() == ArrayNode.class) {
+				return (String) typeNode;
+			} else if (List.class.isAssignableFrom(typeNode.getClass())) {
 				// Multiple types, build a string to represent them
 				StringBuilder typeDetails = new StringBuilder();
 				boolean optional = false;
-				for (JsonNode type : typeNode) {
-					if (type.getClass() == TextNode.class) {
+				for (Object type : (List<String>) typeNode) {
+					if (type.getClass() == String.class) {
 						// This is a simple type
-						if (type.asText().equals("null")) {
+						if (((String) type).equals("null")) {
 							// null as a type means this field is optional
 							optional = true;
 						} else {
 							// Add a simple type to the string
-							typeDetails.append(type.asText());
+							typeDetails.append((String) type);
 							typeDetails.append(", ");
 						}
-					} else if (typeNode.getClass() == ArrayNode.class) {
+					} else if (Map.class.isAssignableFrom(type.getClass())) {
 						// This is a verbose type with sub-fields broken down into type: and other
 						// params
-						if (type.get(TYPE).asText().equals(ARRAY)) {
-							typeDetails.append(type.get(ARRAY_ITEMS).asText());
+						if (((Map<String, Object>) type).get(TYPE).equals(ARRAY)) {
+							typeDetails.append((String) ((Map<String, Object>) type).get(ARRAY_ITEMS));
 							typeDetails.append("[], ");
 						} else {
-							typeDetails.append(type.get(TYPE).asText());
+							typeDetails.append((String) ((Map<String, Object>) type).get(TYPE));
 						}
 					}
 				}
@@ -1008,10 +1001,10 @@ public class CWLService {
 				// Set the type to the constructed string
 				return typeDetails.toString();
 
-			} else if (typeNode.getClass() == ObjectNode.class) {
+			} else if (Map.class.isAssignableFrom(typeNode.getClass())) {
 				// Type: array and items:
-				if (typeNode.has(ARRAY_ITEMS)) {
-					return typeNode.get(ARRAY_ITEMS).asText() + "[]";
+				if (((Map<String, Object>) typeNode).containsKey(ARRAY_ITEMS)) {
+					return ((Map<String, String>) typeNode).get(ARRAY_ITEMS) + "[]";
 				}
 			}
 		}
@@ -1021,13 +1014,13 @@ public class CWLService {
 	/**
 	 * Extract the run parameter from a node representing a step
 	 * 
-	 * @param stepNode The root node of a step
+	 * @param step The root node of a step
 	 * @return A string with the run parameter if it exists
 	 */
-	private String extractRun(JsonNode stepNode) {
-		if (stepNode != null) {
-			if (stepNode.has(RUN)) {
-				return stepNode.get(RUN).asText();
+	private String extractRun(Map<String, Object> step) {
+		if (step != null) {
+			if (step.containsKey(RUN)) {
+				return (String) step.get(RUN);
 			}
 		}
 		return null;

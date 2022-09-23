@@ -94,9 +94,9 @@
     </dependency>
     <!-- YAML -->
     <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
-      <version>1.32</version>
+      <groupId>org.snakeyaml</groupId>
+      <artifactId>snakeyaml-engine</artifactId>
+      <version>2.4</version>
     </dependency>
     <!-- GraphViz/dot -->
     <dependency>
