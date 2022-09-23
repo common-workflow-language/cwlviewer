@@ -815,15 +815,18 @@ public class CWLService {
 			// Shorthand notation "id: type" - no label/doc/other params
 			if (inputOutput.getClass() == String.class) {
 				details.setType((String) inputOutput);
-			} else {
-				details.setLabel(extractLabel((Map<String, Object>) inputOutput));
-				details.setDoc(extractDoc((Map<String, Object>) inputOutput));
-				extractSource((Map<String, Object>) inputOutput).forEach(details::addSourceID);
-				details.setDefaultVal(extractDefault((Map<String, Object>) inputOutput));
+			} else if (List.class.isAssignableFrom(inputOutput.getClass())) {
+				details.setType(this.extractTypes(inputOutput));
+			} else if (Map.class.isAssignableFrom(inputOutput.getClass())) {
+				Map<String, Object> iOMap = (Map<String, Object>) inputOutput;
+				details.setLabel(extractLabel(iOMap));
+				details.setDoc(extractDoc(iOMap));
+				extractSource(iOMap).forEach(details::addSourceID);
+				details.setDefaultVal(extractDefault(iOMap));
 
 				// Type is only for inputs
-				if (((Map<String, Object>) inputOutput).containsKey(TYPE)) {
-					details.setType(extractTypes(((Map<String, Object>) inputOutput).get(TYPE)));
+				if (iOMap.containsKey(TYPE)) {
+					details.setType(extractTypes(iOMap.get(TYPE)));
 				}
 			}
 
@@ -966,7 +969,7 @@ public class CWLService {
 				// Multiple types, build a string to represent them
 				StringBuilder typeDetails = new StringBuilder();
 				boolean optional = false;
-				for (Object type : (List<String>) typeNode) {
+				for (Object type : (List<Object>) typeNode) {
 					if (type.getClass() == String.class) {
 						// This is a simple type
 						if (((String) type).equals("null")) {
@@ -981,8 +984,13 @@ public class CWLService {
 						// This is a verbose type with sub-fields broken down into type: and other
 						// params
 						if (((Map<String, Object>) type).get(TYPE).equals(ARRAY)) {
-							typeDetails.append((String) ((Map<String, Object>) type).get(ARRAY_ITEMS));
-							typeDetails.append("[], ");
+							Object items = ((Map<String, Object>) type).get(ARRAY_ITEMS);
+							if (items.getClass() == String.class) {
+								typeDetails.append(items);
+								typeDetails.append("[], ");
+							} else {
+								typeDetails.append(type.toString() + ", ");
+							}
 						} else {
 							typeDetails.append((String) ((Map<String, Object>) type).get(TYPE));
 						}

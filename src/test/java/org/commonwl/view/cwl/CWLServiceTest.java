@@ -42,6 +42,10 @@ import org.mockito.stubbing.Answer;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -134,19 +138,24 @@ public class CWLServiceTest {
         testLobSTRWorkflow(lobSTRv1, true);
     }
     
-    /**
-     * Test native loading parsing of optional inline types
-     */
-    @Test
-    public void parseWorkflowInlineOptionalTypesNative() throws Exception {
-        CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
-        Workflow wkflow = cwlService.parseWorkflowNative(
-                Paths.get("src/test/resources/cwl/oneline_optional_types.cwl"), null);
-        assertEquals(wkflow.getInputs().get("qualified_phred_quality").getType(), "int?");
-        assertEquals(wkflow.getInputs().get("ncrna_tab_file").getType(), "File?");
-        assertEquals(wkflow.getInputs().get("reverse_reads").getType(), "File?");
-        
-    }
+	/**
+	 * Test native loading parsing of optional inline types
+	 */
+	@Test
+	public void parseWorkflowInlineOptionalTypesNative() throws Exception {
+		CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+//        URI uri = new URI("https://github.com/emo-bon/pipeline-v5/raw/develop/workflows/gos_wf.cwl");
+//        InputStream is = uri.toURL().openStream();
+//        Workflow wkflow = cwlService.parseWorkflowNative(is, null, uri.toURL().getFile());
+		Workflow wkflow = cwlService.parseWorkflowNative(Paths.get("src/test/resources/cwl/oneline_optional_types.cwl"),
+				null);
+		assertEquals(wkflow.getInputs().get("qualified_phred_quality").getType(), "int?");
+		assertEquals(wkflow.getInputs().get("ncrna_tab_file").getType(), "File?");
+		assertEquals(wkflow.getInputs().get("reverse_reads").getType(), "File?");
+		assertEquals(wkflow.getInputs().get("ssu_tax").getType(), "string, File");
+		assertEquals(wkflow.getInputs().get("rfam_models").getType(), "{type=array, items=[string, File]}");
+
+	}
 
     /**
      * Test parsing of a workflow using cwltool
