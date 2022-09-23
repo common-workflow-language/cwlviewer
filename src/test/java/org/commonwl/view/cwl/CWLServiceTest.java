@@ -133,6 +133,20 @@ public class CWLServiceTest {
                 Paths.get("src/test/resources/cwl/lobstr-v1/lobSTR-workflow.cwl"), null);
         testLobSTRWorkflow(lobSTRv1, true);
     }
+    
+    /**
+     * Test native loading parsing of optional inline types
+     */
+    @Test
+    public void parseWorkflowInlineOptionalTypesNative() throws Exception {
+        CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+        Workflow wkflow = cwlService.parseWorkflowNative(
+                Paths.get("src/test/resources/cwl/oneline_optional_types.cwl"), null);
+        assertEquals(wkflow.getInputs().get("qualified_phred_quality").getType(), "int?");
+        assertEquals(wkflow.getInputs().get("ncrna_tab_file").getType(), "File?");
+        assertEquals(wkflow.getInputs().get("reverse_reads").getType(), "File?");
+        
+    }
 
     /**
      * Test parsing of a workflow using cwltool
