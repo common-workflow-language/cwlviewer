@@ -31,14 +31,14 @@ public class CWLStep {
 
     private String label;
     private String doc;
-    private String run;
+    private Object run;
     private CWLProcess runType;
     private Map<String, CWLElement> sources;
 
     public CWLStep() {
     }
 
-    public CWLStep(String label, String doc, String run,
+    public CWLStep(String label, String doc, Object run,
                    Map<String, CWLElement> sources) {
         this.label = label;
         this.doc = doc;
@@ -62,11 +62,11 @@ public class CWLStep {
         this.doc = doc;
     }
 
-    public String getRun() {
+    public Object getRun() {
         return run;
     }
 
-    public void setRun(String run) {
+    public void setRun(Object run) {
         this.run = run;
     }
 

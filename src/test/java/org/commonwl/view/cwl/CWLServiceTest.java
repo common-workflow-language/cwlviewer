@@ -157,6 +157,19 @@ public class CWLServiceTest {
 
 	}
 
+	/**
+	 * Test native loading parsing of nested array types
+	 */
+	@Test
+	public void parseWorkflowNestedArrayTypes() throws Exception {
+		CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+		Workflow wkflow = cwlService.parseWorkflowNative(Paths.get("src/test/resources/cwl/nested_array.cwl"),
+				null);
+		assertEquals(wkflow.getInputs().get("overlap_files").getType(), "File[][]");
+		assertEquals(wkflow.getOutputs().get("freq_files").getType(), "File[][]");
+		assertEquals(true, Map.class.isAssignableFrom(wkflow.getSteps().get("dummy").getRun().getClass()));
+	}
+
     /**
      * Test parsing of a workflow using cwltool
      */
