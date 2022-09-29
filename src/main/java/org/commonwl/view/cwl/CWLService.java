@@ -412,9 +412,12 @@ public class CWLService {
 				CWLStep wfStep = new CWLStep();
 
 				IRI workflowPath = iriFactory.construct(url).resolve("./");
-				IRI runPath = iriFactory.construct(step.get("run").asResource().getURI());
-				wfStep.setRun(workflowPath.relativize(runPath).toString());
-				wfStep.setRunType(rdfService.strToRuntype(step.get("runtype").toString()));
+				Object runValue = step.get("run").asResource().toString();
+				if (String.class.isAssignableFrom(runValue.getClass())) {
+					String runPath = (String) runValue;
+					wfStep.setRun(workflowPath.relativize(runPath).toString());
+					wfStep.setRunType(rdfService.strToRuntype(step.get("runtype").toString()));
+				}
 
 				if (step.contains("src")) {
 					CWLElement src = new CWLElement();
@@ -1012,7 +1015,7 @@ public class CWLService {
 			} else if (Map.class.isAssignableFrom(typeNode.getClass())) {
 				// Type: array and items:
 				if (((Map<String, Object>) typeNode).containsKey(ARRAY_ITEMS)) {
-					return ((Map<String, String>) typeNode).get(ARRAY_ITEMS) + "[]";
+					return extractTypes(((Map<String, String>) typeNode).get(ARRAY_ITEMS)) + "[]";
 				}
 			}
 		}
@@ -1025,10 +1028,10 @@ public class CWLService {
 	 * @param step The root node of a step
 	 * @return A string with the run parameter if it exists
 	 */
-	private String extractRun(Map<String, Object> step) {
+	private Object extractRun(Map<String, Object> step) {
 		if (step != null) {
 			if (step.containsKey(RUN)) {
-				return (String) step.get(RUN);
+				return step.get(RUN);
 			}
 		}
 		return null;
