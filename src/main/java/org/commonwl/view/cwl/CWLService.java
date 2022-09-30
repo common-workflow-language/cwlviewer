@@ -758,7 +758,14 @@ public class CWLService {
 				if (Map.class.isAssignableFrom(inOutNode.getClass())) {
 					Map<String, Object> properties = (Map<String, Object>) inOutNode;
 					if (properties.containsKey(SOURCE)) {
-						inputOutput.addSourceID(stepIDFromSource((String) properties.get(SOURCE)));
+						Object source = properties.get(SOURCE);
+						if (List.class.isAssignableFrom(source.getClass())) {
+							for (String sourceEntry : (List<String>) source) {
+								inputOutput.addSourceID(stepIDFromSource(sourceEntry));
+							}
+						} else {
+							inputOutput.addSourceID(stepIDFromSource((String) source));
+						}
 					} else {
 						inputOutput.setDefaultVal(extractDefault(properties));
 					}

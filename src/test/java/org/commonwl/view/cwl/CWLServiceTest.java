@@ -19,6 +19,23 @@
 
 package org.commonwl.view.cwl;
 
+import static org.apache.commons.io.FileUtils.readFileToString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.Query;
@@ -38,25 +55,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-
-import static org.apache.commons.io.FileUtils.readFileToString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 public class CWLServiceTest {
 
@@ -155,6 +153,18 @@ public class CWLServiceTest {
 		assertEquals(wkflow.getInputs().get("ssu_tax").getType(), "string, File");
 		assertEquals(wkflow.getInputs().get("rfam_models").getType(), "{type=array, items=[string, File]}");
 
+	}
+	
+	/**
+	 * Test native loading parsing of MultipleInputFeatureRequirement using workflows
+	 */
+	@Test
+	public void parseWorkflowMultiInboundLins() throws Exception {
+		CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+        Workflow wkflow = cwlService.parseWorkflowNative(Paths.get("src/test/resources/cwl/complex-workflow/complex-workflow-1.cwl"),
+				null);
+		assertEquals(wkflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(0), "touch_step");
+		assertEquals(wkflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(1), "files");
 	}
 
 	/**
