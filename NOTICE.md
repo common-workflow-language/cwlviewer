@@ -3,7 +3,7 @@ https://github.com/common-workflow-language/cwlviewer/
 
 * Copyright (c) 2016-2017 Mark Robinson https://orcid.org/0000-0002-8184-7507
 * Copyright (c) 2016-2020 The University of Manchester
-* Copyright (c) 2016-2020 CWL community contributors
+* Copyright (c) 2016-2022 CWL community contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
