@@ -4,6 +4,7 @@
 ## v1.4.5 [unreleased]
 
 Switch to snakeyaml-engine (YAML 1.2) from snakeyaml (YAML 1.1)
+Support workflows using `MultipleInputFeatureRequirement`
 
 ## v1.4.4 [2022-06-08]
 
