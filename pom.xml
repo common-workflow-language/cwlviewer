@@ -73,7 +73,7 @@
     <dependency>
       <groupId>com.vladmihalcea</groupId>
       <artifactId>hibernate-types-55</artifactId>
-      <version>2.19.2</version>
+      <version>2.20.0</version>
     </dependency>
     <!-- Liquibase; note that Flyway, while probably having more documentation and users,
          changed its license model. Similarly to mongo, we prefer an open license that
