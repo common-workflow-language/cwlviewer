@@ -94,7 +94,7 @@ public class Scheduler {
      * <p>Errors logged through Logger. Settings in Spring application properties
      * file.</p>
      *
-     * @since 1.4.5
+     * @since 1.4.6
      */
     @Scheduled(cron = "${cron.clearTmpDir}")
     public void clearTmpDir() {
@@ -110,7 +110,7 @@ public class Scheduler {
      * For a given temporary directory, scans it (not recursively) for files and
      * directories exceeding the age limit threshold.
      *
-     * @since 1.4.5
+     * @since 1.4.6
      * @see <a href="https://commons.apache.org/proper/commons-io/apidocs/org/apache/commons/io/filefilter/AgeFileFilter.html">https://commons.apache.org/proper/commons-io/apidocs/org/apache/commons/io/filefilter/AgeFileFilter.html</a>
      * @param temporaryDirectory temporary directory
      */

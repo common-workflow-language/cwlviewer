@@ -3,6 +3,29 @@
 
 ## v1.4.6 [Unreleased]
 
+User visible changes
+- Should be none
+
+Operations changes:
+- Unused RO Bundles and Git repositories are now deleted in case of errors,
+  instead of filling up the disk with unusable files
+- Temporary directories older than 1 day are now cleared via a daily cron job
+  See `src/main/resources/application.properties` for configuration
+
+Minor changes:
+- mockito-all was replaced by mockito-inline as it supports mocking static
+  methods
+
+Dependecies upgrade:
+- Bump jackson from 2.13.4 to 2.14.1
+- Bump spring-data-commons from 2.7.3 to 2.7.6
+- Bump hibernate-types-55 from 2.19.2 to 2.21.1
+- Bump liquibase-core from 4.16.1 to 4.18.0
+- Bump snakeyaml-engine from 2.4 to 2.5
+- Bump common-compress from 1.21 to 1.22
+- Bump junit-jupiter from 1.17.4 to 1.17.6
+- Bump postgresql from 1.17.4 to 1.17.6
+
 ## v1.4.5 [2022-09-30]
 
 User visible changes

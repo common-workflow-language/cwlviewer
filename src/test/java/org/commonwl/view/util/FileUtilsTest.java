@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for <code>FileUtils</code>.
  *
- * @since 1.4.5
+ * @since 1.4.6
  */
 public class FileUtilsTest {
 

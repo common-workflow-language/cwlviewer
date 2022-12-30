@@ -15,7 +15,7 @@ import java.util.Objects;
  * <p>Uses other utilities, such as Apache Commons IO's {@code FileUtils}, but
  * with refinements specific for CWL Viewer (e.g. handling Git repositories).</p>
  *
- * @since 1.4.5
+ * @since 1.4.6
  */
 public class FileUtils {
 
@@ -29,7 +29,7 @@ public class FileUtils {
      *
      * @param repo Git repository object
      * @throws IOException if it fails to delete the Git repository directory
-     * @since 1.4.5
+     * @since 1.4.6
      */
     public static void deleteGitRepository(Git repo) throws IOException {
         if (
@@ -68,7 +68,7 @@ public class FileUtils {
      *
      * @param bundle A bundle object
      * @throws IOException if it fails to delete the bundle temporary directory
-     * @since 1.4.5
+     * @since 1.4.6
      */
     public static void deleteBundleTemporaryDirectory(Bundle bundle) throws IOException {
         // The RoBundleService#saveToFile call will delegate to Apache Taverna's
@@ -109,7 +109,7 @@ public class FileUtils {
      *
      * @param bundle A bundle object
      * @throws IOException if it fails to delete the bundle temporary directory
-     * @since 1.4.5
+     * @since 1.4.6
      */
     public static void deleteBundleParentDirectory(Bundle bundle) throws IOException {
         if (bundle != null) {
