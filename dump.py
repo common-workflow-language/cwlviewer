@@ -36,7 +36,11 @@ def _dump_all_workflows(viewer: str, output: Path) -> None:
     :return: None
     """
     total_elements = _get_total_elements(viewer)
+    logger.info("Total number of workflows: %s", total_elements)
     pages = ceil(total_elements / MAX_PAGE_SIZE)
+    logger.info(
+        "Will create %s separate dump files of up to %s workflows each.",
+        pages, MAX_PAGE_SIZE)
     for page in range(0, pages):
         _dump_workflows(viewer, output, page, MAX_PAGE_SIZE)
 
