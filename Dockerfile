@@ -31,7 +31,7 @@ RUN apk add --update \
 
 #wheel needed by ruamel.yaml for some reason
 RUN pip3 install -U wheel setuptools pip
-RUN pip3 install cwltool html5lib
+RUN pip3 install cwltool
 
 RUN cwltool --version
 
@@ -55,4 +55,4 @@ WORKDIR /tmp
 
 EXPOSE 8080
 ENV LC_ALL C.UTF-8
-CMD ["/opt/java/openjdk/bin/java", "-jar", "/usr/lib/cwlviewer.jar"]
+CMD ["java", "-jar", "/usr/lib/cwlviewer.jar"]

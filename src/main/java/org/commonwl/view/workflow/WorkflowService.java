@@ -19,18 +19,6 @@
 
 package org.commonwl.view.workflow;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
@@ -40,6 +28,7 @@ import org.commonwl.view.git.GitService;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.commonwl.view.researchobject.ROBundleFactory;
 import org.commonwl.view.researchobject.ROBundleNotFoundException;
+import org.commonwl.view.util.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
@@ -51,6 +40,18 @@ import org.springframework.core.io.PathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class WorkflowService {
@@ -295,9 +296,9 @@ public class WorkflowService {
             throws GitAPIException, WorkflowNotFoundException, IOException {
         QueuedWorkflow queuedWorkflow;
 
+        Git repo = null;
         try {
             boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
-            Git repo = null;
             while (repo == null) {
                 try {
                     repo = gitService.getRepository(gitInfo, safeToAccess);
@@ -366,6 +367,10 @@ public class WorkflowService {
                 logger.error("Could not update workflow with cwltool", e);
             }
 
+        } catch (GitAPIException | RuntimeException | IOException e) {
+            logger.warn(String.format("Failed to create Queued Workflow: %s - Temporary files will be deleted", e.getMessage()), e);
+            FileUtils.deleteGitRepository(repo);
+            throw e;
         } finally {
             gitSemaphore.release(gitInfo.getRepoUrl());
         }
@@ -567,7 +572,7 @@ public class WorkflowService {
                 return Optional.of(potentialRaw.replace(path, ""));
             }
         }
-        // Not found, or not at GitHub/GitLab
+        // Not found, or not at github.com/gitlab.com
         return Optional.empty();
 
     }

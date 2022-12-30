@@ -21,7 +21,9 @@ package org.commonwl.view.researchobject;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
+import org.apache.taverna.robundle.fs.BundleFileSystem;
 import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.util.FileUtils;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.slf4j.Logger;
@@ -31,7 +33,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
 /**
@@ -77,6 +81,11 @@ public class ROBundleFactory {
 
         // Save the bundle to the storage location in properties
         Path bundleLocation = roBundleService.saveToFile(bundle);
+        try {
+            FileUtils.deleteBundleTemporaryDirectory(bundle);
+        } catch (IOException e) {
+            logger.warn(String.format("Failed to delete temporary directory for bundle [%s]: %s", bundle.getSource(), e.getMessage()), e);
+        }
 
         // Add RO Bundle to associated workflow model
         workflow.setRoBundlePath(bundleLocation.toString());

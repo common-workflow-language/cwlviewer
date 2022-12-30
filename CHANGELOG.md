@@ -1,6 +1,52 @@
 
 # Changelog 
 
+## v1.4.6 [Unreleased]
+
+## v1.4.5 [2022-09-30]
+
+User visible changes
+
+- Switch to snakeyaml-engine (YAML 1.2) from snakeyaml (YAML 1.1) to improve
+  YAML parsing (less errors)
+- Made explicit that only gitlab.com and github.com are supported as shortcuts,
+and that specifying workflows on other hosts needs an explicit
+git repo URL + branch + path.
+- Fewer errors due to the use of complex types
+- Support workflows using `MultipleInputFeatureRequirement`
+
+Minor changes:
+- Always pass --disable-color to cwltool to improve the logs
+- Removed explicit html5lib Python dependency
+- Improvements to container building.
+- Added diagram of operation to the docs
+
+Dependecies upgrade:
+- Bump maven-enforcer-plugin from 3.0.0 to 3.1.0
+- Bump liquibase-core from 4.11.0 to 4.16.1
+- Bump spring-data-commons from 2.7.0 to 2.7.3
+- Bump hibernate-types-55 from 2.16.2 to 2.19.2
+- Bump postgresql from 1.17.2 to 1.17.4
+- Bump junit-jupiter from 1.17.2 to 1.17.3
+- Bump jena-core from 4.5.0 to 4.6.1
+- Bump jackson-core from 2.13.3 to 2.13.4
+
+
+## v1.4.4 [2022-06-08]
+
+Rebuild container to pull in newer version of Python (3.6.9)
+Use Java 17 LTS
+Update Docker command java location
+
+Bump postgresql from 1.17.1 to 1.17.2
+Bump spring-data-commons from 2.6.3 to 2.7.0
+Bump hibernate-types-55 from 2.16.1 to 2.16.2
+Bump jena-core from 4.4.0 to 4.5.0
+Bump jackson-core from 2.13.2 to 2.13.3
+Update spring boot (2.6.1 → 2.6.7), liquibase (unpinned → 4.10.), jgit (5.13 → 6.1)
+Bump liquibase-core from 4.10.0 to 4.11.0
+Bump junit-jupiter from 1.17.1 to 1.17.2
+
 ## v1.4.3 [2022-04-19]
 A few workflows were not rendering correctly after the upgrade from MongoDB to
 PostgreSQL. The reason was a security update in Thymeleaf that stopped Java

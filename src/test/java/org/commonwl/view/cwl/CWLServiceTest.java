@@ -19,6 +19,23 @@
 
 package org.commonwl.view.cwl;
 
+import static org.apache.commons.io.FileUtils.readFileToString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.Query;
@@ -38,21 +55,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-
-import static org.apache.commons.io.FileUtils.readFileToString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 public class CWLServiceTest {
 
@@ -133,6 +135,50 @@ public class CWLServiceTest {
                 Paths.get("src/test/resources/cwl/lobstr-v1/lobSTR-workflow.cwl"), null);
         testLobSTRWorkflow(lobSTRv1, true);
     }
+    
+	/**
+	 * Test native loading parsing of optional inline types
+	 */
+	@Test
+	public void parseWorkflowInlineOptionalTypesNative() throws Exception {
+		CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+//        URI uri = new URI("https://github.com/emo-bon/pipeline-v5/raw/develop/workflows/gos_wf.cwl");
+//        InputStream is = uri.toURL().openStream();
+//        Workflow wkflow = cwlService.parseWorkflowNative(is, null, uri.toURL().getFile());
+		Workflow wkflow = cwlService.parseWorkflowNative(Paths.get("src/test/resources/cwl/oneline_optional_types.cwl"),
+				null);
+		assertEquals(wkflow.getInputs().get("qualified_phred_quality").getType(), "int?");
+		assertEquals(wkflow.getInputs().get("ncrna_tab_file").getType(), "File?");
+		assertEquals(wkflow.getInputs().get("reverse_reads").getType(), "File?");
+		assertEquals(wkflow.getInputs().get("ssu_tax").getType(), "string, File");
+		assertEquals(wkflow.getInputs().get("rfam_models").getType(), "{type=array, items=[string, File]}");
+
+	}
+	
+	/**
+	 * Test native loading parsing of MultipleInputFeatureRequirement using workflows
+	 */
+	@Test
+	public void parseWorkflowMultiInboundLins() throws Exception {
+		CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+        Workflow wkflow = cwlService.parseWorkflowNative(Paths.get("src/test/resources/cwl/complex-workflow/complex-workflow-1.cwl"),
+				null);
+		assertEquals(wkflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(0), "touch_step");
+		assertEquals(wkflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(1), "files");
+	}
+
+	/**
+	 * Test native loading parsing of nested array types
+	 */
+	@Test
+	public void parseWorkflowNestedArrayTypes() throws Exception {
+		CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+		Workflow wkflow = cwlService.parseWorkflowNative(Paths.get("src/test/resources/cwl/nested_array.cwl"),
+				null);
+		assertEquals(wkflow.getInputs().get("overlap_files").getType(), "File[][]");
+		assertEquals(wkflow.getOutputs().get("freq_files").getType(), "File[][]");
+		assertEquals(true, Map.class.isAssignableFrom(wkflow.getSteps().get("dummy").getRun().getClass()));
+	}
 
     /**
      * Test parsing of a workflow using cwltool
