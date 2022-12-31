@@ -957,6 +957,14 @@ public class CWLService {
 	private String extractDoc(Map<String, Object> cwlFile) {
 		if (cwlFile != null) {
 			if (cwlFile.containsKey(DOC)) {
+				Object doc = cwlFile.get(DOC);
+				if (doc.getClass().isAssignableFrom(String.class)) {
+					return (String) doc;
+				}
+				if (doc instanceof List<?>) {
+					List<String> docList = (List<String>) doc;
+					return String.join("", docList);
+				}
 				return (String) cwlFile.get(DOC);
 			} else if (cwlFile.containsKey(DESCRIPTION)) {
 				// This is to support older standards of cwl which use description instead of
