@@ -871,6 +871,9 @@ public class CWLService {
 	private String extractDefault(Map<String, Object> inputOutput) {
 		if (inputOutput != null && inputOutput.containsKey(DEFAULT)) {
 			Object default_value = ((Map<String, Object>) inputOutput).get(DEFAULT);
+			if (default_value == null) {
+				return null;
+			}
 			if (Map.class.isAssignableFrom(default_value.getClass())
 					&& ((Map<String, Object>) default_value).containsKey(LOCATION)) {
 				return (String) ((Map<String, Object>) default_value).get(LOCATION);
