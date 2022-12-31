@@ -264,6 +264,23 @@ public class CWLServiceTest {
 	}
 
 	/**
+	 * Test retrieval of a workflow overview with an array ``doc`` field
+	 */
+	@Test
+	public void getHelloWorkflowOverviewDocList() throws Exception {
+
+		// Test cwl service
+		CWLService cwlService = new CWLService(Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 5242880);
+
+		// Run workflow overview
+		File helloWorkflow = new File("src/test/resources/cwl/hello/hello_doclist.cwl");
+		WorkflowOverview hello = cwlService.getWorkflowOverview(helloWorkflow);
+		assertNotNull(hello);
+		assertEquals("Puts a message into a file using echo. Even more doc", hello.getDoc());
+
+	}
+
+	/**
 	 * Test IOException is thrown when files are over limit with getWorkflowOverview
 	 */
 	@Test
