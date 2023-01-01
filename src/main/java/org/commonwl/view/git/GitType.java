@@ -19,13 +19,10 @@
 
 package org.commonwl.view.git;
 
-/**
- * Differentiates supported sites for the
- * purposes of URL rewriting
- */
+/** Differentiates supported sites for the purposes of URL rewriting */
 public enum GitType {
-    GITHUB,
-    GITLAB,
-    BITBUCKET,
-    GENERIC
+  GITHUB,
+  GITLAB,
+  BITBUCKET,
+  GENERIC
 }

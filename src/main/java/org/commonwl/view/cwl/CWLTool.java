@@ -19,111 +19,119 @@
 
 package org.commonwl.view.cwl;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import org.commonwl.view.util.StreamGobbler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
-/**
- * Interacts with the Python reference implementation
- * of the common workflow language
- */
+/** Interacts with the Python reference implementation of the common workflow language */
 @Service
 public class CWLTool {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+  private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private String cwlToolVersion;
+  private String cwlToolVersion;
 
-    /**
-     * Get the RDF representation of a CWL file
-     * @param url The URL of the CWL file
-     * @return The RDF representing the CWL file
-     * @throws CWLValidationException cwltool errors
-     */
-    public String getRDF(String url) throws CWLValidationException {
-        return runCwltoolOnWorkflow("--print-rdf", url);
+  /**
+   * Get the RDF representation of a CWL file
+   *
+   * @param url The URL of the CWL file
+   * @return The RDF representing the CWL file
+   * @throws CWLValidationException cwltool errors
+   */
+  public String getRDF(String url) throws CWLValidationException {
+    return runCwltoolOnWorkflow("--print-rdf", url);
+  }
+
+  /**
+   * Get the packed version of a CWL workflow
+   *
+   * @param url The URL of the CWL file
+   * @return The packed version of the workflow
+   * @throws CWLValidationException cwltool errors
+   */
+  public String getPackedVersion(String url) throws CWLValidationException {
+    return runCwltoolOnWorkflow("--pack", url);
+  }
+
+  /**
+   * Gets the version of cwltool being used
+   *
+   * @return The version number
+   */
+  public String getVersion() {
+    if (cwlToolVersion != null) {
+      return cwlToolVersion;
     }
+    try {
+      // Run cwltool --version
+      String[] command = {"cwltool", "--version"};
+      ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
+      Process process = cwlToolProcess.start();
 
-    /**
-     * Get the packed version of a CWL workflow
-     * @param url The URL of the CWL file
-     * @return The packed version of the workflow
-     * @throws CWLValidationException cwltool errors
-     */
-    public String getPackedVersion(String url) throws CWLValidationException {
-        return runCwltoolOnWorkflow("--pack", url);
+      // Get input stream
+      InputStream is = process.getInputStream();
+      InputStreamReader isr = new InputStreamReader(is);
+      BufferedReader br = new BufferedReader(isr);
+
+      String line;
+      if ((line = br.readLine()) != null) {
+        cwlToolVersion = line.substring(line.indexOf(' ') + 1);
+        return cwlToolVersion;
+      } else {
+        return "<error getting cwl version>";
+      }
+    } catch (IOException ex) {
+      return "<error getting cwl version>";
     }
+  }
 
-    /**
-     * Gets the version of cwltool being used
-     * @return The version number
-     */
-    public String getVersion() {
-        if (cwlToolVersion != null) {
-            return cwlToolVersion;
-        }
-        try {
-            // Run cwltool --version
-            String[] command = {"cwltool", "--version"};
-            ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
-            Process process = cwlToolProcess.start();
+  /**
+   * Runs cwltool on a workflow with a given argument
+   *
+   * @param argument The argument for cwltool
+   * @param workflowUrl The url of the workflow
+   * @return The standard output of cwltool
+   * @throws CWLValidationException Errors from cwltool
+   */
+  private String runCwltoolOnWorkflow(String argument, String workflowUrl)
+      throws CWLValidationException {
+    try {
+      // Run command
+      String[] command = {
+        "cwltool",
+        "--disable-color",
+        "--non-strict",
+        "--quiet",
+        "--skip-schemas",
+        argument,
+        workflowUrl
+      };
+      ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
+      Process process = cwlToolProcess.start();
 
-            // Get input stream
-            InputStream is = process.getInputStream();
-            InputStreamReader isr = new InputStreamReader(is);
-            BufferedReader br = new BufferedReader(isr);
+      // Read output from the process using threads
+      StreamGobbler inputGobbler = new StreamGobbler(process.getInputStream());
+      StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream());
+      errorGobbler.start();
+      inputGobbler.start();
 
-            String line;
-            if ((line = br.readLine()) != null) {
-                cwlToolVersion = line.substring(line.indexOf(' ') + 1);
-                return cwlToolVersion;
-            } else {
-                return "<error getting cwl version>";
-            }
-        } catch (IOException ex) {
-            return "<error getting cwl version>";
-        }
+      // Wait for process to complete
+      int exitCode = process.waitFor();
+      if (exitCode == 0) {
+        inputGobbler.join();
+        return inputGobbler.getContent();
+      } else {
+        errorGobbler.join();
+        throw new CWLValidationException(errorGobbler.getContent());
+      }
+    } catch (IOException | InterruptedException e) {
+      logger.error("Error running cwltool process", e);
+      throw new CWLValidationException("Error running cwltool process");
     }
-
-    /**
-     * Runs cwltool on a workflow with a given argument
-     * @param argument The argument for cwltool
-     * @param workflowUrl The url of the workflow
-     * @return The standard output of cwltool
-     * @throws CWLValidationException Errors from cwltool
-     */
-    private String runCwltoolOnWorkflow(String argument, String workflowUrl) throws CWLValidationException {
-        try {
-            // Run command
-            String[] command = {"cwltool", "--disable-color", "--non-strict", "--quiet", "--skip-schemas", argument, workflowUrl};
-            ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
-            Process process = cwlToolProcess.start();
-
-            // Read output from the process using threads
-            StreamGobbler inputGobbler = new StreamGobbler(process.getInputStream());
-            StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream());
-            errorGobbler.start();
-            inputGobbler.start();
-
-            // Wait for process to complete
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                inputGobbler.join();
-                return inputGobbler.getContent();
-            } else {
-                errorGobbler.join();
-                throw new CWLValidationException(errorGobbler.getContent());
-            }
-        } catch (IOException|InterruptedException e) {
-            logger.error("Error running cwltool process", e);
-            throw new CWLValidationException("Error running cwltool process");
-        }
-    }
-
+  }
 }

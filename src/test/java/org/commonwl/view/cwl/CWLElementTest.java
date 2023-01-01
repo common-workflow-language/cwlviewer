@@ -19,33 +19,30 @@
 
 package org.commonwl.view.cwl;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 public class CWLElementTest {
 
-    /**
-     * Test addition and retrieval of source IDs from a node
-     * null values should not be added to the list
-     */
-    @Test
-    public void testSourceIDList() throws Exception {
+  /**
+   * Test addition and retrieval of source IDs from a node null values should not be added to the
+   * list
+   */
+  @Test
+  public void testSourceIDList() throws Exception {
 
-        CWLElement element = new CWLElement();
+    CWLElement element = new CWLElement();
 
-        element.addSourceID("sourceID1");
-        element.addSourceID("sourceID2");
-        element.addSourceID(null);
-        element.addSourceID("sourceID3");
+    element.addSourceID("sourceID1");
+    element.addSourceID("sourceID2");
+    element.addSourceID(null);
+    element.addSourceID("sourceID3");
 
-        List<String> sourceIDs = element.getSourceIDs();
+    List<String> sourceIDs = element.getSourceIDs();
 
-        assertEquals(3, sourceIDs.size());
-        assertEquals("sourceID3", sourceIDs.get(2));
-
-    }
-
+    assertEquals(3, sourceIDs.size());
+    assertEquals("sourceID3", sourceIDs.get(2));
+  }
 }

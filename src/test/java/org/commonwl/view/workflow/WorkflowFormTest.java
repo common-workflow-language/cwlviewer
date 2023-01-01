@@ -19,29 +19,32 @@
 
 package org.commonwl.view.workflow;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.Test;
 
 public class WorkflowFormTest {
 
-    /**
-     * Test for the form stripping unnecessary trailing slashes from directory URLs
-     */
-    @Test
-    public void getURL() throws Exception {
+  /** Test for the form stripping unnecessary trailing slashes from directory URLs */
+  @Test
+  public void getURL() throws Exception {
 
-        String unchangedURL = "https://github.com/common-workflow-language/workflows/tree/master/workflows/compile";
-        WorkflowForm testForm = new WorkflowForm(unchangedURL);
-        assertEquals(unchangedURL, testForm.getUrl());
+    String unchangedURL =
+        "https://github.com/common-workflow-language/workflows/tree/master/workflows/compile";
+    WorkflowForm testForm = new WorkflowForm(unchangedURL);
+    assertEquals(unchangedURL, testForm.getUrl());
 
-        WorkflowForm testForm2 = new WorkflowForm("https://github.com/common-workflow-language/workflows/tree/master/workflows/compile/");
-        assertEquals("https://github.com/common-workflow-language/workflows/tree/master/workflows/compile", testForm2.getUrl());
+    WorkflowForm testForm2 =
+        new WorkflowForm(
+            "https://github.com/common-workflow-language/workflows/tree/master/workflows/compile/");
+    assertEquals(
+        "https://github.com/common-workflow-language/workflows/tree/master/workflows/compile",
+        testForm2.getUrl());
 
-        testForm2.setUrl("https://github.com/common-workflow-language/workflows/tree/master/workflows/make-to-cwl/////");
-        assertEquals("https://github.com/common-workflow-language/workflows/tree/master/workflows/make-to-cwl", testForm2.getUrl());
-
-    }
-
+    testForm2.setUrl(
+        "https://github.com/common-workflow-language/workflows/tree/master/workflows/make-to-cwl/////");
+    assertEquals(
+        "https://github.com/common-workflow-language/workflows/tree/master/workflows/make-to-cwl",
+        testForm2.getUrl());
+  }
 }

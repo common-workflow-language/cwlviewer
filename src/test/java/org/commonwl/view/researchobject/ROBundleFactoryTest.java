@@ -19,56 +19,52 @@
 
 package org.commonwl.view.researchobject;
 
-import org.apache.taverna.robundle.Bundle;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.nio.file.Paths;
+import java.util.HashMap;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.nio.file.Paths;
-import java.util.HashMap;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-/**
- * Test the separate async method to call the ROBundle constructor
- */
+/** Test the separate async method to call the ROBundle constructor */
 public class ROBundleFactoryTest {
 
-    /**
-     * Simulate creation of a valid workflow
-     */
-    @Test
-    public void bundleForValidWorkflow() throws Exception {
+  /** Simulate creation of a valid workflow */
+  @Test
+  public void bundleForValidWorkflow() throws Exception {
 
-        Workflow validWorkflow = new Workflow("Valid Workflow", "Doc for Valid Workflow",
-                new HashMap<>(), new HashMap<>(), new HashMap<>());
-        validWorkflow.setRetrievedFrom(Mockito.mock(GitDetails.class));
+    Workflow validWorkflow =
+        new Workflow(
+            "Valid Workflow",
+            "Doc for Valid Workflow",
+            new HashMap<>(),
+            new HashMap<>(),
+            new HashMap<>());
+    validWorkflow.setRetrievedFrom(Mockito.mock(GitDetails.class));
 
-        // Mocked path to a RO bundle
-        ROBundleService mockROBundleService = Mockito.mock(ROBundleService.class);
-        when(mockROBundleService.saveToFile(any()))
-                .thenReturn(Paths.get("test/path/to/check/for.zip"));
+    // Mocked path to a RO bundle
+    ROBundleService mockROBundleService = Mockito.mock(ROBundleService.class);
+    when(mockROBundleService.saveToFile(any())).thenReturn(Paths.get("test/path/to/check/for.zip"));
 
-        // Test method retries multiple times to get workflow model before success
-        WorkflowRepository mockRepository = Mockito.mock(WorkflowRepository.class);
-        when(mockRepository.findByRetrievedFrom(any(GitDetails.class)))
-                .thenReturn(null)
-                .thenReturn(null)
-                .thenReturn(validWorkflow);
+    // Test method retries multiple times to get workflow model before success
+    WorkflowRepository mockRepository = Mockito.mock(WorkflowRepository.class);
+    when(mockRepository.findByRetrievedFrom(any(GitDetails.class)))
+        .thenReturn(null)
+        .thenReturn(null)
+        .thenReturn(validWorkflow);
 
-        // Create factory under test
-        ROBundleFactory factory = new ROBundleFactory(mockROBundleService, mockRepository);
+    // Create factory under test
+    ROBundleFactory factory = new ROBundleFactory(mockROBundleService, mockRepository);
 
-        // Attempt to add RO to workflow
-        factory.createWorkflowRO(validWorkflow);
+    // Attempt to add RO to workflow
+    factory.createWorkflowRO(validWorkflow);
 
-        assertEquals(Paths.get("test/path/to/check/for.zip"), 
-                Paths.get(validWorkflow.getRoBundlePath()));
-
-    }
-
+    assertEquals(
+        Paths.get("test/path/to/check/for.zip"), Paths.get(validWorkflow.getRoBundlePath()));
+  }
 }

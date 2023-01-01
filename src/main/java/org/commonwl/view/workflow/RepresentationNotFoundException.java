@@ -22,9 +22,6 @@ package org.commonwl.view.workflow;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-/**
- * Exception thrown when a workflow representation was not found
- */
+/** Exception thrown when a workflow representation was not found */
 @ResponseStatus(value = HttpStatus.NOT_ACCEPTABLE)
-public class RepresentationNotFoundException extends RuntimeException {
-}
+public class RepresentationNotFoundException extends RuntimeException {}

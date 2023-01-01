@@ -19,9 +19,10 @@
 
 package org.commonwl.view.researchobject;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
-import org.apache.taverna.robundle.fs.BundleFileSystem;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.util.FileUtils;
 import org.commonwl.view.workflow.Workflow;
@@ -33,63 +34,63 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.Path;
-
 /**
- * Class for the purpose of a Spring Framework Async method
- * being in a different class to where it is called
+ * Class for the purpose of a Spring Framework Async method being in a different class to where it
+ * is called
  *
- * This allows the proxy to kick in and run it asynchronously
+ * <p>This allows the proxy to kick in and run it asynchronously
  */
 @Component
 @EnableAsync
 public class ROBundleFactory {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+  private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final WorkflowRepository workflowRepository;
-    private final ROBundleService roBundleService;
+  private final WorkflowRepository workflowRepository;
+  private final ROBundleService roBundleService;
 
-    @Autowired
-    public ROBundleFactory(ROBundleService roBundleService,
-                           WorkflowRepository workflowRepository) {
-        this.workflowRepository = workflowRepository;
-        this.roBundleService = roBundleService;
+  @Autowired
+  public ROBundleFactory(ROBundleService roBundleService, WorkflowRepository workflowRepository) {
+    this.workflowRepository = workflowRepository;
+    this.roBundleService = roBundleService;
+  }
+
+  /**
+   * Creates a new Workflow Research Object Bundle from Git details and saves it to a file
+   *
+   * @param workflow The workflow to generate a RO bundle for
+   * @throws IOException Any API errors which may have occurred
+   */
+  @Async
+  public void createWorkflowRO(Workflow workflow) throws IOException, InterruptedException {
+    logger.info("Creating Research Object Bundle");
+
+    // Get the whole containing folder, not just the workflow itself
+    GitDetails githubInfo = workflow.getRetrievedFrom();
+    GitDetails roDetails =
+        new GitDetails(
+            githubInfo.getRepoUrl(),
+            githubInfo.getBranch(),
+            FilenameUtils.getPath(githubInfo.getPath()));
+
+    // Create a new Research Object Bundle
+    Bundle bundle = roBundleService.createBundle(workflow, roDetails);
+
+    // Save the bundle to the storage location in properties
+    Path bundleLocation = roBundleService.saveToFile(bundle);
+    try {
+      FileUtils.deleteBundleTemporaryDirectory(bundle);
+    } catch (IOException e) {
+      logger.warn(
+          String.format(
+              "Failed to delete temporary directory for bundle [%s]: %s",
+              bundle.getSource(), e.getMessage()),
+          e);
     }
 
-    /**
-     * Creates a new Workflow Research Object Bundle from Git details
-     * and saves it to a file
-     * @param workflow The workflow to generate a RO bundle for
-     * @throws IOException Any API errors which may have occurred
-     */
-    @Async
-    public void createWorkflowRO(Workflow workflow)
-            throws IOException, InterruptedException {
-        logger.info("Creating Research Object Bundle");
-
-        // Get the whole containing folder, not just the workflow itself
-        GitDetails githubInfo = workflow.getRetrievedFrom();
-        GitDetails roDetails = new GitDetails(githubInfo.getRepoUrl(), githubInfo.getBranch(),
-                FilenameUtils.getPath(githubInfo.getPath()));
-
-        // Create a new Research Object Bundle
-        Bundle bundle = roBundleService.createBundle(workflow, roDetails);
-
-        // Save the bundle to the storage location in properties
-        Path bundleLocation = roBundleService.saveToFile(bundle);
-        try {
-            FileUtils.deleteBundleTemporaryDirectory(bundle);
-        } catch (IOException e) {
-            logger.warn(String.format("Failed to delete temporary directory for bundle [%s]: %s", bundle.getSource(), e.getMessage()), e);
-        }
-
-        // Add RO Bundle to associated workflow model
-        workflow.setRoBundlePath(bundleLocation.toString());
-        workflowRepository.save(workflow);
-        logger.info("Finished saving Research Object Bundle");
-    }
+    // Add RO Bundle to associated workflow model
+    workflow.setRoBundlePath(bundleLocation.toString());
+    workflowRepository.save(workflow);
+    logger.info("Finished saving Research Object Bundle");
+  }
 }

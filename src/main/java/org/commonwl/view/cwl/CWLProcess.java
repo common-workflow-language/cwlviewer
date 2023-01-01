@@ -19,22 +19,20 @@
 
 package org.commonwl.view.cwl;
 
-/**
- * Enum for possible CWL processes
- */
+/** Enum for possible CWL processes */
 public enum CWLProcess {
-    WORKFLOW("Workflow"),
-    COMMANDLINETOOL("CommandLineTool"),
-    EXPRESSIONTOOL("ExpressionTool");
+  WORKFLOW("Workflow"),
+  COMMANDLINETOOL("CommandLineTool"),
+  EXPRESSIONTOOL("ExpressionTool");
 
-    private final String name;
+  private final String name;
 
-    CWLProcess(String name) {
-        this.name = name;
-    }
+  CWLProcess(String name) {
+    this.name = name;
+  }
 
-    @Override
-    public String toString() {
-        return name;
-    }
+  @Override
+  public String toString() {
+    return name;
+  }
 }
