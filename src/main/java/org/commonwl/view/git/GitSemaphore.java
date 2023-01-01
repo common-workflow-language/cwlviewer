@@ -19,48 +19,45 @@
 
 package org.commonwl.view.git;
 
-import org.springframework.stereotype.Component;
-
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
-/**
- * Object to manage concurrent access to Git repositories
- */
+/** Object to manage concurrent access to Git repositories */
 @Component
 public class GitSemaphore {
 
-    private static Map<String, Integer> currentRepos = new HashMap<>();
+  private static Map<String, Integer> currentRepos = new HashMap<>();
 
-    /**
-     * Note that a thread will be accessing the repository
-     * @param repoUrl The url of the repository
-     * @return Whether the resource can be accessed safely
-     * (no other threads are using it)
-     */
-    public synchronized boolean acquire(String repoUrl) {
-        if (currentRepos.containsKey(repoUrl)) {
-            currentRepos.put(repoUrl, currentRepos.get(repoUrl) + 1);
-            return false;
-        } else {
-            currentRepos.put(repoUrl, 1);
-            return true;
-        }
+  /**
+   * Note that a thread will be accessing the repository
+   *
+   * @param repoUrl The url of the repository
+   * @return Whether the resource can be accessed safely (no other threads are using it)
+   */
+  public synchronized boolean acquire(String repoUrl) {
+    if (currentRepos.containsKey(repoUrl)) {
+      currentRepos.put(repoUrl, currentRepos.get(repoUrl) + 1);
+      return false;
+    } else {
+      currentRepos.put(repoUrl, 1);
+      return true;
     }
+  }
 
-    /**
-     * Release use of the shared resource
-     * @param repoUrl The url of the repository
-     */
-    public synchronized void release(String repoUrl) {
-        if (currentRepos.containsKey(repoUrl)) {
-            int threadCountUsing = currentRepos.get(repoUrl);
-            if (threadCountUsing > 1) {
-                currentRepos.put(repoUrl, threadCountUsing - 1);
-            } else {
-                currentRepos.remove(repoUrl);
-            }
-        }
+  /**
+   * Release use of the shared resource
+   *
+   * @param repoUrl The url of the repository
+   */
+  public synchronized void release(String repoUrl) {
+    if (currentRepos.containsKey(repoUrl)) {
+      int threadCountUsing = currentRepos.get(repoUrl);
+      if (threadCountUsing > 1) {
+        currentRepos.put(repoUrl, threadCountUsing - 1);
+      } else {
+        currentRepos.remove(repoUrl);
+      }
     }
-
+  }
 }

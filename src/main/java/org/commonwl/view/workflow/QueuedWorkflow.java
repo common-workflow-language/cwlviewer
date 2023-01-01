@@ -2,11 +2,9 @@ package org.commonwl.view.workflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.commonwl.view.cwl.CWLToolStatus;
-import org.commonwl.view.util.BaseEntity;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
-
+import java.io.Serializable;
+import java.util.List;
+import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -14,13 +12,12 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Objects;
+import org.commonwl.view.cwl.CWLToolStatus;
+import org.commonwl.view.util.BaseEntity;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
-/**
- * A workflow pending completion of cwltool
- */
+/** A workflow pending completion of cwltool */
 @JsonIgnoreProperties(value = {"id", "tempRepresentation", "workflowList"})
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Entity
@@ -28,95 +25,98 @@ import java.util.Objects;
 @SuppressWarnings("JpaAttributeTypeInspection")
 public class QueuedWorkflow extends BaseEntity implements Serializable {
 
-    // ID for database
-    @Id
-    @GenericGenerator(name = "uuid2", strategy = "uuid2")
-    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "uuid2")
-    @Column(length = 36, nullable = false, updatable = false)
-    public String id;
+  // ID for database
+  @Id
+  @GenericGenerator(name = "uuid2", strategy = "uuid2")
+  @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "uuid2")
+  @Column(length = 36, nullable = false, updatable = false)
+  public String id;
 
-    // Very barebones workflow to build loading thumbnail and overview
-    @Column(columnDefinition = "jsonb")
-    @Type(type = "json")
-    @Convert(disableConversion = true)
-    private Workflow tempRepresentation;
+  // Very barebones workflow to build loading thumbnail and overview
+  @Column(columnDefinition = "jsonb")
+  @Type(type = "json")
+  @Convert(disableConversion = true)
+  private Workflow tempRepresentation;
 
-    // List of packed workflows for packed workflows
-    // TODO: Refactor so this is not necessary
-    @Column(columnDefinition = "jsonb")
-    @Type(type = "json")
-    @Convert(disableConversion = true)
-    private List<WorkflowOverview> workflowList;
+  // List of packed workflows for packed workflows
+  // TODO: Refactor so this is not necessary
+  @Column(columnDefinition = "jsonb")
+  @Type(type = "json")
+  @Convert(disableConversion = true)
+  private List<WorkflowOverview> workflowList;
 
-    // Cwltool details
-    @Column(columnDefinition = "jsonb")
-    @Type(type = "json")
-    @Convert(disableConversion = true)
-    private CWLToolStatus cwltoolStatus = CWLToolStatus.RUNNING;
-    @Column(columnDefinition = "TEXT")
-    private String cwltoolVersion = "";
-    @Column(columnDefinition = "TEXT")
-    private String message;
+  // Cwltool details
+  @Column(columnDefinition = "jsonb")
+  @Type(type = "json")
+  @Convert(disableConversion = true)
+  private CWLToolStatus cwltoolStatus = CWLToolStatus.RUNNING;
 
-    public String getId() {
-        return id;
-    }
+  @Column(columnDefinition = "TEXT")
+  private String cwltoolVersion = "";
 
-    public Workflow getTempRepresentation() {
-        return tempRepresentation;
-    }
+  @Column(columnDefinition = "TEXT")
+  private String message;
 
-    public void setTempRepresentation(Workflow tempRepresentation) {
-        this.tempRepresentation = tempRepresentation;
-    }
+  public String getId() {
+    return id;
+  }
 
-    public CWLToolStatus getCwltoolStatus() {
-        return cwltoolStatus;
-    }
+  public Workflow getTempRepresentation() {
+    return tempRepresentation;
+  }
 
-    public void setCwltoolStatus(CWLToolStatus cwltoolStatus) {
-        this.cwltoolStatus = cwltoolStatus;
-    }
+  public void setTempRepresentation(Workflow tempRepresentation) {
+    this.tempRepresentation = tempRepresentation;
+  }
 
-    public String getCwltoolVersion() {
-        return cwltoolVersion;
-    }
+  public CWLToolStatus getCwltoolStatus() {
+    return cwltoolStatus;
+  }
 
-    public void setCwltoolVersion(String cwltoolVersion) {
-        this.cwltoolVersion = cwltoolVersion;
-    }
+  public void setCwltoolStatus(CWLToolStatus cwltoolStatus) {
+    this.cwltoolStatus = cwltoolStatus;
+  }
 
-    public String getMessage() {
-        return message;
-    }
+  public String getCwltoolVersion() {
+    return cwltoolVersion;
+  }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+  public void setCwltoolVersion(String cwltoolVersion) {
+    this.cwltoolVersion = cwltoolVersion;
+  }
 
-    public List<WorkflowOverview> getWorkflowList() {
-        return workflowList;
-    }
+  public String getMessage() {
+    return message;
+  }
 
-    public void setWorkflowList(List<WorkflowOverview> workflowList) {
-        this.workflowList = workflowList;
-    }
+  public void setMessage(String message) {
+    this.message = message;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        QueuedWorkflow that = (QueuedWorkflow) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(tempRepresentation, that.tempRepresentation) &&
-                Objects.equals(workflowList, that.workflowList) &&
-                cwltoolStatus == that.cwltoolStatus &&
-                Objects.equals(cwltoolVersion, that.cwltoolVersion) &&
-                Objects.equals(message, that.message);
-    }
+  public List<WorkflowOverview> getWorkflowList() {
+    return workflowList;
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, tempRepresentation, workflowList, cwltoolStatus, cwltoolVersion, message);
-    }
+  public void setWorkflowList(List<WorkflowOverview> workflowList) {
+    this.workflowList = workflowList;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    QueuedWorkflow that = (QueuedWorkflow) o;
+    return Objects.equals(id, that.id)
+        && Objects.equals(tempRepresentation, that.tempRepresentation)
+        && Objects.equals(workflowList, that.workflowList)
+        && cwltoolStatus == that.cwltoolStatus
+        && Objects.equals(cwltoolVersion, that.cwltoolVersion)
+        && Objects.equals(message, that.message);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        id, tempRepresentation, workflowList, cwltoolStatus, cwltoolVersion, message);
+  }
 }

@@ -1,11 +1,9 @@
 package org.commonwl.view.cwl;
 
-/**
- * Cwltool run status
- */
+/** Cwltool run status */
 public enum CWLToolStatus {
-    DOWNLOADING,
-    RUNNING,
-    ERROR,
-    SUCCESS
+  DOWNLOADING,
+  RUNNING,
+  ERROR,
+  SUCCESS
 }

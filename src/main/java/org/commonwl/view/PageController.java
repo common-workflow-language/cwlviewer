@@ -28,35 +28,38 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class PageController {
 
-    /**
-     * Main page of the application
-     * @param model The model for the home page where the workflow form is added
-     * @return The view for this page
-     */
-    @GetMapping("/")
-    public String homePage(Model model, @RequestParam(value = "url", required = false) String defaultURL) {
-        model.addAttribute("workflowForm", new WorkflowForm(defaultURL));
-        return "index";
-    }
+  /**
+   * Main page of the application
+   *
+   * @param model The model for the home page where the workflow form is added
+   * @return The view for this page
+   */
+  @GetMapping("/")
+  public String homePage(
+      Model model, @RequestParam(value = "url", required = false) String defaultURL) {
+    model.addAttribute("workflowForm", new WorkflowForm(defaultURL));
+    return "index";
+  }
 
-    /**
-     * About page
-     * @param model The model for the about page
-     * @return The view for this page
-     */
-    @GetMapping("/about")
-    public String about(Model model) {
-        return "about";
-    }
+  /**
+   * About page
+   *
+   * @param model The model for the about page
+   * @return The view for this page
+   */
+  @GetMapping("/about")
+  public String about(Model model) {
+    return "about";
+  }
 
-    /**
-     * API documentation page
-     * @param model The model for the API documentation page
-     * @return The view for this page
-     */
-    @GetMapping("/apidocs")
-    public String apiDocumentation(Model model) {
-        return "apidocs";
-    }
-
+  /**
+   * API documentation page
+   *
+   * @param model The model for the API documentation page
+   * @return The view for this page
+   */
+  @GetMapping("/apidocs")
+  public String apiDocumentation(Model model) {
+    return "apidocs";
+  }
 }

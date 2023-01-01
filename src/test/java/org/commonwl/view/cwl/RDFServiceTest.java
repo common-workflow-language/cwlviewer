@@ -19,63 +19,59 @@
 
 package org.commonwl.view.cwl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes=RDFService.class)
+@SpringBootTest(classes = RDFService.class)
 public class RDFServiceTest {
 
-    /**
-     * Create a service to test
-     */
-    @Autowired
-    private RDFService rdfService;
+  /** Create a service to test */
+  @Autowired private RDFService rdfService;
 
-    /**
-     * Test extracting step names from full URIs
-     */
-    @Test
-    public void stepNameFromURI() throws Exception {
+  /** Test extracting step names from full URIs */
+  @Test
+  public void stepNameFromURI() throws Exception {
 
-        // PACKED - with and without input
-        String baseURL = "https://rawgit.com/common-workflow-language/workflows/master/workflows/make-to-cwl/dna.cwl#main";
-        assertEquals("combine_sequences", rdfService.stepNameFromURI(baseURL,
-                baseURL + "/combine_sequences"));
-        assertEquals("combine_sequences", rdfService.stepNameFromURI(baseURL,
-                baseURL + "/combine_sequences/catout"));
+    // PACKED - with and without input
+    String baseURL =
+        "https://rawgit.com/common-workflow-language/workflows/master/workflows/make-to-cwl/dna.cwl#main";
+    assertEquals(
+        "combine_sequences", rdfService.stepNameFromURI(baseURL, baseURL + "/combine_sequences"));
+    assertEquals(
+        "combine_sequences",
+        rdfService.stepNameFromURI(baseURL, baseURL + "/combine_sequences/catout"));
 
-        // UNPACKED - with and without input
-        baseURL = "https://raw.githubusercontent.com/KnowEnG-Research/cwl-specification/master/code/workflow.cwl";
-        assertEquals("clean_p", rdfService.stepNameFromURI(baseURL,
-                baseURL + "#clean_p"));
-        assertEquals("clean_p", rdfService.stepNameFromURI(baseURL,
-                baseURL + "#clean_p/spreadsheet_format"));
+    // UNPACKED - with and without input
+    baseURL =
+        "https://raw.githubusercontent.com/KnowEnG-Research/cwl-specification/master/code/workflow.cwl";
+    assertEquals("clean_p", rdfService.stepNameFromURI(baseURL, baseURL + "#clean_p"));
+    assertEquals(
+        "clean_p", rdfService.stepNameFromURI(baseURL, baseURL + "#clean_p/spreadsheet_format"));
+  }
 
-    }
+  /** Test formatting default values */
+  @Test
+  public void formatDefault() throws Exception {
+    assertEquals("\\\"-bg\\\"", rdfService.formatDefault("-bg"));
+    assertEquals(
+        "10000", rdfService.formatDefault("10000^^http://www.w3.org/2001/XMLSchema#integer"));
+    assertEquals(
+        "true", rdfService.formatDefault("true^^http://www.w3.org/2001/XMLSchema#boolean"));
+  }
 
-    /**
-     * Test formatting default values
-     */
-    @Test
-    public void formatDefault() throws Exception {
-        assertEquals("\\\"-bg\\\"", rdfService.formatDefault("-bg"));
-        assertEquals("10000", rdfService.formatDefault("10000^^http://www.w3.org/2001/XMLSchema#integer"));
-        assertEquals("true", rdfService.formatDefault("true^^http://www.w3.org/2001/XMLSchema#boolean"));
-    }
-
-    /**
-     * Test extracting a label from name
-     */
-    @Test
-    public void labelFromName() throws Exception {
-        assertEquals("trim_method", rdfService.labelFromName("trim_method"));
-        assertEquals("outfile", rdfService.labelFromName("https://cdn.rawgit.com/common-workflow-language/workflows/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/outfile"));
-    }
-
+  /** Test extracting a label from name */
+  @Test
+  public void labelFromName() throws Exception {
+    assertEquals("trim_method", rdfService.labelFromName("trim_method"));
+    assertEquals(
+        "outfile",
+        rdfService.labelFromName(
+            "https://cdn.rawgit.com/common-workflow-language/workflows/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main/outfile"));
+  }
 }

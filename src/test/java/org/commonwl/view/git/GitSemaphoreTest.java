@@ -19,31 +19,29 @@
 
 package org.commonwl.view.git;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.Test;
+
 public class GitSemaphoreTest {
 
-    @Test
-    public void basicOperation() throws Exception {
+  @Test
+  public void basicOperation() throws Exception {
 
-        GitSemaphore sem = new GitSemaphore();
-        boolean first = sem.acquire("1");
-        boolean second = sem.acquire("1");
-        sem.acquire("2");
-        sem.release("1");
-        boolean third = sem.acquire("1");
-        sem.release("1");
-        sem.release("1");
-        boolean fourth = sem.acquire("1");
+    GitSemaphore sem = new GitSemaphore();
+    boolean first = sem.acquire("1");
+    boolean second = sem.acquire("1");
+    sem.acquire("2");
+    sem.release("1");
+    boolean third = sem.acquire("1");
+    sem.release("1");
+    sem.release("1");
+    boolean fourth = sem.acquire("1");
 
-        assertTrue(first);
-        assertFalse(second);
-        assertFalse(third);
-        assertTrue(fourth);
-
-    }
-
+    assertTrue(first);
+    assertFalse(second);
+    assertFalse(third);
+    assertTrue(fourth);
+  }
 }

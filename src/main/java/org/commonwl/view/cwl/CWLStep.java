@@ -20,70 +20,64 @@
 package org.commonwl.view.cwl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.util.Map;
 
-/**
- * Represents a step of a workflow
- */
+/** Represents a step of a workflow */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CWLStep {
 
-    private String label;
-    private String doc;
-    private Object run;
-    private CWLProcess runType;
-    private Map<String, CWLElement> sources;
+  private String label;
+  private String doc;
+  private Object run;
+  private CWLProcess runType;
+  private Map<String, CWLElement> sources;
 
-    public CWLStep() {
-    }
+  public CWLStep() {}
 
-    public CWLStep(String label, String doc, Object run,
-                   Map<String, CWLElement> sources) {
-        this.label = label;
-        this.doc = doc;
-        this.run = run;
-        this.sources = sources;
-    }
+  public CWLStep(String label, String doc, Object run, Map<String, CWLElement> sources) {
+    this.label = label;
+    this.doc = doc;
+    this.run = run;
+    this.sources = sources;
+  }
 
-    public String getLabel() {
-        return label;
-    }
+  public String getLabel() {
+    return label;
+  }
 
-    public void setLabel(String label) {
-        this.label = label;
-    }
+  public void setLabel(String label) {
+    this.label = label;
+  }
 
-    public String getDoc() {
-        return doc;
-    }
+  public String getDoc() {
+    return doc;
+  }
 
-    public void setDoc(String doc) {
-        this.doc = doc;
-    }
+  public void setDoc(String doc) {
+    this.doc = doc;
+  }
 
-    public Object getRun() {
-        return run;
-    }
+  public Object getRun() {
+    return run;
+  }
 
-    public void setRun(Object run) {
-        this.run = run;
-    }
+  public void setRun(Object run) {
+    this.run = run;
+  }
 
-    public CWLProcess getRunType() {
-        return runType;
-    }
+  public CWLProcess getRunType() {
+    return runType;
+  }
 
-    public void setRunType(CWLProcess runType) {
-        this.runType = runType;
-    }
+  public void setRunType(CWLProcess runType) {
+    this.runType = runType;
+  }
 
-    public Map<String, CWLElement> getSources() {
-        return sources;
-    }
+  public Map<String, CWLElement> getSources() {
+    return sources;
+  }
 
-    public void setSources(Map<String, CWLElement> sources) {
-        this.sources = sources;
-    }
-
+  public void setSources(Map<String, CWLElement> sources) {
+    this.sources = sources;
+  }
 }

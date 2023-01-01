@@ -21,45 +21,43 @@ package org.commonwl.view.workflow;
 
 import java.util.Objects;
 
-/**
- * Gives an overview of a workflow
- */
+/** Gives an overview of a workflow */
 public class WorkflowOverview {
 
-    private final String fileName;
-    private final String label;
-    private final String doc;
+  private final String fileName;
+  private final String label;
+  private final String doc;
 
-    public WorkflowOverview(String fileName, String label, String doc) {
-        this.fileName = fileName;
-        this.label = label;
-        this.doc = doc;
-    }
+  public WorkflowOverview(String fileName, String label, String doc) {
+    this.fileName = fileName;
+    this.label = label;
+    this.doc = doc;
+  }
 
-    public String getFileName() {
-        return fileName;
-    }
+  public String getFileName() {
+    return fileName;
+  }
 
-    public String getLabel() {
-        return label;
-    }
+  public String getLabel() {
+    return label;
+  }
 
-    public String getDoc() {
-        return doc;
-    }
+  public String getDoc() {
+    return doc;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        WorkflowOverview that = (WorkflowOverview) o;
-        return Objects.equals(fileName, that.fileName) &&
-                Objects.equals(label, that.label) &&
-                Objects.equals(doc, that.doc);
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    WorkflowOverview that = (WorkflowOverview) o;
+    return Objects.equals(fileName, that.fileName)
+        && Objects.equals(label, that.label)
+        && Objects.equals(doc, that.doc);
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(fileName, label, doc);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(fileName, label, doc);
+  }
 }

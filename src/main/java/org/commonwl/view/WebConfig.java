@@ -32,57 +32,58 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    /**
-     * Ordered list of formats as presented on Workflow page and supported for
-     * content negotiation.
-     * 
-     * @see Workflow#getPermalink(Format)
-     * @see WorkflowPermalinkController
-     *
-     */
-    public static enum Format {
-        // Browser
-        html(MediaType.TEXT_HTML),
-        // API
-        json(MediaType.APPLICATION_JSON),
-        // RDF
-        turtle("text/turtle"), jsonld("application/ld+json"), rdfxml("application/rdf+xml"),
-        // Images
-        svg("image/svg+xml"), png(MediaType.IMAGE_PNG), dot("text/vnd+graphviz"),
-        // Archives
-        zip("application/zip"), ro("application/vnd.wf4ever.robundle+zip"),
-        // raw redirects
-        yaml("text/x-yaml"), raw(MediaType.APPLICATION_OCTET_STREAM);
+  /**
+   * Ordered list of formats as presented on Workflow page and supported for content negotiation.
+   *
+   * @see Workflow#getPermalink(Format)
+   * @see WorkflowPermalinkController
+   */
+  public static enum Format {
+    // Browser
+    html(MediaType.TEXT_HTML),
+    // API
+    json(MediaType.APPLICATION_JSON),
+    // RDF
+    turtle("text/turtle"),
+    jsonld("application/ld+json"),
+    rdfxml("application/rdf+xml"),
+    // Images
+    svg("image/svg+xml"),
+    png(MediaType.IMAGE_PNG),
+    dot("text/vnd+graphviz"),
+    // Archives
+    zip("application/zip"),
+    ro("application/vnd.wf4ever.robundle+zip"),
+    // raw redirects
+    yaml("text/x-yaml"),
+    raw(MediaType.APPLICATION_OCTET_STREAM);
 
-        private final MediaType mediaType;
+    private final MediaType mediaType;
 
-        Format(MediaType mediaType) {
-            this.mediaType = mediaType;
-        }
-
-        Format(String mediaType) {
-            this.mediaType = parseMediaType(mediaType);
-        }
-
-        public MediaType mediaType() {
-            return mediaType;
-        }
+    Format(MediaType mediaType) {
+      this.mediaType = mediaType;
     }
 
-    /**
-     * Allows the use of the format query parameter to be used instead of the Accept
-     * HTTP header
-     */
-    @Override
-    public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
-        ContentNegotiationConfigurer c = configurer.favorParameter(true);
-        for (Format f : Format.values()) {
-            c = c.mediaType(f.name(), f.mediaType());
-        }
+    Format(String mediaType) {
+      this.mediaType = parseMediaType(mediaType);
     }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**").exposedHeaders("Location");  // .setMaxAge(Long.MAX_VALUE)
+    public MediaType mediaType() {
+      return mediaType;
     }
+  }
+
+  /** Allows the use of the format query parameter to be used instead of the Accept HTTP header */
+  @Override
+  public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
+    ContentNegotiationConfigurer c = configurer.favorParameter(true);
+    for (Format f : Format.values()) {
+      c = c.mediaType(f.name(), f.mediaType());
+    }
+  }
+
+  @Override
+  public void addCorsMappings(CorsRegistry registry) {
+    registry.addMapping("/**").exposedHeaders("Location"); // .setMaxAge(Long.MAX_VALUE)
+  }
 }

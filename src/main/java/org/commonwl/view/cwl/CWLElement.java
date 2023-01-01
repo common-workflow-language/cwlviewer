@@ -20,74 +20,71 @@
 package org.commonwl.view.cwl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Represents the input/output of a workflow/tool
- */
+/** Represents the input/output of a workflow/tool */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CWLElement {
 
-    private String label;
-    private String doc;
-    private String type;
-    private String format;
-    private List<String> sourceID;
-    private String defaultVal;
+  private String label;
+  private String doc;
+  private String type;
+  private String format;
+  private List<String> sourceID;
+  private String defaultVal;
 
-    public CWLElement() {
-        this.sourceID = new ArrayList<>();
-    }
+  public CWLElement() {
+    this.sourceID = new ArrayList<>();
+  }
 
-    public String getLabel() {
-        return label;
-    }
+  public String getLabel() {
+    return label;
+  }
 
-    public void setLabel(String label) {
-        this.label = label;
-    }
+  public void setLabel(String label) {
+    this.label = label;
+  }
 
-    public String getDoc() {
-        return doc;
-    }
+  public String getDoc() {
+    return doc;
+  }
 
-    public void setDoc(String doc) {
-        this.doc = doc;
-    }
+  public void setDoc(String doc) {
+    this.doc = doc;
+  }
 
-    public String getType() {
-        return type;
-    }
+  public String getType() {
+    return type;
+  }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+  public void setType(String type) {
+    this.type = type;
+  }
 
-    public String getFormat() {
-        return format;
-    }
+  public String getFormat() {
+    return format;
+  }
 
-    public void setFormat(String format) {
-        this.format = format;
-    }
+  public void setFormat(String format) {
+    this.format = format;
+  }
 
-    public List<String> getSourceIDs() {
-        return sourceID;
-    }
+  public List<String> getSourceIDs() {
+    return sourceID;
+  }
 
-    public void addSourceID(String sourceID) {
-        if (sourceID != null) {
-            this.sourceID.add(sourceID);
-        }
+  public void addSourceID(String sourceID) {
+    if (sourceID != null) {
+      this.sourceID.add(sourceID);
     }
+  }
 
-    public String getDefaultVal() {
-        return defaultVal;
-    }
+  public String getDefaultVal() {
+    return defaultVal;
+  }
 
-    public void setDefaultVal(String defaultVal) {
-        this.defaultVal = defaultVal;
-    }
+  public void setDefaultVal(String defaultVal) {
+    this.defaultVal = defaultVal;
+  }
 }

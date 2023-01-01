@@ -20,82 +20,85 @@
 package org.commonwl.view.workflow;
 
 /**
- * Represents the submission form on the main page to create a new workflow
- * Contains the URL and optionally branch and path (for Git repository)
+ * Represents the submission form on the main page to create a new workflow Contains the URL and
+ * optionally branch and path (for Git repository)
  */
 public class WorkflowForm {
 
-    private String url;
-    private String branch;
-    private String path;
-    private String packedId;
+  private String url;
+  private String branch;
+  private String path;
+  private String packedId;
 
-    public WorkflowForm() {}
+  public WorkflowForm() {}
 
-    public WorkflowForm(String url) {
-        setUrl(url);
+  public WorkflowForm(String url) {
+    setUrl(url);
+  }
+
+  public WorkflowForm(String url, String branch, String path) {
+    setUrl(url);
+    this.branch = branch;
+    this.path = path;
+  }
+
+  public WorkflowForm(String url, String branch, String path, String packedId) {
+    setUrl(url);
+    this.branch = branch;
+    this.path = path;
+    this.packedId = packedId;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  public void setUrl(String url) {
+    if (url != null) {
+      this.url = trimTrailingSlashes(url);
     }
+  }
 
-    public WorkflowForm(String url, String branch, String path) {
-        setUrl(url);
-        this.branch = branch;
-        this.path = path;
-    }
+  public String getBranch() {
+    return branch;
+  }
 
-    public WorkflowForm(String url, String branch, String path, String packedId) {
-        setUrl(url);
-        this.branch = branch;
-        this.path = path;
-        this.packedId = packedId;
-    }
+  public void setBranch(String branch) {
+    this.branch = branch;
+  }
 
-    public String getUrl() {
-        return url;
-    }
+  public String getPath() {
+    return path;
+  }
 
-    public void setUrl(String url) {
-        if (url != null) {
-            this.url = trimTrailingSlashes(url);
-        }
-    }
+  public void setPath(String path) {
+    this.path = path;
+  }
 
-    public String getBranch() {
-        return branch;
-    }
+  public String getPackedId() {
+    return packedId;
+  }
 
-    public void setBranch(String branch) {
-        this.branch = branch;
-    }
+  public void setPackedId(String packedId) {
+    this.packedId = packedId;
+  }
 
-    public String getPath() {
-        return path;
-    }
+  /**
+   * Cuts any trailing slashes off a string
+   *
+   * @param url The string to cut the slashes off
+   * @return The same string without trailing slashes
+   */
+  private String trimTrailingSlashes(String url) {
+    return url.replaceAll("\\/+$", "");
+  }
 
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    public String getPackedId() {
-        return packedId;
-    }
-
-    public void setPackedId(String packedId) {
-        this.packedId = packedId;
-    }
-
-    /**
-     * Cuts any trailing slashes off a string
-     * @param url The string to cut the slashes off
-     * @return The same string without trailing slashes
-     */
-    private String trimTrailingSlashes(String url) {
-        return url.replaceAll("\\/+$", "");
-    }
-
-    @Override
-    public String toString() {
-        return "WorkflowForm [" + (url != null ? "url=" + url + ", " : "")
-                 + (branch != null ? "branch=" + branch + ", " : "") + (path != null ? "path=" + path : "") + "]";
-    }
-
+  @Override
+  public String toString() {
+    return "WorkflowForm ["
+        + (url != null ? "url=" + url + ", " : "")
+        + (branch != null ? "branch=" + branch + ", " : "")
+        + (path != null ? "path=" + path : "")
+        + "]";
+  }
 }

@@ -19,70 +19,69 @@
 
 package org.commonwl.view.researchobject;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.jupiter.api.Test;
 
 public class HashableAgentTest {
 
-    /**
-     * If the ORCID of two agents is the same, they are the same person
-     * regardless of other information
-     */
-    @Test
-    public void orcidsMakeAgentsEqual() throws Exception {
+  /**
+   * If the ORCID of two agents is the same, they are the same person regardless of other
+   * information
+   */
+  @Test
+  public void orcidsMakeAgentsEqual() throws Exception {
 
-        HashableAgent firstOrcid = new HashableAgent("Mark Robindsason",
-                new URI("http://orcid.org/0000-0002-8184-7507"),
-                new URI("mark@example.org"));
+    HashableAgent firstOrcid =
+        new HashableAgent(
+            "Mark Robindsason",
+            new URI("http://orcid.org/0000-0002-8184-7507"),
+            new URI("mark@example.org"));
 
-        HashableAgent secondOrcid = new HashableAgent("Mark Robinson",
-                new URI("http://orcid.org/0000-0002-8184-7507"),
-                new URI("mark@example.com"));
+    HashableAgent secondOrcid =
+        new HashableAgent(
+            "Mark Robinson",
+            new URI("http://orcid.org/0000-0002-8184-7507"),
+            new URI("mark@example.com"));
 
-        Set<HashableAgent> testSet = new HashSet<>();
-        testSet.add(firstOrcid);
-        testSet.remove(secondOrcid);
-        testSet.add(secondOrcid);
+    Set<HashableAgent> testSet = new HashSet<>();
+    testSet.add(firstOrcid);
+    testSet.remove(secondOrcid);
+    testSet.add(secondOrcid);
 
-        assertEquals(1, testSet.size());
-        HashableAgent fromSet = testSet.iterator().next();
-        assertEquals("Mark Robinson", fromSet.getName());
-        assertEquals(new URI("mark@example.com"), fromSet.getUri());
-        assertEquals(new URI("http://orcid.org/0000-0002-8184-7507"), fromSet.getOrcid());
+    assertEquals(1, testSet.size());
+    HashableAgent fromSet = testSet.iterator().next();
+    assertEquals("Mark Robinson", fromSet.getName());
+    assertEquals(new URI("mark@example.com"), fromSet.getUri());
+    assertEquals(new URI("http://orcid.org/0000-0002-8184-7507"), fromSet.getOrcid());
+  }
 
-    }
+  /**
+   * When no ORCID is present but emails are the same, the agents are the same person regardless of
+   * name
+   */
+  @Test
+  public void noOrcidEmailSameMakesAgentsEqual() throws Exception {
 
-    /**
-     * When no ORCID is present but emails are the same, the agents are
-     * the same person regardless of name
-     */
-    @Test
-    public void noOrcidEmailSameMakesAgentsEqual() throws Exception {
+    HashableAgent firstEmail =
+        new HashableAgent("Mark Robindsason", null, new URI("mark@example.com"));
 
-        HashableAgent firstEmail = new HashableAgent("Mark Robindsason",
-                null,
-                new URI("mark@example.com"));
+    HashableAgent secondEmail =
+        new HashableAgent("Mark Robinson", null, new URI("mark@example.com"));
 
-        HashableAgent secondEmail = new HashableAgent("Mark Robinson",
-                null,
-                new URI("mark@example.com"));
+    Set<HashableAgent> testSet = new HashSet<>();
+    testSet.add(firstEmail);
+    testSet.remove(secondEmail);
+    testSet.add(secondEmail);
 
-        Set<HashableAgent> testSet = new HashSet<>();
-        testSet.add(firstEmail);
-        testSet.remove(secondEmail);
-        testSet.add(secondEmail);
-
-        assertEquals(1, testSet.size());
-        HashableAgent fromSet = testSet.iterator().next();
-        assertEquals("Mark Robinson", fromSet.getName());
-        assertEquals(new URI("mark@example.com"), fromSet.getUri());
-        assertNull(fromSet.getOrcid());
-
-    }
+    assertEquals(1, testSet.size());
+    HashableAgent fromSet = testSet.iterator().next();
+    assertEquals("Mark Robinson", fromSet.getName());
+    assertEquals(new URI("mark@example.com"), fromSet.getUri());
+    assertNull(fromSet.getOrcid());
+  }
 }
