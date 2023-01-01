@@ -43,6 +43,7 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.commonwl.view.git.GitConfig;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowOverview;
@@ -52,7 +53,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.springframework.test.context.ContextConfiguration;
 
+@ContextConfiguration(classes = {GitConfig.class})
 public class CWLServiceTest {
 
   /** RDFService for testing */
@@ -88,7 +91,12 @@ public class CWLServiceTest {
 
   @Test
   public void parsePackedWorkflowNativePath() throws Exception {
-    CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 5242880);
+    CWLService cwlService =
+        new CWLService(
+            rdfService,
+            Mockito.mock(CWLTool.class),
+            Mockito.mock(GitConfig.class).licenseVocab(),
+            5242880);
     Workflow dna =
         cwlService.parseWorkflowNative(
             Paths.get("src/test/resources/cwl/make_to_cwl/dna.cwl"), "main");
@@ -101,7 +109,12 @@ public class CWLServiceTest {
 
   @Test
   public void parsePackedWorkflowNativeStream() throws Exception {
-    CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 5242880);
+    CWLService cwlService =
+        new CWLService(
+            rdfService,
+            Mockito.mock(CWLTool.class),
+            Mockito.mock(GitConfig.class).licenseVocab(),
+            5242880);
     Workflow dna =
         cwlService.parseWorkflowNative(
             getClass().getResourceAsStream("/cwl/make_to_cwl/dna.cwl"), "main", "dna.cwl");
@@ -115,7 +128,12 @@ public class CWLServiceTest {
   /** Test native loading parsing of a the LobSTR workflow CWL version draft-3 */
   @Test
   public void parseLobSTRDraft3WorkflowNative() throws Exception {
-    CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 5242880);
+    CWLService cwlService =
+        new CWLService(
+            rdfService,
+            Mockito.mock(CWLTool.class),
+            Mockito.mock(GitConfig.class).licenseVocab(),
+            5242880);
     Workflow lobSTRDraft3 =
         cwlService.parseWorkflowNative(
             Paths.get("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
@@ -125,7 +143,9 @@ public class CWLServiceTest {
   /** Test native loading parsing of a the LobSTR workflow CWL version 1.0 */
   @Test
   public void parseLobSTRv1WorkflowNative() throws Exception {
-    CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+    CWLService cwlService =
+        new CWLService(
+            rdfService, new CWLTool(), Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
     Workflow lobSTRv1 =
         cwlService.parseWorkflowNative(
             Paths.get("src/test/resources/cwl/lobstr-v1/lobSTR-workflow.cwl"), null);
@@ -135,7 +155,9 @@ public class CWLServiceTest {
   /** Test native loading parsing of optional inline types */
   @Test
   public void parseWorkflowInlineOptionalTypesNative() throws Exception {
-    CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+    CWLService cwlService =
+        new CWLService(
+            rdfService, new CWLTool(), Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
     //        URI uri = new
     // URI("https://github.com/emo-bon/pipeline-v5/raw/develop/workflows/gos_wf.cwl");
     //        InputStream is = uri.toURL().openStream();
@@ -154,7 +176,9 @@ public class CWLServiceTest {
   /** Test native loading parsing of MultipleInputFeatureRequirement using workflows */
   @Test
   public void parseWorkflowMultiInboundLins() throws Exception {
-    CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+    CWLService cwlService =
+        new CWLService(
+            rdfService, new CWLTool(), Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
     Workflow wkflow =
         cwlService.parseWorkflowNative(
             Paths.get("src/test/resources/cwl/complex-workflow/complex-workflow-1.cwl"), null);
@@ -169,7 +193,9 @@ public class CWLServiceTest {
   /** Test native loading parsing of nested array types */
   @Test
   public void parseWorkflowNestedArrayTypes() throws Exception {
-    CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+    CWLService cwlService =
+        new CWLService(
+            rdfService, new CWLTool(), Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
     Workflow wkflow =
         cwlService.parseWorkflowNative(Paths.get("src/test/resources/cwl/nested_array.cwl"), null);
     assertEquals(wkflow.getInputs().get("overlap_files").getType(), "File[][]");
@@ -181,7 +207,9 @@ public class CWLServiceTest {
   /** Test native loading parsing of inputs with null default values */
   @Test
   public void parseWorkflowDefaultNullTypes() throws Exception {
-    CWLService cwlService = new CWLService(rdfService, new CWLTool(), 5242880);
+    CWLService cwlService =
+        new CWLService(
+            rdfService, new CWLTool(), Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
     Workflow wkflow =
         cwlService.parseWorkflowNative(Paths.get("src/test/resources/cwl/null_default.cwl"), null);
     assertEquals(wkflow.getInputs().get("overlap_files").getDefaultVal(), null);
@@ -199,7 +227,9 @@ public class CWLServiceTest {
     when(mockCwlTool.getRDF(any(String.class))).thenReturn(readFileToString(packedWorkflowRdf));
 
     // CWLService to test
-    CWLService cwlService = new CWLService(rdfService, mockCwlTool, 5242880);
+    CWLService cwlService =
+        new CWLService(
+            rdfService, mockCwlTool, Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
 
     GitDetails gitInfo =
         new GitDetails(
@@ -236,7 +266,12 @@ public class CWLServiceTest {
         Assertions.assertThrows(
             IOException.class,
             () -> {
-              CWLService cwlService = new CWLService(rdfService, Mockito.mock(CWLTool.class), 0);
+              CWLService cwlService =
+                  new CWLService(
+                      rdfService,
+                      Mockito.mock(CWLTool.class),
+                      Mockito.mock(GitConfig.class).licenseVocab(),
+                      0);
               cwlService.parseWorkflowNative(
                   Paths.get("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
             });
@@ -251,7 +286,11 @@ public class CWLServiceTest {
 
     // Test cwl service
     CWLService cwlService =
-        new CWLService(Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 5242880);
+        new CWLService(
+            Mockito.mock(RDFService.class),
+            Mockito.mock(CWLTool.class),
+            Mockito.mock(GitConfig.class).licenseVocab(),
+            5242880);
 
     // Run workflow overview
     File helloWorkflow = new File("src/test/resources/cwl/hello/hello.cwl");
@@ -270,10 +309,15 @@ public class CWLServiceTest {
 
     // Test cwl service
     CWLService cwlService =
-        new CWLService(Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 5242880);
+        new CWLService(
+            Mockito.mock(RDFService.class),
+            Mockito.mock(CWLTool.class),
+            Mockito.mock(GitConfig.class).licenseVocab(),
+            5242880);
 
     // Run workflow overview
     File helloWorkflow = new File("src/test/resources/cwl/hello/hello_doclist.cwl");
+    System.out.println(cwlService.normaliseLicenseLink("http://asdasdasda"));
     WorkflowOverview hello = cwlService.getWorkflowOverview(helloWorkflow);
     assertNotNull(hello);
     assertEquals("Puts a message into a file using echo. Even more doc", hello.getDoc());
@@ -291,7 +335,11 @@ public class CWLServiceTest {
             IOException.class,
             () -> {
               CWLService cwlService =
-                  new CWLService(Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 0);
+                  new CWLService(
+                      Mockito.mock(RDFService.class),
+                      Mockito.mock(CWLTool.class),
+                      Mockito.mock(GitConfig.class).licenseVocab(),
+                      0);
               cwlService.getWorkflowOverview(helloWorkflow);
             });
     assertEquals(
@@ -308,7 +356,11 @@ public class CWLServiceTest {
   @Test
   public void workflowOverviewsFromPackedFile() throws Exception {
     CWLService cwlService =
-        new CWLService(Mockito.mock(RDFService.class), Mockito.mock(CWLTool.class), 5242880);
+        new CWLService(
+            Mockito.mock(RDFService.class),
+            Mockito.mock(CWLTool.class),
+            Mockito.mock(GitConfig.class).licenseVocab(),
+            5242880);
     File packedFile = new File("src/test/resources/cwl/make_to_cwl/dna.cwl");
     assertTrue(cwlService.isPacked(packedFile));
     List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(packedFile);

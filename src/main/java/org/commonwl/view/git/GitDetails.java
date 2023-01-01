@@ -22,16 +22,15 @@ package org.commonwl.view.git;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.commonwl.view.util.LicenseUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Objects;
+import org.commonwl.view.util.LicenseUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Represents all the parameters necessary to access a file/directory with Git */
 @JsonIgnoreProperties(
@@ -323,7 +322,7 @@ public class GitDetails implements Serializable {
         }
         String key = jsonLicenses.withArray("licenses").get(0).get("key").asText();
         if (!"other".equals(key)) {
-          return LicenseUtils.SPDX_PREFIX
+          return LicenseUtils.SPDX_LICENSES_PREFIX
               + jsonLicenses.withArray("licenses").get(0).get("spdx_id").asText();
         } else {
           return licenseLink;

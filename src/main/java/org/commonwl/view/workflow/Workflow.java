@@ -22,6 +22,7 @@ package org.commonwl.view.workflow;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.tbouron.SpdxLicense;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
@@ -34,8 +35,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
-
-import com.github.tbouron.SpdxLicense;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.WebConfig.Format;
 import org.commonwl.view.cwl.CWLElement;
@@ -360,8 +359,8 @@ public class Workflow extends BaseEntity implements Serializable {
     if (licenseLink == null) {
       return null;
     }
-    if (licenseLink.startsWith(LicenseUtils.SPDX_PREFIX)) {
-      return SpdxLicense.fromId(licenseLink.replace(LicenseUtils.SPDX_PREFIX, "")).name;
+    if (licenseLink.startsWith(LicenseUtils.SPDX_LICENSES_PREFIX)) {
+      return SpdxLicense.fromId(licenseLink.replace(LicenseUtils.SPDX_LICENSES_PREFIX, "")).name;
     }
     return licenseLink;
   }

@@ -19,7 +19,22 @@
 
 package org.commonwl.view.cwl;
 
-import com.github.tbouron.SpdxLicense;
+import static org.apache.commons.io.FileUtils.readFileToString;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -36,7 +51,6 @@ import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitLicenseException;
 import org.commonwl.view.graphviz.ModelDotWriter;
 import org.commonwl.view.graphviz.RDFDotWriter;
-import org.commonwl.view.util.LicenseUtils;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowNotFoundException;
 import org.commonwl.view.workflow.WorkflowOverview;
@@ -48,23 +62,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import static org.apache.commons.io.FileUtils.readFileToString;
-
 /** Provides CWL parsing for workflows to gather an overview for display and visualisation */
 @Service
 public class CWLService {
@@ -75,6 +72,7 @@ public class CWLService {
   // Autowired properties/services
   private final RDFService rdfService;
   private final CWLTool cwlTool;
+  private final Map<String, String> licenseVocab;
   private final int singleFileSizeLimit;
 
   // CWL specific strings
@@ -112,9 +110,11 @@ public class CWLService {
   public CWLService(
       RDFService rdfService,
       CWLTool cwlTool,
+      Map<String, String> licenseVocab,
       @Value("${singleFileSizeLimit}") int singleFileSizeLimit) {
     this.rdfService = rdfService;
     this.cwlTool = cwlTool;
+    this.licenseVocab = licenseVocab;
     this.singleFileSizeLimit = singleFileSizeLimit;
   }
 
@@ -452,7 +452,7 @@ public class CWLService {
     }
     // Try to determine license
     ResultSet licenseResult = rdfService.getLicense(url);
-    String licenseLink = null;
+    String licenseLink;
     if (licenseResult.hasNext()) {
       licenseLink = normaliseLicenseLink(licenseResult.next().get("license").toString());
     } else {
@@ -1061,25 +1061,11 @@ public class CWLService {
     return null;
   }
 
-  private String normaliseLicenseLink(String licenseLink) {
+  public String normaliseLicenseLink(String licenseLink) {
     if (licenseLink == null) {
       return null;
     }
-    if (licenseLink.startsWith(LicenseUtils.SPDX_PREFIX)) {
-      return licenseLink;
-    }
     String httpsLicenseLink = StringUtils.stripEnd(licenseLink.replace("http://", "https://"), "/");
-    return switch (httpsLicenseLink) {
-      case "https://www.apache.org/licenses/LICENSE-2.0",
-          "https://opensource.org/licenses/Apache-2.0" -> LicenseUtils.SPDX_PREFIX
-          + SpdxLicense.APACHE_2_0.id;
-      case "https://mit-license.org", "https://opensource.org/licenses/MIT" -> LicenseUtils
-              .SPDX_PREFIX
-          + SpdxLicense.MIT;
-      case "https://www.gnu.org/licenses/agpl.txt",
-          "https://www.opensource.org/licenses/AGPL-3.0" -> LicenseUtils.SPDX_PREFIX
-          + SpdxLicense.AGPL_3_0;
-      default -> licenseLink;
-    };
+    return licenseVocab.getOrDefault(httpsLicenseLink, licenseLink);
   }
 }
