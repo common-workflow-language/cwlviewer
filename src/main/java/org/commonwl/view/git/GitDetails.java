@@ -20,16 +20,26 @@
 package org.commonwl.view.git;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Represents all the parameters necessary to access a file/directory with Git */
 @JsonIgnoreProperties(
     value = {"internalUrl"},
     ignoreUnknown = true)
 public class GitDetails implements Serializable {
+
+  private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  private static final String SPDX_PREFIX = "https://spdx.org/licenses/";
 
   private String repoUrl;
   private String branch;
@@ -275,5 +285,54 @@ public class GitDetails implements Serializable {
   public String toSummary() {
     return String.format(
         "repoUrl: %s branch: %s path: %s packedId: %s", repoUrl, branch, path, packedId);
+  }
+
+  /**
+   * Retrieves license details from the repo, if present.
+   *
+   * @param workTree the path to the locally cloned repo
+   * @return The license URI
+   */
+  public String getLicense(Path workTree) throws GitLicenseException {
+    try {
+      String[] command = {"licensee", "detect", "--json", workTree.toString()};
+      if (logger.isTraceEnabled()) {
+        logger.trace("Calling " + String.join(" ", command));
+      }
+      Process process = Runtime.getRuntime().exec(command, null);
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode jsonLicenses = mapper.readTree(process.getInputStream());
+      if (logger.isTraceEnabled()) {
+        logger.trace(
+            "Licensee retrieved the following licenses:\n" + jsonLicenses.toPrettyString());
+      }
+      int size = jsonLicenses.withArray("licenses").size();
+      if (size > 0) {
+        String licenseCandidate =
+            jsonLicenses.withArray("matched_files").get(0).get("filename").asText();
+        String licenseLink = getRawUrl(null, licenseCandidate);
+        if (logger.isWarnEnabled() && size > 1) {
+          logger.warn(
+              "There are "
+                  + size
+                  + " identified license files in the "
+                  + repoUrl
+                  + " repository. "
+                  + "Taking the first one: "
+                  + licenseLink);
+        }
+        String key = jsonLicenses.withArray("licenses").get(0).get("key").asText();
+        if (!"other".equals(key)) {
+          return SPDX_PREFIX + jsonLicenses.withArray("licenses").get(0).get("spdx_id").asText();
+        } else {
+          return licenseLink;
+        }
+      } else {
+        return null;
+      }
+    } catch (IOException e) {
+      throw new GitLicenseException(
+          "While attempting to detect license for " + workTree + ": " + e.getMessage(), e);
+    }
   }
 }

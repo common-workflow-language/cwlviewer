@@ -81,6 +81,9 @@ which allows them to be displayed in browsers as static prototypes.
 PostgreSQL is used to store information about `Workflow` and `QueuedWorkflow` 
 objects using [Spring Data JPA](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/).
 
+The [Licensee](https://github.com/licensee/licensee) Ruby Gem is used to automatically infer license information from
+Git repositories.
+
 The application also uses a triple store to keep the RDF representing 
 workflows (gathered from [cwltool](https://github.com/common-workflow-language/cwltool)'s 
 `--print-rdf` functionality).

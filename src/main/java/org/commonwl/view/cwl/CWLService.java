@@ -47,6 +47,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RiotException;
 import org.commonwl.view.docker.DockerService;
 import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitLicenseException;
 import org.commonwl.view.graphviz.ModelDotWriter;
 import org.commonwl.view.graphviz.RDFDotWriter;
 import org.commonwl.view.workflow.Workflow;
@@ -270,7 +271,7 @@ public class CWLService {
    * @return The constructed workflow object
    */
   public Workflow parseWorkflowWithCwltool(Workflow basicModel, Path workflowFile, Path workTree)
-      throws CWLValidationException {
+      throws CWLValidationException, GitLicenseException {
     GitDetails gitDetails = basicModel.getRetrievedFrom();
     String latestCommit = basicModel.getLastCommit();
     String packedWorkflowID = gitDetails.getPackedId();
@@ -452,15 +453,7 @@ public class CWLService {
       licenseLink = licenseResult.next().get("license").toString();
     } else {
       // Check for "LICENSE"-like files in root of git repo
-      for (String licenseCandidate : new String[] {"LICENSE", "LICENSE.txt", "LICENSE.md"}) {
-        // FIXME: This might wrongly match lower-case "license.txt" in case-insensitive
-        // file systems
-        // but the URL would not work
-        if (Files.isRegularFile(workTree.resolve(licenseCandidate))) {
-          // Link to it by raw URL
-          licenseLink = basicModel.getRetrievedFrom().getRawUrl(null, licenseCandidate);
-        }
-      }
+      licenseLink = basicModel.getRetrievedFrom().getLicense(workTree);
     }
 
     // Docker link

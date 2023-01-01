@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.util.Date;
 import org.apache.jena.query.QueryException;
 import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitLicenseException;
 import org.commonwl.view.git.GitSemaphore;
 import org.commonwl.view.git.GitService;
 import org.commonwl.view.researchobject.ROBundleFactory;
@@ -111,7 +112,7 @@ public class CWLToolRunner {
       queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
       queuedWorkflow.setMessage("An error occurred when executing a query on the SPARQL store");
       FileUtils.deleteGitRepository(repo);
-    } catch (CWLValidationException ex) {
+    } catch (CWLValidationException | GitLicenseException ex) {
       String message = ex.getMessage();
       logger.error(
           "Workflow " + queuedWorkflow.getId() + " from " + gitInfo.toSummary() + " : " + message,

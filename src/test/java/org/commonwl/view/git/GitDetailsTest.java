@@ -21,8 +21,13 @@ package org.commonwl.view.git;
 
 import static org.commonwl.view.git.GitDetails.normaliseUrl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.when;
 
+import java.io.File;
+import org.eclipse.jgit.lib.Repository;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 public class GitDetailsTest {
 
@@ -140,5 +145,29 @@ public class GitDetailsTest {
         "github.com/test/url/here.git", normaliseUrl("git://github.com/test/url/here.git"));
     assertEquals("github.com/test/url/here", normaliseUrl("http://www.github.com/test/url/here"));
     assertEquals("github.com/test/url/here", normaliseUrl("http://github.com/test/url/here"));
+  }
+
+  /** Retrieves license details from the repo, if present. */
+  @Test
+  public void getLicense() throws Exception {
+    Repository mockRepo = Mockito.mock(Repository.class);
+
+    when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/apache/"));
+    assertEquals(
+        "https://spdx.org/licenses/Apache-2.0",
+        GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+
+    when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/multiple/"));
+    assertEquals(
+        "https://spdx.org/licenses/Apache-2.0",
+        GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+
+    when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/other/"));
+    assertEquals(
+        "https://could.com/be/anything/src/test/resources/cwl/licenses/other/LICENSE",
+        GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+
+    when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/other/"));
+    assertNull(GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
   }
 }
