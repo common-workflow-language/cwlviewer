@@ -115,13 +115,18 @@ by default on `localhost:3030`
 
 #### Ruby and Licensee
 
-To retrieve license information, CWL Viewe uses the [Licensee](https://github.com/licensee/licensee) Ruby Gem. To install it,
+To retrieve license information, CWL Viewer uses the [Licensee](https://github.com/licensee/licensee) Ruby Gem. To install it,
 [configure Ruby](https://www.ruby-lang.org/en/documentation/installation/) on your environment and then run
 
 ```bash
 gem install licensee
 ```
 
+You may use a dependency from your operating system package manager if you
+prefer too, e.g. `ruby-licensee` for Ubuntu LTS 22.04.1.
+
+Before running Maven, try running `licensee` in the command-line to verify
+it was installed successfully.
 
 ## Compiling and Running
 
