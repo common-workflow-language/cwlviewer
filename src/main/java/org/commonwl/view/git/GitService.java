@@ -35,6 +35,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
+import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -81,8 +82,12 @@ public class GitService {
       // Check if folder already exists
       Path repoDir = gitStorage.resolve(baseName);
       if (Files.isReadable(repoDir) && Files.isDirectory(repoDir)) {
-        repo = Git.open(repoDir.toFile());
-        repo.fetch().call();
+        try {
+          repo = Git.open(repoDir.toFile());
+          repo.fetch().call();
+        } catch (RepositoryNotFoundException ex) {
+          repo = cloneRepo(gitDetails.getRepoUrl(), repoDir.toFile());
+        }
       } else {
         // Create a folder and clone repository into it
         Files.createDirectory(repoDir);
