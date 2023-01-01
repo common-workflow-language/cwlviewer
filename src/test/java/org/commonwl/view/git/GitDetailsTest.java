@@ -164,10 +164,10 @@ public class GitDetailsTest {
 
     when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/other/"));
     assertEquals(
-        "https://could.com/be/anything/src/test/resources/cwl/licenses/other/LICENSE",
+        "https://could.com/be/anything.git",
         GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
 
-    when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/other/"));
+    when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/none/"));
     assertNull(GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
   }
 }
