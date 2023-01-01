@@ -24,4 +24,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 /** Exception thrown when a workflow ID does not exist */
 @ResponseStatus(value = HttpStatus.NOT_FOUND)
-public class WorkflowNotFoundException extends RuntimeException {}
+public class WorkflowNotFoundException extends RuntimeException {
+
+  public WorkflowNotFoundException(String message) {
+    super(message);
+  }
+
+  public WorkflowNotFoundException() {
+    super();
+  }
+}

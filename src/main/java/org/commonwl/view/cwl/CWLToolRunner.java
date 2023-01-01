@@ -33,6 +33,8 @@ import org.commonwl.view.workflow.QueuedWorkflowRepository;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,22 +107,66 @@ public class CWLToolRunner {
       queuedWorkflow.setCwltoolStatus(CWLToolStatus.SUCCESS);
 
     } catch (QueryException ex) {
-      logger.error("Jena query exception ", ex);
+      logger.error("Jena query exception for workflow " + queuedWorkflow.getId(), ex);
       queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
       queuedWorkflow.setMessage("An error occurred when executing a query on the SPARQL store");
       FileUtils.deleteGitRepository(repo);
     } catch (CWLValidationException ex) {
-      logger.error(ex.getMessage(), ex);
+      String message = ex.getMessage();
+      logger.error(
+          "Workflow " + queuedWorkflow.getId() + " from " + gitInfo.toSummary() + " : " + message,
+          ex);
       queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
-      queuedWorkflow.setMessage(ex.getMessage());
+      queuedWorkflow.setMessage(message);
+      FileUtils.deleteGitRepository(repo);
+    } catch (TransportException ex) {
+      String message = ex.getMessage();
+      logger.error(
+          "Workflow retrieval error while processing "
+              + queuedWorkflow.getId()
+              + " from "
+              + gitInfo.toSummary()
+              + " : "
+              + message,
+          ex);
+      queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
+      if (message.contains(
+          "Authentication is required but no CredentialsProvider has been registered")) {
+        queuedWorkflow.setMessage(
+            "Unable to retrieve the Git repository: it may be private, misnamed, or removed. "
+                + message);
+      } else {
+        queuedWorkflow.setMessage(message);
+      }
+      FileUtils.deleteGitRepository(repo);
+    } catch (MissingObjectException ex) {
+      String message = ex.getMessage();
+      logger.error(
+          "Workflow retrieval error while processing "
+              + queuedWorkflow.getId()
+              + " from "
+              + gitInfo.toSummary()
+              + " : "
+              + message,
+          ex);
+      queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
+      queuedWorkflow.setMessage("Unable to retrieve a needed Git object: " + message);
       FileUtils.deleteGitRepository(repo);
     } catch (Exception ex) {
-      logger.error("Unexpected error", ex);
+      logger.error(
+          "Unexpected error processing workflow "
+              + queuedWorkflow.getId()
+              + " from "
+              + gitInfo.toSummary()
+              + " : "
+              + ex.getMessage(),
+          ex);
       queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
       queuedWorkflow.setMessage(
           "Whoops! Cwltool ran successfully, but an unexpected "
               + "error occurred in CWLViewer!\n"
-              + "Help us by reporting it on Gitter or a Github issue\n");
+              + ex.getMessage()
+              + "\nHelp us by reporting it at https://github.com/common-workflow-language/cwlviewer/issues/new/choose\n");
       FileUtils.deleteGitRepository(repo);
     } finally {
       gitSemaphore.release(repoUrl);
