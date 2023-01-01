@@ -4,7 +4,7 @@
 ## v1.4.6 [Unreleased]
 
 User visible changes
-- Should be none
+- Better identify repository licenses through the Licensee Ruby Gem
 
 Operations changes:
 - Unused RO Bundles and Git repositories are now deleted in case of errors,
