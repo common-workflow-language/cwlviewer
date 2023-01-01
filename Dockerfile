@@ -1,3 +1,15 @@
+FROM maven:3-eclipse-temurin-17-alpine AS build-licensee
+
+RUN apk add --update \
+  alpine-sdk \
+  cmake \
+  heimdal-dev \
+  ruby-dev \
+  && rm -rf /var/cache/apk/*
+
+RUN gem install licensee
+
+
 FROM maven:3-eclipse-temurin-17-alpine
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
@@ -27,6 +39,8 @@ RUN apk add --update \
   libxml2-dev \
   libxml2-utils \
   libxslt-dev \
+  ruby \
+  heimdal \
   && rm -rf /var/cache/apk/*
 
 #wheel needed by ruamel.yaml for some reason
@@ -39,6 +53,9 @@ RUN mkdir /usr/share/maven/ref/repository
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
+
+COPY --from=build-licensee /usr/lib/ruby/gems/   /usr/lib/ruby/gems/
+COPY --from=build-licensee /usr/bin/licensee    /usr/bin/
 
 # Top-level files (ignoring .git etc)
 ADD pom.xml LICENSE.md NOTICE.md README.md /usr/src/app/

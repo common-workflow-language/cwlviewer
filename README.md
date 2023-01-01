@@ -113,6 +113,16 @@ system properties like `-Dspring.datasource.url=jdbc:postgresql://localhost:5432
 You will also need to have a SPARQL server such as [Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) running,
 by default on `localhost:3030`
 
+#### Ruby and Licensee
+
+To retrieve license information, CWL Viewe uses the [Licensee](https://github.com/licensee/licensee) Ruby Gem. To install it,
+[configure Ruby](https://www.ruby-lang.org/en/documentation/installation/) on your environment and then run
+
+```bash
+gem install licensee
+```
+
+
 ## Compiling and Running
 
 To compile you will need [Java 17](https://www.oracle.com/java/technologies/downloads/) or a compatible distribution
