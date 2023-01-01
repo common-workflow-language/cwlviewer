@@ -271,4 +271,9 @@ public class GitDetails implements Serializable {
   public int hashCode() {
     return Objects.hash(repoUrl, branch, path, packedId);
   }
+
+  public String toSummary() {
+    return String.format(
+        "repoUrl: %s branch: %s path: %s packedId: %s", repoUrl, branch, path, packedId);
+  }
 }

@@ -965,6 +965,9 @@ public class CWLService {
     if (cwlFile != null) {
       if (cwlFile.containsKey(DOC)) {
         Object doc = cwlFile.get(DOC);
+        if (doc == null) {
+          return null;
+        }
         if (doc.getClass().isAssignableFrom(String.class)) {
           return (String) doc;
         }
