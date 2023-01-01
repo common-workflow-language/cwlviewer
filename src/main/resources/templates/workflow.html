@@ -201,34 +201,9 @@ digraph G {
             <div th:if="${workflow.licenseLink != null}" class="alert alert-success" role="alert">
             	<span class="hidden-xs">This workflow is Open Source and may be reused according to the terms of:</span>
             	<a href="http://example.com/" th:href="@{${workflow.licenseLink}}" class="alert-link">
-        						<span th:remove="tag" th:switch="${workflow.licenseLink}">
-        							<!-- TODO: Move license 'registry' to controller? -->
-        							<span th:remove="tag" th:case="'https://www.apache.org/licenses/LICENSE-2.0'">
-        								Apache License, version 2.0
-        							</span>
-        							<span th:remove="tag" th:case="'http://www.apache.org/licenses/LICENSE-2.0'">
-        								Apache License, version 2.0
-        							</span>
-        							<span th:remove="tag" th:case="'https://spdx.org/licenses/Apache-2.0'">
-        								Apache License, version 2.0
-        							</span>
-        							<span th:remove="tag" th:case="'https://mit-license.org/'">
-        								MIT License
-        							</span>
-        							<span th:remove="tag" th:case="'https://spdx.org/licenses/AGPL-3.0'">
-        								GNU Affero General Public License v3.0
-        							</span>
-        							<span th:remove="tag" th:case="'http://www.gnu.org/licenses/agpl.txt'">
-        								GNU Affero General Public License
-        							</span>
-        							<span th:remove="tag" th:case="'http://www.opensource.org/licenses/AGPL-3.0'">
-        								GNU Affero General Public License v3.0
-        							</span>
-									<div th:remove="tag" th:case="*" th:text="${workflow.licenseLink}">
-        								<!--  FIXME: This may not be an open source license! -->
-										http://example.com/LICENSE
-        							</div>
-        						</span>
+                    <div th:remove="tag" th:text="${workflow.getLicenseName()}">
+                        http://example.com/LICENSE
+                    </div>
 				</a>
 				<div class="hidden-xs"><small>Note that the <em>tools</em> invoked by the workflow may have separate licenses.</small></div>
 			</div>

@@ -19,7 +19,34 @@
 
 package org.commonwl.view.cwl;
 
-import static org.apache.commons.io.FileUtils.readFileToString;
+import com.github.tbouron.SpdxLicense;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.riot.RiotException;
+import org.commonwl.view.docker.DockerService;
+import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.git.GitLicenseException;
+import org.commonwl.view.graphviz.ModelDotWriter;
+import org.commonwl.view.graphviz.RDFDotWriter;
+import org.commonwl.view.util.LicenseUtils;
+import org.commonwl.view.workflow.Workflow;
+import org.commonwl.view.workflow.WorkflowNotFoundException;
+import org.commonwl.view.workflow.WorkflowOverview;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.snakeyaml.engine.v2.api.Load;
+import org.snakeyaml.engine.v2.api.LoadSettings;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -35,31 +62,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIFactory;
-import org.apache.jena.ontology.OntModelSpec;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.RiotException;
-import org.commonwl.view.docker.DockerService;
-import org.commonwl.view.git.GitDetails;
-import org.commonwl.view.git.GitLicenseException;
-import org.commonwl.view.graphviz.ModelDotWriter;
-import org.commonwl.view.graphviz.RDFDotWriter;
-import org.commonwl.view.workflow.Workflow;
-import org.commonwl.view.workflow.WorkflowNotFoundException;
-import org.commonwl.view.workflow.WorkflowOverview;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.snakeyaml.engine.v2.api.Load;
-import org.snakeyaml.engine.v2.api.LoadSettings;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+
+import static org.apache.commons.io.FileUtils.readFileToString;
 
 /** Provides CWL parsing for workflows to gather an overview for display and visualisation */
 @Service
@@ -450,7 +454,7 @@ public class CWLService {
     ResultSet licenseResult = rdfService.getLicense(url);
     String licenseLink = null;
     if (licenseResult.hasNext()) {
-      licenseLink = licenseResult.next().get("license").toString();
+      licenseLink = normaliseLicenseLink(licenseResult.next().get("license").toString());
     } else {
       // Check for "LICENSE"-like files in root of git repo
       licenseLink = basicModel.getRetrievedFrom().getLicense(workTree);
@@ -1055,5 +1059,27 @@ public class CWLService {
       }
     }
     return null;
+  }
+
+  private String normaliseLicenseLink(String licenseLink) {
+    if (licenseLink == null) {
+      return null;
+    }
+    if (licenseLink.startsWith(LicenseUtils.SPDX_PREFIX)) {
+      return licenseLink;
+    }
+    String httpsLicenseLink = StringUtils.stripEnd(licenseLink.replace("http://", "https://"), "/");
+    return switch (httpsLicenseLink) {
+      case "https://www.apache.org/licenses/LICENSE-2.0",
+          "https://opensource.org/licenses/Apache-2.0" -> LicenseUtils.SPDX_PREFIX
+          + SpdxLicense.APACHE_2_0.id;
+      case "https://mit-license.org", "https://opensource.org/licenses/MIT" -> LicenseUtils
+              .SPDX_PREFIX
+          + SpdxLicense.MIT;
+      case "https://www.gnu.org/licenses/agpl.txt",
+          "https://www.opensource.org/licenses/AGPL-3.0" -> LicenseUtils.SPDX_PREFIX
+          + SpdxLicense.AGPL_3_0;
+      default -> licenseLink;
+    };
   }
 }

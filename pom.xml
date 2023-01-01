@@ -156,6 +156,12 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
+    <!-- For SPDX license identifiers -->
+    <dependency>
+      <groupId>com.github.tbouron</groupId>
+      <artifactId>spdx-license-checker</artifactId>
+      <version>1.0.0</version>
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

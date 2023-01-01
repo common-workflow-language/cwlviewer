@@ -34,12 +34,15 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
+
+import com.github.tbouron.SpdxLicense;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.WebConfig.Format;
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.util.BaseEntity;
+import org.commonwl.view.util.LicenseUtils;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -351,6 +354,16 @@ public class Workflow extends BaseEntity implements Serializable {
 
   public void setLicenseLink(String licenseLink) {
     this.licenseLink = licenseLink;
+  }
+
+  public String getLicenseName() {
+    if (licenseLink == null) {
+      return null;
+    }
+    if (licenseLink.startsWith(LicenseUtils.SPDX_PREFIX)) {
+      return SpdxLicense.fromId(licenseLink.replace(LicenseUtils.SPDX_PREFIX, "")).name;
+    }
+    return licenseLink;
   }
 
   @Override
