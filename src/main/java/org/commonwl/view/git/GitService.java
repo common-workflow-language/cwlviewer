@@ -28,7 +28,6 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;

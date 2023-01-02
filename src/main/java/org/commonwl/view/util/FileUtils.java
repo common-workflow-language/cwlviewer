@@ -48,8 +48,8 @@ public class FileUtils {
   }
 
   /**
-   * Deletes the directory of a temporary git repository. Note that the <code>Git</code> object contains a
-   * repository with a directory, but this directory points to the
+   * Deletes the directory of a temporary git repository. Note that the <code>Git</code> object
+   * contains a repository with a directory, but this directory points to the
    *
    * <pre>.git</pre>
    *
@@ -57,9 +57,9 @@ public class FileUtils {
    *
    * <pre>.git</pre>
    *
-   * directory, which corresponds to the cloned folder with the source code from git.
-   * Since temporary folders are generated using <code>UUID.randomUUID()</code> instead of the commit hex digest,
-   * if the fodler name contains a '-' character it is identified as temporary.
+   * directory, which corresponds to the cloned folder with the source code from git. Since
+   * temporary folders are generated using <code>UUID.randomUUID()</code> instead of the commit hex
+   * digest, if the folder name contains a '-' character it is identified as temporary.
    *
    * @param repo Git repository object
    * @throws IOException if it fails to delete the Git repository directory

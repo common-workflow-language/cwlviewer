@@ -8,9 +8,13 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.fs.BundleFileSystem;
+import org.commonwl.view.git.GitDetails;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.junit.Rule;
@@ -249,5 +253,34 @@ public class FileUtilsTest {
     assertTrue(bundleTemporaryDirectory.getParentFile().exists());
     FileUtils.deleteBundleParentDirectory(bundle);
     assertFalse(bundleTemporaryDirectory.exists());
+  }
+
+  @Test
+  public void testRemoveTemporaryRepository() throws IOException {
+    Git tempRepository = mock(Git.class);
+    Repository tempRepository1 = mock(Repository.class);
+    when(tempRepository.getRepository()).thenReturn(tempRepository1);
+    File tempGitRepositoryParent = temporaryFolder.newFolder(String.valueOf(UUID.randomUUID()));
+    File tempGitRepository = tempGitRepositoryParent.toPath().resolve(".git").toFile();
+    Files.createDirectory(tempGitRepository.toPath());
+    when(tempRepository1.getDirectory()).thenReturn(tempGitRepository);
+    assertTrue(tempGitRepository.exists());
+    FileUtils.deleteTemporaryGitRepository(tempRepository);
+    assertFalse(tempGitRepository.exists());
+
+    Git notTempRepository = mock(Git.class);
+    Repository notTempRepository1 = mock(Repository.class);
+    when(notTempRepository.getRepository()).thenReturn(notTempRepository1);
+    File notTempGitRepositoryParent =
+        temporaryFolder.newFolder(
+            DigestUtils.sha1Hex(
+                GitDetails.normaliseUrl(
+                    "https://github.com/common-workflow-language/cwlviewer.git")));
+    File notTempGitRepository = notTempGitRepositoryParent.toPath().resolve(".git").toFile();
+    Files.createDirectory(notTempGitRepository.toPath());
+    when(notTempRepository1.getDirectory()).thenReturn(notTempGitRepository);
+    assertTrue(notTempGitRepository.exists());
+    FileUtils.deleteTemporaryGitRepository(notTempRepository);
+    assertTrue(notTempGitRepository.exists());
   }
 }
