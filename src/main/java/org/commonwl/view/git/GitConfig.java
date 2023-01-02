@@ -22,19 +22,17 @@ public class GitConfig {
     RestTemplate restTemplate = new RestTemplate();
     ObjectNode jsonLicenses =
         restTemplate.getForObject(LicenseUtils.SPDX_LICENSES_JSON_URL, ObjectNode.class);
-    if (jsonLicenses != null) {
-      Map<String, String> licenseMap = new HashMap<>();
-      for (JsonNode license : jsonLicenses.withArray("licenses")) {
-        String spdxURL = license.get("reference").asText();
-        for (JsonNode alias : license.withArray("seeAlso")) {
-          licenseMap.put(
-              StringUtils.stripEnd(alias.asText().replace("http://", "https://"), "/"), spdxURL);
-        }
-      }
-      return licenseMap;
-    } else {
+    if (jsonLicenses == null) {
       throw new GitLicenseException(
-          "Failed to load SPDX licenses from " + LicenseUtils.SPDX_LICENSES_JSON_URL);
+              "Failed to load SPDX licenses from " + LicenseUtils.SPDX_LICENSES_JSON_URL);
+    }
+    Map<String, String> licenseMap = new HashMap<>();
+    for (JsonNode license : jsonLicenses.withArray("licenses")) {
+      String spdxURL = license.get("reference").asText();
+      for (JsonNode alias : license.withArray("seeAlso")) {
+        licenseMap.put(
+            StringUtils.stripEnd(alias.asText().replace("http://", "https://"), "/"), spdxURL);
+      }
     }
   }
 }
