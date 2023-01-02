@@ -216,9 +216,9 @@ public class WorkflowService {
   public List<WorkflowOverview> getWorkflowsFromDirectory(GitDetails gitInfo)
       throws IOException, GitAPIException {
     List<WorkflowOverview> workflowsInDir = new ArrayList<>();
+    Git repo = null;
     try {
       boolean safeToAccess = gitSemaphore.acquire(gitInfo.getRepoUrl());
-      Git repo = null;
       while (repo == null) {
         try {
           repo = gitService.getRepository(gitInfo, safeToAccess);
@@ -260,6 +260,7 @@ public class WorkflowService {
       }
     } finally {
       gitSemaphore.release(gitInfo.getRepoUrl());
+      FileUtils.deleteTemporaryGitRepository(repo);
     }
     return workflowsInDir;
   }
@@ -389,6 +390,7 @@ public class WorkflowService {
       throw e;
     } finally {
       gitSemaphore.release(gitInfo.getRepoUrl());
+      FileUtils.deleteTemporaryGitRepository(repo);
     }
 
     // Return this model to be displayed
@@ -563,12 +565,14 @@ public class WorkflowService {
           logger.info(
               "Time has expired for caching, checking commits for workflow " + workflow.getID());
           String currentHead;
+          Git repo = null;
           boolean safeToAccess = gitSemaphore.acquire(workflow.getRetrievedFrom().getRepoUrl());
           try {
-            Git repo = gitService.getRepository(workflow.getRetrievedFrom(), safeToAccess);
+            repo = gitService.getRepository(workflow.getRetrievedFrom(), safeToAccess);
             currentHead = gitService.getCurrentCommitID(repo);
           } finally {
             gitSemaphore.release(workflow.getRetrievedFrom().getRepoUrl());
+            FileUtils.deleteTemporaryGitRepository(repo);
           }
           logger.info(
               "Current: "

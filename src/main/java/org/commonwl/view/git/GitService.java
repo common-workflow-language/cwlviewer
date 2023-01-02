@@ -19,8 +19,6 @@
 
 package org.commonwl.view.git;
 
-import static org.apache.jena.ext.com.google.common.io.Files.createTempDir;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -29,6 +27,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;
@@ -52,10 +52,10 @@ public class GitService {
   private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
   // Location to check out git repositories into
-  private Path gitStorage;
+  private final Path gitStorage;
 
   // Whether submodules are also cloned
-  private boolean cloneSubmodules;
+  private final boolean cloneSubmodules;
 
   @Autowired
   public GitService(
@@ -217,5 +217,11 @@ public class GitService {
         .setDirectory(directory)
         .setCloneAllBranches(true)
         .call();
+  }
+
+  protected File createTempDir() throws IOException {
+    Path repoDir = gitStorage.resolve(String.valueOf(UUID.randomUUID()));
+    Files.createDirectory(repoDir);
+    return repoDir.toFile();
   }
 }

@@ -48,6 +48,34 @@ public class FileUtils {
   }
 
   /**
+   * Deletes the directory of a temporary git repository. Note that the <code>Git</code> object contains a
+   * repository with a directory, but this directory points to the
+   *
+   * <pre>.git</pre>
+   *
+   * directory. This method will delete the parent of the
+   *
+   * <pre>.git</pre>
+   *
+   * directory, which corresponds to the cloned folder with the source code from git.
+   * Since temporary folders are generated using <code>UUID.randomUUID()</code> instead of the commit hex digest,
+   * if the fodler name contains a '-' character it is identified as temporary.
+   *
+   * @param repo Git repository object
+   * @throws IOException if it fails to delete the Git repository directory
+   * @since 1.4.6
+   */
+  public static void deleteTemporaryGitRepository(Git repo) throws IOException {
+    if (repo != null
+        && repo.getRepository() != null
+        && repo.getRepository().getDirectory() != null
+        && repo.getRepository().getDirectory().getParentFile() != null
+        && repo.getRepository().getDirectory().getParentFile().getName().contains("-")) {
+      deleteGitRepository(repo);
+    }
+  }
+
+  /**
    * Deletes the bundle temporary directory.
    *
    * <p>The <code>Bundle</code> object is an Apache Taverna object. Be careful as it acts as a
