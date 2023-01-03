@@ -3,6 +3,8 @@ package org.commonwl.view.util;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
+
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.fs.BundleFileSystem;
 import org.eclipse.jgit.api.Git;
@@ -16,6 +18,9 @@ import org.eclipse.jgit.api.Git;
  * @since 1.4.6
  */
 public class FileUtils {
+
+  private static final Pattern UUID_REGEX_PATTERN =
+      Pattern.compile("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$");
 
   private FileUtils() {}
 
@@ -59,7 +64,7 @@ public class FileUtils {
    *
    * directory, which corresponds to the cloned folder with the source code from git. Since
    * temporary folders are generated using <code>UUID.randomUUID()</code> instead of the commit hex
-   * digest, if the folder name contains a '-' character it is identified as temporary.
+   * digest, if the folder name is a valid UUID it is identified as temporary.
    *
    * @param repo Git repository object
    * @throws IOException if it fails to delete the Git repository directory
@@ -69,9 +74,11 @@ public class FileUtils {
     if (repo != null
         && repo.getRepository() != null
         && repo.getRepository().getDirectory() != null
-        && repo.getRepository().getDirectory().getParentFile() != null
-        && repo.getRepository().getDirectory().getParentFile().getName().contains("-")) {
-      deleteGitRepository(repo);
+        && repo.getRepository().getDirectory().getParentFile() != null) {
+      if (UUID_REGEX_PATTERN.matcher(
+          repo.getRepository().getDirectory().getParentFile().getName()).matches()) {
+        deleteGitRepository(repo);
+      }
     }
   }
 
