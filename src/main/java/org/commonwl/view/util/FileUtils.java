@@ -3,6 +3,8 @@ package org.commonwl.view.util;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
+
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.fs.BundleFileSystem;
 import org.eclipse.jgit.api.Git;
@@ -16,6 +18,9 @@ import org.eclipse.jgit.api.Git;
  * @since 1.4.6
  */
 public class FileUtils {
+
+  private static final Pattern UUID_REGEX_PATTERN =
+      Pattern.compile("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$");
 
   private FileUtils() {}
 
@@ -44,6 +49,36 @@ public class FileUtils {
       // but we want to delete its parent directory.
       File gitDirectory = repo.getRepository().getDirectory();
       org.apache.commons.io.FileUtils.forceDelete(gitDirectory.getParentFile());
+    }
+  }
+
+  /**
+   * Deletes the directory of a temporary git repository. Note that the <code>Git</code> object
+   * contains a repository with a directory, but this directory points to the
+   *
+   * <pre>.git</pre>
+   *
+   * directory. This method will delete the parent of the
+   *
+   * <pre>.git</pre>
+   *
+   * directory, which corresponds to the cloned folder with the source code from git. Since
+   * temporary folders are generated using <code>UUID.randomUUID()</code> instead of the commit hex
+   * digest, if the folder name is a valid UUID it is identified as temporary.
+   *
+   * @param repo Git repository object
+   * @throws IOException if it fails to delete the Git repository directory
+   * @since 1.4.6
+   */
+  public static void deleteTemporaryGitRepository(Git repo) throws IOException {
+    if (repo != null
+        && repo.getRepository() != null
+        && repo.getRepository().getDirectory() != null
+        && repo.getRepository().getDirectory().getParentFile() != null) {
+      if (UUID_REGEX_PATTERN.matcher(
+          repo.getRepository().getDirectory().getParentFile().getName()).matches()) {
+        deleteGitRepository(repo);
+      }
     }
   }
 

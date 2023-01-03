@@ -29,6 +29,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -53,7 +54,7 @@ public class GitServiceTest {
 
   @BeforeEach
   public void setup() throws GitAPIException {
-    GitService gitService = new GitService(null, false);
+    GitService gitService = new GitService(Path.of(System.getProperty("java.io.tmpdir")), false);
     this.spyGitService = spy(gitService);
     this.mockGit = mock(Git.class);
     this.mockGoodCheckoutCommand = mock(CheckoutCommand.class);

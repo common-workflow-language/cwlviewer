@@ -171,6 +171,7 @@ public class CWLToolRunner {
       FileUtils.deleteGitRepository(repo);
     } finally {
       gitSemaphore.release(repoUrl);
+      FileUtils.deleteTemporaryGitRepository(repo);
       queuedWorkflowRepository.save(queuedWorkflow);
     }
   }
