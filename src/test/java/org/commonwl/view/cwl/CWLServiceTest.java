@@ -279,6 +279,7 @@ public class CWLServiceTest {
     File expectedDotCode = new File("src/test/resources/cwl/make_to_cwl/visualisation.dot");
     assertEquals(readFileToString(expectedDotCode), workflow.getVisualisationDot());
     assertEquals("https://spdx.org/licenses/Apache-2.0", workflow.getLicenseLink());
+    assertEquals("Apache License 2.0", workflow.getLicenseName());
   }
 
   /** Test IOException is thrown when files are over limit */
