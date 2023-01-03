@@ -28,11 +28,12 @@ public class GitConfig {
     }
     Map<String, String> licenseMap = new HashMap<>();
     for (JsonNode license : jsonLicenses.withArray("licenses")) {
-      String spdxURL = license.get("reference").asText();
+      String spdxURL = LicenseUtils.SPDX_LICENSES_PREFIX + license.get("licenseId").asText();
       for (JsonNode alias : license.withArray("seeAlso")) {
         licenseMap.put(
             StringUtils.stripEnd(alias.asText().replace("http://", "https://"), "/"), spdxURL);
       }
     }
+    return licenseMap;
   }
 }

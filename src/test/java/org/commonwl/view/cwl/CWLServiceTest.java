@@ -19,30 +19,18 @@
 
 package org.commonwl.view.cwl;
 
-import static org.apache.commons.io.FileUtils.readFileToString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
 import org.commonwl.view.git.GitConfig;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
@@ -55,11 +43,29 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+
+import static org.apache.commons.io.FileUtils.readFileToString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 @ContextConfiguration(classes = {GitConfig.class})
 public class CWLServiceTest {
 
   /** RDFService for testing */
   private RDFService rdfService;
+
+  /** GitConfig for testing */
+  private GitConfig gitConfig;
 
   @BeforeEach
   public void setUp() throws Exception {
@@ -84,9 +90,27 @@ public class CWLServiceTest {
           }
         };
 
+    Answer apacheLicense =
+        new Answer<ResultSet>() {
+          @Override
+          public ResultSet answer(InvocationOnMock invocationOnMock) throws Throwable {
+            RDFNode licenseNode = Mockito.mock(RDFNode.class);
+            when(licenseNode.toString()).thenReturn("https://www.apache.org/licenses/LICENSE-2.0");
+            QuerySolution result = Mockito.mock(QuerySolution.class);
+            when(result.get("license")).thenReturn(licenseNode);
+            ResultSet resultSet = Mockito.mock(ResultSet.class);
+            when(resultSet.hasNext()).thenReturn(true);
+            Mockito.when(resultSet.next()).thenReturn(result);
+            return resultSet;
+          }
+        };
+
     this.rdfService = Mockito.spy(new RDFService("http://localhost:3030/cwlviewer/"));
     Mockito.doAnswer(queryRdf).when(rdfService).runQuery(any());
+    Mockito.doAnswer(apacheLicense).when(rdfService).getLicense(any());
     Mockito.doReturn(true).when(rdfService).graphExists(any(String.class));
+
+    this.gitConfig = Mockito.spy(GitConfig.class);
   }
 
   @Test
@@ -228,8 +252,7 @@ public class CWLServiceTest {
 
     // CWLService to test
     CWLService cwlService =
-        new CWLService(
-            rdfService, mockCwlTool, Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
+        new CWLService(rdfService, mockCwlTool, gitConfig.licenseVocab(), 5242880);
 
     GitDetails gitInfo =
         new GitDetails(
@@ -255,6 +278,7 @@ public class CWLServiceTest {
     assertEquals(3, workflow.getSteps().size());
     File expectedDotCode = new File("src/test/resources/cwl/make_to_cwl/visualisation.dot");
     assertEquals(readFileToString(expectedDotCode), workflow.getVisualisationDot());
+    assertEquals("https://spdx.org/licenses/Apache-2.0", workflow.getLicenseLink());
   }
 
   /** Test IOException is thrown when files are over limit */
