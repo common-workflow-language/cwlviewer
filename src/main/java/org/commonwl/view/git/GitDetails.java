@@ -28,6 +28,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Objects;
+import org.commonwl.view.util.LicenseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +39,6 @@ import org.slf4j.LoggerFactory;
 public class GitDetails implements Serializable {
 
   private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-  private static final String SPDX_PREFIX = "https://spdx.org/licenses/";
 
   private String repoUrl;
   private String branch;
@@ -323,7 +322,8 @@ public class GitDetails implements Serializable {
         }
         String key = jsonLicenses.withArray("licenses").get(0).get("key").asText();
         if (!"other".equals(key)) {
-          return SPDX_PREFIX + jsonLicenses.withArray("licenses").get(0).get("spdx_id").asText();
+          return LicenseUtils.SPDX_LICENSES_PREFIX
+              + jsonLicenses.withArray("licenses").get(0).get("spdx_id").asText();
         } else {
           return licenseLink;
         }

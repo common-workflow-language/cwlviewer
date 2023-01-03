@@ -22,6 +22,7 @@ package org.commonwl.view.workflow;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.tbouron.SpdxLicense;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
@@ -40,6 +41,7 @@ import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.util.BaseEntity;
+import org.commonwl.view.util.LicenseUtils;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -351,6 +353,16 @@ public class Workflow extends BaseEntity implements Serializable {
 
   public void setLicenseLink(String licenseLink) {
     this.licenseLink = licenseLink;
+  }
+
+  public String getLicenseName() {
+    if (licenseLink == null) {
+      return null;
+    }
+    if (licenseLink.startsWith(LicenseUtils.SPDX_LICENSES_PREFIX)) {
+      return SpdxLicense.fromId(licenseLink.replace(LicenseUtils.SPDX_LICENSES_PREFIX, "")).name;
+    }
+    return licenseLink;
   }
 
   @Override

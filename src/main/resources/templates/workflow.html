@@ -49,29 +49,29 @@
 digraph G {
     graph [
         bgcolor="#eeeeee"
-		color="black"
-		fontsize="10"
-		labeljust="left"
-		clusterrank="local"
-		ranksep="0.22"
-		nodesep="0.05"
-	];
+        color="black"
+        fontsize="10"
+        labeljust="left"
+        clusterrank="local"
+        ranksep="0.22"
+        nodesep="0.05"
+    ];
     node [
-	    fontname="Helvetica"
-		fontsize="10"
-		fontcolor="black"
-		shape="record"
-		height="0"
-		width="0"
-		color="black"
-		fillcolor="lightgoldenrodyellow"
-		style="filled"
+        fontname="Helvetica"
+        fontsize="10"
+        fontcolor="black"
+        shape="record"
+        height="0"
+        width="0"
+        color="black"
+        fillcolor="lightgoldenrodyellow"
+        style="filled"
     ];
     edge [
-		fontname="Helvetica"
-		fontsize="8"
-		fontcolor="black"
-		color="black"
+        fontname="Helvetica"
+        fontsize="8"
+        fontcolor="black"
+        color="black"
         arrowsize="0.7"
     ];
     subgraph cluster_inputs {
@@ -199,43 +199,18 @@ digraph G {
                 <img th:if="${workflow.dockerLink == 'true'}" id="dockerLogo" th:src="@{/img/Docker-logo.png}" src="../static/img/Docker-logo.png" alt="docker logo" />
             </div>
             <div th:if="${workflow.licenseLink != null}" class="alert alert-success" role="alert">
-            	<span class="hidden-xs">This workflow is Open Source and may be reused according to the terms of:</span>
-            	<a href="http://example.com/" th:href="@{${workflow.licenseLink}}" class="alert-link">
-        						<span th:remove="tag" th:switch="${workflow.licenseLink}">
-        							<!-- TODO: Move license 'registry' to controller? -->
-        							<span th:remove="tag" th:case="'https://www.apache.org/licenses/LICENSE-2.0'">
-        								Apache License, version 2.0
-        							</span>
-        							<span th:remove="tag" th:case="'http://www.apache.org/licenses/LICENSE-2.0'">
-        								Apache License, version 2.0
-        							</span>
-        							<span th:remove="tag" th:case="'https://spdx.org/licenses/Apache-2.0'">
-        								Apache License, version 2.0
-        							</span>
-        							<span th:remove="tag" th:case="'https://mit-license.org/'">
-        								MIT License
-        							</span>
-        							<span th:remove="tag" th:case="'https://spdx.org/licenses/AGPL-3.0'">
-        								GNU Affero General Public License v3.0
-        							</span>
-        							<span th:remove="tag" th:case="'http://www.gnu.org/licenses/agpl.txt'">
-        								GNU Affero General Public License
-        							</span>
-        							<span th:remove="tag" th:case="'http://www.opensource.org/licenses/AGPL-3.0'">
-        								GNU Affero General Public License v3.0
-        							</span>
-									<div th:remove="tag" th:case="*" th:text="${workflow.licenseLink}">
-        								<!--  FIXME: This may not be an open source license! -->
-										http://example.com/LICENSE
-        							</div>
-        						</span>
-				</a>
-				<div class="hidden-xs"><small>Note that the <em>tools</em> invoked by the workflow may have separate licenses.</small></div>
-			</div>
-			<div th:unless="${workflow.licenseLink}" class="alert alert-warning" role="alert">
-				Unknown workflow license, check
-				<a th:href="@{${workflow.retrievedFrom.getUrl()}}" href="#" rel="noopener" target="_blank">source repository</a>.
-			</div>
+                <span class="hidden-xs">This workflow is Open Source and may be reused according to the terms of:</span>
+                <a href="http://example.com/" th:href="@{${workflow.licenseLink}}" class="alert-link">
+                    <div th:remove="tag" th:text="${workflow.getLicenseName()}">
+                        http://example.com/LICENSE
+                    </div>
+                </a>
+                <div class="hidden-xs"><small>Note that the <em>tools</em> invoked by the workflow may have separate licenses.</small></div>
+            </div>
+            <div th:unless="${workflow.licenseLink}" class="alert alert-warning" role="alert">
+                Unknown workflow license, check
+                <a th:href="@{${workflow.retrievedFrom.getUrl()}}" href="#" rel="noopener" target="_blank">source repository</a>.
+            </div>
             <h2>Inputs</h2>
             <div th:if="${workflow.inputs.isEmpty()}" class="alert alert-info">
                 <p>There are no inputs in this workflow</p>
@@ -273,10 +248,10 @@ digraph G {
                 <div class="table-responsive">
                     <table class="table table-striped table-hover steps">
                         <thead>
-	                        <th>ID</th>
-	                        <th>Runs</th>
-	                        <th>Label</th>
-	                        <th>Doc</th>
+                            <th>ID</th>
+                            <th>Runs</th>
+                            <th>Label</th>
+                            <th>Doc</th>
                         </thead>
                         <tbody>
                         <tr th:each="step : ${workflow.steps}" th:with="workflowURL=@{${workflow.retrievedFrom.getUrl()}}">
@@ -332,8 +307,8 @@ digraph G {
         </div>
     </div>
     <div class="row hidden-print">
-    	<div class="col-md-12 text-center" id="formats">
-    	   <span th:each="format : ${formats}">
+        <div class="col-md-12 text-center" id="formats">
+           <span th:each="format : ${formats}">
             <a th:id="|format-${format}|" role="button" class="btn btn-default btn-sm" th:href="${workflow.getPermalink(format.name())}" th:text="${format}"
                       href="#">html</a>
            </span>
@@ -341,7 +316,7 @@ digraph G {
     </div>
     <div class="visible-print-block">
       <address>Permalink:
-      	<code th:text="${workflow.permalink}">https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/larger/test-hello.cwl</code>
+        <code th:text="${workflow.permalink}">https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/larger/test-hello.cwl</code>
       </address>
     </div>
 </div>

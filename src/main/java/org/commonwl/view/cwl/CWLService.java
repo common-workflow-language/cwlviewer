@@ -37,6 +37,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.ontology.OntModelSpec;
@@ -71,6 +72,7 @@ public class CWLService {
   // Autowired properties/services
   private final RDFService rdfService;
   private final CWLTool cwlTool;
+  private final Map<String, String> licenseVocab;
   private final int singleFileSizeLimit;
 
   // CWL specific strings
@@ -108,9 +110,11 @@ public class CWLService {
   public CWLService(
       RDFService rdfService,
       CWLTool cwlTool,
+      Map<String, String> licenseVocab,
       @Value("${singleFileSizeLimit}") int singleFileSizeLimit) {
     this.rdfService = rdfService;
     this.cwlTool = cwlTool;
+    this.licenseVocab = licenseVocab;
     this.singleFileSizeLimit = singleFileSizeLimit;
   }
 
@@ -448,9 +452,9 @@ public class CWLService {
     }
     // Try to determine license
     ResultSet licenseResult = rdfService.getLicense(url);
-    String licenseLink = null;
+    String licenseLink;
     if (licenseResult.hasNext()) {
-      licenseLink = licenseResult.next().get("license").toString();
+      licenseLink = normaliseLicenseLink(licenseResult.next().get("license").toString());
     } else {
       // Check for "LICENSE"-like files in root of git repo
       licenseLink = basicModel.getRetrievedFrom().getLicense(workTree);
@@ -1055,5 +1059,13 @@ public class CWLService {
       }
     }
     return null;
+  }
+
+  public String normaliseLicenseLink(String licenseLink) {
+    if (licenseLink == null) {
+      return null;
+    }
+    String httpsLicenseLink = StringUtils.stripEnd(licenseLink.replace("http://", "https://"), "/");
+    return licenseVocab.getOrDefault(httpsLicenseLink, licenseLink);
   }
 }
