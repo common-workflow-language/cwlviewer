@@ -62,6 +62,9 @@ def is_running(location):
     if queued.status_code == 303:
         # Done!
         return False
+    if not queued.ok:
+        print(f"Failed {location}: {q.text}", file=sys.stderr)
+        return False
     j = queued.json()
     if j["cwltoolStatus"] == "RUNNING":
         return True
@@ -72,7 +75,7 @@ def is_running(location):
         raise Exception(f"Unhandled queue status: {queued.status_code} {queued.text}")
 
 
-MAX_CONCURRENT = 2  # Maximum number in queue
+MAX_CONCURRENT = 3  # Maximum number in queue
 SLEEP = 0.5  # wait SLEEP seconds if queue is full
 
 
