@@ -63,7 +63,7 @@ def is_running(location):
         # Done!
         return False
     if not queued.ok:
-        print(f"Failed {location}: {q.text}", file=sys.stderr)
+        print(f"Failed {location}: {queued.text}", file=sys.stderr)
         return False
     j = queued.json()
     if j["cwltoolStatus"] == "RUNNING":
