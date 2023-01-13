@@ -250,9 +250,13 @@ public class WorkflowService {
           if (eIndex > 0) {
             String extension = file.getName().substring(eIndex);
             if (extension.equals("cwl")) {
-              WorkflowOverview overview = cwlService.getWorkflowOverview(file);
-              if (overview != null) {
-                workflowsInDir.add(overview);
+              try {
+                WorkflowOverview overview = cwlService.getWorkflowOverview(file);
+                if (overview != null) {
+                  workflowsInDir.add(overview);
+                }
+              } catch (IOException err) {
+                logger.error("Skipping file due to IOException: " + file.toString(), err);
               }
             }
           }
