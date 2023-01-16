@@ -1,4 +1,7 @@
-version: '3.2'
+version: '3.9'
+networks:
+  postgres:
+  sparql:
 volumes:
   bundle:
   git:
@@ -14,7 +17,7 @@ services:
     #build: .
     ports:
      - "8080:8080"
-    links:
+    networks:
      - postgres
      - sparql
     volumes:
@@ -38,6 +41,8 @@ services:
   postgres:
     restart: always
     image: postgres:14-alpine
+    networks:
+     - postgres
     command: postgres -c listen_addresses='*' -c log_statement=all
     environment:
       - POSTGRES_USER=sa
@@ -48,7 +53,9 @@ services:
       - type: volume
         source: postgres
         target: /var/lib/postgresql/data
-      - ./pg_hba.conf/:/var/lib/postgresql/data/pg_hba.conf
+      - type: bind
+        source: ./pg_hba.conf
+        target: /var/lib/postgresql/data/pg_hba.conf
   sparql:
     restart: always
 ## For debugging, expose the Fuseki port by enabling:
@@ -57,8 +64,17 @@ services:
 ## To find the admin password, try:
 ##   docker-compose exec sparql grep admin /fuseki/shiro.ini
     image: stain/jena-fuseki:3.4.0
+    networks:
+      - sparql
     volumes:
-    - type: volume
-      source: sparql
-      target: /fuseki/databases/cwlviewer
-    command: "/jena-fuseki/fuseki-server --loc=/fuseki/databases/cwlviewer /cwlviewer"
+      - type: volume
+        source: sparql
+        target: /fuseki
+      - type: bind
+        source: ./start-jena.sh
+        target: /start-jena.sh
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    command: "/start-jena.sh"
