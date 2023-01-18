@@ -45,7 +45,7 @@ If you change the source code, then use this `docker-compose.override.yml` and
 re-build with `docker-compose build`:
 
 ```yaml
-version: '3.2'
+version: '3.9'
 services:
   spring:
     build: .
@@ -62,7 +62,7 @@ If you have modified the source code, then you may want to build the docker imag
 Create `docker-compose.override.yml`:
 
 ```
-version: '3.2'
+version: '3.9'
 services:
   postgres:
     ports:
@@ -171,7 +171,7 @@ There are a variety of configuration options detailed in the [application config
 When deploying with docker, these can be overridden externally by creating/modifying `docker-compose.override.yml` as follows:
 
 ```yaml
-version: '3.2'
+version: '3.9'
 services:
   spring:
     environment:
