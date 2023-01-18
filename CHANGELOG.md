@@ -1,7 +1,7 @@
 
 # Changelog 
 
-## v1.4.6 [Unreleased]
+## v1.4.6 [2023-01-18]
 
 User visible changes
 - Better identify repository licenses through the Licensee Ruby Gem
@@ -25,6 +25,11 @@ Dependecies upgrade:
 - Bump common-compress from 1.21 to 1.22
 - Bump junit-jupiter from 1.17.4 to 1.17.6
 - Bump postgresql from 1.17.4 to 1.17.6
+
+Changes related to the migration of view.commonwl.org from Curii, Inc to HPC4AI, University of Turin:
+- Removed Data controller section in the About page
+- Added HPC4AI logo in the page footer
+- Updated docker-compose.yml file to explicitly set `ulimit -n` to `65536`
 
 ## v1.4.5 [2022-09-30]
 
