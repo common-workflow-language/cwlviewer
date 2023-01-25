@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
-
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.fs.BundleFileSystem;
 import org.eclipse.jgit.api.Git;
@@ -75,8 +74,9 @@ public class FileUtils {
         && repo.getRepository() != null
         && repo.getRepository().getDirectory() != null
         && repo.getRepository().getDirectory().getParentFile() != null) {
-      if (UUID_REGEX_PATTERN.matcher(
-          repo.getRepository().getDirectory().getParentFile().getName()).matches()) {
+      if (UUID_REGEX_PATTERN
+          .matcher(repo.getRepository().getDirectory().getParentFile().getName())
+          .matches()) {
         deleteGitRepository(repo);
       }
     }

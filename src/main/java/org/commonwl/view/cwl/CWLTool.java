@@ -107,6 +107,8 @@ public class CWLTool {
         "--disable-color",
         "--non-strict",
         "--quiet",
+        "--enable-dev",
+        "--enable-ext",
         "--skip-schemas",
         argument,
         workflowUrl
