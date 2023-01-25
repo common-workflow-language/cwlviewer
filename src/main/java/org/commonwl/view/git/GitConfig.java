@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.commonwl.view.util.LicenseUtils;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +23,7 @@ public class GitConfig {
         restTemplate.getForObject(LicenseUtils.SPDX_LICENSES_JSON_URL, ObjectNode.class);
     if (jsonLicenses == null) {
       throw new GitLicenseException(
-              "Failed to load SPDX licenses from " + LicenseUtils.SPDX_LICENSES_JSON_URL);
+          "Failed to load SPDX licenses from " + LicenseUtils.SPDX_LICENSES_JSON_URL);
     }
     Map<String, String> licenseMap = new HashMap<>();
     for (JsonNode license : jsonLicenses.withArray("licenses")) {
