@@ -67,11 +67,12 @@ public class CWLTool {
     if (cwlToolVersion != null) {
       return cwlToolVersion;
     }
+    Process process = null;
     try {
       // Run cwltool --version
       String[] command = {"cwltool", "--version"};
       ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
-      Process process = cwlToolProcess.start();
+      process = cwlToolProcess.start();
 
       // Get input stream
       InputStream is = process.getInputStream();
@@ -79,14 +80,20 @@ public class CWLTool {
       BufferedReader br = new BufferedReader(isr);
 
       String line;
+      String cwlToolVersion;
       if ((line = br.readLine()) != null) {
         cwlToolVersion = line.substring(line.indexOf(' ') + 1);
-        return cwlToolVersion;
       } else {
-        return "<error getting cwl version>";
+        cwlToolVersion = "<error getting cwltool version>";
       }
+      return cwlToolVersion;
+
     } catch (IOException ex) {
-      return "<error getting cwl version>";
+      return "<error getting cwltool version>";
+    } finally {
+      if (process != null) {
+        process.destroyForcibly();
+      }
     }
   }
 
@@ -100,6 +107,8 @@ public class CWLTool {
    */
   private String runCwltoolOnWorkflow(String argument, String workflowUrl)
       throws CWLValidationException {
+    Process process = null;
+
     try {
       // Run command
       String[] command = {
@@ -114,7 +123,7 @@ public class CWLTool {
         workflowUrl
       };
       ProcessBuilder cwlToolProcess = new ProcessBuilder(command);
-      Process process = cwlToolProcess.start();
+      process = cwlToolProcess.start();
 
       // Read output from the process using threads
       StreamGobbler inputGobbler = new StreamGobbler(process.getInputStream());
@@ -126,14 +135,20 @@ public class CWLTool {
       int exitCode = process.waitFor();
       if (exitCode == 0) {
         inputGobbler.join();
+        process.destroyForcibly();
         return inputGobbler.getContent();
       } else {
         errorGobbler.join();
+        process.destroyForcibly();
         throw new CWLValidationException(errorGobbler.getContent());
       }
     } catch (IOException | InterruptedException e) {
       logger.error("Error running cwltool process", e);
       throw new CWLValidationException("Error running cwltool process");
+    } finally {
+      if (process != null) {
+        process.destroyForcibly();
+      }
     }
   }
 }
