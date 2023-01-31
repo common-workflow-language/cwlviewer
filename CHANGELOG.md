@@ -1,6 +1,18 @@
 
 # Changelog 
 
+## v1.4.7 [2023-01-31]
+
+User visible changes
+- The extensions to CWL that `cwltool` knows about will no longer results in an error
+
+Operations changes:
+- After we run `cwltool`, we now try harder to cleanup the process.
+
+Dependecies upgrade:
+- Bump jackson-core from 2.14.1 to 2.14.2
+- Bump mockito-inline from 5.0.0 to 5.1.1
+
 ## v1.4.6 [2023-01-18]
 
 User visible changes
