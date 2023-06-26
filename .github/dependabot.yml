@@ -19,3 +19,8 @@ updates:
   - dependency-name: org.apache.jena:jena-osgi
     versions:
     - 3.17.0
+  # Maintain dependencies for GitHub Actions
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: "daily"
