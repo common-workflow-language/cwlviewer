@@ -2,16 +2,17 @@ package org.commonwl.view.workflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import org.commonwl.view.cwl.CWLToolStatus;
 import org.commonwl.view.util.BaseEntity;
 import org.hibernate.annotations.GenericGenerator;
@@ -22,7 +23,6 @@ import org.hibernate.annotations.Type;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Entity
 @Table(name = "queued_workflow")
-@SuppressWarnings("JpaAttributeTypeInspection")
 public class QueuedWorkflow extends BaseEntity implements Serializable {
 
   // ID for database
@@ -34,20 +34,20 @@ public class QueuedWorkflow extends BaseEntity implements Serializable {
 
   // Very barebones workflow to build loading thumbnail and overview
   @Column(columnDefinition = "jsonb")
-  @Type(type = "json")
+  @Type(value = JsonType.class)
   @Convert(disableConversion = true)
   private Workflow tempRepresentation;
 
   // List of packed workflows for packed workflows
   // TODO: Refactor so this is not necessary
   @Column(columnDefinition = "jsonb")
-  @Type(type = "json")
+  @Type(value = JsonType.class)
   @Convert(disableConversion = true)
   private List<WorkflowOverview> workflowList;
 
   // Cwltool details
   @Column(columnDefinition = "jsonb")
-  @Type(type = "json")
+  @Type(value = JsonType.class)
   @Convert(disableConversion = true)
   private CWLToolStatus cwltoolStatus = CWLToolStatus.RUNNING;
 

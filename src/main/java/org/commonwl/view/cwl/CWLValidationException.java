@@ -19,7 +19,7 @@
 
 package org.commonwl.view.cwl;
 
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 
 /** Exception thrown when a workflow failed CWLTool validation */
 public class CWLValidationException extends ValidationException {

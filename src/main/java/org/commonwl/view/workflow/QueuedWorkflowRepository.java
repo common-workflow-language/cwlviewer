@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>Use only queries without objects and JSON here. For other methods use the Impl class to avoid
  * issues with serialization.
  */
+@Repository
 public interface QueuedWorkflowRepository
     extends JpaRepository<QueuedWorkflow, String>, QueuedWorkflowRepositoryCustom {
 

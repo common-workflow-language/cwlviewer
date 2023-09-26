@@ -5,47 +5,24 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.List;
-import org.commonwl.view.CwlViewerApplication;
-import org.commonwl.view.WebConfig;
 import org.commonwl.view.git.GitDetails;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Propagation;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@ActiveProfiles("it")
-@Testcontainers
-// @SpringBootTest(
-//        classes={WebConfig.class, CwlViewerApplication.class, QueuedWorkflowRepository.class}
-// )
+@TestPropertySource(locations = "classpath:it-application.properties")
 @DataJpaTest(showSql = true)
-@EnableJpaRepositories
-@EntityScan
-@Transactional(propagation = Propagation.REQUIRED)
+@ContextConfiguration(initializers = PostgreSQLContextInitializer.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ContextConfiguration(
-    initializers = PostgreSQLContextInitializer.class,
-    classes = {WebConfig.class, CwlViewerApplication.class, QueuedWorkflowRepository.class})
 public class QueuedWorkflowRepositoryTest {
-
-  @Container
-  public static PostgreSQLContainer<?> postgreSQLContainer =
-      new PostgreSQLContainer<>("postgres:9.6.12")
-          .withDatabaseName("cwlviewer")
-          .withUsername("sa")
-          .withPassword("sa");
 
   @Autowired QueuedWorkflowRepository repository;
 
+  @Transactional
   @Test
   public void deleteQueuedWorkflowByRetrievedFromTest() {
 
@@ -84,6 +61,7 @@ public class QueuedWorkflowRepositoryTest {
     assertNull(retrievedQueuedWorkflowAfterDelete);
   }
 
+  @Transactional
   @Test
   public void deleteQueuedWorkflowByRetrievedFromTest2() {
     // create stub queued workflow

@@ -23,15 +23,18 @@ import java.util.List;
 import org.commonwl.view.git.GitDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
 /**
  * Stores and retrieved workflow objects from the database
  *
- * <p>See Spring Data JPA docs: https://docs.spring.io/spring-data/jpa/docs/current/reference/html/
+ * <p>See Spring Data JPA docs: <a
+ * href="https://docs.spring.io/spring-data/jpa/docs/current/reference/html/">...</a>
  */
-public interface WorkflowRepository extends JpaRepository<Workflow, String> {
+@Repository
+public interface WorkflowRepository extends CrudRepository<Workflow, String> {
 
   /**
    * Finds a workflow model in the database based on where it was retrieved from
