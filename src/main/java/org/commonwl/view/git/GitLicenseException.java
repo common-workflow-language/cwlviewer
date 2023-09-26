@@ -1,6 +1,6 @@
 package org.commonwl.view.git;
 
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 
 public class GitLicenseException extends ValidationException {
 
