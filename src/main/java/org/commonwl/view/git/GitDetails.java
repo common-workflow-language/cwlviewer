@@ -19,6 +19,7 @@
 
 package org.commonwl.view.git;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 /** Represents all the parameters necessary to access a file/directory with Git */
 @JsonIgnoreProperties(
-    value = {"internalUrl"},
+    value = {"internalUrl", "logger"},
     ignoreUnknown = true)
 public class GitDetails implements Serializable {
 
@@ -45,6 +46,7 @@ public class GitDetails implements Serializable {
   private String path;
   private String packedId;
 
+  @JsonCreator
   public GitDetails(String repoUrl, String branch, String path) {
     this.repoUrl = repoUrl;
 
@@ -110,16 +112,12 @@ public class GitDetails implements Serializable {
       if (domain.startsWith("www.")) {
         domain = domain.substring(4);
       }
-      switch (domain) {
-        case "github.com":
-          return GitType.GITHUB;
-        case "gitlab.com":
-          return GitType.GITLAB;
-        case "bitbucket.org":
-          return GitType.BITBUCKET;
-        default:
-          return GitType.GENERIC;
-      }
+      return switch (domain) {
+        case "github.com" -> GitType.GITHUB;
+        case "gitlab.com" -> GitType.GITLAB;
+        case "bitbucket.org" -> GitType.BITBUCKET;
+        default -> GitType.GENERIC;
+      };
     } catch (URISyntaxException ex) {
       return GitType.GENERIC;
     }
@@ -133,27 +131,25 @@ public class GitDetails implements Serializable {
    */
   public String getUrl(String branchOverride) {
     String packedPart = packedId == null ? "" : "#" + packedId;
-    switch (getType()) {
-      case GITHUB:
-      case GITLAB:
-        return "https://"
-            + normaliseUrl(repoUrl).replace(".git", "")
-            + "/blob/"
-            + branchOverride
-            + "/"
-            + path
-            + packedPart;
-      case BITBUCKET:
-        return "https://"
-            + normaliseUrl(repoUrl).replace(".git", "")
-            + "/src/"
-            + branchOverride
-            + "/"
-            + path
-            + packedPart;
-      default:
-        return repoUrl;
-    }
+    return switch (getType()) {
+      case GITHUB, GITLAB ->
+          "https://"
+              + normaliseUrl(repoUrl).replace(".git", "")
+              + "/blob/"
+              + branchOverride
+              + "/"
+              + path
+              + packedPart;
+      case BITBUCKET ->
+          "https://"
+              + normaliseUrl(repoUrl).replace(".git", "")
+              + "/src/"
+              + branchOverride
+              + "/"
+              + path
+              + packedPart;
+      default -> repoUrl;
+    };
   }
 
   /**
@@ -174,18 +170,17 @@ public class GitDetails implements Serializable {
   public String getInternalUrl(String branchOverride) {
     String packedPart = packedId == null ? "" : "%23" + packedId;
     String pathPart = path.equals("/") ? "" : "/" + path;
-    switch (getType()) {
-      case GITHUB:
-      case GITLAB:
-        return "/workflows/"
-            + normaliseUrl(repoUrl).replace(".git", "")
-            + "/blob/"
-            + branchOverride
-            + pathPart
-            + packedPart;
-      default:
-        return "/workflows/" + normaliseUrl(repoUrl) + "/" + branchOverride + pathPart + packedPart;
-    }
+    return switch (getType()) {
+      case GITHUB, GITLAB ->
+          "/workflows/"
+              + normaliseUrl(repoUrl).replace(".git", "")
+              + "/blob/"
+              + branchOverride
+              + pathPart
+              + packedPart;
+      default ->
+          "/workflows/" + normaliseUrl(repoUrl) + "/" + branchOverride + pathPart + packedPart;
+    };
   }
 
   /**
@@ -211,25 +206,23 @@ public class GitDetails implements Serializable {
     if (pathOverride == null) {
       pathOverride = path;
     }
-    switch (getType()) {
-      case GITHUB:
-        return "https://raw.githubusercontent.com/"
-            + normaliseUrl(repoUrl).replace("github.com/", "").replace(".git", "")
-            + "/"
-            + branchOverride
-            + "/"
-            + pathOverride;
-      case GITLAB:
-      case BITBUCKET:
-        return "https://"
-            + normaliseUrl(repoUrl).replace(".git", "")
-            + "/raw/"
-            + branchOverride
-            + "/"
-            + pathOverride;
-      default:
-        return repoUrl;
-    }
+    return switch (getType()) {
+      case GITHUB ->
+          "https://raw.githubusercontent.com/"
+              + normaliseUrl(repoUrl).replace("github.com/", "").replace(".git", "")
+              + "/"
+              + branchOverride
+              + "/"
+              + pathOverride;
+      case GITLAB, BITBUCKET ->
+          "https://"
+              + normaliseUrl(repoUrl).replace(".git", "")
+              + "/raw/"
+              + branchOverride
+              + "/"
+              + pathOverride;
+      default -> repoUrl;
+    };
   }
 
   /**

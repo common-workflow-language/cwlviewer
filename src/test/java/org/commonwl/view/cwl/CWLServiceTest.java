@@ -53,7 +53,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -77,31 +76,26 @@ public class CWLServiceTest {
         "https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main",
         workflowModel);
 
-    Answer queryRdf =
-        new Answer<ResultSet>() {
-          @Override
-          public ResultSet answer(InvocationOnMock invocation) throws Throwable {
-            Object[] args = invocation.getArguments();
-            Query query = QueryFactory.create(args[0].toString());
-            try (QueryExecution qexec = QueryExecutionFactory.create(query, workflowDataset)) {
-              return ResultSetFactory.copyResults(qexec.execSelect());
-            }
+    Answer<ResultSet> queryRdf =
+        invocation -> {
+          Object[] args = invocation.getArguments();
+          Query query = QueryFactory.create(args[0].toString());
+          try (QueryExecution queryExecution =
+              QueryExecutionFactory.create(query, workflowDataset)) {
+            return ResultSetFactory.copyResults(queryExecution.execSelect());
           }
         };
 
-    Answer apacheLicense =
-        new Answer<ResultSet>() {
-          @Override
-          public ResultSet answer(InvocationOnMock invocationOnMock) throws Throwable {
-            RDFNode licenseNode = Mockito.mock(RDFNode.class);
-            when(licenseNode.toString()).thenReturn("https://www.apache.org/licenses/LICENSE-2.0");
-            QuerySolution result = Mockito.mock(QuerySolution.class);
-            when(result.get("license")).thenReturn(licenseNode);
-            ResultSet resultSet = Mockito.mock(ResultSet.class);
-            when(resultSet.hasNext()).thenReturn(true);
-            Mockito.when(resultSet.next()).thenReturn(result);
-            return resultSet;
-          }
+    Answer<ResultSet> apacheLicense =
+        invocationOnMock -> {
+          RDFNode licenseNode = Mockito.mock(RDFNode.class);
+          when(licenseNode.toString()).thenReturn("https://www.apache.org/licenses/LICENSE-2.0");
+          QuerySolution result = Mockito.mock(QuerySolution.class);
+          when(result.get("license")).thenReturn(licenseNode);
+          ResultSet resultSet = Mockito.mock(ResultSet.class);
+          when(resultSet.hasNext()).thenReturn(true);
+          Mockito.when(resultSet.next()).thenReturn(result);
+          return resultSet;
         };
 
     this.rdfService = Mockito.spy(new RDFService("http://localhost:3030/cwlviewer/"));
@@ -148,7 +142,7 @@ public class CWLServiceTest {
     assertEquals(3, dna.getSteps().size());
   }
 
-  /** Test native loading parsing of a the LobSTR workflow CWL version draft-3 */
+  /** Test native loading parsing of the LobSTR workflow CWL version draft-3 */
   @Test
   public void parseLobSTRDraft3WorkflowNative() throws Exception {
     CWLService cwlService =
@@ -163,7 +157,7 @@ public class CWLServiceTest {
     testLobSTRWorkflow(lobSTRDraft3, true);
   }
 
-  /** Test native loading parsing of a the LobSTR workflow CWL version 1.0 */
+  /** Test native loading parsing of the LobSTR workflow CWL version 1.0 */
   @Test
   public void parseLobSTRv1WorkflowNative() throws Exception {
     CWLService cwlService =
@@ -181,19 +175,15 @@ public class CWLServiceTest {
     CWLService cwlService =
         new CWLService(
             rdfService, new CWLTool(), Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
-    //        URI uri = new
-    // URI("https://github.com/emo-bon/pipeline-v5/raw/develop/workflows/gos_wf.cwl");
-    //        InputStream is = uri.toURL().openStream();
-    //        Workflow wkflow = cwlService.parseWorkflowNative(is, null, uri.toURL().getFile());
-    Workflow wkflow =
+    Workflow workflow =
         cwlService.parseWorkflowNative(
             Paths.get("src/test/resources/cwl/oneline_optional_types.cwl"), null);
-    assertEquals(wkflow.getInputs().get("qualified_phred_quality").getType(), "int?");
-    assertEquals(wkflow.getInputs().get("ncrna_tab_file").getType(), "File?");
-    assertEquals(wkflow.getInputs().get("reverse_reads").getType(), "File?");
-    assertEquals(wkflow.getInputs().get("ssu_tax").getType(), "string, File");
+    assertEquals(workflow.getInputs().get("qualified_phred_quality").getType(), "int?");
+    assertEquals(workflow.getInputs().get("ncrna_tab_file").getType(), "File?");
+    assertEquals(workflow.getInputs().get("reverse_reads").getType(), "File?");
+    assertEquals(workflow.getInputs().get("ssu_tax").getType(), "string, File");
     assertEquals(
-        wkflow.getInputs().get("rfam_models").getType(), "{type=array, items=[string, File]}");
+        workflow.getInputs().get("rfam_models").getType(), "{type=array, items=[string, File]}");
   }
 
   /** Test native loading parsing of MultipleInputFeatureRequirement using workflows */
@@ -202,14 +192,14 @@ public class CWLServiceTest {
     CWLService cwlService =
         new CWLService(
             rdfService, new CWLTool(), Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
-    Workflow wkflow =
+    Workflow workflow =
         cwlService.parseWorkflowNative(
             Paths.get("src/test/resources/cwl/complex-workflow/complex-workflow-1.cwl"), null);
     assertEquals(
-        wkflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(0),
+        workflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(0),
         "touch_step");
     assertEquals(
-        wkflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(1),
+        workflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(1),
         "files");
   }
 
@@ -219,12 +209,11 @@ public class CWLServiceTest {
     CWLService cwlService =
         new CWLService(
             rdfService, new CWLTool(), Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
-    Workflow wkflow =
+    Workflow workflow =
         cwlService.parseWorkflowNative(Paths.get("src/test/resources/cwl/nested_array.cwl"), null);
-    assertEquals(wkflow.getInputs().get("overlap_files").getType(), "File[][]");
-    assertEquals(wkflow.getOutputs().get("freq_files").getType(), "File[][]");
-    assertEquals(
-        true, Map.class.isAssignableFrom(wkflow.getSteps().get("dummy").getRun().getClass()));
+    assertEquals(workflow.getInputs().get("overlap_files").getType(), "File[][]");
+    assertEquals(workflow.getOutputs().get("freq_files").getType(), "File[][]");
+    assertTrue(Map.class.isAssignableFrom(workflow.getSteps().get("dummy").getRun().getClass()));
   }
 
   /** Test native loading parsing of inputs with null default values */
@@ -233,11 +222,10 @@ public class CWLServiceTest {
     CWLService cwlService =
         new CWLService(
             rdfService, new CWLTool(), Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
-    Workflow wkflow =
+    Workflow workflow =
         cwlService.parseWorkflowNative(Paths.get("src/test/resources/cwl/null_default.cwl"), null);
-    assertEquals(wkflow.getInputs().get("overlap_files").getDefaultVal(), null);
-    assertEquals(
-        wkflow.getSteps().get("dummy").getSources().get("nested_array").getDefaultVal(), null);
+    assertNull(workflow.getInputs().get("overlap_files").getDefaultVal());
+    assertNull(workflow.getSteps().get("dummy").getSources().get("nested_array").getDefaultVal());
   }
 
   /** Test parsing of a workflow using cwltool */
@@ -283,7 +271,7 @@ public class CWLServiceTest {
 
   /** Test IOException is thrown when files are over limit */
   @Test
-  public void workflowOverSingleFileSizeLimitThrowsIOException() throws Exception {
+  public void workflowOverSingleFileSizeLimitThrowsIOException() {
 
     // Should throw IOException due to oversized files
     Exception thrown =
@@ -349,7 +337,7 @@ public class CWLServiceTest {
 
   /** Test IOException is thrown when files are over limit with getWorkflowOverview */
   @Test
-  public void workflowOverviewOverSingleFileSizeLimitThrowsIOException() throws Exception {
+  public void workflowOverviewOverSingleFileSizeLimitThrowsIOException() {
     // File to test
     File helloWorkflow = new File("src/test/resources/cwl/hello/hello.cwl");
 
@@ -395,10 +383,10 @@ public class CWLServiceTest {
   }
 
   /**
-   * Validate a LobSTR workflow See:
-   * https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR
+   * Validate a LobSTR workflow See: <a
+   * href="https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR">...</a>
    */
-  private void testLobSTRWorkflow(Workflow lobSTR, boolean nativeParsed) throws Exception {
+  private void testLobSTRWorkflow(Workflow lobSTR, boolean nativeParsed) {
 
     // Overall not null
     assertNotNull(lobSTR);

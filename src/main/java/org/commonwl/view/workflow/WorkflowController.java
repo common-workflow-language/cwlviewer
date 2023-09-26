@@ -19,15 +19,15 @@
 
 package org.commonwl.view.workflow;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.cwl.CWLService;
@@ -214,7 +214,7 @@ public class WorkflowController {
    * @param branch The branch of the repository
    * @return The workflow view with the workflow as a model
    */
-  @GetMapping(value = "/workflows/**/*.git/{branch}/**")
+  @GetMapping(value = "/workflows/*/*.git/{branch}/**")
   public ModelAndView getWorkflowGeneric(
       @Value("${applicationURL}") String applicationURL,
       @PathVariable("branch") String branch,
@@ -263,7 +263,7 @@ public class WorkflowController {
    * @param branch The branch of repository
    */
   @GetMapping(
-      value = "/robundle/**/*.git/{branch}/**",
+      value = "/robundle/*/*/*.git/{branch}/**",
       produces = "application/vnd.wf4ever.robundle+zip")
   @ResponseBody
   public Resource getROBundleGeneric(
@@ -314,7 +314,7 @@ public class WorkflowController {
    *
    * @param branch The branch of repository
    */
-  @GetMapping(value = "/graph/svg/**/*.git/{branch}/**", produces = "image/svg+xml")
+  @GetMapping(value = "/graph/svg/*/*/*.git/{branch}/**", produces = "image/svg+xml")
   @ResponseBody
   public Resource downloadGraphSvgGeneric(
       @PathVariable("branch") String branch,
@@ -364,7 +364,7 @@ public class WorkflowController {
    *
    * @param branch The branch of repository
    */
-  @GetMapping(value = "/graph/png/**/*.git/{branch}/**", produces = "image/png")
+  @GetMapping(value = "/graph/png/*/*/*.git/{branch}/**", produces = "image/png")
   @ResponseBody
   public Resource downloadGraphPngGeneric(
       @PathVariable("branch") String branch,
@@ -414,7 +414,7 @@ public class WorkflowController {
    *
    * @param branch The branch of repository
    */
-  @GetMapping(value = "/graph/xdot/**/*.git/{branch}/**", produces = "text/vnd.graphviz")
+  @GetMapping(value = "/graph/xdot/*/*/*.git/{branch}/**", produces = "text/vnd.graphviz")
   @ResponseBody
   public Resource downloadGraphDotGeneric(
       @PathVariable("branch") String branch,
