@@ -23,7 +23,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <java.version>17</java.version>
-    <jena.version>4.9.0</jena.version>
+    <jena.version>4.10.0</jena.version>
     <!-- BEGIN should correspond to https://repo1.maven.org/maven2/org/apache/jena/jena/3.9.0/jena-3.9.0.pom -->
     <ver.jsonldjava>0.13.4</ver.jsonldjava>
     <ver.jackson>2.15.3</ver.jackson>
