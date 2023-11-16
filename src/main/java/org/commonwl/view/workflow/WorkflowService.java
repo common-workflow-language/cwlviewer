@@ -33,6 +33,7 @@ import java.util.Optional;
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
+import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitSemaphore;
 import org.commonwl.view.git.GitService;
@@ -308,7 +309,7 @@ public class WorkflowService {
    * @throws IOException Other file handling exceptions
    */
   public QueuedWorkflow createQueuedWorkflow(GitDetails gitInfo)
-      throws GitAPIException, WorkflowNotFoundException, IOException {
+      throws GitAPIException, WorkflowNotFoundException, IOException, CWLValidationException {
     QueuedWorkflow queuedWorkflow;
 
     Git repo = null;
@@ -338,7 +339,7 @@ public class WorkflowService {
 
       // Check workflow is readable
       if (!Files.isReadable(workflowFile)) {
-        throw new WorkflowNotFoundException();
+        throw new WorkflowNotFoundException("Unable to read workflow file on disk.");
       }
 
       // Handling of packed workflows
