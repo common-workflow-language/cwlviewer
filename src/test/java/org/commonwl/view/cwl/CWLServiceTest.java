@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,10 @@ public class CWLServiceTest {
     File packedWorkflowRdf = new File("src/test/resources/cwl/make_to_cwl/dna.ttl");
     Model workflowModel = ModelFactory.createDefaultModel();
     workflowModel.read(
-        new ByteArrayInputStream(readFileToString(packedWorkflowRdf).getBytes()), null, "TURTLE");
+        new ByteArrayInputStream(
+            readFileToString(packedWorkflowRdf, StandardCharsets.UTF_8).getBytes()),
+        null,
+        "TURTLE");
     Dataset workflowDataset = DatasetFactory.create();
     workflowDataset.addNamedModel(
         "https://w3id.org/cwl/view/git/549c973ccc01781595ce562dea4cedc6c9540fe0/workflows/make-to-cwl/dna.cwl#main",
@@ -235,7 +239,8 @@ public class CWLServiceTest {
     // Mock CWLTool
     CWLTool mockCwlTool = Mockito.mock(CWLTool.class);
     File packedWorkflowRdf = new File("src/test/resources/cwl/make_to_cwl/dna.ttl");
-    when(mockCwlTool.getRDF(any(String.class))).thenReturn(readFileToString(packedWorkflowRdf));
+    when(mockCwlTool.getRDF(any(String.class)))
+        .thenReturn(readFileToString(packedWorkflowRdf, StandardCharsets.UTF_8));
 
     // CWLService to test
     CWLService cwlService =
@@ -264,7 +269,8 @@ public class CWLServiceTest {
     assertEquals(1, workflow.getOutputs().size());
     assertEquals(3, workflow.getSteps().size());
     File expectedDotCode = new File("src/test/resources/cwl/make_to_cwl/visualisation.dot");
-    assertEquals(readFileToString(expectedDotCode), workflow.getVisualisationDot());
+    assertEquals(
+        readFileToString(expectedDotCode, StandardCharsets.UTF_8), workflow.getVisualisationDot());
     assertEquals("https://spdx.org/licenses/Apache-2.0", workflow.getLicenseLink());
     assertEquals("Apache License 2.0", workflow.getLicenseName());
   }
