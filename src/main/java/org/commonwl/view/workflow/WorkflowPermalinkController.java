@@ -87,7 +87,7 @@ public class WorkflowPermalinkController {
       produces = {
         MediaType.TEXT_HTML_VALUE,
         MediaType.APPLICATION_JSON_VALUE,
-        MediaType.APPLICATION_JSON_UTF8_VALUE
+        MediaType.APPLICATION_JSON_VALUE
       })
   public void goToViewer(
       @PathVariable("commitid") String commitId,

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -128,7 +129,7 @@ public class CWLService {
     if (workflowFile.length() > singleFileSizeLimit) {
       return false;
     }
-    String fileContent = readFileToString(workflowFile);
+    String fileContent = readFileToString(workflowFile, StandardCharsets.UTF_8);
     return fileContent.contains("$graph");
   }
 
