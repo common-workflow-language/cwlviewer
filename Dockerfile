@@ -43,9 +43,10 @@ RUN apk add --update \
   heimdal \
   && rm -rf /var/cache/apk/*
 
-#wheel needed by ruamel.yaml for some reason
-RUN pip3 install -U wheel setuptools pip
-RUN pip3 install cwltool
+# wheel needed by ruamel.yaml for some reason
+# https://stackoverflow.com/a/75722775
+RUN pip3 install --break-system-packages -U wheel setuptools pip
+RUN pip3 install --break-system-packages cwltool
 
 RUN cwltool --version
 
