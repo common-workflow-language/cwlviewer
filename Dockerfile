@@ -1,4 +1,4 @@
-FROM maven:3-eclipse-temurin-17-alpine AS build-licensee
+FROM docker.io/library/maven:3-eclipse-temurin-17-alpine AS build-licensee
 
 RUN apk add --update \
   alpine-sdk \
@@ -10,7 +10,7 @@ RUN apk add --update \
 RUN gem install licensee
 
 
-FROM maven:3-eclipse-temurin-17-alpine
+FROM docker.io/library/maven:3-eclipse-temurin-17-alpine
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
 # Build-time metadata as defined at https://github.com/opencontainers/image-spec/blob/main/annotations.md
@@ -29,8 +29,8 @@ LABEL org.opencontainers.image.created=$BUILD_DATE \
 RUN apk add --update \
   graphviz \
   ttf-freefont \
-  py3-pip \
   gcc \
+  pipx \
   python3-dev \
   libc-dev \
   nodejs \
@@ -43,9 +43,9 @@ RUN apk add --update \
   heimdal \
   && rm -rf /var/cache/apk/*
 
-#wheel needed by ruamel.yaml for some reason
-RUN pip3 install -U wheel setuptools pip
-RUN pip3 install cwltool
+ENV PATH="/root/.local/bin:${PATH}"
+
+RUN pipx install cwltool
 
 RUN cwltool --version
 
