@@ -23,18 +23,19 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.tbouron.SpdxLicense;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Table;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.WebConfig.Format;
 import org.commonwl.view.cwl.CWLElement;
@@ -42,6 +43,7 @@ import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.util.BaseEntity;
 import org.commonwl.view.util.LicenseUtils;
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -58,7 +60,6 @@ import org.springframework.format.annotation.DateTimeFormat;
       @Index(columnList = "retrievedFrom", unique = true),
       @Index(columnList = "retrievedOn")
     })
-@SuppressWarnings("deprecation")
 public class Workflow extends BaseEntity implements Serializable {
 
   // ID for database
@@ -70,7 +71,7 @@ public class Workflow extends BaseEntity implements Serializable {
 
   // Metadata
   @Column(columnDefinition = "jsonb")
-  @Type(type = "json")
+  @Type(value = JsonType.class)
   @Convert(disableConversion = true)
   private GitDetails retrievedFrom;
 
@@ -95,21 +96,21 @@ public class Workflow extends BaseEntity implements Serializable {
   private String doc;
 
   @Column(columnDefinition = "jsonb")
-  @Type(type = "json")
+  @Type(value = JsonType.class)
   @Convert(disableConversion = true)
   private Map<String, CWLElement> inputs;
 
   @Column(columnDefinition = "jsonb")
-  @Type(type = "json")
+  @Type(value = JsonType.class)
   @Convert(disableConversion = true)
   private Map<String, CWLElement> outputs;
 
   @Column(columnDefinition = "jsonb")
-  @Type(type = "json")
+  @Type(value = JsonType.class)
   @Convert(disableConversion = true)
   private Map<String, CWLStep> steps;
 
-  // Currently only DockerRequirement is parsed for this
+  // Currently, only DockerRequirement is parsed for this
   @Column(columnDefinition = "TEXT")
   private String dockerLink;
 

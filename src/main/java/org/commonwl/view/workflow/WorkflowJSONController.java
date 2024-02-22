@@ -21,9 +21,9 @@ package org.commonwl.view.workflow;
 
 import static org.commonwl.view.cwl.CWLToolStatus.SUCCESS;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
 import org.slf4j.Logger;
@@ -221,7 +221,7 @@ public class WorkflowJSONController {
    * @return The JSON representation of the workflow
    */
   @GetMapping(
-      value = "/workflows/**/*.git/{branch}/**",
+      value = "/workflows/*/*.git/{branch}/**",
       produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
   public Workflow getWorkflowJsonGeneric(
       @PathVariable("branch") String branch, HttpServletRequest request) {
