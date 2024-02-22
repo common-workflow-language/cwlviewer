@@ -26,8 +26,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,8 +41,6 @@ import org.springframework.web.servlet.HandlerMapping;
 /** JSON API Controller */
 @RestController
 public class WorkflowJSONController {
-
-  private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
   private final WorkflowFormValidator workflowFormValidator;
   private final WorkflowService workflowService;
@@ -67,7 +63,7 @@ public class WorkflowJSONController {
    *
    * @return A list of all the workflows
    */
-  @GetMapping(value = "/workflows", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  @GetMapping(value = "/workflows", produces = MediaType.APPLICATION_JSON_VALUE)
   public Page<Workflow> listWorkflowsJson(
       Model model, @PageableDefault(size = 10) Pageable pageable) {
     return workflowService.getPageOfWorkflows(pageable);
@@ -78,10 +74,7 @@ public class WorkflowJSONController {
    *
    * @return A list of all the workflows
    */
-  @GetMapping(
-      value = "/workflows",
-      params = "search",
-      produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  @GetMapping(value = "/workflows", params = "search", produces = MediaType.APPLICATION_JSON_VALUE)
   public Page<Workflow> searchWorkflowsJson(
       Model model,
       @PageableDefault(size = 10) Pageable pageable,
@@ -98,7 +91,7 @@ public class WorkflowJSONController {
    * @param packedId The ID of the workflow if the file is packed
    * @return Appropriate response code and optional JSON string with message
    */
-  @PostMapping(value = "/workflows", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  @PostMapping(value = "/workflows", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<?> newWorkflowFromGitURLJson(
       @RequestParam(value = "url") String url,
       @RequestParam(value = "branch", required = false) String branch,
@@ -119,7 +112,7 @@ public class WorkflowJSONController {
         error = "Could not parse workflow details from URL";
       }
       Map<String, String> message = Collections.singletonMap("message", "Error: " + error);
-      return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<Map<String, String>>(message, HttpStatus.BAD_REQUEST);
     } else {
       // Get workflow or create if does not exist
       Workflow workflow = workflowService.getWorkflow(gitInfo);
@@ -139,7 +132,6 @@ public class WorkflowJSONController {
                 }
               } else {
                 // Error with alternatives suggested
-                List<WorkflowOverview> test = queued.getWorkflowList();
                 List<String> workflowUris = new ArrayList<>();
                 for (WorkflowOverview overview : queued.getWorkflowList()) {
                   workflowUris.add(overview.getFileName().substring(1));
@@ -150,18 +142,19 @@ public class WorkflowJSONController {
                     "This workflow file is packed and contains multiple workflow "
                         + "descriptions. Please provide a packedId parameter with one of the following");
                 responseMap.put("packedId", workflowUris);
-                return new ResponseEntity<Map>(responseMap, HttpStatus.UNPROCESSABLE_ENTITY);
+                return new ResponseEntity<Map<String, Object>>(
+                    responseMap, HttpStatus.UNPROCESSABLE_ENTITY);
               }
             }
           } catch (CWLValidationException ex) {
             Map<String, String> message =
                 Collections.singletonMap("message", "Error:" + ex.getMessage());
-            return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<Map<String, String>>(message, HttpStatus.BAD_REQUEST);
           } catch (Exception ex) {
             Map<String, String> message =
                 Collections.singletonMap(
                     "message", "Error: Workflow could not be created from the provided cwl file");
-            return new ResponseEntity<Map>(message, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<Map<String, String>>(message, HttpStatus.BAD_REQUEST);
           }
         }
         response.setHeader("Location", "/queue/" + queued.getId());
@@ -190,7 +183,7 @@ public class WorkflowJSONController {
         "/workflows/{domain}.com/{owner}/{repoName}/tree/{branch}/**",
         "/workflows/{domain}.com/{owner}/{repoName}/blob/{branch}/**"
       },
-      produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+      produces = MediaType.APPLICATION_JSON_VALUE)
   public Workflow getWorkflowJson(
       @PathVariable("domain") String domain,
       @PathVariable("owner") String owner,
@@ -222,7 +215,7 @@ public class WorkflowJSONController {
    */
   @GetMapping(
       value = "/workflows/**/*.git/{branch}/**",
-      produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+      produces = MediaType.APPLICATION_JSON_VALUE)
   public Workflow getWorkflowJsonGeneric(
       @PathVariable("branch") String branch, HttpServletRequest request) {
     // The wildcard end of the URL is the path
@@ -248,7 +241,7 @@ public class WorkflowJSONController {
    * @return 303 see other status w/ location header if success, otherwise JSON representation of
    *     object
    */
-  @GetMapping(value = "/queue/{queueID}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  @GetMapping(value = "/queue/{queueID}", produces = MediaType.APPLICATION_JSON_VALUE)
   public QueuedWorkflow checkQueueJson(
       @PathVariable("queueID") String queueID, HttpServletResponse response) {
     QueuedWorkflow queuedWorkflow = workflowService.getQueuedWorkflow(queueID);

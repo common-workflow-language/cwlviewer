@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
@@ -102,6 +103,7 @@ public class ModelDotWriterTest {
     dotWriter.writeGraph(testWorkflow);
 
     File expectedDot = new File("src/test/resources/graphviz/testWorkflow.dot");
-    assertEquals(FileUtils.readFileToString(expectedDot), dotSource.toString());
+    assertEquals(
+        FileUtils.readFileToString(expectedDot, StandardCharsets.UTF_8), dotSource.toString());
   }
 }

@@ -91,10 +91,9 @@ public class WorkflowJSONControllerTest {
 
     // Error in validation
     mockMvc
-        .perform(
-            post("/workflows").param("url", "invalidurl").accept(MediaType.APPLICATION_JSON_UTF8))
+        .perform(post("/workflows").param("url", "invalidurl").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.message", is("Error: Could not parse workflow details from URL")));
 
     // Workflow already exists
@@ -102,7 +101,7 @@ public class WorkflowJSONControllerTest {
         .perform(
             post("/workflows")
                 .param("url", "https://github.com/owner/repoName/tree/branch/path/workflow.cwl")
-                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isSeeOther())
         .andExpect(
             header()
@@ -115,7 +114,7 @@ public class WorkflowJSONControllerTest {
         .perform(
             post("/workflows")
                 .param("url", "https://github.com/owner/repoName/tree/branch/path/workflow.cwl")
-                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest());
 
     // Success
@@ -123,7 +122,7 @@ public class WorkflowJSONControllerTest {
         .perform(
             post("/workflows")
                 .param("url", "https://github.com/owner/repoName/tree/branch/path/success.cwl")
-                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isAccepted())
         .andExpect(header().string("Location", is("/queue/123")));
 
@@ -132,7 +131,7 @@ public class WorkflowJSONControllerTest {
         .perform(
             post("/workflows")
                 .param("url", "https://github.com/owner/repoName/tree/branch/path/singlePacked.cwl")
-                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isAccepted())
         .andExpect(header().string("Location", is("/queue/123")));
 
@@ -142,7 +141,7 @@ public class WorkflowJSONControllerTest {
             post("/workflows")
                 .param(
                     "url", "https://github.com/owner/repoName/tree/branch/path/multiplePacked.cwl")
-                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(
             jsonPath(
@@ -174,7 +173,7 @@ public class WorkflowJSONControllerTest {
             get("/workflows/github.com/owner/repo/blob/branch/path/to/workflow.cwl")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.retrievedFrom.repoUrl", is("https://github.com/owner/repo.git")))
         .andExpect(jsonPath("$.retrievedFrom.branch", is("branch")))
         .andExpect(jsonPath("$.retrievedFrom.path", is("path/to/workflow.cwl")))
@@ -224,29 +223,29 @@ public class WorkflowJSONControllerTest {
 
     // No workflow
     mockMvc
-        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON_UTF8))
+        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
 
     // Running workflow
     mockMvc
-        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON_UTF8))
+        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.cwltoolStatus", is("RUNNING")))
         .andExpect(jsonPath("$.cwltoolVersion", is("v1.0")));
 
     // Error workflow
     mockMvc
-        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON_UTF8))
+        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.cwltoolStatus", is("ERROR")))
         .andExpect(jsonPath("$.message", is("cwltool error message")))
         .andExpect(jsonPath("$.cwltoolVersion", is("v1.0")));
 
     // Success workflow
     mockMvc
-        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON_UTF8))
+        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isSeeOther())
         .andExpect(
             header()
