@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -128,7 +129,7 @@ public class CWLService {
     if (workflowFile.length() > singleFileSizeLimit) {
       return false;
     }
-    String fileContent = readFileToString(workflowFile);
+    String fileContent = readFileToString(workflowFile, StandardCharsets.UTF_8);
     return fileContent.contains("$graph");
   }
 
@@ -180,7 +181,8 @@ public class CWLService {
    * @return The constructed workflow object
    */
   public Workflow parseWorkflowNative(
-      InputStream workflowStream, String packedWorkflowId, String defaultLabel) throws IOException {
+      InputStream workflowStream, String packedWorkflowId, String defaultLabel)
+      throws IOException, WorkflowNotFoundException, CWLValidationException {
     // Parse file as yaml
     Map<String, Object> cwlFile = yamlStreamToJson(workflowStream);
 
@@ -204,9 +206,11 @@ public class CWLService {
       }
       if (!found && !packedWorkflowId.isEmpty()) throw new WorkflowNotFoundException();
     }
-    if (!found && extractProcess(cwlFile) == CWLProcess.WORKFLOW) {
-      // Check the current json node is a workflow
+    if (!found && (extractProcess(cwlFile) == CWLProcess.WORKFLOW)) {
       found = true;
+    } else if (found && (extractProcess(cwlFile) != CWLProcess.WORKFLOW)) {
+      throw new CWLNotAWorkflowException(
+          "Not a 'class: Workflow' CWL document, is a " + extractProcess(cwlFile));
     }
     if (!found) {
       throw new WorkflowNotFoundException();
@@ -247,7 +251,7 @@ public class CWLService {
    * @return The constructed workflow object
    */
   public Workflow parseWorkflowNative(Path workflowFile, String packedWorkflowId)
-      throws IOException {
+      throws IOException, WorkflowNotFoundException, CWLValidationException {
 
     // Check file size limit before parsing
     long fileSizeBytes = Files.size(workflowFile);

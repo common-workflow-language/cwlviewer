@@ -58,7 +58,6 @@ import org.springframework.format.annotation.DateTimeFormat;
       @Index(columnList = "retrievedFrom", unique = true),
       @Index(columnList = "retrievedOn")
     })
-@SuppressWarnings("deprecation")
 public class Workflow extends BaseEntity implements Serializable {
 
   // ID for database

@@ -38,8 +38,6 @@ import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -47,8 +45,6 @@ import org.springframework.stereotype.Service;
 /** Handles Git related functionality */
 @Service
 public class GitService {
-
-  private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
   // Location to check out git repositories into
   private final Path gitStorage;

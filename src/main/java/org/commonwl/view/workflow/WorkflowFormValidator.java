@@ -23,8 +23,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.git.GitDetails;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
@@ -32,8 +30,6 @@ import org.springframework.validation.ValidationUtils;
 /** Runs validation on the workflow form from the main page */
 @Component
 public class WorkflowFormValidator {
-
-  private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
   // URL validation for cwl files on github.com
   private static final String GITHUB_CWL_REGEX =

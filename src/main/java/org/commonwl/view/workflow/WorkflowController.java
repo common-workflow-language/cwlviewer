@@ -30,8 +30,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.WebConfig;
+import org.commonwl.view.cwl.CWLNotAWorkflowException;
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolStatus;
+import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.graphviz.GraphVizService;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -162,6 +164,10 @@ public class WorkflowController {
         } catch (WorkflowNotFoundException ex) {
           logger.warn("git.notFound " + workflowForm, ex);
           bindingResult.rejectValue("url", "git.notFound");
+          return new ModelAndView("index");
+        } catch (CWLNotAWorkflowException ex) {
+          logger.warn("cwl.notAWorkflow " + workflowForm, ex);
+          bindingResult.rejectValue("url", "cwl.notAWorkflow");
           return new ModelAndView("index");
         } catch (Exception ex) {
           logger.warn("url.parsingError " + workflowForm, ex);
@@ -629,7 +635,11 @@ public class WorkflowController {
           } catch (WorkflowNotFoundException ex) {
             logger.warn("git.notFound " + workflowForm, ex);
             errors.rejectValue(
-                "url", "git.notFound", "The workflow could not be found within the repository");
+                "url", "git.notFound", "The workflow could not be found within the repository.");
+          } catch (CWLValidationException ex) {
+            logger.warn("cwl.invalid " + workflowForm, ex);
+            errors.rejectValue(
+                "url", "cwl.invalid", "The workflow had a parsing error: " + ex.getMessage());
           } catch (IOException ex) {
             logger.warn("url.parsingError " + workflowForm, ex);
             errors.rejectValue(
@@ -658,7 +668,8 @@ public class WorkflowController {
     }
   }
 
-  private Resource getGraphFromInputStream(InputStream in, String format) throws IOException {
+  private Resource getGraphFromInputStream(InputStream in, String format)
+      throws IOException, WorkflowNotFoundException, CWLValidationException {
     Workflow workflow =
         cwlService.parseWorkflowNative(in, null, "workflow"); // first workflow will do
     InputStream out = graphVizService.getGraphStream(workflow.getVisualisationDot(), format);
