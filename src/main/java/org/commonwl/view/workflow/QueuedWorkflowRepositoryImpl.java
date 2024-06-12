@@ -1,8 +1,10 @@
 package org.commonwl.view.workflow;
 
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import io.hypersistence.utils.hibernate.type.json.JsonBlobType;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.commonwl.view.git.GitDetails;
 import org.hibernate.query.Query;
 
@@ -23,11 +25,8 @@ public class QueuedWorkflowRepositoryImpl implements QueuedWorkflowRepositoryCus
         entityManager
             .createNativeQuery(QUERY_FIND_BY_RETRIEVED_FROM, QueuedWorkflow.class)
             .unwrap(Query.class)
-            .setParameter("retrievedFrom", retrievedFrom, JsonBinaryType.INSTANCE)
-            .getResultList()
-            .stream()
-            .findFirst()
-            .orElse(null);
+            .setParameter("retrievedFrom", retrievedFrom, JsonBlobType.INSTANCE)
+            .getSingleResult();
   }
 
   @Override
@@ -35,7 +34,7 @@ public class QueuedWorkflowRepositoryImpl implements QueuedWorkflowRepositoryCus
     entityManager
         .createNativeQuery(QUERY_DELETE_BY_RETRIEVED_FROM, QueuedWorkflow.class)
         .unwrap(Query.class)
-        .setParameter("retrievedFrom", retrievedFrom, JsonBinaryType.INSTANCE)
+        .setParameter("retrievedFrom", retrievedFrom, JsonType.INSTANCE)
         .executeUpdate();
   }
 }
