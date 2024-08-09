@@ -62,7 +62,7 @@ services:
 #    ports:
 #     - "3030:3030"
 ## To find the admin password, try:
-##   docker-compose exec sparql grep admin /fuseki/shiro.ini
+##   docker compose exec sparql grep admin /fuseki/shiro.ini
     image: stain/jena-fuseki:3.4.0
     networks:
       - sparql

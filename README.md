@@ -30,7 +30,7 @@ Then run the following commands to clone the project in your local system.
 
 In the project directory, to start CWLViewer exposed on port `8080`, run:
 
-    docker-compose up
+    docker compose up
 
 The web server will connect to a local host, you'll see the message saying "Tomcat started on port(s):8080".
 
@@ -38,11 +38,11 @@ To see the locally running CWL Viewer app, visit http://localhost:8080/ in your 
 
 To stop and remove:
 
-    docker-compose down
+    docker compose down
 
 
 If you change the source code, then use this `docker-compose.override.yml` and
-re-build with `docker-compose build`:
+re-build with `docker compose build`:
 
 ```yaml
 version: '3.9'
@@ -75,7 +75,7 @@ services:
 Then start the containers:
 
 ```
-docker-compose up
+docker compose up
 ```
 
 Then start Spring Boot locally:
@@ -91,7 +91,7 @@ Now you can connect to http://localhost:7999 in your browser.
 To completely reset the state, you must delete the data volumes:
 
 ```
-docker-compose down
+docker compose down
 docker volume rm  cwlviewer_bundle cwlviewer_git cwlviewer_graphviz cwlviewer_postgres cwlviewer_sparql
 ```
 
