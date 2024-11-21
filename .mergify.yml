@@ -1,18 +1,18 @@
 queue_rules:
   - name: default
-    conditions:
-      - -draft # not a draft
-      - base=main
-
-pull_request_rules:
-  - name: Automatic merge on approval and when when GitHub branch protection passes on main
-    conditions:
+    queue_conditions:
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by<1"
       - -draft
       - base=main
       - label!=dependencies
+    merge_conditions:
+      - -draft # not a draft
+      - base=main
+    merge_method: merge
+
+pull_request_rules:
+  - name: refactored queue action rule
+    conditions: []
     actions:
       queue:
-        method: merge
-        name: default
