@@ -74,10 +74,7 @@ public class WorkflowJSONController {
    *
    * @return A list of all the workflows
    */
-  @GetMapping(
-      value = "/workflows",
-      params = "search",
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "/workflows", params = "search", produces = MediaType.APPLICATION_JSON_VALUE)
   public Page<Workflow> searchWorkflowsJson(
       Model model,
       @PageableDefault(size = 10) Pageable pageable,
@@ -216,9 +213,7 @@ public class WorkflowJSONController {
    * @param branch The branch of the repository
    * @return The JSON representation of the workflow
    */
-  @GetMapping(
-      value = "/workflows/*/*.git/{branch}/**",
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "/workflows/*/*.git/{branch}/**", produces = MediaType.APPLICATION_JSON_VALUE)
   public Workflow getWorkflowJsonGeneric(
       @PathVariable("branch") String branch, HttpServletRequest request) {
     // The wildcard end of the URL is the path

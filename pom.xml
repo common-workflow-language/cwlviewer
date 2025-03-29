@@ -86,7 +86,7 @@
     <!-- Liquibase; note that Flyway, while probably having more documentation and users,
          changed its license model. Similarly to mongo, we prefer an open license that
          won't lock users or developers from updating or modifying the code if necessary.
-         Hence our choice for liquibase. Feel free to suggest alternatives, but keep in
+         Hence, our choice for liquibase. Feel free to suggest alternatives, but keep in
          mind the license.
     -->
     <dependency>
@@ -158,6 +158,12 @@
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.18.0</version>
+    </dependency>
+    <!-- Lang, used by Liquibase 4.30/0+ -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.17.0</version>
     </dependency>
     <!-- For JSR-303, javax.validation -->
     <dependency>
