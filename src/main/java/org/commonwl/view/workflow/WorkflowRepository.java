@@ -20,11 +20,10 @@
 package org.commonwl.view.workflow;
 
 import java.util.List;
-import org.commonwl.view.git.GitDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -34,15 +33,8 @@ import org.springframework.stereotype.Repository;
  * href="https://docs.spring.io/spring-data/jpa/docs/current/reference/html/">...</a>
  */
 @Repository
-public interface WorkflowRepository extends CrudRepository<Workflow, String> {
-
-  /**
-   * Finds a workflow model in the database based on where it was retrieved from
-   *
-   * @param retrievedFrom Details of where the workflow is from
-   * @return The workflow model
-   */
-  Workflow findByRetrievedFrom(GitDetails retrievedFrom);
+public interface WorkflowRepository
+    extends JpaRepository<Workflow, String>, WorkflowRepositoryCustom {
 
   /**
    * Finds a workflow model in the database based on a commit ID and path
