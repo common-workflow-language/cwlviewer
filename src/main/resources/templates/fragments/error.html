@@ -29,7 +29,7 @@
     </head>
     <body>
 
-        <nav th:replace="fragments/header :: navbar"></nav>
+        <nav th:replace="~{fragments/header :: navbar}"></nav>
 
         <div class="container">
             <div class="row">
@@ -47,6 +47,6 @@
             </div>
         </div>
 
-        <div th:replace="fragments/footer :: copy"></div>
+        <div th:replace="~{fragments/footer :: copy}"></div>
     </body>
 </html>

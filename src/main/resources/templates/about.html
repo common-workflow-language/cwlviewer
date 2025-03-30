@@ -29,7 +29,7 @@
 </head>
 <body>
 
-<nav th:replace="fragments/header :: navbar"></nav>
+<nav th:replace="~{fragments/header :: navbar}"></nav>
 
 <div class="container">
     <div class="row">
@@ -286,7 +286,7 @@ s:license: "https://www.apache.org/licenses/LICENSE-2.0"
     </div>
 </div>
 
-<div th:replace="fragments/footer :: copy"></div>
+<div th:replace="~{fragments/footer :: copy}"></div>
 
 <script src="/bower_components/requirejs/require.js" data-main="/js/docs.js"></script>
 </body>
