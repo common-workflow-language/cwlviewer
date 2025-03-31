@@ -17,7 +17,7 @@ public class PostgreSQLContextInitializer
   @Override
   public void initialize(ConfigurableApplicationContext applicationContext) {
     PostgreSQLContainer<?> postgreSQLContainer =
-        new PostgreSQLContainer<>("postgres:9.6.12")
+        new PostgreSQLContainer<>("postgres:17.4")
             .withDatabaseName("cwlviewer")
             .withUsername("sa")
             .withPassword("sa");
