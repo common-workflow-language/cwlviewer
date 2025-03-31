@@ -12,17 +12,18 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @TestPropertySource(locations = "classpath:it-application.properties")
 @DataJpaTest(showSql = true)
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
 @ContextConfiguration(initializers = PostgreSQLContextInitializer.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class QueuedWorkflowRepositoryTest {
 
   @Autowired QueuedWorkflowRepository repository;
 
-  @Transactional
   @Test
   public void deleteQueuedWorkflowByRetrievedFromTest() {
 
