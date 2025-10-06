@@ -92,7 +92,7 @@
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
-      <version>5.0.0</version>
+      <version>5.0.1</version>
     </dependency>
     <!-- Postgres -->
     <dependency>
