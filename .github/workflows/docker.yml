@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Build the CWLViewer Java Maven docker image
         run: docker build -f Dockerfile -t commonworkflowlanguage/cwlviewer:latest .
       - name: Confirm we can execute java in the container
