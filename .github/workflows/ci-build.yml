@@ -43,8 +43,8 @@ jobs:
       - name: Install system packages
         run: |
           sudo apt-get -qq update
-          sudo apt-get install graphviz python3-pip
-          sudo pip install cwltool
+          sudo apt-get install graphviz pipx
+          pipx install cwltool
 
       - name: Build and test with Maven
         run: |
@@ -53,7 +53,7 @@ jobs:
       - name: Coverage report
         run: |
           mvn prepare-package -DskipTests=true
-          mvn --errors jacoco:report coveralls:report --no-transfer-progress -DrepoToken=$COVERALLS_SECRET -DpullRequest=${{ github.event.number }}
+          mvn --errors jacoco:report coveralls:report --no-transfer-progress -DrepoToken="$COVERALLS_SECRET" -DpullRequest=${{ github.event.number }}
         env:
           CI_NAME: github
           COVERALLS_SECRET: ${{ secrets.GITHUB_TOKEN }}
