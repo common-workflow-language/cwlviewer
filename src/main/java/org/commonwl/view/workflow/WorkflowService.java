@@ -48,7 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.PathResource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -476,7 +476,7 @@ public class WorkflowService {
    * @throws WorkflowNotFoundException Error getting the workflow or format
    * @throws IOException Error reading the workflow files
    */
-  public PathResource getWorkflowGraph(String format, GitDetails gitDetails)
+  public ClassPathResource getWorkflowGraph(String format, GitDetails gitDetails)
       throws WorkflowNotFoundException, IOException {
     // Determine file extension from format
     String extension;
@@ -503,7 +503,7 @@ public class WorkflowService {
     Path out =
         graphVizService.getGraphPath(
             workflow.getID() + "." + extension, workflow.getVisualisationDot(), format);
-    return new PathResource(out);
+    return new ClassPathResource(out.toString());
   }
 
   /**

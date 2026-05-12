@@ -142,7 +142,7 @@ public class WorkflowJSONControllerTest {
                 .param(
                     "url", "https://github.com/owner/repoName/tree/branch/path/multiplePacked.cwl")
                 .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isUnprocessableContent())
         .andExpect(
             jsonPath(
                 "$.message",

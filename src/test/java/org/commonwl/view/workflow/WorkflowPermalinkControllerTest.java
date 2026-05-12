@@ -19,8 +19,8 @@
 
 package org.commonwl.view.workflow;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -31,7 +31,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.commonwl.view.cwl.RDFService;
@@ -40,7 +39,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
-import org.springframework.core.io.PathResource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -50,12 +49,12 @@ public class WorkflowPermalinkControllerTest {
   @TempDir private Path tempDir;
   private MockMvc mockMvc;
   private byte[] rdfResponse;
-  private final PathResource png =
-      new PathResource(Paths.get("src/test/resources/graphviz/testVis.png"));
-  private final PathResource svg =
-      new PathResource(Paths.get("src/test/resources/graphviz/testVis.svg"));
-  private final PathResource dot =
-      new PathResource(Paths.get("src/test/resources/graphviz/testWorkflow.dot"));
+  private final ClassPathResource png =
+      new ClassPathResource("src/test/resources/graphviz/testVis.png");
+  private final ClassPathResource svg =
+      new ClassPathResource("src/test/resources/graphviz/testVis.svg");
+  private final ClassPathResource dot =
+      new ClassPathResource("src/test/resources/graphviz/testWorkflow.dot");
 
   @BeforeEach
   public void setUp() throws Exception {
