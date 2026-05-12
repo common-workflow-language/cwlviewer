@@ -1,4 +1,4 @@
-FROM docker.io/library/maven:3-eclipse-temurin-17-alpine AS build-licensee
+FROM docker.io/library/maven:3-eclipse-temurin-25-alpine AS build-licensee
 
 RUN apk add --update \
   alpine-sdk \
@@ -10,7 +10,7 @@ RUN apk add --update \
 RUN gem install licensee
 
 
-FROM docker.io/library/maven:3-eclipse-temurin-17-alpine
+FROM docker.io/library/maven:3-eclipse-temurin-25-alpine
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
 # Build-time metadata as defined at https://github.com/opencontainers/image-spec/blob/main/annotations.md
