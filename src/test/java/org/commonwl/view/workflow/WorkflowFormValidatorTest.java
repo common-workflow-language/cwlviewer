@@ -38,8 +38,7 @@ public class WorkflowFormValidatorTest {
 
   /** GitHub File URL */
   @Test
-  public void githubUrl() {
-
+  public void gitHubUrl() {
     WorkflowForm githubUrl =
         new WorkflowForm(
             "https://github.com/nlesc-sherlock/deeplearning/blob/master/CWLworkflow/pipeline.cwl");
@@ -55,8 +54,7 @@ public class WorkflowFormValidatorTest {
 
   /** Gitlab File URL */
   @Test
-  public void gitlabUrl() {
-
+  public void gitLabUrl() {
     WorkflowForm gitlabUrl =
         new WorkflowForm(
             "https://gitlab.com/unduthegun/stellaris-emblem-lab/blob/cwl/textures/textures.cwl");
@@ -72,15 +70,15 @@ public class WorkflowFormValidatorTest {
 
   /** Generic File URL */
   @Test
-  public void genericUrl() {
+  public void genericGitUrl() {
 
-    WorkflowForm genericUrl =
+    WorkflowForm genericGitUrl =
         new WorkflowForm("https://bitbucket.org/markrobinson96/workflows.git");
-    genericUrl.setBranch("branchName");
-    genericUrl.setPath("path/to/workflow.cwl");
+    genericGitUrl.setBranch("branchName");
+    genericGitUrl.setPath("path/to/workflow.cwl");
 
-    Errors errors = new BeanPropertyBindingResult(genericUrl, "workflowForm");
-    GitDetails details = workflowFormValidator.validateAndParse(genericUrl, errors);
+    Errors errors = new BeanPropertyBindingResult(genericGitUrl, "workflowForm");
+    GitDetails details = workflowFormValidator.validateAndParse(genericGitUrl, errors);
 
     assertNotNull(details);
     assertEquals("https://bitbucket.org/markrobinson96/workflows.git", details.getRepoUrl());
@@ -92,7 +90,6 @@ public class WorkflowFormValidatorTest {
   /** Packed URL */
   @Test
   public void packedUrl() {
-
     WorkflowForm githubUrl =
         new WorkflowForm(
             "https://github.com/MarkRobbo/workflows/tree/master/packed.cwl#workflowId");
@@ -110,7 +107,6 @@ public class WorkflowFormValidatorTest {
   /** Empty URL */
   @Test
   public void emptyURL() {
-
     WorkflowForm emptyURL = new WorkflowForm("");
 
     Errors errors = new BeanPropertyBindingResult(emptyURL, "workflowForm");
@@ -123,7 +119,6 @@ public class WorkflowFormValidatorTest {
   /** Invalid URL */
   @Test
   public void invalidURL() {
-
     WorkflowForm invalidURL = new WorkflowForm("https://google.com/clearly/not/github/url");
 
     Errors errors = new BeanPropertyBindingResult(invalidURL, "workflowForm");
@@ -136,7 +131,6 @@ public class WorkflowFormValidatorTest {
   /** Generic File URL without branch or path */
   @Test
   public void noBranchOrPath() {
-
     WorkflowForm genericUrl =
         new WorkflowForm("https://bitbucket.org/markrobinson96/workflows.git");
 

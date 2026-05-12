@@ -79,7 +79,7 @@ public class WorkflowForm {
     return packedId;
   }
 
-  public void setPackedId(String packedId) {
+  public void getGitDetailssetPackedId(String packedId) {
     this.packedId = packedId;
   }
 
