@@ -19,15 +19,17 @@
 
 package org.commonwl.view.git;
 
-import static org.commonwl.view.git.GitDetails.normaliseUrl;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.when;
-
-import java.io.File;
 import org.eclipse.jgit.lib.Repository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.io.File;
+
+import static org.commonwl.view.git.GitDetails.normaliseUrl;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.Mockito.when;
 
 public class GitDetailsTest {
 
@@ -48,7 +50,7 @@ public class GitDetailsTest {
 
   /** Branch getter, should default to "master" if null */
   @Test
-  public void getBranch() throws Exception {
+  public void getBranch() {
     GitDetails details1 =
         new GitDetails("https://repo.url/repo.git", "testbranch", "path/within/workflow.cwl");
     assertEquals("testbranch", details1.getBranch());
@@ -60,7 +62,7 @@ public class GitDetailsTest {
 
   /** Path getter, should default to / if null */
   @Test
-  public void getPath() throws Exception {
+  public void getPath() {
     GitDetails details1 = new GitDetails("https://repo.url/repo.git", "branch", "subdir/");
     assertEquals("subdir/", details1.getPath());
 
@@ -74,7 +76,7 @@ public class GitDetailsTest {
 
   /** Get the type of URLs from Git details */
   @Test
-  public void getType() throws Exception {
+  public void getType() {
     assertEquals(GitType.GITHUB, GITHUB_DETAILS.getType());
     assertEquals(GitType.GITLAB, GITLAB_DETAILS.getType());
     assertEquals(GitType.BITBUCKET, BITBUCKET_DETAILS.getType());
@@ -83,7 +85,7 @@ public class GitDetailsTest {
 
   /** Construct a URL from Git details */
   @Test
-  public void getUrl() throws Exception {
+  public void getUrl() {
     assertEquals(
         "https://github.com/owner/repoName/blob/branch/path/within/structure.cwl",
         GITHUB_DETAILS.getUrl());
@@ -101,7 +103,7 @@ public class GitDetailsTest {
 
   /** Construct the internal link to a workflow from Git details */
   @Test
-  public void getInternalUrl() throws Exception {
+  public void getInternalUrl() {
     assertEquals(
         "/workflows/github.com/owner/repoName/blob/branch/path/within/structure.cwl",
         GITHUB_DETAILS.getInternalUrl());
@@ -121,7 +123,7 @@ public class GitDetailsTest {
 
   /** Construct the raw URL to a workflow file from Git details */
   @Test
-  public void getRawUrl() throws Exception {
+  public void getRawUrl() {
     assertEquals(
         "https://raw.githubusercontent.com/owner/repoName/branch/path/within/structure.cwl",
         GITHUB_DETAILS.getRawUrl());
@@ -138,7 +140,7 @@ public class GitDetailsTest {
 
   /** Normalise a URL removing protocol and www. */
   @Test
-  public void getNormaliseUrl() throws Exception {
+  public void getNormaliseUrl() {
     assertEquals("github.com/test/url/here", normaliseUrl("https://www.github.com/test/url/here"));
     assertEquals("github.com/test/url/here", normaliseUrl("ssh://www.github.com/test/url/here"));
     assertEquals(
@@ -147,27 +149,46 @@ public class GitDetailsTest {
     assertEquals("github.com/test/url/here", normaliseUrl("http://github.com/test/url/here"));
   }
 
+  /**
+   * Check if the licensee gem is installed and its binary is available.
+   *
+   * @return {@code true} if {@code licensee} is found in the {@code $PATH}.
+   */
+  private boolean isLicenseeAvailable() {
+    try {
+      Process p = new ProcessBuilder("licensee", "--version").redirectErrorStream(true).start();
+
+      int exit = p.waitFor();
+      return exit == 0;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   /** Retrieves license details from the repo, if present. */
   @Test
-  public void getLicense() throws Exception {
-    Repository mockRepo = Mockito.mock(Repository.class);
+  public void getLicense() {
+    assumeTrue(isLicenseeAvailable(), "Skipping test: licensee not in PATH");
 
-    when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/apache/"));
-    assertEquals(
-        "https://spdx.org/licenses/Apache-2.0",
-        GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+      try (Repository mockRepo = Mockito.mock(Repository.class)) {
 
-    when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/multiple/"));
-    assertEquals(
-        "https://spdx.org/licenses/Apache-2.0",
-        GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+          when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/apache/"));
+          assertEquals(
+                  "https://spdx.org/licenses/Apache-2.0",
+                  GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
 
-    when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/other/"));
-    assertEquals(
-        "https://could.com/be/anything.git",
-        GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+          when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/multiple/"));
+          assertEquals(
+                  "https://spdx.org/licenses/Apache-2.0",
+                  GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
 
-    when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/none/"));
-    assertNull(GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+          when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/other/"));
+          assertEquals(
+                  "https://could.com/be/anything.git",
+                  GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+
+          when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/none/"));
+          assertNull(GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+      }
   }
 }

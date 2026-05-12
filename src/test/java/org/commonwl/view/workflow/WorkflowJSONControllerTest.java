@@ -19,6 +19,20 @@
 
 package org.commonwl.view.workflow;
 
+import org.commonwl.view.cwl.CWLToolStatus;
+import org.commonwl.view.cwl.CWLValidationException;
+import org.commonwl.view.git.GitDetails;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,23 +44,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import org.commonwl.view.cwl.CWLToolStatus;
-import org.commonwl.view.cwl.CWLValidationException;
-import org.commonwl.view.git.GitDetails;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 /** API testing */
 public class WorkflowJSONControllerTest {
 
   @Test
   public void newWorkflowFromGithubURLJson() throws Exception {
+    final var uuid = UUID.randomUUID();
 
     // Validator pass or fail
     WorkflowFormValidator mockValidator = Mockito.mock(WorkflowFormValidator.class);
@@ -63,7 +66,7 @@ public class WorkflowJSONControllerTest {
         .thenReturn(
             new GitDetails("https://github.com/owner/repoName.git", "branch", "path/workflow.cwl"));
     QueuedWorkflow mockQueuedWorkflow = Mockito.mock(QueuedWorkflow.class);
-    when(mockQueuedWorkflow.getId()).thenReturn("123");
+    when(mockQueuedWorkflow.getId()).thenReturn(uuid);
     when(mockQueuedWorkflow.getTempRepresentation()).thenReturn(mockWorkflow);
     List<WorkflowOverview> listOfTwoOverviews = new ArrayList<>();
     listOfTwoOverviews.add(new WorkflowOverview("#packedId1", "label", "doc"));
@@ -124,7 +127,7 @@ public class WorkflowJSONControllerTest {
                 .param("url", "https://github.com/owner/repoName/tree/branch/path/success.cwl")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isAccepted())
-        .andExpect(header().string("Location", is("/queue/123")));
+        .andExpect(header().string("Location", is("/queue/" + uuid)));
 
     // Packed workflow with one ID is still accepted and parsed using that ID
     mockMvc
@@ -133,7 +136,7 @@ public class WorkflowJSONControllerTest {
                 .param("url", "https://github.com/owner/repoName/tree/branch/path/singlePacked.cwl")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isAccepted())
-        .andExpect(header().string("Location", is("/queue/123")));
+        .andExpect(header().string("Location", is("/queue/" + uuid)));
 
     // Packed workflow with multiple IDs is unprocessable
     mockMvc
@@ -193,6 +196,8 @@ public class WorkflowJSONControllerTest {
   @Test
   public void checkQueue() throws Exception {
 
+    final var uuid = UUID.randomUUID();
+
     QueuedWorkflow qwfRunning = new QueuedWorkflow();
     qwfRunning.setCwltoolStatus(CWLToolStatus.RUNNING);
     qwfRunning.setCwltoolVersion("v1.0");
@@ -223,12 +228,12 @@ public class WorkflowJSONControllerTest {
 
     // No workflow
     mockMvc
-        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON))
+        .perform(get("/queue/" + uuid).accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
 
     // Running workflow
     mockMvc
-        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON))
+        .perform(get("/queue/" + uuid).accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.cwltoolStatus", is("RUNNING")))
@@ -236,7 +241,7 @@ public class WorkflowJSONControllerTest {
 
     // Error workflow
     mockMvc
-        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON))
+        .perform(get("/queue/" + uuid).accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.cwltoolStatus", is("ERROR")))
@@ -245,7 +250,7 @@ public class WorkflowJSONControllerTest {
 
     // Success workflow
     mockMvc
-        .perform(get("/queue/123").accept(MediaType.APPLICATION_JSON))
+        .perform(get("/queue/" + uuid).accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isSeeOther())
         .andExpect(
             header()

@@ -19,13 +19,14 @@
 
 package org.commonwl.view.researchobject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class HashableAgentTest {
 

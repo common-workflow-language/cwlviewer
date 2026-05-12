@@ -22,12 +22,6 @@ package org.commonwl.view.workflow;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
-import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.cwl.CWLNotAWorkflowException;
@@ -42,9 +36,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -52,10 +46,21 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 @Controller
 public class WorkflowController {
@@ -444,7 +449,7 @@ public class WorkflowController {
       value = {"/queue/{queueID}/tempgraph.png"},
       produces = "image/png")
   @ResponseBody
-  public PathResource getTempGraphAsPng(
+  public ClassPathResource getTempGraphAsPng(
       @PathVariable("queueID") String queueID, HttpServletResponse response) throws IOException {
     QueuedWorkflow queued = workflowService.getQueuedWorkflow(queueID);
     if (queued == null) {
@@ -454,7 +459,7 @@ public class WorkflowController {
         graphVizService.getGraphPath(
             queued.getId() + ".png", queued.getTempRepresentation().getVisualisationDot(), "png");
     response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
-    return new PathResource(out);
+    return new ClassPathResource(out.toString());
   }
 
   /**

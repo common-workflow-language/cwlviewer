@@ -1,13 +1,5 @@
 package org.commonwl.view;
 
-import java.io.File;
-import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.AgeFileFilter;
 import org.commonwl.view.workflow.QueuedWorkflowRepository;
@@ -17,6 +9,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Stream;
 
 /** Scheduler class for recurrent processes. */
 @Component

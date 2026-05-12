@@ -2,21 +2,21 @@ package org.commonwl.view.workflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.commonwl.view.cwl.CWLToolStatus;
+import org.commonwl.view.util.BaseEntity;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
-import org.commonwl.view.cwl.CWLToolStatus;
-import org.commonwl.view.util.BaseEntity;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
+import java.util.UUID;
 
 /** A workflow pending completion of cwltool */
 @JsonIgnoreProperties(value = {"id", "tempRepresentation", "workflowList"})
@@ -27,28 +27,24 @@ public class QueuedWorkflow extends BaseEntity implements Serializable {
 
   // ID for database
   @Id
-  @GenericGenerator(name = "uuid2", strategy = "uuid2")
-  @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "uuid2")
-  @Column(length = 36, nullable = false, updatable = false)
-  public String id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(nullable = false, updatable = false)
+  private UUID id;
 
   // Very barebones workflow to build loading thumbnail and overview
   @Column(columnDefinition = "jsonb")
-  @Type(value = JsonType.class)
-  @Convert(disableConversion = true)
+  @JdbcTypeCode(SqlTypes.JSON)
   private Workflow tempRepresentation;
 
   // List of packed workflows for packed workflows
   // TODO: Refactor so this is not necessary
   @Column(columnDefinition = "jsonb")
-  @Type(value = JsonType.class)
-  @Convert(disableConversion = true)
+  @JdbcTypeCode(SqlTypes.JSON)
   private List<WorkflowOverview> workflowList;
 
   // Cwltool details
   @Column(columnDefinition = "jsonb")
-  @Type(value = JsonType.class)
-  @Convert(disableConversion = true)
+  @JdbcTypeCode(SqlTypes.JSON)
   private CWLToolStatus cwltoolStatus = CWLToolStatus.RUNNING;
 
   @Column(columnDefinition = "TEXT")
@@ -57,7 +53,7 @@ public class QueuedWorkflow extends BaseEntity implements Serializable {
   @Column(columnDefinition = "TEXT")
   private String message;
 
-  public String getId() {
+  public UUID getId() {
     return id;
   }
 

@@ -21,9 +21,6 @@ package org.commonwl.view.workflow;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
 import org.commonwl.view.cwl.RDFService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -34,6 +31,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.HandlerMapping;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Allows permalinks in URIs across our RDF to identify a workflow or a workflow file

@@ -19,13 +19,13 @@
 
 package org.commonwl.view.cwl;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = RDFService.class)
@@ -36,7 +36,7 @@ public class RDFServiceTest {
 
   /** Test extracting step names from full URIs */
   @Test
-  public void stepNameFromURI() throws Exception {
+  public void stepNameFromURI() {
 
     // PACKED - with and without input
     String baseURL =
@@ -57,7 +57,7 @@ public class RDFServiceTest {
 
   /** Test formatting default values */
   @Test
-  public void formatDefault() throws Exception {
+  public void formatDefault() {
     assertEquals("\\\"-bg\\\"", rdfService.formatDefault("-bg"));
     assertEquals(
         "10000", rdfService.formatDefault("10000^^http://www.w3.org/2001/XMLSchema#integer"));
@@ -67,7 +67,7 @@ public class RDFServiceTest {
 
   /** Test extracting a label from name */
   @Test
-  public void labelFromName() throws Exception {
+  public void labelFromName() {
     assertEquals("trim_method", rdfService.labelFromName("trim_method"));
     assertEquals(
         "outfile",

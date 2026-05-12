@@ -1,16 +1,5 @@
 package org.commonwl.view.util;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.when;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.UUID;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.fs.BundleFileSystem;
@@ -26,6 +15,18 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for <code>FileUtils</code>.
@@ -259,9 +260,9 @@ public class FileUtilsTest {
     Repository tempRepository1 = mock(Repository.class);
     when(tempRepository.getRepository()).thenReturn(tempRepository1);
     Path tempGitRepositoryParent =
-        Files.createDirectory(temporaryFolder.resolve(String.valueOf(UUID.randomUUID())));
+        Files.createDirectories(temporaryFolder.resolve(String.valueOf(UUID.randomUUID())));
     File tempGitRepository = tempGitRepositoryParent.resolve(".git").toFile();
-    Files.createDirectory(tempGitRepository.toPath());
+    Files.createDirectories(tempGitRepository.toPath());
     when(tempRepository1.getDirectory()).thenReturn(tempGitRepository);
     assertTrue(tempGitRepository.exists());
     FileUtils.deleteTemporaryGitRepository(tempRepository);
@@ -271,13 +272,13 @@ public class FileUtilsTest {
     Repository notTempRepository1 = mock(Repository.class);
     when(notTempRepository.getRepository()).thenReturn(notTempRepository1);
     Path notTempGitRepositoryParent =
-        Files.createDirectory(
+        Files.createDirectories(
             Path.of(
                 DigestUtils.sha1Hex(
                     GitDetails.normaliseUrl(
                         "https://github.com/common-workflow-language/cwlviewer.git"))));
     File notTempGitRepository = notTempGitRepositoryParent.resolve(".git").toFile();
-    Files.createDirectory(notTempGitRepository.toPath());
+    Files.createDirectories(notTempGitRepository.toPath());
     when(notTempRepository1.getDirectory()).thenReturn(notTempGitRepository);
     assertTrue(notTempGitRepository.exists());
     FileUtils.deleteTemporaryGitRepository(notTempRepository);

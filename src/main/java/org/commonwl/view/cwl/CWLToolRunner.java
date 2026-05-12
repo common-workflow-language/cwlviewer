@@ -19,9 +19,6 @@
 
 package org.commonwl.view.cwl;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Date;
 import org.apache.jena.query.QueryException;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitLicenseException;
@@ -42,6 +39,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Date;
 
 /** Replace existing workflow with the one given by cwltool */
 @Component

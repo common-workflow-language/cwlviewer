@@ -1,12 +1,13 @@
 package org.commonwl.view.util;
 
+import org.apache.taverna.robundle.Bundle;
+import org.apache.taverna.robundle.fs.BundleFileSystem;
+import org.eclipse.jgit.api.Git;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
-import org.apache.taverna.robundle.Bundle;
-import org.apache.taverna.robundle.fs.BundleFileSystem;
-import org.eclipse.jgit.api.Git;
 
 /**
  * File utilities for CWL Viewer.

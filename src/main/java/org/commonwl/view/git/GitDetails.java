@@ -21,17 +21,19 @@ package org.commonwl.view.git;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.commonwl.view.util.LicenseUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Objects;
-import org.commonwl.view.util.LicenseUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Represents all the parameters necessary to access a file/directory with Git */
 @JsonIgnoreProperties(
@@ -46,8 +48,13 @@ public class GitDetails implements Serializable {
   private String path;
   private String packedId;
 
-  @JsonCreator
-  public GitDetails(String repoUrl, String branch, String path) {
+  public GitDetails() {}
+
+  @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+  public GitDetails(
+      @JsonProperty("repoUrl") String repoUrl,
+      @JsonProperty("branch") String branch,
+      @JsonProperty("path") String path) {
     this.repoUrl = repoUrl;
 
     // Default to the master branch
@@ -75,7 +82,11 @@ public class GitDetails implements Serializable {
   }
 
   public void setBranch(String branch) {
-    this.branch = branch;
+    if (branch == null || branch.isEmpty()) {
+      this.branch = "master";
+    } else {
+      this.branch = branch;
+    }
   }
 
   public String getPackedId() {
@@ -301,7 +312,7 @@ public class GitDetails implements Serializable {
       int size = jsonLicenses.withArray("licenses").size();
       if (size > 0) {
         String licenseCandidate =
-            jsonLicenses.withArray("matched_files").get(0).get("filename").asText();
+            jsonLicenses.withArray("matched_files").get(0).get("filename").asString();
         String licenseLink = getRawUrl(null, licenseCandidate);
         if (logger.isWarnEnabled() && size > 1) {
           logger.warn(
@@ -313,10 +324,10 @@ public class GitDetails implements Serializable {
                   + "Taking the first one: "
                   + licenseLink);
         }
-        String key = jsonLicenses.withArray("licenses").get(0).get("key").asText();
+        String key = jsonLicenses.withArray("licenses").get(0).get("key").asString();
         if (!"other".equals(key)) {
           return LicenseUtils.SPDX_LICENSES_PREFIX
-              + jsonLicenses.withArray("licenses").get(0).get("spdx_id").asText();
+              + jsonLicenses.withArray("licenses").get(0).get("spdx_id").asString();
         } else {
           return licenseLink;
         }

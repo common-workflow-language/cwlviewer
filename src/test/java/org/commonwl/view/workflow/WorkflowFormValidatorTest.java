@@ -19,22 +19,26 @@
 
 package org.commonwl.view.workflow;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.commonwl.view.git.GitDetails;
 import org.junit.jupiter.api.Test;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /** Tests the validator. Parsing is already checked in GithubServiceTest */
 public class WorkflowFormValidatorTest {
 
   /** Workflow form validator to test */
-  private WorkflowFormValidator workflowFormValidator = new WorkflowFormValidator();
+  private final WorkflowFormValidator workflowFormValidator = new WorkflowFormValidator();
 
-  /** Github File URL */
+  /** GitHub File URL */
   @Test
-  public void githubUrl() throws Exception {
+  public void githubUrl() {
 
     WorkflowForm githubUrl =
         new WorkflowForm(
@@ -51,7 +55,7 @@ public class WorkflowFormValidatorTest {
 
   /** Gitlab File URL */
   @Test
-  public void gitlabUrl() throws Exception {
+  public void gitlabUrl() {
 
     WorkflowForm gitlabUrl =
         new WorkflowForm(
@@ -68,7 +72,7 @@ public class WorkflowFormValidatorTest {
 
   /** Generic File URL */
   @Test
-  public void genericUrl() throws Exception {
+  public void genericUrl() {
 
     WorkflowForm genericUrl =
         new WorkflowForm("https://bitbucket.org/markrobinson96/workflows.git");
@@ -87,7 +91,7 @@ public class WorkflowFormValidatorTest {
 
   /** Packed URL */
   @Test
-  public void packedUrl() throws Exception {
+  public void packedUrl() {
 
     WorkflowForm githubUrl =
         new WorkflowForm(
@@ -105,7 +109,7 @@ public class WorkflowFormValidatorTest {
 
   /** Empty URL */
   @Test
-  public void emptyURL() throws Exception {
+  public void emptyURL() {
 
     WorkflowForm emptyURL = new WorkflowForm("");
 
@@ -118,7 +122,7 @@ public class WorkflowFormValidatorTest {
 
   /** Invalid URL */
   @Test
-  public void invalidURL() throws Exception {
+  public void invalidURL() {
 
     WorkflowForm invalidURL = new WorkflowForm("https://google.com/clearly/not/github/url");
 
@@ -131,7 +135,7 @@ public class WorkflowFormValidatorTest {
 
   /** Generic File URL without branch or path */
   @Test
-  public void noBranchOrPath() throws Exception {
+  public void noBranchOrPath() {
 
     WorkflowForm genericUrl =
         new WorkflowForm("https://bitbucket.org/markrobinson96/workflows.git");

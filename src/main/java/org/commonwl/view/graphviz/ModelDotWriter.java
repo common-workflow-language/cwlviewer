@@ -19,14 +19,15 @@
 
 package org.commonwl.view.graphviz;
 
+import org.commonwl.view.cwl.CWLElement;
+import org.commonwl.view.cwl.CWLStep;
+import org.commonwl.view.workflow.Workflow;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.commonwl.view.cwl.CWLElement;
-import org.commonwl.view.cwl.CWLStep;
-import org.commonwl.view.workflow.Workflow;
 
 /** Writes GraphViz DOT files from a workflow model */
 public class ModelDotWriter extends DotWriter {

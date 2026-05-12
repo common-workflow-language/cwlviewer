@@ -19,17 +19,6 @@
 
 package org.commonwl.view.workflow;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.when;
-
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.git.GitDetails;
@@ -43,14 +32,23 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
+
 public class WorkflowServiceTest {
 
   /** Folder for test research object bundles */
   @TempDir public Path roBundleFolder;
-
-  /** Retry the running of cwltool */
-  @Test
-  public void retryCwltoolGeneration() throws Exception {}
 
   /** Getting a list of workflow overviews from a directory */
   @Test
@@ -92,9 +90,9 @@ public class WorkflowServiceTest {
 
     // 1 workflow should be found
     assertEquals(2, list.size());
-    assertEquals("workflow.cwl", list.get(0).getFileName());
-    assertEquals("label", list.get(0).getLabel());
-    assertEquals("doc", list.get(0).getDoc());
+    assertEquals("workflow.cwl", list.getFirst().getFileName());
+    assertEquals("label", list.getFirst().getLabel());
+    assertEquals("doc", list.getFirst().getDoc());
 
     assertEquals("workflow2.cwl", list.get(1).getFileName());
     assertEquals("label2", list.get(1).getLabel());
@@ -116,7 +114,7 @@ public class WorkflowServiceTest {
             new HashMap<>(),
             new HashMap<>(),
             new HashMap<>());
-    oldWorkflow.setId("theworkflowid");
+    oldWorkflow.setId(UUID.randomUUID());
     oldWorkflow.setRetrievedOn(new Date());
     oldWorkflow.setRetrievedFrom(githubInfo);
     oldWorkflow.setLastCommit("d46ce365f1a10c4c4d6b0caed51c6f64b84c2f63");
@@ -130,7 +128,7 @@ public class WorkflowServiceTest {
             new HashMap<>(),
             new HashMap<>(),
             new HashMap<>());
-    updatedWorkflow.setId("newworkflowid");
+    updatedWorkflow.setId(UUID.randomUUID());
 
     WorkflowRepository mockWorkflowRepo = Mockito.mock(WorkflowRepository.class);
     when(mockWorkflowRepo.findByRetrievedFrom(any())).thenReturn(oldWorkflow);

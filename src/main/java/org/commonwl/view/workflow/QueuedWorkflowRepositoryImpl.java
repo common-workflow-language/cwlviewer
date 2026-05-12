@@ -1,6 +1,5 @@
 package org.commonwl.view.workflow;
 
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.PersistenceContextType;
@@ -38,7 +37,7 @@ public class QueuedWorkflowRepositoryImpl implements QueuedWorkflowRepositoryCus
       return null;
     }
 
-    query.setParameter("retrievedFrom", retrievedFrom, new JsonType(GitDetails.class));
+    query.setParameter("retrievedFrom", retrievedFrom);
     return (QueuedWorkflow) query.uniqueResult();
   }
 
@@ -51,7 +50,7 @@ public class QueuedWorkflowRepositoryImpl implements QueuedWorkflowRepositoryCus
             .unwrap(Query.class);
 
     if (query != null) {
-      query.setParameter("retrievedFrom", retrievedFrom, new JsonType(GitDetails.class));
+      query.setParameter("retrievedFrom", retrievedFrom);
       query.executeUpdate();
     }
   }

@@ -64,16 +64,6 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.hypersistence</groupId>
-      <artifactId>hypersistence-utils-hibernate-73</artifactId>
-      <version>3.15.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
-      <version>2.21.3</version>
-    </dependency>
     <!-- Liquibase; note that Flyway, while probably having more documentation and users,
          changed its license model. Similarly to mongo, we prefer an open license that
          won't lock users or developers from updating or modifying the code if necessary.
@@ -114,11 +104,6 @@
           <artifactId>slf4j-log4j12</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <!-- JSON parsing -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
     </dependency>
     <!-- Jena, turtle -->
     <dependency>

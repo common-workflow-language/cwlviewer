@@ -19,8 +19,9 @@
 
 package org.commonwl.view.researchobject;
 
-import java.net.URI;
 import org.apache.taverna.robundle.manifest.Agent;
+
+import java.net.URI;
 
 /** An implementation of Agent with added HashCode and Equals methods for use in sets */
 public class HashableAgent extends Agent {

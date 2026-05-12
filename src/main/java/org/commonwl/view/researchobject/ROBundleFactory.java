@@ -19,8 +19,6 @@
 
 package org.commonwl.view.researchobject;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.taverna.robundle.Bundle;
 import org.commonwl.view.git.GitDetails;
@@ -33,6 +31,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * Class for the purpose of a Spring Framework Async method being in a different class to where it

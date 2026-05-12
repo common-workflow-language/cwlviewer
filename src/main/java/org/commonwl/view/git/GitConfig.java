@@ -1,9 +1,5 @@
 package org.commonwl.view.git;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.commonwl.view.util.LicenseUtils;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +7,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 public class GitConfig {
@@ -27,10 +28,10 @@ public class GitConfig {
     }
     Map<String, String> licenseMap = new HashMap<>();
     for (JsonNode license : jsonLicenses.withArray("licenses")) {
-      String spdxURL = LicenseUtils.SPDX_LICENSES_PREFIX + license.get("licenseId").asText();
+      String spdxURL = LicenseUtils.SPDX_LICENSES_PREFIX + license.get("licenseId").asString();
       for (JsonNode alias : license.withArray("seeAlso")) {
         licenseMap.put(
-            StringUtils.stripEnd(alias.asText().replace("http://", "https://"), "/"), spdxURL);
+            StringUtils.stripEnd(alias.asString().replace("http://", "https://"), "/"), spdxURL);
       }
     }
     return licenseMap;

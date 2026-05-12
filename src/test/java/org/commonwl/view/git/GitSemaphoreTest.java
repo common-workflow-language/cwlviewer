@@ -19,15 +19,15 @@
 
 package org.commonwl.view.git;
 
+import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.junit.jupiter.api.Test;
 
 public class GitSemaphoreTest {
 
   @Test
-  public void basicOperation() throws Exception {
+  public void basicOperation() {
 
     GitSemaphore sem = new GitSemaphore();
     boolean first = sem.acquire("1");

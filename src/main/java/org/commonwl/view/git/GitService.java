@@ -19,15 +19,6 @@
 
 package org.commonwl.view.git;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;
@@ -41,6 +32,16 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 /** Handles Git related functionality */
 @Service
@@ -85,7 +86,7 @@ public class GitService {
         }
       } else {
         // Create a folder and clone repository into it
-        Files.createDirectory(repoDir);
+        Files.createDirectories(repoDir);
         try {
           repo = cloneRepo(gitDetails.getRepoUrl(), repoDir.toFile());
         } catch (CheckoutConflictException ex) {
@@ -216,7 +217,7 @@ public class GitService {
 
   protected File createTempDir() throws IOException {
     Path repoDir = gitStorage.resolve(String.valueOf(UUID.randomUUID()));
-    Files.createDirectory(repoDir);
+    Files.createDirectories(repoDir);
     return repoDir.toFile();
   }
 }

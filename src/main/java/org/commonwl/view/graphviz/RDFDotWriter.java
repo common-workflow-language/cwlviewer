@@ -19,18 +19,19 @@
 
 package org.commonwl.view.graphviz;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.commonwl.view.cwl.CWLProcess;
 import org.commonwl.view.cwl.RDFService;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /** Writes GraphViz DOT files from a workflow RDF model */
 public class RDFDotWriter extends DotWriter {

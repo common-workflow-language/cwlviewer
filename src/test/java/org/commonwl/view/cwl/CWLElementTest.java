@@ -19,10 +19,11 @@
 
 package org.commonwl.view.cwl;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CWLElementTest {
 
@@ -31,7 +32,7 @@ public class CWLElementTest {
    * list
    */
   @Test
-  public void testSourceIDList() throws Exception {
+  public void testSourceIDList() {
 
     CWLElement element = new CWLElement();
 

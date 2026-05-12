@@ -19,17 +19,19 @@
 
 package org.commonwl.view.researchobject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-import java.nio.file.Paths;
-import java.util.HashMap;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 /** Test the separate async method to call the ROBundle constructor */
 public class ROBundleFactoryTest {
@@ -49,7 +51,8 @@ public class ROBundleFactoryTest {
 
     // Mocked path to a RO bundle
     ROBundleService mockROBundleService = Mockito.mock(ROBundleService.class);
-    when(mockROBundleService.saveToFile(any())).thenReturn(Paths.get("test/path/to/check/for.zip"));
+    Path zipPath = Paths.get("test/path/to/check/for.zip");
+    when(mockROBundleService.saveToFile(any())).thenReturn(zipPath);
 
     // Test method retries multiple times to get workflow model before success
     WorkflowRepository mockRepository = Mockito.mock(WorkflowRepository.class);
@@ -65,6 +68,6 @@ public class ROBundleFactoryTest {
     factory.createWorkflowRO(validWorkflow);
 
     assertEquals(
-        Paths.get("test/path/to/check/for.zip"), Paths.get(validWorkflow.getRoBundlePath()));
+            zipPath, Paths.get(validWorkflow.getRoBundlePath()));
   }
 }

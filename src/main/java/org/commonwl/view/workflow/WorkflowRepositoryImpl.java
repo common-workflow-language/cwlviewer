@@ -19,7 +19,6 @@
 
 package org.commonwl.view.workflow;
 
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.PersistenceContextType;
@@ -45,7 +44,7 @@ public class WorkflowRepositoryImpl implements WorkflowRepositoryCustom {
       return null;
     }
 
-    query.setParameter("retrievedFrom", retrievedFrom, new JsonType(GitDetails.class));
+    query.setParameter("retrievedFrom", retrievedFrom);
     return (Workflow) query.uniqueResult();
   }
 }

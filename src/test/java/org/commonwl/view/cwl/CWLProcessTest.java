@@ -19,15 +19,15 @@
 
 package org.commonwl.view.cwl;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CWLProcessTest {
 
   /** Test toString method for enum */
   @Test
-  public void testToString() throws Exception {
+  public void testToString() {
     assertEquals("Workflow", CWLProcess.WORKFLOW.toString());
     assertEquals("CommandLineTool", CWLProcess.COMMANDLINETOOL.toString());
     assertEquals("ExpressionTool", CWLProcess.EXPRESSIONTOOL.toString());

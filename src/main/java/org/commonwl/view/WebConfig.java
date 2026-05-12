@@ -19,8 +19,6 @@
 
 package org.commonwl.view;
 
-import static org.springframework.http.MediaType.parseMediaType;
-
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowPermalinkController;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +26,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import static org.springframework.http.MediaType.parseMediaType;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {

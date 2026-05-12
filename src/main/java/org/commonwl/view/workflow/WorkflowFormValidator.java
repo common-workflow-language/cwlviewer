@@ -19,13 +19,14 @@
 
 package org.commonwl.view.workflow;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.git.GitDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Runs validation on the workflow form from the main page */
 @Component

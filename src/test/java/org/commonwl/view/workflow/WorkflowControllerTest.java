@@ -19,30 +19,6 @@
 
 package org.commonwl.view.workflow;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitSemaphore;
@@ -64,6 +40,31 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 /** Tests the controller for workflow related functionality */
 public class WorkflowControllerTest {
@@ -223,9 +224,7 @@ public class WorkflowControllerTest {
     assertTrue(temporaryFile.exists());
     assertThrows(
         RuntimeException.class,
-        () -> {
-          service.createQueuedWorkflow(gitDetails);
-        });
+        () -> service.createQueuedWorkflow(gitDetails));
     assertFalse(temporaryFile.exists());
   }
 
@@ -371,12 +370,12 @@ public class WorkflowControllerTest {
     // Mock service to return mock workflow
     WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
     when(mockWorkflowService.getWorkflowGraph(any(String.class), Mockito.any(GitDetails.class)))
-        .thenReturn(new ClassPathResource("src/test/resources/graphviz/testVis.svg"))
-        .thenReturn(new ClassPathResource("src/test/resources/graphviz/testVis.png"))
-        .thenReturn(new ClassPathResource("src/test/resources/graphviz/testWorkflow.dot"))
-        .thenReturn(new ClassPathResource("src/test/resources/graphviz/testVis.svg"))
-        .thenReturn(new ClassPathResource("src/test/resources/graphviz/testVis.png"))
-        .thenReturn(new ClassPathResource("src/test/resources/graphviz/testWorkflow.dot"))
+        .thenReturn(new ClassPathResource("graphviz/testVis.svg"))
+        .thenReturn(new ClassPathResource("graphviz/testVis.png"))
+        .thenReturn(new ClassPathResource("graphviz/testWorkflow.dot"))
+        .thenReturn(new ClassPathResource("graphviz/testVis.svg"))
+        .thenReturn(new ClassPathResource("graphviz/testVis.png"))
+        .thenReturn(new ClassPathResource("graphviz/testWorkflow.dot"))
         .thenThrow(new WorkflowNotFoundException());
 
     // Mock controller/MVC
