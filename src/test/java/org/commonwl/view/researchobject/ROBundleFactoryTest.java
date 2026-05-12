@@ -19,19 +19,18 @@
 
 package org.commonwl.view.researchobject;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 /** Test the separate async method to call the ROBundle constructor */
 public class ROBundleFactoryTest {
@@ -67,7 +66,6 @@ public class ROBundleFactoryTest {
     // Attempt to add RO to workflow
     factory.createWorkflowRO(validWorkflow);
 
-    assertEquals(
-            zipPath, Paths.get(validWorkflow.getRoBundlePath()));
+    assertEquals(zipPath, Paths.get(validWorkflow.getRoBundlePath()));
   }
 }

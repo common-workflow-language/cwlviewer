@@ -19,16 +19,16 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.git.GitDetails;
-import org.junit.jupiter.api.Test;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.Errors;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.commonwl.view.git.GitDetails;
+import org.junit.jupiter.api.Test;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Errors;
 
 /** Tests the validator. Parsing is already checked in GithubServiceTest */
 public class WorkflowFormValidatorTest {

@@ -19,6 +19,13 @@
 
 package org.commonwl.view.graphviz;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.File;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.commonwl.view.cwl.CWLElement;
 import org.commonwl.view.cwl.CWLProcess;
@@ -26,14 +33,6 @@ import org.commonwl.view.cwl.CWLStep;
 import org.commonwl.view.workflow.Workflow;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.File;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ModelDotWriterTest {
 

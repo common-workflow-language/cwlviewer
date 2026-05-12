@@ -19,11 +19,9 @@
 
 package org.commonwl.view.graphviz;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,9 +33,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import javax.imageio.ImageIO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class GraphVizServiceTest {
 
@@ -125,7 +124,7 @@ public class GraphVizServiceTest {
     Path dotSource = Paths.get("src/test/resources/graphviz/testWorkflow.dot");
     Path xdot = graphVizService.getGraphPath("workflowid.dot", readFileToString(dotSource), "xdot");
     String xdotString = readFileToString(xdot);
-      assertFalse(xdotString.isEmpty());
+    assertFalse(xdotString.isEmpty());
   }
 
   /** Check that an xdot stream can be generated from DOT source */
@@ -134,7 +133,7 @@ public class GraphVizServiceTest {
     Path dotSource = Paths.get("src/test/resources/graphviz/testWorkflow.dot");
     InputStream xdot = graphVizService.getGraphStream(readFileToString(dotSource), "xdot");
     String xdotString = readStreamToString(xdot);
-      assertFalse(xdotString.isEmpty());
+    assertFalse(xdotString.isEmpty());
   }
 
   /** Check that files in the graphVizFolder can be deleted with deleteCache() */

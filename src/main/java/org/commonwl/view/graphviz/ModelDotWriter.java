@@ -19,15 +19,14 @@
 
 package org.commonwl.view.graphviz;
 
-import org.commonwl.view.cwl.CWLElement;
-import org.commonwl.view.cwl.CWLStep;
-import org.commonwl.view.workflow.Workflow;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.commonwl.view.cwl.CWLElement;
+import org.commonwl.view.cwl.CWLStep;
+import org.commonwl.view.workflow.Workflow;
 
 /** Writes GraphViz DOT files from a workflow model */
 public class ModelDotWriter extends DotWriter {
@@ -151,7 +150,7 @@ public class ModelDotWriter extends DotWriter {
     // Workaround to force outputs to lowest ranking, see #104
     writeLine("");
     writeLine("  // Invisible links to force outputs to be at lowest rank");
-    if (workflow.getOutputs().size() > 0) {
+    if (!workflow.getOutputs().isEmpty()) {
       for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
         writeLine(
             "  \""

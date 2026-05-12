@@ -19,14 +19,13 @@
 
 package org.commonwl.view.workflow;
 
-import org.commonwl.view.WebConfig.Format;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import org.commonwl.view.WebConfig.Format;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /** Exception thrown when multiple workflows exist for the request */
 @ResponseStatus(value = HttpStatus.MULTIPLE_CHOICES)
@@ -56,11 +55,11 @@ public class MultipleWorkflowsException extends RuntimeException {
   /**
    * Generate a text/uri-list of potential representations/redirects
    *
-   * @see https://www.iana.org/assignments/media-types/text/uri-list
+   * @see <a href="https://www.iana.org/assignments/media-types/text/uri-list">...</a>
    */
   @Override
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    final StringBuilder sb = new StringBuilder();
     sb.append("## Multiple workflow representations found");
     sb.append(CRLF);
     sb.append("# ");

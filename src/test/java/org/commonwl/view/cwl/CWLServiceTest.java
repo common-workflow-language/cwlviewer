@@ -19,6 +19,21 @@
 
 package org.commonwl.view.cwl;
 
+import static org.apache.commons.io.FileUtils.readFileToString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.Query;
@@ -41,22 +56,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.context.ContextConfiguration;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-
-import static org.apache.commons.io.FileUtils.readFileToString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {GitConfig.class})
 public class CWLServiceTest {
@@ -188,7 +187,7 @@ public class CWLServiceTest {
     assertEquals("File?", workflow.getInputs().get("reverse_reads").getType());
     assertEquals("string, File", workflow.getInputs().get("ssu_tax").getType());
     assertEquals(
-            "{type=array, items=[string, File]}", workflow.getInputs().get("rfam_models").getType());
+        "{type=array, items=[string, File]}", workflow.getInputs().get("rfam_models").getType());
   }
 
   /** Test native loading parsing of MultipleInputFeatureRequirement using workflows */
@@ -201,11 +200,11 @@ public class CWLServiceTest {
         cwlService.parseWorkflowNative(
             Paths.get("src/test/resources/cwl/complex-workflow/complex-workflow-1.cwl"), null);
     assertEquals(
-            "touch_step",
-            workflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(0));
+        "touch_step",
+        workflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(0));
     assertEquals(
-            "files",
-            workflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(1));
+        "files",
+        workflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(1));
   }
 
   /** Test native loading parsing of nested array types */
@@ -317,9 +316,9 @@ public class CWLServiceTest {
     assertNotNull(hello);
 
     // No docs for this workflow
-    assertEquals("Hello World", hello.getLabel());
-    assertEquals("Puts a message into a file using echo", hello.getDoc());
-    assertEquals("/hello.cwl", hello.getFileName());
+    assertEquals("Hello World", hello.label());
+    assertEquals("Puts a message into a file using echo", hello.doc());
+    assertEquals("/hello.cwl", hello.fileName());
   }
 
   /** Test retrieval of a workflow overview with an array ``doc`` field */
@@ -339,7 +338,7 @@ public class CWLServiceTest {
     System.out.println(cwlService.normaliseLicenseLink("http://asdasdasda"));
     WorkflowOverview hello = cwlService.getWorkflowOverview(helloWorkflow);
     assertNotNull(hello);
-    assertEquals("Puts a message into a file using echo. Even more doc", hello.getDoc());
+    assertEquals("Puts a message into a file using echo. Even more doc", hello.doc());
   }
 
   /** Test IOException is thrown when files are over limit with getWorkflowOverview */
@@ -384,9 +383,9 @@ public class CWLServiceTest {
     assertTrue(cwlService.isPacked(packedFile));
     List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(packedFile);
     assertEquals(1, overviews.size());
-    assertEquals("main", overviews.getFirst().getFileName());
-    assertNull(overviews.getFirst().getLabel());
-    assertNull(overviews.getFirst().getDoc());
+    assertEquals("main", overviews.getFirst().fileName());
+    assertNull(overviews.getFirst().label());
+    assertNull(overviews.getFirst().doc());
   }
 
   /**

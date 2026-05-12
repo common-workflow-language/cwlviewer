@@ -19,6 +19,23 @@
 
 package org.commonwl.view.cwl;
 
+import static org.apache.commons.io.FileUtils.readFileToString;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -45,24 +62,6 @@ import org.snakeyaml.engine.v2.api.LoadSettings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import static org.apache.commons.io.FileUtils.readFileToString;
 
 /** Provides CWL parsing for workflows to gather an overview for display and visualisation */
 @Service
@@ -183,7 +182,7 @@ public class CWLService {
    */
   public Workflow parseWorkflowNative(
       InputStream workflowStream, String packedWorkflowId, String defaultLabel)
-      throws IOException, WorkflowNotFoundException, CWLValidationException {
+      throws WorkflowNotFoundException, CWLValidationException {
     // Parse file as yaml
     Map<String, Object> cwlFile = yamlStreamToJson(workflowStream);
 
@@ -426,12 +425,9 @@ public class CWLService {
         CWLStep wfStep = new CWLStep();
 
         IRI workflowPath = iriFactory.construct(url).resolve("./");
-        Object runValue = step.get("run").asResource().toString();
-        if (String.class.isAssignableFrom(runValue.getClass())) {
-          String runPath = (String) runValue;
-          wfStep.setRun(workflowPath.relativize(runPath).toString());
-          wfStep.setRunType(rdfService.strToRuntype(step.get("runtype").toString()));
-        }
+        String runValue = step.get("run").asResource().toString();
+        wfStep.setRun(workflowPath.relativize(runValue).toString());
+        wfStep.setRunType(rdfService.strToRuntype(step.get("runtype").toString()));
 
         if (step.contains("src")) {
           CWLElement src = new CWLElement();
@@ -581,34 +577,25 @@ public class CWLService {
    * @return The human readable name for that type
    */
   private String typeURIToString(String uri) {
-    switch (uri) {
-      case "http://www.w3.org/2001/XMLSchema#string":
-        return "String";
-      case "https://w3id.org/cwl/cwl#File":
-        return "File";
-      case "http://www.w3.org/2001/XMLSchema#boolean":
-        return "Boolean";
-      case "http://www.w3.org/2001/XMLSchema#int":
-        return "Integer";
-      case "http://www.w3.org/2001/XMLSchema#double":
-        return "Double";
-      case "http://www.w3.org/2001/XMLSchema#float":
-        return "Float";
-      case "http://www.w3.org/2001/XMLSchema#long":
-        return "Long";
-      case "https://w3id.org/cwl/cwl#Directory":
-        return "Directory";
-      default:
-        return uri;
-    }
+    return switch (uri) {
+      case "http://www.w3.org/2001/XMLSchema#string" -> "String";
+      case "https://w3id.org/cwl/cwl#File" -> "File";
+      case "http://www.w3.org/2001/XMLSchema#boolean" -> "Boolean";
+      case "http://www.w3.org/2001/XMLSchema#int" -> "Integer";
+      case "http://www.w3.org/2001/XMLSchema#double" -> "Double";
+      case "http://www.w3.org/2001/XMLSchema#float" -> "Float";
+      case "http://www.w3.org/2001/XMLSchema#long" -> "Long";
+      case "https://w3id.org/cwl/cwl#Directory" -> "Directory";
+      default -> uri;
+    };
   }
 
   /**
    * Converts a yaml String to JsonNode
    *
-   * @param path A Path to a file containing the yaml content
+   * @param path A Path to a file containing the YAML content
    * @return A JsonNode with the content of the document
-   * @throws IOException
+   * @throws IOException If it fails to read open a stream to the given path
    */
   private Map<String, Object> yamlPathToJson(Path path) throws IOException {
     LoadSettings settings = LoadSettings.builder().build();
@@ -619,9 +606,9 @@ public class CWLService {
   }
 
   /**
-   * Converts a yaml String to JsonNode
+   * Converts a YAML String to JsonNode
    *
-   * @param yamlStream An InputStream containing the yaml content
+   * @param yamlStream An InputStream containing the YAML content
    * @return A JsonNode with the content of the document
    */
   private Map<String, Object> yamlStreamToJson(InputStream yamlStream) {
@@ -749,7 +736,7 @@ public class CWLService {
       for (Map<String, Object> inOutNode : (List<Map<String, Object>>) inOut) {
         CWLElement inputOutput = new CWLElement();
         List<String> sources = extractSource(inOutNode);
-        if (sources.size() > 0) {
+        if (!sources.isEmpty()) {
           for (String source : sources) {
             inputOutput.addSourceID(stepIDFromSource(source));
           }
@@ -879,7 +866,7 @@ public class CWLService {
    */
   private String extractDefault(Map<String, Object> inputOutput) {
     if (inputOutput != null && inputOutput.containsKey(DEFAULT)) {
-      Object default_value = ((Map<String, Object>) inputOutput).get(DEFAULT);
+      Object default_value = inputOutput.get(DEFAULT);
       if (default_value == null) {
         return null;
       }
@@ -901,7 +888,7 @@ public class CWLService {
    */
   private List<String> extractSource(Map<String, Object> inputOutput) {
     if (inputOutput != null) {
-      List<String> sources = new ArrayList<String>();
+      List<String> sources = new ArrayList<>();
       Object sourceNode = null;
 
       // outputSource and source treated the same
@@ -936,7 +923,7 @@ public class CWLService {
    * @return The step ID
    */
   private String stepIDFromSource(String source) {
-    if (source != null && source.length() > 0) {
+    if (source != null && !source.isEmpty()) {
       // Strip leading # if it exists
       if (source.charAt(0) == '#') {
         source = source.substring(1);
@@ -1005,7 +992,7 @@ public class CWLService {
         for (Object type : (List<Object>) typeNode) {
           if (type.getClass() == String.class) {
             // This is a simple type
-            if (((String) type).equals("null")) {
+            if (type.equals("null")) {
               // null as a type means this field is optional
               optional = true;
             } else {
@@ -1022,7 +1009,7 @@ public class CWLService {
                 typeDetails.append(items);
                 typeDetails.append("[], ");
               } else {
-                typeDetails.append(type.toString() + ", ");
+                typeDetails.append(type).append(", ");
               }
             } else {
               typeDetails.append((String) ((Map<String, Object>) type).get(TYPE));

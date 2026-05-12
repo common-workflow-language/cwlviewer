@@ -21,6 +21,9 @@ package org.commonwl.view.workflow;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
 import org.commonwl.view.cwl.RDFService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -31,10 +34,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.HandlerMapping;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
 
 /**
  * Allows permalinks in URIs across our RDF to identify a workflow or a workflow file
@@ -78,10 +77,9 @@ public class WorkflowPermalinkController {
   }
 
   /**
-   * Redirect to the viewer for a web browser or API call
+   * Redirect (302) to the viewer for a web browser or API call, or 404
    *
    * @param commitId The commit ID of the workflow
-   * @return A 302 redirect response to the viewer or 404
    */
   @GetMapping(
       value = "/git/{commitid}/**",
@@ -106,10 +104,9 @@ public class WorkflowPermalinkController {
   }
 
   /**
-   * Redirect to the raw file if this exists
+   * Redirect (302) to the raw file if this exists, or 406
    *
    * @param commitId The commit ID of the workflow
-   * @return A 302 redirect response to the raw URL or 406
    */
   @GetMapping(
       value = "/git/{commitid}/**",
@@ -119,7 +116,7 @@ public class WorkflowPermalinkController {
       HttpServletRequest request,
       HttpServletResponse response) {
     Optional<String> rawUrl = findRaw(commitId, request);
-    if (!rawUrl.isPresent()) {
+    if (rawUrl.isEmpty()) {
       throw new RepresentationNotFoundException();
     } else {
       response.setHeader("Location", rawUrl.get());
@@ -205,8 +202,8 @@ public class WorkflowPermalinkController {
    *
    * @param commitId The commit ID of the workflow
    * @return The SVG image
-   * @throws IOException
-   * @throws WorkflowNotFoundException
+   * @throws IOException If it fails to read or write the SVG file
+   * @throws WorkflowNotFoundException If it fails to find the workflow
    */
   @GetMapping(value = "/git/{commitid}/**", produces = "image/svg+xml")
   public Resource getGraphAsSvg(
@@ -225,8 +222,8 @@ public class WorkflowPermalinkController {
    *
    * @param commitId The commit ID of the workflow
    * @return The PNG image
-   * @throws IOException
-   * @throws WorkflowNotFoundException
+   * @throws IOException If it fails to read or write the PNG file
+   * @throws WorkflowNotFoundException If it cannot find the workflow
    */
   @GetMapping(value = "/git/{commitid}/**", produces = "image/png")
   public Resource getGraphAsPng(
@@ -245,8 +242,8 @@ public class WorkflowPermalinkController {
    *
    * @param commitId The commit ID of the workflow
    * @return The XDOT source
-   * @throws IOException
-   * @throws WorkflowNotFoundException
+   * @throws IOException If it fails to read or write the dot file
+   * @throws WorkflowNotFoundException If the workflow cannot be found
    */
   @GetMapping(value = "/git/{commitid}/**", produces = "text/vnd+graphviz")
   public Resource getGraphAsXDot(

@@ -22,6 +22,11 @@ package org.commonwl.view.workflow;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.cwl.CWLNotAWorkflowException;
@@ -54,13 +59,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
 @Controller
 public class WorkflowController {
@@ -151,7 +149,7 @@ public class WorkflowController {
               workflow = result.getTempRepresentation();
             } else {
               if (result.getWorkflowList().size() == 1) {
-                gitInfo.setPackedId(result.getWorkflowList().get(0).getFileName());
+                gitInfo.setPackedId(result.getWorkflowList().getFirst().fileName());
               }
               return new ModelAndView("redirect:" + gitInfo.getInternalUrl());
             }
@@ -201,10 +199,10 @@ public class WorkflowController {
         "/workflows/{domain}.com/{owner}/{repoName}/blob/{branch}/**"
       })
   public ModelAndView getWorkflow(
-      @PathVariable("domain") String domain,
-      @PathVariable("owner") String owner,
-      @PathVariable("repoName") String repoName,
-      @PathVariable("branch") String branch,
+      @PathVariable String domain,
+      @PathVariable String owner,
+      @PathVariable String repoName,
+      @PathVariable String branch,
       HttpServletRequest request,
       RedirectAttributes redirectAttrs) {
     // The wildcard end of the URL is the path
@@ -228,7 +226,7 @@ public class WorkflowController {
   @GetMapping(value = "/workflows/*/*.git/{branch}/**")
   public ModelAndView getWorkflowGeneric(
       @Value("${applicationURL}") String applicationURL,
-      @PathVariable("branch") String branch,
+      @PathVariable String branch,
       HttpServletRequest request,
       RedirectAttributes redirectAttrs) {
     String path =
@@ -253,10 +251,10 @@ public class WorkflowController {
       produces = {"application/vnd.wf4ever.robundle+zip", "application/zip"})
   @ResponseBody
   public Resource getROBundle(
-      @PathVariable("domain") String domain,
-      @PathVariable("owner") String owner,
-      @PathVariable("repoName") String repoName,
-      @PathVariable("branch") String branch,
+      @PathVariable String domain,
+      @PathVariable String owner,
+      @PathVariable String repoName,
+      @PathVariable String branch,
       HttpServletRequest request,
       HttpServletResponse response) {
     String path =
@@ -278,9 +276,7 @@ public class WorkflowController {
       produces = "application/vnd.wf4ever.robundle+zip")
   @ResponseBody
   public Resource getROBundleGeneric(
-      @PathVariable("branch") String branch,
-      HttpServletRequest request,
-      HttpServletResponse response) {
+      @PathVariable String branch, HttpServletRequest request, HttpServletResponse response) {
     String path =
         (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
     GitDetails gitDetails = getGitDetails(10, path, branch);
@@ -305,10 +301,10 @@ public class WorkflowController {
       produces = "image/svg+xml")
   @ResponseBody
   public Resource downloadGraphSvg(
-      @PathVariable("domain") String domain,
-      @PathVariable("owner") String owner,
-      @PathVariable("repoName") String repoName,
-      @PathVariable("branch") String branch,
+      @PathVariable String domain,
+      @PathVariable String owner,
+      @PathVariable String repoName,
+      @PathVariable String branch,
       HttpServletRequest request,
       HttpServletResponse response)
       throws IOException {
@@ -328,9 +324,7 @@ public class WorkflowController {
   @GetMapping(value = "/graph/svg/*/*/*.git/{branch}/**", produces = "image/svg+xml")
   @ResponseBody
   public Resource downloadGraphSvgGeneric(
-      @PathVariable("branch") String branch,
-      HttpServletRequest request,
-      HttpServletResponse response)
+      @PathVariable String branch, HttpServletRequest request, HttpServletResponse response)
       throws IOException {
     String path =
         (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
@@ -355,10 +349,10 @@ public class WorkflowController {
       produces = "image/png")
   @ResponseBody
   public Resource downloadGraphPng(
-      @PathVariable("domain") String domain,
-      @PathVariable("owner") String owner,
-      @PathVariable("repoName") String repoName,
-      @PathVariable("branch") String branch,
+      @PathVariable String domain,
+      @PathVariable String owner,
+      @PathVariable String repoName,
+      @PathVariable String branch,
       HttpServletRequest request,
       HttpServletResponse response)
       throws IOException {
@@ -378,9 +372,7 @@ public class WorkflowController {
   @GetMapping(value = "/graph/png/*/*/*.git/{branch}/**", produces = "image/png")
   @ResponseBody
   public Resource downloadGraphPngGeneric(
-      @PathVariable("branch") String branch,
-      HttpServletRequest request,
-      HttpServletResponse response)
+      @PathVariable String branch, HttpServletRequest request, HttpServletResponse response)
       throws IOException {
     String path =
         (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
@@ -405,10 +397,10 @@ public class WorkflowController {
       produces = "text/vnd.graphviz")
   @ResponseBody
   public Resource downloadGraphDot(
-      @PathVariable("domain") String domain,
-      @PathVariable("owner") String owner,
-      @PathVariable("repoName") String repoName,
-      @PathVariable("branch") String branch,
+      @PathVariable String domain,
+      @PathVariable String owner,
+      @PathVariable String repoName,
+      @PathVariable String branch,
       HttpServletRequest request,
       HttpServletResponse response)
       throws IOException {
@@ -428,9 +420,7 @@ public class WorkflowController {
   @GetMapping(value = "/graph/xdot/*/*/*.git/{branch}/**", produces = "text/vnd.graphviz")
   @ResponseBody
   public Resource downloadGraphDotGeneric(
-      @PathVariable("branch") String branch,
-      HttpServletRequest request,
-      HttpServletResponse response)
+      @PathVariable String branch, HttpServletRequest request, HttpServletResponse response)
       throws IOException {
     String path =
         (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
@@ -450,7 +440,7 @@ public class WorkflowController {
       produces = "image/png")
   @ResponseBody
   public ClassPathResource getTempGraphAsPng(
-      @PathVariable("queueID") String queueID, HttpServletResponse response) throws IOException {
+      @PathVariable String queueID, HttpServletResponse response) throws IOException {
     QueuedWorkflow queued = workflowService.getQueuedWorkflow(queueID);
     if (queued == null) {
       throw new WorkflowNotFoundException();
@@ -473,7 +463,7 @@ public class WorkflowController {
       consumes = {"text/yaml", "text/x-yaml", "text/plain", "application/octet-stream"})
   @ResponseBody
   public Resource downloadGraphPngFromFile(InputStream in, HttpServletResponse response)
-      throws IOException, NoSuchAlgorithmException {
+      throws IOException {
     response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
     return getGraphFromInputStream(in, "png");
   }
@@ -489,7 +479,7 @@ public class WorkflowController {
       consumes = {"text/yaml", "text/x-yaml", "text/plain", "application/octet-stream"})
   @ResponseBody
   public Resource downloadGraphSvgFromFile(InputStream in, HttpServletResponse response)
-      throws IOException, NoSuchAlgorithmException {
+      throws IOException {
     response.setHeader("Content-Disposition", "inline; filename=\"graph.svg\"");
     return getGraphFromInputStream(in, "svg");
   }
@@ -522,17 +512,12 @@ public class WorkflowController {
    */
   public static GitDetails getGitDetails(
       String domain, String owner, String repoName, String branch, String path) {
-    String repoUrl;
-    switch (domain) {
-      case "github":
-        repoUrl = "https://github.com/" + owner + "/" + repoName + ".git";
-        break;
-      case "gitlab":
-        repoUrl = "https://gitlab.com/" + owner + "/" + repoName + ".git";
-        break;
-      default:
-        throw new WorkflowNotFoundException();
-    }
+    String repoUrl =
+        switch (domain) {
+          case "github" -> "https://github.com/" + owner + "/" + repoName + ".git";
+          case "gitlab" -> "https://gitlab.com/" + owner + "/" + repoName + ".git";
+          default -> throw new WorkflowNotFoundException();
+        };
     String[] pathSplit = path.split("#");
     GitDetails details = new GitDetails(repoUrl, branch, path);
     if (pathSplit.length > 1) {
@@ -600,7 +585,7 @@ public class WorkflowController {
               if (queued.getWorkflowList() != null) {
                 // Packed workflow listing
                 if (queued.getWorkflowList().size() == 1) {
-                  gitDetails.setPackedId(queued.getWorkflowList().get(0).getFileName());
+                  gitDetails.setPackedId(queued.getWorkflowList().getFirst().fileName());
                   return new ModelAndView("redirect:" + gitDetails.getInternalUrl());
                 }
                 return new ModelAndView(
@@ -617,7 +602,7 @@ public class WorkflowController {
                 return new ModelAndView(
                     "redirect:"
                         + gitDetails.getInternalUrl()
-                        + workflowOverviews.get(0).getFileName());
+                        + workflowOverviews.getFirst().fileName());
               } else {
                 errors.rejectValue(
                     "url",
@@ -668,7 +653,7 @@ public class WorkflowController {
       return new ModelAndView("loading", "queued", queued);
     } else {
       return new ModelAndView("workflow", "workflow", workflowModel)
-          .addObject("lineSeparator", System.getProperty("line.separator"))
+          .addObject("lineSeparator", System.lineSeparator())
           .addObject("formats", WebConfig.Format.values());
     }
   }

@@ -19,8 +19,15 @@
 
 package org.commonwl.view.workflow;
 
+import static org.commonwl.view.cwl.CWLToolStatus.SUCCESS;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.commonwl.view.cwl.CWLValidationException;
 import org.commonwl.view.git.GitDetails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,14 +45,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.HandlerMapping;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.commonwl.view.cwl.CWLToolStatus.SUCCESS;
 
 /** JSON API Controller */
 @RestController
@@ -116,12 +115,12 @@ public class WorkflowJSONController {
     if (errors.hasErrors() || gitInfo == null) {
       String error;
       if (errors.hasErrors()) {
-        error = errors.getAllErrors().get(0).getDefaultMessage();
+        error = errors.getAllErrors().getFirst().getDefaultMessage();
       } else {
         error = "Could not parse workflow details from URL";
       }
       Map<String, String> message = Collections.singletonMap("message", "Error: " + error);
-      return new ResponseEntity<Map<String, String>>(message, HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
     } else {
       // Get workflow or create if does not exist
       Workflow workflow = workflowService.getWorkflow(gitInfo);
@@ -134,7 +133,7 @@ public class WorkflowJSONController {
             if (queued.getWorkflowList() != null) {
               if (queued.getWorkflowList().size() == 1) {
                 // Parse the packed workflow within automatically if there is only one
-                gitInfo.setPackedId(queued.getWorkflowList().get(0).getFileName());
+                gitInfo.setPackedId(queued.getWorkflowList().getFirst().fileName());
                 queued = workflowService.getQueuedWorkflow(gitInfo);
                 if (queued == null) {
                   queued = workflowService.createQueuedWorkflow(gitInfo);
@@ -143,7 +142,7 @@ public class WorkflowJSONController {
                 // Error with alternatives suggested
                 List<String> workflowUris = new ArrayList<>();
                 for (WorkflowOverview overview : queued.getWorkflowList()) {
-                  workflowUris.add(overview.getFileName().substring(1));
+                  workflowUris.add(overview.fileName().substring(1));
                 }
                 Map<String, Object> responseMap = new HashMap<>();
                 responseMap.put(
@@ -151,19 +150,18 @@ public class WorkflowJSONController {
                     "This workflow file is packed and contains multiple workflow "
                         + "descriptions. Please provide a packedId parameter with one of the following");
                 responseMap.put("packedId", workflowUris);
-                return new ResponseEntity<Map<String, Object>>(
-                    responseMap, HttpStatus.UNPROCESSABLE_ENTITY);
+                return new ResponseEntity<>(responseMap, HttpStatus.UNPROCESSABLE_CONTENT);
               }
             }
           } catch (CWLValidationException ex) {
             Map<String, String> message =
                 Collections.singletonMap("message", "Error:" + ex.getMessage());
-            return new ResponseEntity<Map<String, String>>(message, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
           } catch (Exception ex) {
             Map<String, String> message =
                 Collections.singletonMap(
                     "message", "Error: Workflow could not be created from the provided cwl file");
-            return new ResponseEntity<Map<String, String>>(message, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
           }
         }
         response.setHeader("Location", "/queue/" + queued.getId());
@@ -194,10 +192,10 @@ public class WorkflowJSONController {
       },
       produces = MediaType.APPLICATION_JSON_VALUE)
   public Workflow getWorkflowJson(
-      @PathVariable("domain") String domain,
-      @PathVariable("owner") String owner,
-      @PathVariable("repoName") String repoName,
-      @PathVariable("branch") String branch,
+      @PathVariable String domain,
+      @PathVariable String owner,
+      @PathVariable String repoName,
+      @PathVariable String branch,
       HttpServletRequest request) {
     // The wildcard end of the URL is the path
     String path =
@@ -223,8 +221,7 @@ public class WorkflowJSONController {
    * @return The JSON representation of the workflow
    */
   @GetMapping(value = "/workflows/*/*.git/{branch}/**", produces = MediaType.APPLICATION_JSON_VALUE)
-  public Workflow getWorkflowJsonGeneric(
-      @PathVariable("branch") String branch, HttpServletRequest request) {
+  public Workflow getWorkflowJsonGeneric(@PathVariable String branch, HttpServletRequest request) {
     // The wildcard end of the URL is the path
     String path =
         (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
@@ -249,8 +246,7 @@ public class WorkflowJSONController {
    *     object
    */
   @GetMapping(value = "/queue/{queueID}", produces = MediaType.APPLICATION_JSON_VALUE)
-  public QueuedWorkflow checkQueueJson(
-      @PathVariable("queueID") String queueID, HttpServletResponse response) {
+  public QueuedWorkflow checkQueueJson(@PathVariable String queueID, HttpServletResponse response) {
     QueuedWorkflow queuedWorkflow = workflowService.getQueuedWorkflow(queueID);
     if (queuedWorkflow == null) {
       throw new WorkflowNotFoundException();

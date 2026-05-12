@@ -19,17 +19,16 @@
 
 package org.commonwl.view.git;
 
-import org.eclipse.jgit.lib.Repository;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import java.io.File;
-
 import static org.commonwl.view.git.GitDetails.normaliseUrl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.when;
+
+import java.io.File;
+import org.eclipse.jgit.lib.Repository;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 public class GitDetailsTest {
 
@@ -170,25 +169,26 @@ public class GitDetailsTest {
   public void getLicense() {
     assumeTrue(isLicenseeAvailable(), "Skipping test: licensee not in PATH");
 
-      try (Repository mockRepo = Mockito.mock(Repository.class)) {
+    try (Repository mockRepo = Mockito.mock(Repository.class)) {
 
-          when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/apache/"));
-          assertEquals(
-                  "https://spdx.org/licenses/Apache-2.0",
-                  GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+      when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/apache/"));
+      assertEquals(
+          "https://spdx.org/licenses/Apache-2.0",
+          GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
 
-          when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/multiple/"));
-          assertEquals(
-                  "https://spdx.org/licenses/Apache-2.0",
-                  GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+      when(mockRepo.getWorkTree())
+          .thenReturn(new File("src/test/resources/cwl/licenses/multiple/"));
+      assertEquals(
+          "https://spdx.org/licenses/Apache-2.0",
+          GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
 
-          when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/other/"));
-          assertEquals(
-                  "https://could.com/be/anything.git",
-                  GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+      when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/other/"));
+      assertEquals(
+          "https://could.com/be/anything.git",
+          GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
 
-          when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/none/"));
-          assertNull(GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
-      }
+      when(mockRepo.getWorkTree()).thenReturn(new File("src/test/resources/cwl/licenses/none/"));
+      assertNull(GENERIC_DETAILS.getLicense(mockRepo.getWorkTree().toPath()));
+    }
   }
 }

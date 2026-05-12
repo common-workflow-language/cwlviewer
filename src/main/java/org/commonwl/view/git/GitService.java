@@ -19,6 +19,15 @@
 
 package org.commonwl.view.git;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.commonwl.view.researchobject.HashableAgent;
 import org.eclipse.jgit.api.Git;
@@ -32,16 +41,6 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 /** Handles Git related functionality */
 @Service
@@ -162,11 +161,11 @@ public class GitService {
       if (author != null) {
         HashableAgent newAgent = new HashableAgent();
         String name = author.getName();
-        if (name != null && name.length() > 0) {
+        if (name != null && !name.isEmpty()) {
           newAgent.setName(author.getName());
         }
         String email = author.getEmailAddress();
-        if (email != null && email.length() > 0) {
+        if (email != null && !email.isEmpty()) {
           newAgent.setUri(new URI("mailto:" + author.getEmailAddress()));
         }
         fileAuthors.add(newAgent);

@@ -29,6 +29,6 @@ public class PostgreSQLContextInitializer
             "spring.jpa.hibernate.ddl-auto=create")
         .applyTo(applicationContext.getEnvironment());
     applicationContext.addApplicationListener(
-            (ApplicationListener<ContextClosedEvent>) event -> postgreSQLContainer.stop());
+        (ApplicationListener<ContextClosedEvent>) event -> postgreSQLContainer.stop());
   }
 }

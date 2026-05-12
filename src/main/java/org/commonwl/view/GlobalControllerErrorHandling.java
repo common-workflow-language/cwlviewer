@@ -19,6 +19,7 @@
 
 package org.commonwl.view;
 
+import java.util.Collections;
 import org.commonwl.view.workflow.MultipleWorkflowsException;
 import org.commonwl.view.workflow.RepresentationNotFoundException;
 import org.commonwl.view.workflow.WorkflowNotFoundException;
@@ -28,8 +29,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import java.util.Collections;
 
 /**
  * Handles exception handling across the application.

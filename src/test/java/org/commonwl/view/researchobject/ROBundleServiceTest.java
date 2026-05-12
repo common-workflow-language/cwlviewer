@@ -19,6 +19,21 @@
 
 package org.commonwl.view.researchobject;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import org.apache.jena.query.ResultSet;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
@@ -39,22 +54,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
-
-import java.io.File;
-import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 public class ROBundleServiceTest {
 
@@ -141,7 +140,8 @@ public class ROBundleServiceTest {
     when(lobSTRdraft3.getPermalink()).thenReturn(permalink);
     when(lobSTRdraft3.getPermalink(any()))
         .thenAnswer(
-                (Answer<String>) invocation -> {
+            (Answer<String>)
+                invocation -> {
                   Object[] args = invocation.getArguments();
                   return permalink + "?format=" + args[0];
                 });

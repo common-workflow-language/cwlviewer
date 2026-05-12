@@ -19,6 +19,17 @@
 
 package org.commonwl.view.workflow;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
@@ -41,18 +52,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @Service
 public class WorkflowService {
@@ -258,7 +257,7 @@ public class WorkflowService {
                   workflowsInDir.add(overview);
                 }
               } catch (IOException err) {
-                logger.error("Skipping file due to IOException: " + file.toString(), err);
+                logger.error("Skipping file due to IOException: " + file, err);
               }
             }
           }
@@ -349,7 +348,7 @@ public class WorkflowService {
         if (cwlService.isPacked(workflowFile.toFile())) {
           List<WorkflowOverview> overviews =
               cwlService.getWorkflowOverviewsFromPacked(workflowFile.toFile());
-          if (overviews.size() == 0) {
+          if (overviews.isEmpty()) {
             throw new IOException(
                 "No workflow was found within the packed CWL file. " + gitInfo.toSummary());
           } else {
@@ -445,9 +444,9 @@ public class WorkflowService {
     List<Workflow> matches = workflowRepository.findByCommitAndPath(commitID, path);
     if (matches == null || matches.isEmpty()) {
       throw new WorkflowNotFoundException();
-    } else if (part == null) {
+    } else if (part.isEmpty()) {
       // any part will do - so we'll pick the first one
-      return matches.get(0);
+      return matches.getFirst();
     } else {
       // Multiple matches means either added by both branch and ID
       // Or packed workflow
@@ -457,14 +456,8 @@ public class WorkflowService {
           return workflow;
         }
       }
-      if (part.isPresent()) {
-        // Sorry, don't know about your part!
-        throw new WorkflowNotFoundException();
-      } else {
-        // No part requested, let's show some alternate permalinks,
-        // in addition to the raw redirect
-        throw new MultipleWorkflowsException(matches);
-      }
+      // Sorry, don't know about your part!
+      throw new WorkflowNotFoundException();
     }
   }
 
@@ -480,18 +473,12 @@ public class WorkflowService {
   public ClassPathResource getWorkflowGraph(String format, GitDetails gitDetails)
       throws WorkflowNotFoundException, IOException {
     // Determine file extension from format
-    String extension;
-    switch (format) {
-      case "svg":
-      case "png":
-        extension = format;
-        break;
-      case "xdot":
-        extension = "dot";
-        break;
-      default:
-        throw new WorkflowNotFoundException("Format " + format + " not recognized.");
-    }
+    String extension =
+        switch (format) {
+          case "svg", "png" -> format;
+          case "xdot" -> "dot";
+          default -> throw new WorkflowNotFoundException("Format " + format + " not recognized.");
+        };
 
     // Get workflow
     Workflow workflow = getWorkflow(gitDetails);

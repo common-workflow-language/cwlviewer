@@ -31,7 +31,7 @@ public class CWLElement {
   private String doc;
   private String type;
   private String format;
-  private List<String> sourceID;
+  private final List<String> sourceID;
   private String defaultVal;
 
   public CWLElement() {

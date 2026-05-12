@@ -19,6 +19,12 @@
 
 package org.commonwl.view.graphviz;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.QuerySolution;
@@ -26,20 +32,13 @@ import org.apache.jena.query.ResultSet;
 import org.commonwl.view.cwl.CWLProcess;
 import org.commonwl.view.cwl.RDFService;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 /** Writes GraphViz DOT files from a workflow RDF model */
 public class RDFDotWriter extends DotWriter {
 
   private final IRIFactory iriFactory = IRIFactory.iriImplementation();
 
-  private RDFService rdfService;
-  private String gitPath;
+  private final RDFService rdfService;
+  private final String gitPath;
 
   public RDFDotWriter(Writer writer, RDFService rdfService, String gitPath) {
     super(writer);
@@ -165,7 +164,7 @@ public class RDFDotWriter extends DotWriter {
         String sourceID = nodeIDFromUri(stepLink.get("src").toString());
         String dest = stepLink.get("dest").toString();
         String destID = nodeIDFromUri(dest);
-        String destInput = dest.substring(dest.replaceAll("#", "/").lastIndexOf("/") + 1);
+        String destInput = dest.substring(dest.replace("#", "/").lastIndexOf("/") + 1);
         writeLine("  \"" + sourceID + "\" -> \"" + destID + "\" [label=\"" + destInput + "\"];");
       } else if (stepLink.contains("default")) {
         // Collect default values

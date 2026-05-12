@@ -19,6 +19,18 @@
 
 package org.commonwl.view.workflow;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.git.GitDetails;
@@ -31,19 +43,6 @@ import org.eclipse.jgit.lib.Repository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
-
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.when;
 
 public class WorkflowServiceTest {
 
@@ -90,13 +89,13 @@ public class WorkflowServiceTest {
 
     // 1 workflow should be found
     assertEquals(2, list.size());
-    assertEquals("workflow.cwl", list.getFirst().getFileName());
-    assertEquals("label", list.getFirst().getLabel());
-    assertEquals("doc", list.getFirst().getDoc());
+    assertEquals("workflow.cwl", list.getFirst().fileName());
+    assertEquals("label", list.getFirst().label());
+    assertEquals("doc", list.getFirst().doc());
 
-    assertEquals("workflow2.cwl", list.get(1).getFileName());
-    assertEquals("label2", list.get(1).getLabel());
-    assertEquals("doc2", list.get(1).getDoc());
+    assertEquals("workflow2.cwl", list.get(1).fileName());
+    assertEquals("label2", list.get(1).label());
+    assertEquals("doc2", list.get(1).doc());
   }
 
   /** Getting a workflow when cache has expired And a new workflow needs to be created */

@@ -19,19 +19,6 @@
 
 package org.commonwl.view.git;
 
-import org.eclipse.jgit.api.CheckoutCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.RefNotFoundException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,6 +26,17 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 public class GitServiceTest {
 
@@ -54,8 +52,6 @@ public class GitServiceTest {
   private CheckoutCommand mockTagNotFoundCommand;
   private CheckoutCommand mockCheckoutCommand;
 
-  Git git = null;
-
   @BeforeEach
   public void setup() throws GitAPIException {
     GitService gitService = new GitService(Path.of(System.getProperty("java.io.tmpdir")), false);
@@ -68,14 +64,7 @@ public class GitServiceTest {
     when(this.mockGit.checkout()).thenReturn(this.mockCheckoutCommand);
     when(this.mockBranchNotFoundCommand.call()).thenThrow(branchNotFoundException);
     when(this.mockTagNotFoundCommand.call()).thenThrow(tagNotFoundException);
-    git = doReturn(this.mockGit).when(this.spyGitService).cloneRepo(Mockito.any(), Mockito.any());
-  }
-
-  @AfterEach
-  public void tearDown() {
-    if (git != null) {
-      git.close();
-    }
+    doReturn(this.mockGit).when(this.spyGitService).cloneRepo(Mockito.any(), Mockito.any());
   }
 
   @Test
@@ -98,11 +87,10 @@ public class GitServiceTest {
     when(mockCheckoutCommand.setName("refs/remotes/origin/mytag"))
         .thenReturn(this.mockBranchNotFoundCommand);
     when(mockCheckoutCommand.setName("mytag")).thenReturn(this.mockGoodCheckoutCommand);
-    Git git = doReturn(this.mockGit)
-            .when(this.spyGitService)
-            .cloneRepo(Mockito.any(String.class), Mockito.any(File.class));
+    doReturn(this.mockGit)
+        .when(this.spyGitService)
+        .cloneRepo(Mockito.any(String.class), Mockito.any(File.class));
     assertNotNull(this.spyGitService.getRepository(new GitDetails(null, "mytag", "foo"), false));
-    git.close();
   }
 
   @Test
@@ -110,11 +98,10 @@ public class GitServiceTest {
     when(mockCheckoutCommand.setName("refs/remotes/origin/mybranch"))
         .thenReturn(this.mockGoodCheckoutCommand);
     when(mockCheckoutCommand.setName("mytag")).thenReturn(this.mockTagNotFoundCommand);
-    Git git = doReturn(this.mockGit)
-            .when(this.spyGitService)
-            .cloneRepo(Mockito.any(String.class), Mockito.any(File.class));
+    doReturn(this.mockGit)
+        .when(this.spyGitService)
+        .cloneRepo(Mockito.any(String.class), Mockito.any(File.class));
     assertNotNull(this.spyGitService.getRepository(new GitDetails(null, "mybranch", "foo"), false));
-    git.close();
   }
 
   @Test()
@@ -122,9 +109,9 @@ public class GitServiceTest {
     when(mockCheckoutCommand.setName("refs/remotes/origin/mytag"))
         .thenReturn(this.mockBranchNotFoundCommand);
     when(mockCheckoutCommand.setName("mytag")).thenReturn(this.mockTagNotFoundCommand);
-    Git git = doReturn(this.mockGit)
-            .when(this.spyGitService)
-            .cloneRepo(Mockito.any(String.class), Mockito.any(File.class));
+    doReturn(this.mockGit)
+        .when(this.spyGitService)
+        .cloneRepo(Mockito.any(String.class), Mockito.any(File.class));
     boolean thrown = false;
     try {
       this.spyGitService.getRepository(new GitDetails(null, "mytag", "foo"), false);
@@ -133,6 +120,5 @@ public class GitServiceTest {
       thrown = (e == this.branchNotFoundException);
     }
     assertTrue(thrown);
-    git.close();
   }
 }

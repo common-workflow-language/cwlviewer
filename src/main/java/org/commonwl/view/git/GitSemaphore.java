@@ -19,16 +19,15 @@
 
 package org.commonwl.view.git;
 
-import org.springframework.stereotype.Component;
-
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
 /** Object to manage concurrent access to Git repositories */
 @Component
 public class GitSemaphore {
 
-  private static Map<String, Integer> currentRepos = new HashMap<>();
+  private static final Map<String, Integer> currentRepos = new HashMap<>();
 
   /**
    * Note that a thread will be accessing the repository

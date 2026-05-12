@@ -30,6 +30,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import java.io.Serializable;
+import java.util.Date;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import org.commonwl.view.WebConfig;
 import org.commonwl.view.WebConfig.Format;
 import org.commonwl.view.cwl.CWLElement;
@@ -40,12 +45,6 @@ import org.commonwl.view.util.LicenseUtils;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.format.annotation.DateTimeFormat;
-
-import java.io.Serializable;
-import java.util.Date;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
 
 /** Representation of a workflow */
 @JsonInclude(JsonInclude.Include.NON_NULL)

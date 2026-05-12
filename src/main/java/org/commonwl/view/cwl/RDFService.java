@@ -44,17 +44,18 @@ public class RDFService {
 
   // Context for SPARQL queries
   private final String queryCtx =
-      "PREFIX cwl: <https://w3id.org/cwl/cwl#>\n"
-          + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
-          + "PREFIX sld: <https://w3id.org/cwl/salad#>\n"
-          + "PREFIX dct: <http://purl.org/dc/terms/>\n"
-          + "PREFIX doap: <http://usefulinc.com/ns/doap#>\n"
-          + "PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>\n"
-          + "PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>\n"
-          + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
-          + "PREFIX s: <http://schema.org/>";
+      """
+          PREFIX cwl: <https://w3id.org/cwl/cwl#>
+          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          PREFIX sld: <https://w3id.org/cwl/salad#>
+          PREFIX dct: <http://purl.org/dc/terms/>
+          PREFIX doap: <http://usefulinc.com/ns/doap#>
+          PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>
+          PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>
+          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          PREFIX s: <http://schema.org/>""";
 
-  private String rdfService;
+  private final String rdfService;
 
   /**
    * Create the RDFService with configuration
@@ -171,13 +172,15 @@ public class RDFService {
   public String getOntLabel(String ontologyURI) {
     ParameterizedSparqlString labelQuery = new ParameterizedSparqlString();
     labelQuery.setCommandText(
-        "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"
-            + "SELECT ?label\n"
-            + "WHERE {\n"
-            + "  GRAPH ?graphName {\n"
-            + "    ?ont rdfs:label ?label\n"
-            + "  }\n"
-            + "}\n");
+        """
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+            SELECT ?label
+            WHERE {
+              GRAPH ?graphName {
+                ?ont rdfs:label ?label
+              }
+            }
+            """);
     labelQuery.setIri("ont", ontologyURI);
     labelQuery.setIri("graphName", rdfService + "ontologies");
     ResultSet result = runQuery(labelQuery);
@@ -436,16 +439,12 @@ public class RDFService {
    * @return CWL process the string refers to
    */
   public CWLProcess strToRuntype(String runtype) {
-    switch (runtype) {
-      case "https://w3id.org/cwl/cwl#Workflow":
-        return CWLProcess.WORKFLOW;
-      case "https://w3id.org/cwl/cwl#CommandLineTool":
-        return CWLProcess.COMMANDLINETOOL;
-      case "https://w3id.org/cwl/cwl#ExpressionTool":
-        return CWLProcess.EXPRESSIONTOOL;
-      default:
-        return null;
-    }
+    return switch (runtype) {
+      case "https://w3id.org/cwl/cwl#Workflow" -> CWLProcess.WORKFLOW;
+      case "https://w3id.org/cwl/cwl#CommandLineTool" -> CWLProcess.COMMANDLINETOOL;
+      case "https://w3id.org/cwl/cwl#ExpressionTool" -> CWLProcess.EXPRESSIONTOOL;
+      default -> null;
+    };
   }
 
   /**
