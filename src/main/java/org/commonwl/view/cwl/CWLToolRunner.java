@@ -19,6 +19,9 @@
 
 package org.commonwl.view.cwl;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Date;
 import org.apache.jena.query.QueryException;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitLicenseException;
@@ -31,6 +34,8 @@ import org.commonwl.view.workflow.QueuedWorkflowRepository;
 import org.commonwl.view.workflow.Workflow;
 import org.commonwl.view.workflow.WorkflowRepository;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.errors.TransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,13 +43,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Date;
-
-/**
- * Replace an existing workflow with the one given by cwltool
- */
+/** Replace an existing workflow with the one given by cwltool */
 @Component
 @EnableAsync
 public class CWLToolRunner {
@@ -114,13 +113,47 @@ public class CWLToolRunner {
       FileUtils.deleteGitRepository(repo);
     } catch (CWLValidationException | GitLicenseException ex) {
       String message = ex.getMessage();
-      logger.error("Workflow {} from {} : {}", queuedWorkflow.getId(), gitInfo.toSummary(), message, ex);
+      logger.error(
+          "Workflow {} from {} : {}", queuedWorkflow.getId(), gitInfo.toSummary(), message, ex);
       queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
       queuedWorkflow.setMessage(message);
       FileUtils.deleteGitRepository(repo);
+    } catch (TransportException ex) {
+      String message = ex.getMessage();
+      logger.error(
+          "Workflow retrieval error while processing {} from {} : {}",
+          queuedWorkflow.getId(),
+          gitInfo.toSummary(),
+          message,
+          ex);
+      queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
+      if (message.contains(
+          "Authentication is required but no CredentialsProvider has been registered")) {
+        queuedWorkflow.setMessage(
+            "Unable to retrieve the Git repository: it may be private, misnamed, or removed. "
+                + message);
+      } else {
+        queuedWorkflow.setMessage(message);
+      }
+      FileUtils.deleteGitRepository(repo);
+    } catch (MissingObjectException ex) {
+      String message = ex.getMessage();
+      logger.error(
+          "Workflow retrieval error while processing {} from {} : {}",
+          queuedWorkflow.getId(),
+          gitInfo.toSummary(),
+          message,
+          ex);
+      queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
+      queuedWorkflow.setMessage("Unable to retrieve a needed Git object: " + message);
+      FileUtils.deleteGitRepository(repo);
     } catch (Exception ex) {
-      logger.error("Unexpected error processing workflow {} from {} : {}",
-          queuedWorkflow.getId(), gitInfo.toSummary(), ex.getMessage(), ex);
+      logger.error(
+          "Unexpected error processing workflow {} from {} : {}",
+          queuedWorkflow.getId(),
+          gitInfo.toSummary(),
+          ex.getMessage(),
+          ex);
       queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
       queuedWorkflow.setMessage(
           "Whoops! Cwltool ran successfully, but an unexpected "
