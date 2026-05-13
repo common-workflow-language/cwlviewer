@@ -19,9 +19,6 @@
 
 package org.commonwl.view.cwl;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Date;
 import org.apache.jena.query.QueryException;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.git.GitLicenseException;
@@ -41,7 +38,13 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
-/** Replace existing workflow with the one given by cwltool */
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Date;
+
+/**
+ * Replace an existing workflow with the one given by cwltool
+ */
 @Component
 @EnableAsync
 public class CWLToolRunner {
@@ -105,27 +108,19 @@ public class CWLToolRunner {
       queuedWorkflow.setCwltoolStatus(CWLToolStatus.SUCCESS);
 
     } catch (QueryException ex) {
-      logger.error("Jena query exception for workflow " + queuedWorkflow.getId(), ex);
+      logger.error("Jena query exception for workflow {}", queuedWorkflow.getId(), ex);
       queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
       queuedWorkflow.setMessage("An error occurred when executing a query on the SPARQL store");
       FileUtils.deleteGitRepository(repo);
     } catch (CWLValidationException | GitLicenseException ex) {
       String message = ex.getMessage();
-      logger.error(
-          "Workflow " + queuedWorkflow.getId() + " from " + gitInfo.toSummary() + " : " + message,
-          ex);
+      logger.error("Workflow {} from {} : {}", queuedWorkflow.getId(), gitInfo.toSummary(), message, ex);
       queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
       queuedWorkflow.setMessage(message);
       FileUtils.deleteGitRepository(repo);
     } catch (Exception ex) {
-      logger.error(
-          "Unexpected error processing workflow "
-              + queuedWorkflow.getId()
-              + " from "
-              + gitInfo.toSummary()
-              + " : "
-              + ex.getMessage(),
-          ex);
+      logger.error("Unexpected error processing workflow {} from {} : {}",
+          queuedWorkflow.getId(), gitInfo.toSummary(), ex.getMessage(), ex);
       queuedWorkflow.setCwltoolStatus(CWLToolStatus.ERROR);
       queuedWorkflow.setMessage(
           "Whoops! Cwltool ran successfully, but an unexpected "
