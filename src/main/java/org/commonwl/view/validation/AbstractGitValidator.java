@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.WorkflowForm;
+import org.springframework.validation.Errors;
 
 /**
  * Abstract implementation of a Git validator.
@@ -58,6 +59,9 @@ public abstract class AbstractGitValidator implements GitUrlValidator {
       return false;
     }
   }
+
+  @Override
+  public void validate(WorkflowForm form, Errors errors) {}
 
   @Override
   public GitDetails parse(String url, WorkflowForm form) {

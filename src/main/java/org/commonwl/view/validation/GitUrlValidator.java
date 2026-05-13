@@ -21,6 +21,7 @@ package org.commonwl.view.validation;
 
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.WorkflowForm;
+import org.springframework.validation.Errors;
 
 /** Validate Git URLs. */
 public interface GitUrlValidator {
@@ -31,6 +32,14 @@ public interface GitUrlValidator {
    * @return {@code true} if the URL is one of the supported Git flavours, {@code false} otherwise
    */
   boolean supports(String url);
+
+  /**
+   * Validate the form.
+   *
+   * @param form The web form
+   * @param errors The errors object
+   */
+  void validate(WorkflowForm form, Errors errors);
 
   /**
    * Parse the Git URL returning a {@code GitDetails} object.

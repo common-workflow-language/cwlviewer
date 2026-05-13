@@ -21,6 +21,8 @@ package org.commonwl.view.validation;
 
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.WorkflowForm;
+import org.springframework.validation.Errors;
+import org.springframework.validation.ValidationUtils;
 
 /** Validate generic Git repository URLs. */
 public class GenericGitUrlValidator implements GitUrlValidator {
@@ -31,19 +33,25 @@ public class GenericGitUrlValidator implements GitUrlValidator {
   }
 
   @Override
+  public void validate(WorkflowForm form, Errors errors) {
+    ValidationUtils.rejectIfEmptyOrWhitespace(errors, "branch", "branch.emptyOrWhitespace");
+  }
+
+  @Override
   public GitDetails parse(String url, WorkflowForm form) {
-    GitDetails details = new GitDetails(url, null, null);
+    String branch = "master";
+    String path = "/";
 
     if (form != null) {
       if (form.getBranch() != null && !form.getBranch().isBlank()) {
-        details.setBranch(form.getBranch());
+        branch = form.getBranch();
       }
 
       if (form.getPath() != null && !form.getPath().isBlank()) {
-        details.setPath(form.getPath());
+        path = form.getPath();
       }
     }
 
-    return details;
+    return new GitDetails(url, branch, path);
   }
 }

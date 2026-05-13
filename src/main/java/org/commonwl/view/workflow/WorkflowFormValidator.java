@@ -54,6 +54,8 @@ public class WorkflowFormValidator {
 
     for (GitUrlValidator handler : handlers) {
       if (handler.supports(form.getUrl())) {
+        handler.validate(form, e);
+
         GitDetails details = handler.parse(form.getUrl(), form);
         if (details != null) {
           attachPackedId(details, form);

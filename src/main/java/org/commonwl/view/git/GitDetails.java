@@ -304,14 +304,14 @@ public class GitDetails implements Serializable {
     try {
       String[] command = {"licensee", "detect", "--json", workTree.toString()};
       if (logger.isTraceEnabled()) {
-        logger.trace("Calling " + String.join(" ", command));
+        logger.trace("Calling {}", String.join(" ", command));
       }
       Process process = Runtime.getRuntime().exec(command, null);
       ObjectMapper mapper = new ObjectMapper();
       JsonNode jsonLicenses = mapper.readTree(process.getInputStream());
       if (logger.isTraceEnabled()) {
         logger.trace(
-            "Licensee retrieved the following licenses:\n" + jsonLicenses.toPrettyString());
+            "Licensee retrieved the following licenses:\n{}", jsonLicenses.toPrettyString());
       }
       int size = jsonLicenses.withArray("licenses").size();
       if (size > 0) {
@@ -320,13 +320,10 @@ public class GitDetails implements Serializable {
         String licenseLink = getRawUrl(null, licenseCandidate);
         if (logger.isWarnEnabled() && size > 1) {
           logger.warn(
-              "There are "
-                  + size
-                  + " identified license files in the "
-                  + repoUrl
-                  + " repository. "
-                  + "Taking the first one: "
-                  + licenseLink);
+              "There are {} identified license files in the {} repository. Taking the first one: {}",
+              size,
+              repoUrl,
+              licenseLink);
         }
         String key = jsonLicenses.withArray("licenses").get(0).get("key").asString();
         if (!"other".equals(key)) {
