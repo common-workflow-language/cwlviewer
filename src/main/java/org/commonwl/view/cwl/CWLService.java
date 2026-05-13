@@ -177,7 +177,7 @@ public class CWLService {
    * @param packedWorkflowId The ID of the workflow object if the file is packed. <code>null</code>
    *     means the workflow is not expected to be packed, while "" means the first workflow found is
    *     used, packed or non-packed.
-   * @param defaultLabel Label to give workflow if not set
+   * @param defaultLabel Label to give a workflow if not set
    * @return The constructed workflow object
    */
   public Workflow parseWorkflowNative(

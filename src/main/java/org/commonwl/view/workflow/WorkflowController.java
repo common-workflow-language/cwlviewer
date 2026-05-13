@@ -41,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -439,7 +438,7 @@ public class WorkflowController {
       value = {"/queue/{queueID}/tempgraph.png"},
       produces = "image/png")
   @ResponseBody
-  public ClassPathResource getTempGraphAsPng(
+  public FileSystemResource getTempGraphAsPng(
       @PathVariable String queueID, HttpServletResponse response) throws IOException {
     QueuedWorkflow queued = workflowService.getQueuedWorkflow(queueID);
     if (queued == null) {
@@ -449,7 +448,7 @@ public class WorkflowController {
         graphVizService.getGraphPath(
             queued.getId() + ".png", queued.getTempRepresentation().getVisualisationDot(), "png");
     response.setHeader("Content-Disposition", "inline; filename=\"graph.png\"");
-    return new ClassPathResource(out.toString());
+    return new FileSystemResource(out.toString());
   }
 
   /**

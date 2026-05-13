@@ -57,7 +57,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -367,12 +367,12 @@ public class WorkflowControllerTest {
     // Mock service to return mock workflow
     WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
     when(mockWorkflowService.getWorkflowGraph(any(String.class), Mockito.any(GitDetails.class)))
-        .thenReturn(new ClassPathResource("graphviz/testVis.svg"))
-        .thenReturn(new ClassPathResource("graphviz/testVis.png"))
-        .thenReturn(new ClassPathResource("graphviz/testWorkflow.dot"))
-        .thenReturn(new ClassPathResource("graphviz/testVis.svg"))
-        .thenReturn(new ClassPathResource("graphviz/testVis.png"))
-        .thenReturn(new ClassPathResource("graphviz/testWorkflow.dot"))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.svg"))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.png"))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testWorkflow.dot"))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.svg"))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.png"))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testWorkflow.dot"))
         .thenThrow(new WorkflowNotFoundException());
 
     // Mock controller/MVC

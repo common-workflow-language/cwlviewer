@@ -21,6 +21,7 @@ package org.commonwl.view.git;
 
 import jakarta.validation.ValidationException;
 
+@SuppressWarnings("unused")
 public class GitLicenseException extends ValidationException {
 
   public GitLicenseException(String message) {

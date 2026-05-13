@@ -72,6 +72,7 @@ public class GitDetails implements Serializable {
     return repoUrl;
   }
 
+  @SuppressWarnings("unused")
   public void setRepoUrl(String repoUrl) {
     this.repoUrl = repoUrl;
   }
@@ -111,7 +112,7 @@ public class GitDetails implements Serializable {
   }
 
   /**
-   * Get the type of a repository URL this object refers to
+   * Get the type of repository URL this object refers to
    *
    * @return The type for the URL
    */
@@ -179,7 +180,10 @@ public class GitDetails implements Serializable {
    */
   public String getInternalUrl(String branchOverride) {
     String packedPart = packedId == null ? "" : "%23" + packedId;
+
+    // TODO: Maybe this needs encoding to support commas? See issue #782
     String pathPart = path.equals("/") ? "" : "/" + path;
+
     return switch (getType()) {
       case GITHUB, GITLAB ->
           "/workflows/"
@@ -188,6 +192,7 @@ public class GitDetails implements Serializable {
               + branchOverride
               + pathPart
               + packedPart;
+
       default ->
           "/workflows/" + normaliseUrl(repoUrl) + "/" + branchOverride + pathPart + packedPart;
     };

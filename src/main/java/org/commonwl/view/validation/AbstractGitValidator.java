@@ -20,6 +20,9 @@
 package org.commonwl.view.validation;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 import org.commonwl.view.git.GitDetails;
 import org.commonwl.view.workflow.WorkflowForm;
 
@@ -59,27 +62,52 @@ public abstract class AbstractGitValidator implements GitUrlValidator {
   @Override
   public GitDetails parse(String url, WorkflowForm form) {
     final URI uri = URI.create(url);
-    final String[] parts = uri.getPath().split("/");
 
-    if (parts.length < 3) return null;
+    List<String> parts = Arrays.stream(uri.getPath().split("/")).filter(p -> !p.isBlank()).toList();
 
-    final String owner = parts[1];
-    final String repo = parts[2];
+    if (parts.size() < 2) return null;
 
-    final String repoUrl = repoBaseUrl(owner, repo);
+    String owner = parts.get(0);
+    String repo = parts.get(1);
 
-    String branch = form.getBranch();
-    String path = form.getPath();
+    String repoUrl = repoBaseUrl(owner, repo);
 
-    for (int i = 3; i < parts.length; i++) {
-      if ("tree".equals(parts[i]) || "blob".equals(parts[i])) {
-        if (branch == null && i + 1 < parts.length) {
-          branch = parts[i + 1];
+    String branch = null;
+    String path = null;
+
+    // Detect branch/path from /tree/ or /blob/
+    for (int i = 2; i < parts.size(); i++) {
+      String p = parts.get(i);
+
+      if ("tree".equals(p) || "blob".equals(p)) {
+        if (i + 1 < parts.size()) {
+          branch = parts.get(i + 1);
         }
-        if (path == null && i + 2 < parts.length) {
-          path = String.join("/", java.util.Arrays.copyOfRange(parts, i + 2, parts.length));
+        if (i + 2 < parts.size()) {
+          path = String.join("/", parts.subList(i + 2, parts.size()));
         }
         break;
+      }
+    }
+
+    // Optional GitHub-style fragment fallback (#branch/path)
+    String fragment = uri.getFragment();
+    if (fragment != null && !fragment.isBlank()) {
+      String[] fragParts = fragment.split("/", 2);
+      if (branch == null) {
+        branch = fragParts[0];
+      }
+      if (path == null && fragParts.length > 1) {
+        path = fragParts[1];
+      }
+    }
+
+    if (form != null) {
+      if (StringUtils.isNotBlank(form.getBranch())) {
+        branch = form.getBranch();
+      }
+      if (StringUtils.isNotBlank(form.getPath())) {
+        path = form.getPath();
       }
     }
 

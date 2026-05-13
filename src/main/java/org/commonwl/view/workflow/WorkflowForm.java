@@ -79,7 +79,8 @@ public class WorkflowForm {
     return packedId;
   }
 
-  public void getGitDetailssetPackedId(String packedId) {
+  @SuppressWarnings("unused")
+  public void getGitDetailsSetPackedId(String packedId) {
     this.packedId = packedId;
   }
 

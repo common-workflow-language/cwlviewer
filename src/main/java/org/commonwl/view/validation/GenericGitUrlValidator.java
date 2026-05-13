@@ -32,10 +32,18 @@ public class GenericGitUrlValidator implements GitUrlValidator {
 
   @Override
   public GitDetails parse(String url, WorkflowForm form) {
-    if (form.getBranch() == null || form.getBranch().isBlank()) {
-      return null;
+    GitDetails details = new GitDetails(url, null, null);
+
+    if (form != null) {
+      if (form.getBranch() != null && !form.getBranch().isBlank()) {
+        details.setBranch(form.getBranch());
+      }
+
+      if (form.getPath() != null && !form.getPath().isBlank()) {
+        details.setPath(form.getPath());
+      }
     }
 
-    return new GitDetails(url, form.getBranch(), form.getPath());
+    return details;
   }
 }

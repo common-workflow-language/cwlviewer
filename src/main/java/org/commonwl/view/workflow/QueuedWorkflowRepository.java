@@ -2,6 +2,7 @@ package org.commonwl.view.workflow;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Repository
 public interface QueuedWorkflowRepository
-    extends JpaRepository<QueuedWorkflow, String>, QueuedWorkflowRepositoryCustom {
+    extends JpaRepository<QueuedWorkflow, UUID>, QueuedWorkflowRepositoryCustom {
 
   /**
    * Deletes all queued workflows with date retrieved on older or equal to the Date argument passed.

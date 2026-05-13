@@ -46,7 +46,8 @@ public class QueuedWorkflow extends BaseEntity implements Serializable {
   // ID for database
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(nullable = false, updatable = false)
+  @Column(nullable = false, updatable = false, columnDefinition = "varchar(36)")
+  @JdbcTypeCode(SqlTypes.VARCHAR)
   private UUID id;
 
   // Very barebones workflow to build loading thumbnail and overview
@@ -99,6 +100,7 @@ public class QueuedWorkflow extends BaseEntity implements Serializable {
     this.cwltoolVersion = cwltoolVersion;
   }
 
+  @SuppressWarnings("unused")
   public String getMessage() {
     return message;
   }

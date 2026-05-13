@@ -137,7 +137,9 @@ public class WorkflowFormValidatorTest {
     Errors errors = new BeanPropertyBindingResult(genericUrl, "workflowForm");
     GitDetails details = workflowFormValidator.validateAndParse(genericUrl, errors);
 
-    assertNull(details);
+    assertNotNull(details);
+    assertEquals("master", details.getBranch());
+    assertEquals("/", details.getPath());
     assertTrue(errors.hasErrors());
   }
 }

@@ -63,7 +63,8 @@ public class Workflow extends BaseEntity implements Serializable {
   // ID for database
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(nullable = false, updatable = false)
+  @Column(nullable = false, updatable = false, columnDefinition = "varchar(36)")
+  @JdbcTypeCode(SqlTypes.VARCHAR)
   private UUID id;
 
   // Metadata
@@ -149,7 +150,7 @@ public class Workflow extends BaseEntity implements Serializable {
     this(null, null, null, null, null, null, null);
   }
 
-  public UUID getID() {
+  public UUID getId() {
     return id;
   }
 
@@ -161,6 +162,7 @@ public class Workflow extends BaseEntity implements Serializable {
     return label;
   }
 
+  @SuppressWarnings("unused")
   public void setLabel(String label) {
     this.label = label;
   }
@@ -169,6 +171,7 @@ public class Workflow extends BaseEntity implements Serializable {
     return doc;
   }
 
+  @SuppressWarnings("unused")
   public void setDoc(String doc) {
     this.doc = doc;
   }
@@ -177,6 +180,7 @@ public class Workflow extends BaseEntity implements Serializable {
     return inputs;
   }
 
+  @SuppressWarnings("unused")
   public void setInputs(Map<String, CWLElement> inputs) {
     this.inputs = inputs;
   }
@@ -185,6 +189,7 @@ public class Workflow extends BaseEntity implements Serializable {
     return outputs;
   }
 
+  @SuppressWarnings("unused")
   public void setOutputs(Map<String, CWLElement> outputs) {
     this.outputs = outputs;
   }
@@ -193,6 +198,7 @@ public class Workflow extends BaseEntity implements Serializable {
     return steps;
   }
 
+  @SuppressWarnings("unused")
   public void setSteps(Map<String, CWLStep> steps) {
     this.steps = steps;
   }
@@ -233,6 +239,7 @@ public class Workflow extends BaseEntity implements Serializable {
     return dockerLink;
   }
 
+  @SuppressWarnings("unused")
   public void setDockerLink(String dockerLink) {
     this.dockerLink = dockerLink;
   }
@@ -268,6 +275,7 @@ public class Workflow extends BaseEntity implements Serializable {
     return retrievedFrom.getInternalUrl().replaceFirst("/workflows", "/graph/svg");
   }
 
+  @SuppressWarnings("unused")
   public String getRoBundle() {
     if (roBundlePath != null) {
       return getRoBundleLink();
@@ -337,6 +345,7 @@ public class Workflow extends BaseEntity implements Serializable {
         + packedPart;
   }
 
+  @SuppressWarnings("unused")
   public boolean isPacked() {
     return retrievedFrom.getPackedId() != null;
   }
@@ -345,6 +354,7 @@ public class Workflow extends BaseEntity implements Serializable {
     return licenseLink;
   }
 
+  @SuppressWarnings("unused")
   public void setLicenseLink(String licenseLink) {
     this.licenseLink = licenseLink;
   }

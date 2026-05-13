@@ -130,7 +130,7 @@ public class ROBundleServiceTest {
             "933bf2a1a1cce32d88f88f136275535da9df0954",
             "workflows/lobSTR/lobSTR-workflow.cwl");
     lobSTRdraft3 = Mockito.mock(Workflow.class);
-    when(lobSTRdraft3.getID()).thenReturn(UUID.randomUUID());
+    when(lobSTRdraft3.getId()).thenReturn(UUID.randomUUID());
     when(lobSTRdraft3.getRetrievedFrom()).thenReturn(lobSTRdraft3Details);
     when(lobSTRdraft3.getLastCommit()).thenReturn("933bf2a1a1cce32d88f88f136275535da9df0954");
     final String permalink =

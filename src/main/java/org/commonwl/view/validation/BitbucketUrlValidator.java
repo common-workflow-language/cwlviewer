@@ -20,6 +20,7 @@
 package org.commonwl.view.validation;
 
 /** Validate Bitbucket repository URLs. */
+@SuppressWarnings("unused")
 public class BitbucketUrlValidator extends AbstractGitValidator {
   protected String host() {
     return "bitbucket.org";

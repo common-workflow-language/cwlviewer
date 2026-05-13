@@ -39,7 +39,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -49,9 +49,12 @@ public class WorkflowPermalinkControllerTest {
   @TempDir private Path tempDir;
   private MockMvc mockMvc;
   private byte[] rdfResponse;
-  private final ClassPathResource png = new ClassPathResource("graphviz/testVis.png");
-  private final ClassPathResource svg = new ClassPathResource("graphviz/testVis.svg");
-  private final ClassPathResource dot = new ClassPathResource("graphviz/testWorkflow.dot");
+  private final FileSystemResource png =
+      new FileSystemResource("src/test/resources/graphviz/testVis.png");
+  private final FileSystemResource svg =
+      new FileSystemResource("src/test/resources/graphviz/testVis.svg");
+  private final FileSystemResource dot =
+      new FileSystemResource("src/test/resources/graphviz/testWorkflow.dot");
 
   @BeforeEach
   public void setUp() throws Exception {
@@ -63,8 +66,9 @@ public class WorkflowPermalinkControllerTest {
                 "https://github.com/MarkRobbo/workflows.git", "master", "path/to/workflow.cwl"));
 
     WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
+    //noinspection unchecked
     when(mockWorkflowService.findByCommitAndPath(
-            any(String.class), any(String.class), any(Optional.class)))
+            any(String.class), any(String.class), (Optional<String>) any(Optional.class)))
         .thenReturn(mockWorkflow);
 
     when(mockWorkflowService.findRawBaseForCommit(any(String.class)))
