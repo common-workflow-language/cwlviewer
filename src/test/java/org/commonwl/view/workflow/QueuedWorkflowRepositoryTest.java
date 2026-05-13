@@ -53,8 +53,7 @@ public class QueuedWorkflowRepositoryTest {
     assertNotNull(retrievedQueuedWorkflowAfterSave);
 
     // delete saved queued workflow by workflow git details
-    repository.deleteByTempRepresentation_RetrievedFrom(
-        queuedWorkflow.getTempRepresentation().getRetrievedFrom());
+    repository.deleteByRetrievedFrom(queuedWorkflow.getTempRepresentation().getRetrievedFrom());
 
     // retrieve deleted queued workflow by workflow git details
     QueuedWorkflow retrievedQueuedWorkflowAfterDelete =

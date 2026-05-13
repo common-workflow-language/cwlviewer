@@ -533,7 +533,7 @@ public class WorkflowService {
     workflowRepository.delete(workflow);
 
     // Remove any queued repositories pointing to the workflow
-    queuedWorkflowRepository.deleteByTempRepresentation_RetrievedFrom(workflow.getRetrievedFrom());
+    queuedWorkflowRepository.deleteByRetrievedFrom(workflow.getRetrievedFrom());
   }
 
   /**
