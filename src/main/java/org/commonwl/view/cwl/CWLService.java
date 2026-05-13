@@ -236,7 +236,7 @@ public class CWLService {
       dotWriter.writeGraph(workflowModel);
       workflowModel.setVisualisationDot(graphWriter.toString());
     } catch (IOException ex) {
-      logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
+      logger.error("Failed to create DOT graph for workflow: {}", ex.getMessage());
     }
 
     return workflowModel;
@@ -479,12 +479,12 @@ public class CWLService {
 
     // Generate DOT graph
     StringWriter graphWriter = new StringWriter();
-    RDFDotWriter RDFDotWriter = new RDFDotWriter(graphWriter, rdfService, gitPath);
+    RDFDotWriter rdfDotWriter = new RDFDotWriter(graphWriter, rdfService, gitPath);
     try {
-      RDFDotWriter.writeGraph(url);
+      rdfDotWriter.writeGraph(url);
       workflowModel.setVisualisationDot(graphWriter.toString());
     } catch (IOException ex) {
-      logger.error("Failed to create DOT graph for workflow: " + ex.getMessage());
+      logger.error("Failed to create DOT graph for workflow: {}", ex.getMessage());
     }
 
     return workflowModel;
@@ -499,7 +499,7 @@ public class CWLService {
    */
   public WorkflowOverview getWorkflowOverview(File file) throws IOException {
 
-    // Get the content of this file from Github
+    // Get the content of this file from GitHub
     long fileSizeBytes = file.length();
 
     // Check file size limit before parsing
@@ -574,7 +574,7 @@ public class CWLService {
    * Convert RDF URI for a type to a name
    *
    * @param uri The URI for the type
-   * @return The human readable name for that type
+   * @return The human-readable name for that type
    */
   private String typeURIToString(String uri) {
     return switch (uri) {
@@ -687,7 +687,7 @@ public class CWLService {
   }
 
   /**
-   * Get a the inputs for a particular document
+   * Get the inputs for a particular document
    *
    * @param cwlDoc The document to get inputs for
    * @return A map of input IDs and details related to them

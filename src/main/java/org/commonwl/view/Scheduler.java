@@ -82,14 +82,13 @@ public class Scheduler {
     calendar.add(Calendar.HOUR, -QUEUED_WORKFLOW_AGE_LIMIT_HOURS);
     Date removeTime = calendar.getTime();
 
-    logger.info("The time is " + now);
-    logger.info(
-        "Delete time interval is : OLDER THAN " + QUEUED_WORKFLOW_AGE_LIMIT_HOURS + " HOURS");
-    logger.info("Deleting queued workflows older than or equal to " + removeTime);
+    logger.info("The time is {}", now);
+    logger.info("Delete time interval is : OLDER THAN {} HOURS", QUEUED_WORKFLOW_AGE_LIMIT_HOURS);
+    logger.info("Deleting queued workflows older than or equal to {}", removeTime);
 
     logger.info(
-        queuedWorkflowRepository.deleteByTempRepresentation_RetrievedOnLessThanEqual(removeTime)
-            + " Old queued workflows removed");
+        "{} Old queued workflows removed",
+        queuedWorkflowRepository.deleteByTempRepresentation_RetrievedOnLessThanEqual(removeTime));
   }
 
   /**
@@ -98,9 +97,9 @@ public class Scheduler {
    * <p>Will scan each temporary directory (graphviz, RO, git), searching for files exceeding a
    * specified threshold.
    *
-   * <p>It scans the first level directories, i.e. it does not recursively scans directories. So it
+   * <p>It scans the first level directories, i.e. it does not recursively scan directories. So it
    * will delete any RO or Git repository directories that exceed the threshold. Similarly, it will
-   * delete any graph (svg, png, etc) that also exceed it.
+   * delete any graph (svg, png, etc.) that also exceeds it.
    *
    * <p>Errors logged through Logger. Settings in Spring application properties file.
    *
@@ -141,9 +140,9 @@ public class Scheduler {
           // expected and
           // must be treated as errors.
           logger.error(
-              String.format(
-                  "Failed to delete old temporary file or directory [%s]: %s",
-                  fileToDelete.getAbsolutePath(), e.getMessage()),
+              "Failed to delete old temporary file or directory [{}]: {}",
+              fileToDelete.getAbsolutePath(),
+              e.getMessage(),
               e);
         }
       }
