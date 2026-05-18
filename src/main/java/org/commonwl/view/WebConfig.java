@@ -38,7 +38,7 @@ public class WebConfig implements WebMvcConfigurer {
    * @see Workflow#getPermalink(Format)
    * @see WorkflowPermalinkController
    */
-  public static enum Format {
+  public enum Format {
     // Browser
     html(MediaType.TEXT_HTML),
     // API

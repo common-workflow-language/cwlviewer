@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class GitSemaphore {
 
-  private static Map<String, Integer> currentRepos = new HashMap<>();
+  private static final Map<String, Integer> currentRepos = new HashMap<>();
 
   /**
    * Note that a thread will be accessing the repository

@@ -150,7 +150,7 @@ public class ModelDotWriter extends DotWriter {
     // Workaround to force outputs to lowest ranking, see #104
     writeLine("");
     writeLine("  // Invisible links to force outputs to be at lowest rank");
-    if (workflow.getOutputs().size() > 0) {
+    if (!workflow.getOutputs().isEmpty()) {
       for (Map.Entry<String, CWLStep> step : workflow.getSteps().entrySet()) {
         writeLine(
             "  \""

@@ -33,6 +33,7 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.apache.jena.query.ResultSet;
 import org.apache.taverna.robundle.Bundle;
 import org.apache.taverna.robundle.Bundles;
@@ -52,7 +53,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class ROBundleServiceTest {
@@ -130,7 +130,7 @@ public class ROBundleServiceTest {
             "933bf2a1a1cce32d88f88f136275535da9df0954",
             "workflows/lobSTR/lobSTR-workflow.cwl");
     lobSTRdraft3 = Mockito.mock(Workflow.class);
-    when(lobSTRdraft3.getID()).thenReturn("testID");
+    when(lobSTRdraft3.getId()).thenReturn(UUID.randomUUID());
     when(lobSTRdraft3.getRetrievedFrom()).thenReturn(lobSTRdraft3Details);
     when(lobSTRdraft3.getLastCommit()).thenReturn("933bf2a1a1cce32d88f88f136275535da9df0954");
     final String permalink =
@@ -140,13 +140,11 @@ public class ROBundleServiceTest {
     when(lobSTRdraft3.getPermalink()).thenReturn(permalink);
     when(lobSTRdraft3.getPermalink(any()))
         .thenAnswer(
-            new Answer<String>() {
-              @Override
-              public String answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                return permalink + "?format=" + args[0];
-              }
-            });
+            (Answer<String>)
+                invocation -> {
+                  Object[] args = invocation.getArguments();
+                  return permalink + "?format=" + args[0];
+                });
   }
 
   /** Use a temporary directory for testing */
@@ -174,7 +172,7 @@ public class ROBundleServiceTest {
     Manifest manifest = bundle.getManifest();
     assertEquals("CWL Viewer", manifest.getCreatedBy().getName());
     assertEquals("https://view.commonwl.org", manifest.getCreatedBy().getUri().toString());
-    assertEquals("Mark Robinson", manifest.getAuthoredBy().get(0).getName());
+    assertEquals("Mark Robinson", manifest.getAuthoredBy().getFirst().getName());
     assertEquals(
         new URI(
             "https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/workflows/lobSTR/lobSTR-workflow.cwl"),
@@ -192,10 +190,10 @@ public class ROBundleServiceTest {
     assertEquals(
         "https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/lobstr-draft3/lobSTR-workflow.cwl?format=raw",
         cwlAggregate.getRetrievedFrom().toString());
-    assertEquals("Mark Robinson", cwlAggregate.getAuthoredBy().get(0).getName());
+    assertEquals("Mark Robinson", cwlAggregate.getAuthoredBy().getFirst().getName());
     assertEquals(
-        "mailto:mark@example.com", cwlAggregate.getAuthoredBy().get(0).getUri().toString());
-    assertNull(cwlAggregate.getAuthoredBy().get(0).getOrcid());
+        "mailto:mark@example.com", cwlAggregate.getAuthoredBy().getFirst().getUri().toString());
+    assertNull(cwlAggregate.getAuthoredBy().getFirst().getOrcid());
     assertEquals("text/x-yaml", cwlAggregate.getMediatype());
     assertEquals("https://w3id.org/cwl/draft-3", cwlAggregate.getConformsTo().toString());
 
@@ -216,12 +214,13 @@ public class ROBundleServiceTest {
     assertEquals(1, history.size());
     assertEquals(
         "http:/git2prov.org/git2prov?giturl=https:/github.com/common-workflow-language/workflows.git&serialization=PROV-JSON",
-        history.get(0).toString());
+        history.getFirst().toString());
 
     // Save and check it exists in the temporary folder
     roBundleService.saveToFile(bundle);
     File[] fileList = roBundleFolder.listFiles();
-    assertTrue(fileList.length == 1);
+    assertNotNull(fileList);
+    assertEquals(1, fileList.length);
     for (File ro : fileList) {
       assertTrue(ro.getName().endsWith(".zip"));
       Bundle savedBundle = Bundles.openBundle(ro.toPath());
@@ -252,6 +251,6 @@ public class ROBundleServiceTest {
         manifest.getAggregation(
             new URI(
                 "https://w3id.org/cwl/view/git/933bf2a1a1cce32d88f88f136275535da9df0954/lobstr-draft3/models/illumina_v3.pcrfree.stepmodel?format=raw"));
-    assertEquals("Mark Robinson", urlAggregate.getAuthoredBy().get(0).getName());
+    assertEquals("Mark Robinson", urlAggregate.getAuthoredBy().getFirst().getName());
   }
 }

@@ -44,17 +44,18 @@ public class RDFService {
 
   // Context for SPARQL queries
   private final String queryCtx =
-      "PREFIX cwl: <https://w3id.org/cwl/cwl#>\n"
-          + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
-          + "PREFIX sld: <https://w3id.org/cwl/salad#>\n"
-          + "PREFIX dct: <http://purl.org/dc/terms/>\n"
-          + "PREFIX doap: <http://usefulinc.com/ns/doap#>\n"
-          + "PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>\n"
-          + "PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>\n"
-          + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
-          + "PREFIX s: <http://schema.org/>";
+      """
+          PREFIX cwl: <https://w3id.org/cwl/cwl#>
+          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          PREFIX sld: <https://w3id.org/cwl/salad#>
+          PREFIX dct: <http://purl.org/dc/terms/>
+          PREFIX doap: <http://usefulinc.com/ns/doap#>
+          PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>
+          PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>
+          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          PREFIX s: <http://schema.org/>""";
 
-  private String rdfService;
+  private final String rdfService;
 
   /**
    * Create the RDFService with configuration
@@ -129,8 +130,10 @@ public class RDFService {
   public boolean ontPropertyExists(String ontUri) {
     ParameterizedSparqlString graphQuery = new ParameterizedSparqlString();
     graphQuery.setCommandText(
-        "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"
-            + "ASK WHERE { GRAPH ?graphName { ?ont rdfs:label ?label } }");
+        """
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        ASK WHERE { GRAPH ?graphName { ?ont rdfs:label ?label } }
+        """);
     graphQuery.setIri("ont", ontUri);
     graphQuery.setIri("graphName", rdfService + "ontologies");
     Query query = QueryFactory.create(graphQuery.toString());
@@ -149,14 +152,25 @@ public class RDFService {
     ParameterizedSparqlString labelQuery = new ParameterizedSparqlString();
     labelQuery.setCommandText(
         queryCtx
-            + "SELECT ?label ?doc\n"
-            + "WHERE {\n"
-            + "  GRAPH ?wf {"
-            + "    ?wf rdf:type ?type .\n"
-            + "    OPTIONAL { ?wf sld:label|rdfs:label ?label }\n"
-            + "    OPTIONAL { ?wf sld:doc|rdfs:comment ?doc }\n"
-            + "  }"
-            + "}");
+            + """
+            PREFIX cwl: <https://w3id.org/cwl/cwl#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX sld: <https://w3id.org/cwl/salad#>
+            PREFIX dct: <http://purl.org/dc/terms/>
+            PREFIX doap: <http://usefulinc.com/ns/doap#>
+            PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>
+            PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX s: <http://schema.org/>
+            SELECT ?label ?doc
+            WHERE {
+              GRAPH ?wf {
+                ?wf rdf:type ?type .
+                OPTIONAL { ?wf sld:label|rdfs:label ?label }
+                OPTIONAL { ?wf sld:doc|rdfs:comment ?doc }
+              }
+            }
+            """);
     labelQuery.setIri("wf", workflowURI);
     return runQuery(labelQuery);
   }
@@ -171,13 +185,15 @@ public class RDFService {
   public String getOntLabel(String ontologyURI) {
     ParameterizedSparqlString labelQuery = new ParameterizedSparqlString();
     labelQuery.setCommandText(
-        "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"
-            + "SELECT ?label\n"
-            + "WHERE {\n"
-            + "  GRAPH ?graphName {\n"
-            + "    ?ont rdfs:label ?label\n"
-            + "  }\n"
-            + "}\n");
+        """
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+            SELECT ?label
+            WHERE {
+              GRAPH ?graphName {
+                ?ont rdfs:label ?label
+              }
+            }
+            """);
     labelQuery.setIri("ont", ontologyURI);
     labelQuery.setIri("graphName", rdfService + "ontologies");
     ResultSet result = runQuery(labelQuery);
@@ -197,31 +213,42 @@ public class RDFService {
     ParameterizedSparqlString inputsQuery = new ParameterizedSparqlString();
     inputsQuery.setCommandText(
         queryCtx
-            + "SELECT ?name ?type ?items ?null ?format ?label ?doc\n"
-            + "WHERE {\n"
-            + "  GRAPH ?wf {"
-            + "    ?wf rdf:type cwl:Workflow .\n"
-            + "    ?wf cwl:inputs ?name .\n"
-            + "    OPTIONAL {\n"
-            + "      { \n"
-            + "        ?name sld:type ?type\n"
-            + "        FILTER(?type != sld:null) \n"
-            + "        FILTER (!isBlank(?type))\n"
-            + "      } UNION { \n"
-            + "        ?name sld:type ?arraytype .\n"
-            + "        ?arraytype sld:type ?type .\n"
-            + "        ?arraytype sld:items ?items \n"
-            + "      }\n"
-            + "    }\n"
-            + "    OPTIONAL { \n"
-            + "      ?name sld:type ?null\n"
-            + "      FILTER(?null = sld:null)\n"
-            + "    }\n"
-            + "    OPTIONAL { ?name cwl:format ?format }\n"
-            + "    OPTIONAL { ?name sld:label|rdfs:label ?label }\n"
-            + "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }"
-            + "  }"
-            + "}");
+            + """
+            PREFIX cwl: <https://w3id.org/cwl/cwl#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX sld: <https://w3id.org/cwl/salad#>
+            PREFIX dct: <http://purl.org/dc/terms/>
+            PREFIX doap: <http://usefulinc.com/ns/doap#>
+            PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>
+            PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX s: <http://schema.org/>
+            SELECT ?name ?type ?items ?null ?format ?label ?doc
+            WHERE {
+              GRAPH ?wf {
+                ?wf rdf:type cwl:Workflow .
+                ?wf cwl:inputs ?name .
+                OPTIONAL {
+                  {\s
+                    ?name sld:type ?type
+                    FILTER(?type != sld:null)\s
+                    FILTER (!isBlank(?type))
+                  } UNION {\s
+                    ?name sld:type ?arraytype .
+                    ?arraytype sld:type ?type .
+                    ?arraytype sld:items ?items\s
+                  }
+                }
+                OPTIONAL {\s
+                  ?name sld:type ?null
+                  FILTER(?null = sld:null)
+                }
+                OPTIONAL { ?name cwl:format ?format }
+                OPTIONAL { ?name sld:label|rdfs:label ?label }
+                OPTIONAL { ?name sld:doc|rdfs:comment ?doc }
+              }
+            }
+            """);
     inputsQuery.setIri("wf", workflowURI);
     return runQuery(inputsQuery);
   }
@@ -236,31 +263,42 @@ public class RDFService {
     ParameterizedSparqlString outputsQuery = new ParameterizedSparqlString();
     outputsQuery.setCommandText(
         queryCtx
-            + "SELECT ?name ?type ?items ?null ?format ?label ?doc\n"
-            + "WHERE {\n"
-            + "  GRAPH ?wf {"
-            + "    ?wf rdf:type cwl:Workflow .\n"
-            + "    ?wf cwl:outputs ?name .\n"
-            + "    OPTIONAL {\n"
-            + "      { \n"
-            + "        ?name sld:type ?type\n"
-            + "        FILTER(?type != sld:null) \n"
-            + "        FILTER (!isBlank(?type))\n"
-            + "      } UNION { \n"
-            + "        ?name sld:type ?arraytype .\n"
-            + "        ?arraytype sld:type ?type .\n"
-            + "        ?arraytype sld:items ?items \n"
-            + "      }\n"
-            + "    }\n"
-            + "    OPTIONAL { \n"
-            + "      ?name sld:type ?null\n"
-            + "      FILTER(?null = sld:null)\n"
-            + "    }\n"
-            + "    OPTIONAL { ?name cwl:format ?format }\n"
-            + "    OPTIONAL { ?name sld:label|rdfs:label ?label }\n"
-            + "    OPTIONAL { ?name sld:doc|rdfs:comment ?doc }"
-            + "  }"
-            + "}");
+            + """
+            PREFIX cwl: <https://w3id.org/cwl/cwl#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX sld: <https://w3id.org/cwl/salad#>
+            PREFIX dct: <http://purl.org/dc/terms/>
+            PREFIX doap: <http://usefulinc.com/ns/doap#>
+            PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>
+            PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX s: <http://schema.org/>
+            SELECT ?name ?type ?items ?null ?format ?label ?doc
+            WHERE {
+              GRAPH ?wf {
+                ?wf rdf:type cwl:Workflow .
+                ?wf cwl:outputs ?name .
+                OPTIONAL {
+                  {\s
+                    ?name sld:type ?type
+                    FILTER(?type != sld:null)\s
+                    FILTER (!isBlank(?type))
+                  } UNION {\s
+                    ?name sld:type ?arraytype .
+                    ?arraytype sld:type ?type .
+                    ?arraytype sld:items ?items\s
+                  }
+                }
+                OPTIONAL {\s
+                  ?name sld:type ?null
+                  FILTER(?null = sld:null)
+                }
+                OPTIONAL { ?name cwl:format ?format }
+                OPTIONAL { ?name sld:label|rdfs:label ?label }
+                OPTIONAL { ?name sld:doc|rdfs:comment ?doc }
+              }
+            }
+            """);
     outputsQuery.setIri("wf", workflowURI);
     return runQuery(outputsQuery);
   }
@@ -275,20 +313,31 @@ public class RDFService {
     ParameterizedSparqlString stepQuery = new ParameterizedSparqlString();
     stepQuery.setCommandText(
         queryCtx
-            + "SELECT ?step ?run ?runtype ?label ?doc ?stepinput ?default ?src\n"
-            + "WHERE {\n"
-            + "  GRAPH ?wf {"
-            + "    ?wf Workflow:steps ?step .\n"
-            + "    ?step cwl:run ?run .\n"
-            + "    ?run rdf:type ?runtype .\n"
-            + "    OPTIONAL { \n"
-            + "        ?step cwl:in ?stepinput .\n"
-            + "        { ?stepinput cwl:source ?src } UNION { ?stepinput cwl:default ?default }\n"
-            + "    }\n"
-            + "    OPTIONAL { ?run sld:label|rdfs:label ?label }\n"
-            + "    OPTIONAL { ?run sld:doc|rdfs:comment ?doc }\n"
-            + "  }"
-            + "}");
+            + """
+            PREFIX cwl: <https://w3id.org/cwl/cwl#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX sld: <https://w3id.org/cwl/salad#>
+            PREFIX dct: <http://purl.org/dc/terms/>
+            PREFIX doap: <http://usefulinc.com/ns/doap#>
+            PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>
+            PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX s: <http://schema.org/>
+            SELECT ?step ?run ?runtype ?label ?doc ?stepinput ?default ?src
+            WHERE {
+              GRAPH ?wf {
+                ?wf Workflow:steps ?step .
+                ?step cwl:run ?run .
+                ?run rdf:type ?runtype .
+                OPTIONAL {\s
+                    ?step cwl:in ?stepinput .
+                    { ?stepinput cwl:source ?src } UNION { ?stepinput cwl:default ?default }
+                }
+                OPTIONAL { ?run sld:label|rdfs:label ?label }
+                OPTIONAL { ?run sld:doc|rdfs:comment ?doc }
+              }
+            }
+            """);
     stepQuery.setIri("wf", workflowURI);
     return runQuery(stepQuery);
   }
@@ -303,14 +352,25 @@ public class RDFService {
     ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
     linkQuery.setCommandText(
         queryCtx
-            + "SELECT ?src ?dest ?default\n"
-            + "WHERE {\n"
-            + "  GRAPH ?wf {"
-            + "    ?wf Workflow:steps ?step .\n"
-            + "    ?step cwl:in ?dest .\n"
-            + "    { ?dest cwl:source ?src } UNION { ?dest cwl:default ?default }\n"
-            + "  }"
-            + "}");
+            + """
+            PREFIX cwl: <https://w3id.org/cwl/cwl#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX sld: <https://w3id.org/cwl/salad#>
+            PREFIX dct: <http://purl.org/dc/terms/>
+            PREFIX doap: <http://usefulinc.com/ns/doap#>
+            PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>
+            PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX s: <http://schema.org/>
+            SELECT ?src ?dest ?default
+            WHERE {
+              GRAPH ?wf {
+                ?wf Workflow:steps ?step .
+                ?step cwl:in ?dest .
+                { ?dest cwl:source ?src } UNION { ?dest cwl:default ?default }
+              }
+            }
+            """);
     linkQuery.setIri("wf", workflowURI);
     return runQuery(linkQuery);
   }
@@ -325,14 +385,25 @@ public class RDFService {
     ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
     linkQuery.setCommandText(
         queryCtx
-            + "SELECT ?src ?dest\n"
-            + "WHERE {\n"
-            + "  GRAPH ?wf {"
-            + "    ?wf rdf:type cwl:Workflow .\n"
-            + "    ?wf cwl:outputs ?dest .\n"
-            + "    ?dest cwl:outputSource ?src\n"
-            + "  }"
-            + "}");
+            + """
+            PREFIX cwl: <https://w3id.org/cwl/cwl#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX sld: <https://w3id.org/cwl/salad#>
+            PREFIX dct: <http://purl.org/dc/terms/>
+            PREFIX doap: <http://usefulinc.com/ns/doap#>
+            PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>
+            PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX s: <http://schema.org/>
+            SELECT ?src ?dest
+            WHERE {
+              GRAPH ?wf {
+                ?wf rdf:type cwl:Workflow .
+                ?wf cwl:outputs ?dest .
+                ?dest cwl:outputSource ?src
+              }
+            }
+            """);
     linkQuery.setIri("wf", workflowURI);
     return runQuery(linkQuery);
   }
@@ -347,15 +418,26 @@ public class RDFService {
     ParameterizedSparqlString dockerQuery = new ParameterizedSparqlString();
     dockerQuery.setCommandText(
         queryCtx
-            + "SELECT ?docker ?pull\n"
-            + "WHERE {\n"
-            + "  GRAPH ?wf {"
-            + "    ?wf rdf:type cwl:Workflow .\n"
-            + "    { ?wf cwl:requirements ?docker } UNION { ?wf cwl:hints ?docker} .\n"
-            + "    ?docker rdf:type cwl:DockerRequirement\n"
-            + "    OPTIONAL { ?docker DockerRequirement:dockerPull ?pull }\n"
-            + "  }"
-            + "}");
+            + """
+            PREFIX cwl: <https://w3id.org/cwl/cwl#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX sld: <https://w3id.org/cwl/salad#>
+            PREFIX dct: <http://purl.org/dc/terms/>
+            PREFIX doap: <http://usefulinc.com/ns/doap#>
+            PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>
+            PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX s: <http://schema.org/>
+            SELECT ?docker ?pull
+            WHERE {
+              GRAPH ?wf {
+                ?wf rdf:type cwl:Workflow .
+                { ?wf cwl:requirements ?docker } UNION { ?wf cwl:hints ?docker} .
+                ?docker rdf:type cwl:DockerRequirement
+                OPTIONAL { ?docker DockerRequirement:dockerPull ?pull }
+              }
+            }
+            """);
     dockerQuery.setIri("wf", workflowURI);
     return runQuery(dockerQuery);
   }
@@ -371,27 +453,38 @@ public class RDFService {
     ParameterizedSparqlString linkQuery = new ParameterizedSparqlString();
     linkQuery.setCommandText(
         queryCtx
-            + "SELECT ?email ?name ?orcid\n"
-            + "WHERE {\n"
-            + "  GRAPH ?graphName {"
-            + "    ?file s:author|s:contributor|s:creator ?author .\n"
-            + "    {\n"
-            + "      ?creator rdf:type s:Person .\n"
-            + "      OPTIONAL { ?author s:email ?email }\n"
-            + "      OPTIONAL { ?author s:name ?name }\n"
-            + "      OPTIONAL { ?author s:id|s:sameAs ?orcid }\n"
-            + "    } UNION {\n"
-            + "      ?author rdf:type s:Organization .\n"
-            + "      ?author s:department* ?dept .\n"
-            + "      ?dept s:member ?member\n"
-            + "      OPTIONAL { ?member s:email ?email }\n"
-            + "      OPTIONAL { ?member s:name ?name }\n"
-            + "      OPTIONAL { ?member s:id|s:sameAs ?orcid }\n"
-            + "    }\n"
-            + "    FILTER(regex(str(?orcid), \"^https?://orcid.org/\" ))\n"
-            + "    FILTER(regex(str(?file), ?wfFilter, \"i\" ))\n"
-            + "  }"
-            + "}");
+            + """
+            PREFIX cwl: <https://w3id.org/cwl/cwl#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX sld: <https://w3id.org/cwl/salad#>
+            PREFIX dct: <http://purl.org/dc/terms/>
+            PREFIX doap: <http://usefulinc.com/ns/doap#>
+            PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>
+            PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX s: <http://schema.org/>
+            SELECT ?email ?name ?orcid
+            WHERE {
+              GRAPH ?graphName {
+                ?file s:author|s:contributor|s:creator ?author .
+                {
+                  ?creator rdf:type s:Person .
+                  OPTIONAL { ?author s:email ?email }
+                  OPTIONAL { ?author s:name ?name }
+                  OPTIONAL { ?author s:id|s:sameAs ?orcid }
+                } UNION {
+                  ?author rdf:type s:Organization .
+                  ?author s:department* ?dept .
+                  ?dept s:member ?member
+                  OPTIONAL { ?member s:email ?email }
+                  OPTIONAL { ?member s:name ?name }
+                  OPTIONAL { ?member s:id|s:sameAs ?orcid }
+                }
+                FILTER(regex(str(?orcid), "^https?://orcid.org/" ))
+                FILTER(regex(str(?file), ?wfFilter, "i" ))
+              }
+            }
+            """);
     linkQuery.setLiteral("wfFilter", path + "$");
     linkQuery.setIri("graphName", fileUri);
     return runQuery(linkQuery);
@@ -436,16 +529,12 @@ public class RDFService {
    * @return CWL process the string refers to
    */
   public CWLProcess strToRuntype(String runtype) {
-    switch (runtype) {
-      case "https://w3id.org/cwl/cwl#Workflow":
-        return CWLProcess.WORKFLOW;
-      case "https://w3id.org/cwl/cwl#CommandLineTool":
-        return CWLProcess.COMMANDLINETOOL;
-      case "https://w3id.org/cwl/cwl#ExpressionTool":
-        return CWLProcess.EXPRESSIONTOOL;
-      default:
-        return null;
-    }
+    return switch (runtype) {
+      case "https://w3id.org/cwl/cwl#Workflow" -> CWLProcess.WORKFLOW;
+      case "https://w3id.org/cwl/cwl#CommandLineTool" -> CWLProcess.COMMANDLINETOOL;
+      case "https://w3id.org/cwl/cwl#ExpressionTool" -> CWLProcess.EXPRESSIONTOOL;
+      default -> null;
+    };
   }
 
   /**
@@ -480,15 +569,26 @@ public class RDFService {
     ParameterizedSparqlString licenseQuery = new ParameterizedSparqlString();
     licenseQuery.setCommandText(
         queryCtx
-            + "SELECT ?license \n"
-            + "WHERE {\n"
-            + "  GRAPH ?wf {"
-            + "    ?wf rdf:type cwl:Workflow .\n"
-            + "    { ?wf s:license ?license } \n"
-            + "UNION { ?wf doap:license ?license } \n"
-            + "UNION { ?wf dct:license ?license } \n"
-            + "  }"
-            + "}");
+            + """
+            PREFIX cwl: <https://w3id.org/cwl/cwl#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX sld: <https://w3id.org/cwl/salad#>
+            PREFIX dct: <http://purl.org/dc/terms/>
+            PREFIX doap: <http://usefulinc.com/ns/doap#>
+            PREFIX Workflow: <https://w3id.org/cwl/cwl#Workflow/>
+            PREFIX DockerRequirement: <https://w3id.org/cwl/cwl#DockerRequirement/>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX s: <http://schema.org/>
+            SELECT ?license\s
+            WHERE {
+              GRAPH ?wf {
+                ?wf rdf:type cwl:Workflow .
+                { ?wf s:license ?license }\s
+            UNION { ?wf doap:license ?license }\s
+            UNION { ?wf dct:license ?license }\s
+              }
+            }
+            """);
     licenseQuery.setIri("wf", workflowURI);
     return runQuery(licenseQuery);
   }

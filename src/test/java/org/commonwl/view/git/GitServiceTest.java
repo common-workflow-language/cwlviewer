@@ -68,7 +68,7 @@ public class GitServiceTest {
   }
 
   @Test
-  public void transferPathToBranch() throws Exception {
+  public void transferPathToBranch() {
     GitService gitService = new GitService(null, false);
     GitDetails slashesInBranch =
         new GitDetails(null, "branchpart1", "branchpart2/branchpart3/workflowInRoot.cwl");

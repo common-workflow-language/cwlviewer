@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class CwlViewerApplication {
 
-  public static void main(String[] args) {
+  static void main(String[] args) {
     SpringApplication.run(CwlViewerApplication.class, args);
   }
 }

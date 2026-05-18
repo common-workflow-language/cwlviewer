@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import org.commonwl.view.git.GitDetails;
@@ -49,7 +50,8 @@ public class ROBundleFactoryTest {
 
     // Mocked path to a RO bundle
     ROBundleService mockROBundleService = Mockito.mock(ROBundleService.class);
-    when(mockROBundleService.saveToFile(any())).thenReturn(Paths.get("test/path/to/check/for.zip"));
+    Path zipPath = Paths.get("test/path/to/check/for.zip");
+    when(mockROBundleService.saveToFile(any())).thenReturn(zipPath);
 
     // Test method retries multiple times to get workflow model before success
     WorkflowRepository mockRepository = Mockito.mock(WorkflowRepository.class);
@@ -64,7 +66,6 @@ public class ROBundleFactoryTest {
     // Attempt to add RO to workflow
     factory.createWorkflowRO(validWorkflow);
 
-    assertEquals(
-        Paths.get("test/path/to/check/for.zip"), Paths.get(validWorkflow.getRoBundlePath()));
+    assertEquals(zipPath, Paths.get(validWorkflow.getRoBundlePath()));
   }
 }

@@ -20,23 +20,22 @@
 package org.commonwl.view.cwl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Represents the input/output of a workflow/tool */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class CWLElement {
+public class CWLElement implements Serializable {
 
   private String label;
   private String doc;
   private String type;
   private String format;
-  private List<String> sourceID;
+  private final List<String> sourceID = new ArrayList<>();
   private String defaultVal;
 
-  public CWLElement() {
-    this.sourceID = new ArrayList<>();
-  }
+  public CWLElement() {}
 
   public String getLabel() {
     return label;

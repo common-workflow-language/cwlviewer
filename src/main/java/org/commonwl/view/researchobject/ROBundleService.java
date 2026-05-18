@@ -147,7 +147,7 @@ public class ROBundleService {
       // Make a directory in the RO bundle to store the files
       Path bundleRoot = bundle.getRoot();
       Path bundlePath = bundleRoot.resolve("workflow");
-      Files.createDirectory(bundlePath);
+      Files.createDirectories(bundlePath);
 
       // Add the files from the repo to this workflow
       Set<HashableAgent> authors = new HashSet<>();
@@ -278,7 +278,7 @@ public class ROBundleService {
 
             // Create a new folder in the RO for this directory
             Path newBundlePath = bundlePath.resolve(file.getName());
-            Files.createDirectory(newBundlePath);
+            Files.createDirectories(newBundlePath);
 
             // Create git details object for subfolder
             GitDetails subfolderGitDetails =

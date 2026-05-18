@@ -17,32 +17,36 @@
  * under the License.
  */
 
-package org.commonwl.view.cwl;
+package org.commonwl.view.validation;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.commonwl.view.git.GitDetails;
+import org.commonwl.view.workflow.WorkflowForm;
+import org.springframework.validation.Errors;
 
-import java.util.List;
-import org.junit.jupiter.api.Test;
-
-public class CWLElementTest {
+/** Validate Git URLs. */
+public interface GitUrlValidator {
+  /**
+   * Checks if the URL is supported or not.
+   *
+   * @param url URL
+   * @return {@code true} if the URL is one of the supported Git flavours, {@code false} otherwise
+   */
+  boolean supports(String url);
 
   /**
-   * Test addition and retrieval of source IDs from a node null values should not be added to the
-   * list
+   * Validate the form.
+   *
+   * @param form The web form
+   * @param errors The errors object
    */
-  @Test
-  public void testSourceIDList() {
+  void validate(WorkflowForm form, Errors errors);
 
-    CWLElement element = new CWLElement();
-
-    element.addSourceID("sourceID1");
-    element.addSourceID("sourceID2");
-    element.addSourceID(null);
-    element.addSourceID("sourceID3");
-
-    List<String> sourceIDs = element.getSourceIDs();
-
-    assertEquals(3, sourceIDs.size());
-    assertEquals("sourceID3", sourceIDs.get(2));
-  }
+  /**
+   * Parse the Git URL returning a {@code GitDetails} object.
+   *
+   * @param url Git URL
+   * @param form Workflow form
+   * @return {@code GitDetails} object
+   */
+  GitDetails parse(String url, WorkflowForm form);
 }

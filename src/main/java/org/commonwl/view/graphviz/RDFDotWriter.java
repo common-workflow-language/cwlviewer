@@ -37,8 +37,8 @@ public class RDFDotWriter extends DotWriter {
 
   private final IRIFactory iriFactory = IRIFactory.iriImplementation();
 
-  private RDFService rdfService;
-  private String gitPath;
+  private final RDFService rdfService;
+  private final String gitPath;
 
   public RDFDotWriter(Writer writer, RDFService rdfService, String gitPath) {
     super(writer);
@@ -164,7 +164,7 @@ public class RDFDotWriter extends DotWriter {
         String sourceID = nodeIDFromUri(stepLink.get("src").toString());
         String dest = stepLink.get("dest").toString();
         String destID = nodeIDFromUri(dest);
-        String destInput = dest.substring(dest.replaceAll("#", "/").lastIndexOf("/") + 1);
+        String destInput = dest.substring(dest.replace("#", "/").lastIndexOf("/") + 1);
         writeLine("  \"" + sourceID + "\" -> \"" + destID + "\" [label=\"" + destInput + "\"];");
       } else if (stepLink.contains("default")) {
         // Collect default values

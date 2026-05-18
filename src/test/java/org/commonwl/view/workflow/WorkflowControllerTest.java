@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -58,7 +57,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
-import org.springframework.core.io.PathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -222,11 +221,7 @@ public class WorkflowControllerTest {
     when(repository.getDirectory()).thenReturn(temporaryFile);
     when(git.getRepository()).thenThrow(RuntimeException.class).thenReturn(repository);
     assertTrue(temporaryFile.exists());
-    assertThrows(
-        RuntimeException.class,
-        () -> {
-          service.createQueuedWorkflow(gitDetails);
-        });
+    assertThrows(RuntimeException.class, () -> service.createQueuedWorkflow(gitDetails));
     assertFalse(temporaryFile.exists());
   }
 
@@ -372,12 +367,12 @@ public class WorkflowControllerTest {
     // Mock service to return mock workflow
     WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
     when(mockWorkflowService.getWorkflowGraph(any(String.class), Mockito.any(GitDetails.class)))
-        .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testVis.svg")))
-        .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testVis.png")))
-        .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testWorkflow.dot")))
-        .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testVis.svg")))
-        .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testVis.png")))
-        .thenReturn(new PathResource(Paths.get("src/test/resources/graphviz/testWorkflow.dot")))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.svg"))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.png"))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testWorkflow.dot"))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.svg"))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testVis.png"))
+        .thenReturn(new FileSystemResource("src/test/resources/graphviz/testWorkflow.dot"))
         .thenThrow(new WorkflowNotFoundException());
 
     // Mock controller/MVC

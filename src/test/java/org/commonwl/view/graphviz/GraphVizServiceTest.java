@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,13 +47,13 @@ public class GraphVizServiceTest {
 
   /** Generate a service for testing using the temporary folder */
   @BeforeEach
-  public void setUp() throws Exception {
+  public void setUp() {
     graphVizService = new GraphVizService(graphvizFolder.getAbsolutePath());
   }
 
   /** Check that a valid png file can be generated from DOT source */
   @Test
-  public void getGraphAsPng() throws Exception {
+  public void getGraphAsPng() throws IOException {
 
     Path dotSource = Paths.get("src/test/resources/graphviz/testWorkflow.dot");
 
@@ -66,7 +67,7 @@ public class GraphVizServiceTest {
 
   /** Check that a valid png file can be generated from DOT source */
   @Test
-  public void getGraphAsPngStream() throws Exception {
+  public void getGraphAsPngStream() throws IOException {
 
     Path dotSource = Paths.get("src/test/resources/graphviz/testWorkflow.dot");
 
@@ -79,12 +80,12 @@ public class GraphVizServiceTest {
   }
 
   private String readFileToString(Path path) throws IOException {
-    return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+    return Files.readString(path);
   }
 
   private String readStreamToString(InputStream is) throws IOException {
     BufferedReader r = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     while (true) {
       String line = r.readLine();
       if (line == null) break;
@@ -96,7 +97,7 @@ public class GraphVizServiceTest {
 
   /** Check that a valid svg file can be generated from DOT source */
   @Test
-  public void getGraphAsSvg() throws Exception {
+  public void getGraphAsSvg() throws IOException {
 
     Path dotSource = Paths.get("src/test/resources/graphviz/testWorkflow.dot");
 
@@ -107,7 +108,7 @@ public class GraphVizServiceTest {
 
   /** Check that a valid svg file can be generated from DOT source */
   @Test
-  public void getGraphAsSvgStream() throws Exception {
+  public void getGraphAsSvgStream() throws IOException {
 
     Path dotSource = Paths.get("src/test/resources/graphviz/testWorkflow.dot");
 
@@ -118,32 +119,32 @@ public class GraphVizServiceTest {
 
   /** Check that an xdot file can be generated from DOT source */
   @Test
-  public void getGraphAsXDot() throws Exception {
+  public void getGraphAsXDot() throws IOException {
 
     Path dotSource = Paths.get("src/test/resources/graphviz/testWorkflow.dot");
     Path xdot = graphVizService.getGraphPath("workflowid.dot", readFileToString(dotSource), "xdot");
     String xdotString = readFileToString(xdot);
-    assertTrue(xdotString.length() > 0);
+    assertFalse(xdotString.isEmpty());
   }
 
   /** Check that an xdot stream can be generated from DOT source */
   @Test
-  public void getGraphAsXDotStream() throws Exception {
+  public void getGraphAsXDotStream() throws IOException {
     Path dotSource = Paths.get("src/test/resources/graphviz/testWorkflow.dot");
     InputStream xdot = graphVizService.getGraphStream(readFileToString(dotSource), "xdot");
     String xdotString = readStreamToString(xdot);
-    assertTrue(xdotString.length() > 0);
+    assertFalse(xdotString.isEmpty());
   }
 
   /** Check that files in the graphVizFolder can be deleted with deleteCache() */
   @Test
-  public void deleteCache() throws Exception {
+  public void deleteCache() {
 
     File png = new File(graphvizFolder, "exampleid.png");
     File svg = new File(graphvizFolder, "exampleid.svg");
     File dot = new File(graphvizFolder, "exampleid.dot");
 
-    graphVizService.deleteCache("exampleid");
+    graphVizService.deleteCache(UUID.randomUUID());
 
     assertFalse(png.exists());
     assertFalse(svg.exists());

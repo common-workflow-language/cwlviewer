@@ -28,6 +28,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -94,7 +95,7 @@ public class GraphVizService {
    *
    * @param workflowID The ID of the workflow used for assuming file locations
    */
-  public void deleteCache(String workflowID) {
+  public void deleteCache(UUID workflowID) {
     File graphvizSvg = new File(graphvizStorage + "/" + workflowID + ".svg");
     graphvizSvg.delete();
     File graphvizPng = new File(graphvizStorage + "/" + workflowID + ".png");

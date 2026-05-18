@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.git.GitDetails;
@@ -47,10 +48,6 @@ public class WorkflowServiceTest {
 
   /** Folder for test research object bundles */
   @TempDir public Path roBundleFolder;
-
-  /** Retry the running of cwltool */
-  @Test
-  public void retryCwltoolGeneration() throws Exception {}
 
   /** Getting a list of workflow overviews from a directory */
   @Test
@@ -92,13 +89,13 @@ public class WorkflowServiceTest {
 
     // 1 workflow should be found
     assertEquals(2, list.size());
-    assertEquals("workflow.cwl", list.get(0).getFileName());
-    assertEquals("label", list.get(0).getLabel());
-    assertEquals("doc", list.get(0).getDoc());
+    assertEquals("workflow.cwl", list.getFirst().fileName());
+    assertEquals("label", list.getFirst().label());
+    assertEquals("doc", list.getFirst().doc());
 
-    assertEquals("workflow2.cwl", list.get(1).getFileName());
-    assertEquals("label2", list.get(1).getLabel());
-    assertEquals("doc2", list.get(1).getDoc());
+    assertEquals("workflow2.cwl", list.get(1).fileName());
+    assertEquals("label2", list.get(1).label());
+    assertEquals("doc2", list.get(1).doc());
   }
 
   /** Getting a workflow when cache has expired And a new workflow needs to be created */
@@ -116,7 +113,7 @@ public class WorkflowServiceTest {
             new HashMap<>(),
             new HashMap<>(),
             new HashMap<>());
-    oldWorkflow.setId("theworkflowid");
+    oldWorkflow.setId(UUID.randomUUID());
     oldWorkflow.setRetrievedOn(new Date());
     oldWorkflow.setRetrievedFrom(githubInfo);
     oldWorkflow.setLastCommit("d46ce365f1a10c4c4d6b0caed51c6f64b84c2f63");
@@ -130,7 +127,7 @@ public class WorkflowServiceTest {
             new HashMap<>(),
             new HashMap<>(),
             new HashMap<>());
-    updatedWorkflow.setId("newworkflowid");
+    updatedWorkflow.setId(UUID.randomUUID());
 
     WorkflowRepository mockWorkflowRepo = Mockito.mock(WorkflowRepository.class);
     when(mockWorkflowRepo.findByRetrievedFrom(any())).thenReturn(oldWorkflow);

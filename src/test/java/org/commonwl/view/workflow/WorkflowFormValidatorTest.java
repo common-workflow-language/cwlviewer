@@ -19,7 +19,11 @@
 
 package org.commonwl.view.workflow;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.commonwl.view.git.GitDetails;
 import org.junit.jupiter.api.Test;
@@ -30,12 +34,11 @@ import org.springframework.validation.Errors;
 public class WorkflowFormValidatorTest {
 
   /** Workflow form validator to test */
-  private WorkflowFormValidator workflowFormValidator = new WorkflowFormValidator();
+  private final WorkflowFormValidator workflowFormValidator = new WorkflowFormValidator();
 
-  /** Github File URL */
+  /** GitHub File URL */
   @Test
-  public void githubUrl() throws Exception {
-
+  public void gitHubUrl() {
     WorkflowForm githubUrl =
         new WorkflowForm(
             "https://github.com/nlesc-sherlock/deeplearning/blob/master/CWLworkflow/pipeline.cwl");
@@ -51,8 +54,7 @@ public class WorkflowFormValidatorTest {
 
   /** Gitlab File URL */
   @Test
-  public void gitlabUrl() throws Exception {
-
+  public void gitLabUrl() {
     WorkflowForm gitlabUrl =
         new WorkflowForm(
             "https://gitlab.com/unduthegun/stellaris-emblem-lab/blob/cwl/textures/textures.cwl");
@@ -68,15 +70,15 @@ public class WorkflowFormValidatorTest {
 
   /** Generic File URL */
   @Test
-  public void genericUrl() throws Exception {
+  public void genericGitUrl() {
 
-    WorkflowForm genericUrl =
+    WorkflowForm genericGitUrl =
         new WorkflowForm("https://bitbucket.org/markrobinson96/workflows.git");
-    genericUrl.setBranch("branchName");
-    genericUrl.setPath("path/to/workflow.cwl");
+    genericGitUrl.setBranch("branchName");
+    genericGitUrl.setPath("path/to/workflow.cwl");
 
-    Errors errors = new BeanPropertyBindingResult(genericUrl, "workflowForm");
-    GitDetails details = workflowFormValidator.validateAndParse(genericUrl, errors);
+    Errors errors = new BeanPropertyBindingResult(genericGitUrl, "workflowForm");
+    GitDetails details = workflowFormValidator.validateAndParse(genericGitUrl, errors);
 
     assertNotNull(details);
     assertEquals("https://bitbucket.org/markrobinson96/workflows.git", details.getRepoUrl());
@@ -87,8 +89,7 @@ public class WorkflowFormValidatorTest {
 
   /** Packed URL */
   @Test
-  public void packedUrl() throws Exception {
-
+  public void packedUrl() {
     WorkflowForm githubUrl =
         new WorkflowForm(
             "https://github.com/MarkRobbo/workflows/tree/master/packed.cwl#workflowId");
@@ -105,8 +106,7 @@ public class WorkflowFormValidatorTest {
 
   /** Empty URL */
   @Test
-  public void emptyURL() throws Exception {
-
+  public void emptyURL() {
     WorkflowForm emptyURL = new WorkflowForm("");
 
     Errors errors = new BeanPropertyBindingResult(emptyURL, "workflowForm");
@@ -118,8 +118,7 @@ public class WorkflowFormValidatorTest {
 
   /** Invalid URL */
   @Test
-  public void invalidURL() throws Exception {
-
+  public void invalidURL() {
     WorkflowForm invalidURL = new WorkflowForm("https://google.com/clearly/not/github/url");
 
     Errors errors = new BeanPropertyBindingResult(invalidURL, "workflowForm");
@@ -131,15 +130,16 @@ public class WorkflowFormValidatorTest {
 
   /** Generic File URL without branch or path */
   @Test
-  public void noBranchOrPath() throws Exception {
-
+  public void noBranchOrPath() {
     WorkflowForm genericUrl =
         new WorkflowForm("https://bitbucket.org/markrobinson96/workflows.git");
 
     Errors errors = new BeanPropertyBindingResult(genericUrl, "workflowForm");
     GitDetails details = workflowFormValidator.validateAndParse(genericUrl, errors);
 
-    assertNull(details);
+    assertNotNull(details);
+    assertEquals("master", details.getBranch());
+    assertEquals("/", details.getPath());
     assertTrue(errors.hasErrors());
   }
 }

@@ -158,7 +158,7 @@ public class CWLServiceTest {
     Workflow lobSTRDraft3 =
         cwlService.parseWorkflowNative(
             Paths.get("src/test/resources/cwl/lobstr-draft3/lobSTR-workflow.cwl"), null);
-    testLobSTRWorkflow(lobSTRDraft3, true);
+    testLobSTRWorkflow(lobSTRDraft3);
   }
 
   /** Test native loading parsing of the LobSTR workflow CWL version 1.0 */
@@ -170,7 +170,7 @@ public class CWLServiceTest {
     Workflow lobSTRv1 =
         cwlService.parseWorkflowNative(
             Paths.get("src/test/resources/cwl/lobstr-v1/lobSTR-workflow.cwl"), null);
-    testLobSTRWorkflow(lobSTRv1, true);
+    testLobSTRWorkflow(lobSTRv1);
   }
 
   /** Test native loading parsing of optional inline types */
@@ -182,17 +182,17 @@ public class CWLServiceTest {
     Workflow workflow =
         cwlService.parseWorkflowNative(
             Paths.get("src/test/resources/cwl/oneline_optional_types.cwl"), null);
-    assertEquals(workflow.getInputs().get("qualified_phred_quality").getType(), "int?");
-    assertEquals(workflow.getInputs().get("ncrna_tab_file").getType(), "File?");
-    assertEquals(workflow.getInputs().get("reverse_reads").getType(), "File?");
-    assertEquals(workflow.getInputs().get("ssu_tax").getType(), "string, File");
+    assertEquals("int?", workflow.getInputs().get("qualified_phred_quality").getType());
+    assertEquals("File?", workflow.getInputs().get("ncrna_tab_file").getType());
+    assertEquals("File?", workflow.getInputs().get("reverse_reads").getType());
+    assertEquals("string, File", workflow.getInputs().get("ssu_tax").getType());
     assertEquals(
-        workflow.getInputs().get("rfam_models").getType(), "{type=array, items=[string, File]}");
+        "{type=array, items=[string, File]}", workflow.getInputs().get("rfam_models").getType());
   }
 
   /** Test native loading parsing of MultipleInputFeatureRequirement using workflows */
   @Test
-  public void parseWorkflowMultiInboundLins() throws Exception {
+  public void parseWorkflowMultiInboundLinks() throws Exception {
     CWLService cwlService =
         new CWLService(
             rdfService, new CWLTool(), Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
@@ -200,11 +200,11 @@ public class CWLServiceTest {
         cwlService.parseWorkflowNative(
             Paths.get("src/test/resources/cwl/complex-workflow/complex-workflow-1.cwl"), null);
     assertEquals(
-        workflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(0),
-        "touch_step");
+        "touch_step",
+        workflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(0));
     assertEquals(
-        workflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(1),
-        "files");
+        "files",
+        workflow.getSteps().get("re_tar_step").getSources().get("file_list").getSourceIDs().get(1));
   }
 
   /** Test native loading parsing of nested array types */
@@ -215,8 +215,8 @@ public class CWLServiceTest {
             rdfService, new CWLTool(), Mockito.mock(GitConfig.class).licenseVocab(), 5242880);
     Workflow workflow =
         cwlService.parseWorkflowNative(Paths.get("src/test/resources/cwl/nested_array.cwl"), null);
-    assertEquals(workflow.getInputs().get("overlap_files").getType(), "File[][]");
-    assertEquals(workflow.getOutputs().get("freq_files").getType(), "File[][]");
+    assertEquals("File[][]", workflow.getInputs().get("overlap_files").getType());
+    assertEquals("File[][]", workflow.getOutputs().get("freq_files").getType());
     assertTrue(Map.class.isAssignableFrom(workflow.getSteps().get("dummy").getRun().getClass()));
   }
 
@@ -316,9 +316,9 @@ public class CWLServiceTest {
     assertNotNull(hello);
 
     // No docs for this workflow
-    assertEquals("Hello World", hello.getLabel());
-    assertEquals("Puts a message into a file using echo", hello.getDoc());
-    assertEquals("/hello.cwl", hello.getFileName());
+    assertEquals("Hello World", hello.label());
+    assertEquals("Puts a message into a file using echo", hello.doc());
+    assertEquals("/hello.cwl", hello.fileName());
   }
 
   /** Test retrieval of a workflow overview with an array ``doc`` field */
@@ -338,7 +338,7 @@ public class CWLServiceTest {
     System.out.println(cwlService.normaliseLicenseLink("http://asdasdasda"));
     WorkflowOverview hello = cwlService.getWorkflowOverview(helloWorkflow);
     assertNotNull(hello);
-    assertEquals("Puts a message into a file using echo. Even more doc", hello.getDoc());
+    assertEquals("Puts a message into a file using echo. Even more doc", hello.doc());
   }
 
   /** Test IOException is thrown when files are over limit with getWorkflowOverview */
@@ -383,16 +383,16 @@ public class CWLServiceTest {
     assertTrue(cwlService.isPacked(packedFile));
     List<WorkflowOverview> overviews = cwlService.getWorkflowOverviewsFromPacked(packedFile);
     assertEquals(1, overviews.size());
-    assertEquals("main", overviews.get(0).getFileName());
-    assertNull(overviews.get(0).getLabel());
-    assertNull(overviews.get(0).getDoc());
+    assertEquals("main", overviews.getFirst().fileName());
+    assertNull(overviews.getFirst().label());
+    assertNull(overviews.getFirst().doc());
   }
 
   /**
    * Validate a LobSTR workflow See: <a
    * href="https://github.com/common-workflow-language/workflows/tree/master/workflows/lobSTR">...</a>
    */
-  private void testLobSTRWorkflow(Workflow lobSTR, boolean nativeParsed) {
+  private void testLobSTRWorkflow(Workflow lobSTR) {
 
     // Overall not null
     assertNotNull(lobSTR);
@@ -426,7 +426,8 @@ public class CWLServiceTest {
     assertTrue(outputs.get("bam").getSourceIDs().contains("samindex"));
 
     // Extra tests if parsing is done with cwltool
-    if (!nativeParsed) {
+    CWLProcess runType = steps.get("lobSTR").getRunType();
+    if (runType != null) {
       assertEquals(CWLProcess.COMMANDLINETOOL, steps.get("lobSTR").getRunType());
     }
   }

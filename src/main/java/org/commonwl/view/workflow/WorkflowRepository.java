@@ -20,10 +20,13 @@
 package org.commonwl.view.workflow;
 
 import java.util.List;
+import java.util.UUID;
+import org.commonwl.view.git.GitDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -33,8 +36,7 @@ import org.springframework.stereotype.Repository;
  * href="https://docs.spring.io/spring-data/jpa/docs/current/reference/html/">...</a>
  */
 @Repository
-public interface WorkflowRepository
-    extends JpaRepository<Workflow, String>, WorkflowRepositoryCustom {
+public interface WorkflowRepository extends JpaRepository<Workflow, UUID> {
 
   /**
    * Finds a workflow model in the database based on a commit ID and path
@@ -57,6 +59,15 @@ public interface WorkflowRepository
    */
   @Query("SELECT w FROM Workflow w WHERE w.lastCommit = ?1")
   List<Workflow> findByCommit(String commitId);
+
+  /**
+   * Finds a workflow model in the database based on where it was retrieved from
+   *
+   * @param retrievedFrom Details of where the workflow is from
+   * @return The workflow model
+   */
+  @Query("SELECT w FROM Workflow w WHERE w.retrievedFrom = :retrievedFrom")
+  Workflow findByRetrievedFrom(@Param("retrievedFrom") GitDetails retrievedFrom);
 
   /**
    * Paged request to get workflows of a specific status
