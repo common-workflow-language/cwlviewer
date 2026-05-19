@@ -16,17 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.commonwl.view.workflow;
 
-import org.commonwl.view.git.GitDetails;
+package org.commonwl.view.validation;
 
-public interface WorkflowRepositoryCustom {
+/** Validate GitLab repository URLs. */
+public class GitLabUrlValidator extends AbstractGitValidator {
 
-  /**
-   * Finds a workflow model in the database based on where it was retrieved from
-   *
-   * @param retrievedFrom Details of where the workflow is from
-   * @return The workflow model
-   */
-  Workflow findByRetrievedFrom(GitDetails retrievedFrom);
+  @Override
+  protected String host() {
+    return "gitlab.com";
+  }
+
+  @Override
+  protected String repoBaseUrl(String owner, String repo) {
+    return "https://gitlab.com/" + owner + "/" + repo + ".git";
+  }
 }

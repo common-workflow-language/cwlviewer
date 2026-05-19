@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import org.commonwl.view.cwl.CWLService;
 import org.commonwl.view.cwl.CWLToolRunner;
 import org.commonwl.view.cwl.CWLToolStatus;
@@ -48,7 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.PathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -119,7 +120,7 @@ public class WorkflowService {
    * @return The model for the workflow
    */
   public Workflow getWorkflow(String id) {
-    return workflowRepository.findById(id).orElse(null);
+    return workflowRepository.findById(UUID.fromString(id)).orElse(null);
   }
 
   /**
@@ -129,13 +130,13 @@ public class WorkflowService {
    * @return The model for the queued workflow
    */
   public QueuedWorkflow getQueuedWorkflow(String id) {
-    return queuedWorkflowRepository.findById(id).orElse(null);
+    return queuedWorkflowRepository.findById(UUID.fromString(id)).orElse(null);
   }
 
   /**
    * Get a queued workflow from the database
    *
-   * @param githubInfo Github information for the workflow
+   * @param githubInfo GitHub information for the workflow
    * @return The queued workflow model
    */
   public QueuedWorkflow getQueuedWorkflow(GitDetails githubInfo) {
@@ -157,7 +158,7 @@ public class WorkflowService {
   }
 
   /**
-   * Get a workflow from the database, refreshing it if cache has expired
+   * Get a workflow from the database, refreshing it if the cache has expired
    *
    * @param gitInfo Git information for the workflow
    * @return The workflow model associated with gitInfo
@@ -199,7 +200,7 @@ public class WorkflowService {
           workflow = null;
         } catch (Exception e) {
           // Add back the old workflow if it is broken now
-          logger.error("Could not parse updated workflow " + workflow.getID());
+          logger.error("Could not parse updated workflow {}", workflow.getId());
           workflowRepository.save(workflow);
         }
       }
@@ -246,7 +247,7 @@ public class WorkflowService {
 
       File directory = new File(pathToDirectory.toString());
       if (directory.exists() && directory.isDirectory()) {
-        for (final File file : directory.listFiles()) {
+        for (final File file : Objects.requireNonNull(directory.listFiles())) {
           int eIndex = file.getName().lastIndexOf('.') + 1;
           if (eIndex > 0) {
             String extension = file.getName().substring(eIndex);
@@ -257,7 +258,7 @@ public class WorkflowService {
                   workflowsInDir.add(overview);
                 }
               } catch (IOException err) {
-                logger.error("Skipping file due to IOException: " + file.toString(), err);
+                logger.error("Skipping file due to IOException: {}", file, err);
               }
             }
           }
@@ -348,7 +349,7 @@ public class WorkflowService {
         if (cwlService.isPacked(workflowFile.toFile())) {
           List<WorkflowOverview> overviews =
               cwlService.getWorkflowOverviewsFromPacked(workflowFile.toFile());
-          if (overviews.size() == 0) {
+          if (overviews.isEmpty()) {
             throw new IOException(
                 "No workflow was found within the packed CWL file. " + gitInfo.toSummary());
           } else {
@@ -382,7 +383,7 @@ public class WorkflowService {
       try {
         cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
       } catch (Exception e) {
-        logger.error("Could not update workflow with cwltool: " + gitInfo.toSummary(), e);
+        logger.error("Could not update workflow with cwltool: {}", gitInfo.toSummary(), e);
       }
 
     } catch (GitAPIException | RuntimeException | IOException e) {
@@ -414,7 +415,7 @@ public class WorkflowService {
     try {
       cwlToolRunner.createWorkflowFromQueued(queuedWorkflow);
     } catch (Exception e) {
-      logger.error("Could not update workflow " + queuedWorkflow.getId() + " with cwltool.", e);
+      logger.error("Could not update workflow {} with cwltool.", queuedWorkflow.getId(), e);
     }
   }
 
@@ -444,9 +445,9 @@ public class WorkflowService {
     List<Workflow> matches = workflowRepository.findByCommitAndPath(commitID, path);
     if (matches == null || matches.isEmpty()) {
       throw new WorkflowNotFoundException();
-    } else if (part == null) {
+    } else if (part.isEmpty()) {
       // any part will do - so we'll pick the first one
-      return matches.get(0);
+      return matches.getFirst();
     } else {
       // Multiple matches means either added by both branch and ID
       // Or packed workflow
@@ -456,14 +457,8 @@ public class WorkflowService {
           return workflow;
         }
       }
-      if (part.isPresent()) {
-        // Sorry, don't know about your part!
-        throw new WorkflowNotFoundException();
-      } else {
-        // No part requested, let's show some alternate permalinks,
-        // in addition to the raw redirect
-        throw new MultipleWorkflowsException(matches);
-      }
+      // Sorry, don't know about your part!
+      throw new WorkflowNotFoundException();
     }
   }
 
@@ -476,21 +471,15 @@ public class WorkflowService {
    * @throws WorkflowNotFoundException Error getting the workflow or format
    * @throws IOException Error reading the workflow files
    */
-  public PathResource getWorkflowGraph(String format, GitDetails gitDetails)
+  public FileSystemResource getWorkflowGraph(String format, GitDetails gitDetails)
       throws WorkflowNotFoundException, IOException {
     // Determine file extension from format
-    String extension;
-    switch (format) {
-      case "svg":
-      case "png":
-        extension = format;
-        break;
-      case "xdot":
-        extension = "dot";
-        break;
-      default:
-        throw new WorkflowNotFoundException("Format " + format + " not recognized.");
-    }
+    String extension =
+        switch (format) {
+          case "svg", "png" -> format;
+          case "xdot" -> "dot";
+          default -> throw new WorkflowNotFoundException("Format " + format + " not recognized.");
+        };
 
     // Get workflow
     Workflow workflow = getWorkflow(gitDetails);
@@ -502,8 +491,8 @@ public class WorkflowService {
     // Generate graph and serve the file
     Path out =
         graphVizService.getGraphPath(
-            workflow.getID() + "." + extension, workflow.getVisualisationDot(), format);
-    return new PathResource(out);
+            workflow.getId() + "." + extension, workflow.getVisualisationDot(), format);
+    return new FileSystemResource(out.toString());
   }
 
   /**
@@ -516,7 +505,8 @@ public class WorkflowService {
       ROBundleFactory.createWorkflowRO(workflow);
     } catch (Exception ex) {
       logger.error(
-          "Error creating RO Bundle for workflow from " + workflow.getRetrievedFrom().toSummary(),
+          "Error creating RO Bundle for workflow from {}",
+          workflow.getRetrievedFrom().toSummary(),
           ex);
     }
   }
@@ -531,20 +521,20 @@ public class WorkflowService {
     if (workflow.getRoBundlePath() != null) {
       File roBundle = new File(workflow.getRoBundlePath());
       if (roBundle.delete()) {
-        logger.debug("Deleted Research Object Bundle for workflow " + workflow.getID());
+        logger.debug("Deleted Research Object Bundle for workflow {}", workflow.getId());
       } else {
-        logger.info("Failed to delete Research Object Bundle for workflow " + workflow.getID());
+        logger.info("Failed to delete Research Object Bundle for workflow {}", workflow.getId());
       }
     }
 
     // Delete cached graphviz images if they exist
-    graphVizService.deleteCache(workflow.getID());
+    graphVizService.deleteCache(workflow.getId());
 
     // Remove the workflow from the database
     workflowRepository.delete(workflow);
 
     // Remove any queued repositories pointing to the workflow
-    queuedWorkflowRepository.deleteByTempRepresentation_RetrievedFrom(workflow.getRetrievedFrom());
+    queuedWorkflowRepository.deleteByRetrievedFrom(workflow.getRetrievedFrom());
   }
 
   /**
@@ -568,7 +558,7 @@ public class WorkflowService {
           // Cache expiry time has elapsed
           // Check current head of the branch with the cached head
           logger.info(
-              "Time has expired for caching, checking commits for workflow " + workflow.getID());
+              "Time has expired for caching, checking commits for workflow {}", workflow.getId());
           String currentHead;
           Git repo = null;
           boolean safeToAccess = gitSemaphore.acquire(workflow.getRetrievedFrom().getRepoUrl());
@@ -580,12 +570,10 @@ public class WorkflowService {
             FileUtils.deleteTemporaryGitRepository(repo);
           }
           logger.info(
-              "Current: "
-                  + workflow.getLastCommit()
-                  + ", HEAD: "
-                  + currentHead
-                  + " for workflow "
-                  + workflow.getID());
+              "Current: {}, HEAD: {} for workflow {}",
+              workflow.getLastCommit(),
+              currentHead,
+              workflow.getId());
 
           // Reset date in database if there are still no changes
           boolean expired = !workflow.getLastCommit().equals(currentHead);
@@ -600,8 +588,8 @@ public class WorkflowService {
       } catch (Exception ex) {
         // Default to no expiry if there was an API error
         logger.error(
-            "API Error when checking for latest commit ID for caching for workflow "
-                + workflow.getID(),
+            "API Error when checking for latest commit ID for caching for workflow {}",
+            workflow.getId(),
             ex);
       }
     }

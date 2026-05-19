@@ -19,8 +19,8 @@
 
 package org.commonwl.view.workflow;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -31,7 +31,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.commonwl.view.cwl.RDFService;
@@ -40,7 +39,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
-import org.springframework.core.io.PathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -50,12 +49,12 @@ public class WorkflowPermalinkControllerTest {
   @TempDir private Path tempDir;
   private MockMvc mockMvc;
   private byte[] rdfResponse;
-  private final PathResource png =
-      new PathResource(Paths.get("src/test/resources/graphviz/testVis.png"));
-  private final PathResource svg =
-      new PathResource(Paths.get("src/test/resources/graphviz/testVis.svg"));
-  private final PathResource dot =
-      new PathResource(Paths.get("src/test/resources/graphviz/testWorkflow.dot"));
+  private final FileSystemResource png =
+      new FileSystemResource("src/test/resources/graphviz/testVis.png");
+  private final FileSystemResource svg =
+      new FileSystemResource("src/test/resources/graphviz/testVis.svg");
+  private final FileSystemResource dot =
+      new FileSystemResource("src/test/resources/graphviz/testWorkflow.dot");
 
   @BeforeEach
   public void setUp() throws Exception {
@@ -67,8 +66,9 @@ public class WorkflowPermalinkControllerTest {
                 "https://github.com/MarkRobbo/workflows.git", "master", "path/to/workflow.cwl"));
 
     WorkflowService mockWorkflowService = Mockito.mock(WorkflowService.class);
+    //noinspection unchecked
     when(mockWorkflowService.findByCommitAndPath(
-            any(String.class), any(String.class), any(Optional.class)))
+            any(String.class), any(String.class), (Optional<String>) any(Optional.class)))
         .thenReturn(mockWorkflow);
 
     when(mockWorkflowService.findRawBaseForCommit(any(String.class)))

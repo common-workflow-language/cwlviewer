@@ -16,24 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.commonwl.view.workflow;
 
-import org.commonwl.view.git.GitDetails;
-import org.springframework.data.repository.query.Param;
+package org.commonwl.view.validation;
 
-public interface QueuedWorkflowRepositoryCustom {
-  /**
-   * Finds a queued workflow based on where it was retrieved from.
-   *
-   * @param retrievedFrom Details of where the queued workflow is from
-   * @return The queued workflow
-   */
-  QueuedWorkflow findByRetrievedFrom(@Param("retrievedFrom") GitDetails retrievedFrom);
+/** Validate Bitbucket repository URLs. */
+@SuppressWarnings("unused")
+public class BitbucketUrlValidator extends AbstractGitValidator {
+  protected String host() {
+    return "bitbucket.org";
+  }
 
-  /**
-   * Deletes a queued workflow based on where it was retrieved from.
-   *
-   * @param retrievedFrom Details of where the queued workflow is from
-   */
-  void deleteByTempRepresentation_RetrievedFrom(GitDetails retrievedFrom);
+  protected String repoBaseUrl(String owner, String repo) {
+    return "https://bitbucket.org/" + owner + "/" + repo + ".git";
+  }
 }

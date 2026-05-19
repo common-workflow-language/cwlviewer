@@ -55,11 +55,11 @@ public class MultipleWorkflowsException extends RuntimeException {
   /**
    * Generate a text/uri-list of potential representations/redirects
    *
-   * @see https://www.iana.org/assignments/media-types/text/uri-list
+   * @see <a href="https://www.iana.org/assignments/media-types/text/uri-list">...</a>
    */
   @Override
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    final StringBuilder sb = new StringBuilder();
     sb.append("## Multiple workflow representations found");
     sb.append(CRLF);
     sb.append("# ");

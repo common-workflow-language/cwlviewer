@@ -25,8 +25,8 @@ import java.io.Writer;
 /** Takes an object and creates a DOT graph of it */
 public abstract class DotWriter {
 
-  protected static final String EOL = System.getProperty("line.separator");
-  private Writer writer;
+  protected static final String EOL = System.lineSeparator();
+  private final Writer writer;
 
   public DotWriter(Writer writer) {
     this.writer = writer;

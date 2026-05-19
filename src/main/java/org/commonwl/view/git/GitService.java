@@ -85,7 +85,7 @@ public class GitService {
         }
       } else {
         // Create a folder and clone repository into it
-        Files.createDirectory(repoDir);
+        Files.createDirectories(repoDir);
         try {
           repo = cloneRepo(gitDetails.getRepoUrl(), repoDir.toFile());
         } catch (CheckoutConflictException ex) {
@@ -161,11 +161,11 @@ public class GitService {
       if (author != null) {
         HashableAgent newAgent = new HashableAgent();
         String name = author.getName();
-        if (name != null && name.length() > 0) {
+        if (name != null && !name.isEmpty()) {
           newAgent.setName(author.getName());
         }
         String email = author.getEmailAddress();
-        if (email != null && email.length() > 0) {
+        if (email != null && !email.isEmpty()) {
           newAgent.setUri(new URI("mailto:" + author.getEmailAddress()));
         }
         fileAuthors.add(newAgent);
@@ -216,7 +216,7 @@ public class GitService {
 
   protected File createTempDir() throws IOException {
     Path repoDir = gitStorage.resolve(String.valueOf(UUID.randomUUID()));
-    Files.createDirectory(repoDir);
+    Files.createDirectories(repoDir);
     return repoDir.toFile();
   }
 }

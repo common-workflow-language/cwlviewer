@@ -1,16 +1,21 @@
 # CWL Viewer
 
-This is a [Spring Boot](http://projects.spring.io/spring-boot/) MVC application which fetches [Common Workflow Language](http://www.commonwl.org/) files from a Github repository and creates a page for it detailing the main workflow and its inputs, outputs and steps.
+This is a [Spring Boot](http://projects.spring.io/spring-boot/) MVC application which fetches [Common Workflow Language](http://www.commonwl.org/) files
+from a GitHub repository and creates a page for it detailing the main workflow and its inputs, outputs and steps.
 
 [![Build Status](https://github.com/common-workflow-language/cwlviewer/workflows/CWL%20Viewer%20Build/badge.svg?branch=main)](https://github.com/common-workflow-language/cwlviewer/actions?query=workflow%3A%22CWL%20Viewer%20Build%22) [![Coverage Status](https://coveralls.io/repos/github/common-workflow-language/cwlviewer/badge.svg)](https://coveralls.io/github/common-workflow-language/cwlviewer) [![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/common-workflow-language/cwlviewer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![](https://images.microbadger.com/badges/image/commonworkflowlanguage/cwlviewer.svg)](https://microbadger.com/images/commonworkflowlanguage/cwlviewer "MicroBadger commonworkflowlanguage/cwlviewer") [![Docker image commonworkflowlanguage/cwlviewer](https://images.microbadger.com/badges/version/commonworkflowlanguage/cwlviewer.svg)](https://hub.docker.com/r/commonworkflowlanguage/cwlviewer/ "Docker Hub commonworkflowlanguage/cwlviewer")
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.823534.svg)](https://doi.org/10.5281/zenodo.823534)
 
 # Using CWL Viewer
 
-You are recommended to use the **production instance** of CWL Viewer at https://view.commonwl.org/ which runs the latest [release](https://github.com/common-workflow-language/cwlviewer/releases). Any downtime should be reported on the [gitter chat for cwlviewer](https://gitter.im/common-workflow-language/cwlviewer).
+You are recommended to use the **production instance** of CWL Viewer at https://view.commonwl.org/ which runs
+the latest [release](https://github.com/common-workflow-language/cwlviewer/releases). Any downtime should be reported on the [gitter chat for cwlviewer](https://gitter.im/common-workflow-language/cwlviewer).
 
-<!--- I don't think this is a thing any more.
-The **dev instance** at http://view.commonwl.org:8082/ corresponds to the current `master` branch, and is updated every 6 minutes to run the latest [commonworkflowlanguage/cwlviewer docker image](https://hub.docker.com/r/commonworkflowlanguage/cwlviewer/builds/). Note that this instance is NOT secured and might break at any time.
+<!--- I don't think this is a thing anymore.
+The **dev instance** at http://view.commonwl.org:8082/ corresponds to the current `master` branch,
+and is updated every 6 minutes to run the latest
+[commonworkflowlanguage/cwlviewer docker image](https://hub.docker.com/r/commonworkflowlanguage/cwlviewer/builds/).
+Note that this instance is NOT secured and might break at any time.
 -->
 
 # Running
@@ -19,7 +24,8 @@ If you are a developer, or you want to use the CWL Viewer in a closed environmen
 
 ## Recommended - Running with Docker
 
-This application can be started with [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/) and Docker Compose is the recommended method of running or developing this codebase.
+This application can be started with [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/) and Docker Compose is the recommended
+method of running or developing this codebase.
 
 Then run the following commands to clone the project in your local system.
 
@@ -134,7 +140,8 @@ To compile you will need [Java 17](https://www.oracle.com/java/technologies/down
 (e.g. [Eclipse Adoptium](https://projects.eclipse.org/projects/adoptium)) and version, as well as
 [Apache Maven 3](https://maven.apache.org/download.cgi) (`apt install maven`).
 
-Spring Boot uses an embedded HTTP server. The Spring Boot Maven plugin includes a run goal which can be used to quickly compile and run it:
+Spring Boot uses an embedded HTTP server. The Spring Boot Maven plugin includes a run goal which can be used to
+quickly compile and run it:
 
 ```
 $ mvn spring-boot:run
@@ -166,9 +173,11 @@ Now check out http://localhost:8080/ to access CWL Viewer.
 
 ## Configuration
 
-There are a variety of configuration options detailed in the [application configuration file](https://github.com/common-workflow-language/cwlviewer/blob/master/src/main/resources/application.properties) which can be adjusted.
+There are a variety of configuration options detailed in the [application configuration file](https://github.com/common-workflow-language/cwlviewer/blob/master/src/main/resources/application.properties) which can
+be adjusted.
 
-When deploying with docker, these can be overridden externally by creating/modifying `docker-compose.override.yml` as follows:
+When deploying with docker, these can be overridden externally by creating/modifying `docker-compose.override.yml`
+as follows:
 
 ```yaml
 version: '3.9'

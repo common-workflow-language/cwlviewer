@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 public class GitSemaphoreTest {
 
   @Test
-  public void basicOperation() throws Exception {
+  public void basicOperation() {
 
     GitSemaphore sem = new GitSemaphore();
     boolean first = sem.acquire("1");

@@ -43,7 +43,7 @@ public class ModelDotWriterTest {
    * generation TODO: This is a pain, can it be made simpler?
    */
   @BeforeEach
-  public void setUp() throws Exception {
+  public void setUp() {
 
     // Inputs
     Map<String, CWLElement> inputs = new HashMap<>();

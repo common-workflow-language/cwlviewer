@@ -17,12 +17,18 @@
  * under the License.
  */
 
-package org.commonwl.view.cwl;
+package org.commonwl.view.validation;
 
-/** Cwltool run status */
-public enum CWLToolStatus {
-  DOWNLOADING,
-  RUNNING,
-  ERROR,
-  SUCCESS
+/** Validate GitHub repository URLs. */
+public class GitHubUrlValidator extends AbstractGitValidator {
+
+  @Override
+  protected String host() {
+    return "github.com";
+  }
+
+  @Override
+  protected String repoBaseUrl(String owner, String repo) {
+    return "https://github.com/" + owner + "/" + repo + ".git";
+  }
 }

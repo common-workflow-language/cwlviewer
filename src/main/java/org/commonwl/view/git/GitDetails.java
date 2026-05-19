@@ -21,8 +21,7 @@ package org.commonwl.view.git;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
@@ -32,6 +31,8 @@ import java.util.Objects;
 import org.commonwl.view.util.LicenseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /** Represents all the parameters necessary to access a file/directory with Git */
 @JsonIgnoreProperties(
@@ -46,8 +47,13 @@ public class GitDetails implements Serializable {
   private String path;
   private String packedId;
 
-  @JsonCreator
-  public GitDetails(String repoUrl, String branch, String path) {
+  public GitDetails() {}
+
+  @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+  public GitDetails(
+      @JsonProperty("repoUrl") String repoUrl,
+      @JsonProperty("branch") String branch,
+      @JsonProperty("path") String path) {
     this.repoUrl = repoUrl;
 
     // Default to the master branch
@@ -66,6 +72,7 @@ public class GitDetails implements Serializable {
     return repoUrl;
   }
 
+  @SuppressWarnings("unused")
   public void setRepoUrl(String repoUrl) {
     this.repoUrl = repoUrl;
   }
@@ -75,7 +82,11 @@ public class GitDetails implements Serializable {
   }
 
   public void setBranch(String branch) {
-    this.branch = branch;
+    if (branch == null || branch.isEmpty()) {
+      this.branch = "master";
+    } else {
+      this.branch = branch;
+    }
   }
 
   public String getPackedId() {
@@ -101,7 +112,7 @@ public class GitDetails implements Serializable {
   }
 
   /**
-   * Get the type of a repository URL this object refers to
+   * Get the type of repository URL this object refers to
    *
    * @return The type for the URL
    */
@@ -169,7 +180,10 @@ public class GitDetails implements Serializable {
    */
   public String getInternalUrl(String branchOverride) {
     String packedPart = packedId == null ? "" : "%23" + packedId;
+
+    // TODO: Maybe this needs encoding to support commas? See issue #782
     String pathPart = path.equals("/") ? "" : "/" + path;
+
     return switch (getType()) {
       case GITHUB, GITLAB ->
           "/workflows/"
@@ -178,6 +192,7 @@ public class GitDetails implements Serializable {
               + branchOverride
               + pathPart
               + packedPart;
+
       default ->
           "/workflows/" + normaliseUrl(repoUrl) + "/" + branchOverride + pathPart + packedPart;
     };
@@ -289,34 +304,31 @@ public class GitDetails implements Serializable {
     try {
       String[] command = {"licensee", "detect", "--json", workTree.toString()};
       if (logger.isTraceEnabled()) {
-        logger.trace("Calling " + String.join(" ", command));
+        logger.trace("Calling {}", String.join(" ", command));
       }
       Process process = Runtime.getRuntime().exec(command, null);
       ObjectMapper mapper = new ObjectMapper();
       JsonNode jsonLicenses = mapper.readTree(process.getInputStream());
       if (logger.isTraceEnabled()) {
         logger.trace(
-            "Licensee retrieved the following licenses:\n" + jsonLicenses.toPrettyString());
+            "Licensee retrieved the following licenses:\n{}", jsonLicenses.toPrettyString());
       }
       int size = jsonLicenses.withArray("licenses").size();
       if (size > 0) {
         String licenseCandidate =
-            jsonLicenses.withArray("matched_files").get(0).get("filename").asText();
+            jsonLicenses.withArray("matched_files").get(0).get("filename").asString();
         String licenseLink = getRawUrl(null, licenseCandidate);
         if (logger.isWarnEnabled() && size > 1) {
           logger.warn(
-              "There are "
-                  + size
-                  + " identified license files in the "
-                  + repoUrl
-                  + " repository. "
-                  + "Taking the first one: "
-                  + licenseLink);
+              "There are {} identified license files in the {} repository. Taking the first one: {}",
+              size,
+              repoUrl,
+              licenseLink);
         }
-        String key = jsonLicenses.withArray("licenses").get(0).get("key").asText();
+        String key = jsonLicenses.withArray("licenses").get(0).get("key").asString();
         if (!"other".equals(key)) {
           return LicenseUtils.SPDX_LICENSES_PREFIX
-              + jsonLicenses.withArray("licenses").get(0).get("spdx_id").asText();
+              + jsonLicenses.withArray("licenses").get(0).get("spdx_id").asString();
         } else {
           return licenseLink;
         }

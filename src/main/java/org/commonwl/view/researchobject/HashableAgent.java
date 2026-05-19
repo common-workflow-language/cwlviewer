@@ -20,6 +20,7 @@
 package org.commonwl.view.researchobject;
 
 import java.net.URI;
+import java.util.Objects;
 import org.apache.taverna.robundle.manifest.Agent;
 
 /** An implementation of Agent with added HashCode and Equals methods for use in sets */
@@ -70,7 +71,7 @@ public class HashableAgent extends Agent {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (o == null || getClass() != o.getClass() || super.getClass() != o.getClass()) return false;
+    if (o == null || getClass() != o.getClass()) return false;
 
     HashableAgent that = (HashableAgent) o;
 
@@ -81,9 +82,9 @@ public class HashableAgent extends Agent {
     if (orcid == null && uri != null && uri.equals(that.uri)) return true;
 
     // Default to checking all parameters
-    if (orcid != null ? !orcid.equals(that.orcid) : that.orcid != null) return false;
-    if (name != null ? !name.equals(that.name) : that.name != null) return false;
-    return uri != null ? uri.equals(that.uri) : that.uri == null;
+    if (!Objects.equals(orcid, that.orcid)) return false;
+    if (!Objects.equals(name, that.name)) return false;
+    return Objects.equals(uri, that.uri);
   }
 
   /**

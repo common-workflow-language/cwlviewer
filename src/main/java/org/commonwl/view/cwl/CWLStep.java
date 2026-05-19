@@ -20,11 +20,12 @@
 package org.commonwl.view.cwl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.io.Serializable;
 import java.util.Map;
 
 /** Represents a step of a workflow */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class CWLStep {
+public class CWLStep implements Serializable {
 
   private String label;
   private String doc;

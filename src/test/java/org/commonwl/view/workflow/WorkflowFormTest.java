@@ -27,7 +27,7 @@ public class WorkflowFormTest {
 
   /** Test for the form stripping unnecessary trailing slashes from directory URLs */
   @Test
-  public void getURL() throws Exception {
+  public void getURL() {
 
     String unchangedURL =
         "https://github.com/common-workflow-language/workflows/tree/master/workflows/compile";

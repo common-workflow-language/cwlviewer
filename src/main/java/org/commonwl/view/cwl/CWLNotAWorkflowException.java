@@ -20,6 +20,7 @@
 package org.commonwl.view.cwl;
 
 /** Exception thrown when the provided CWL document is not a Workflow. */
+@SuppressWarnings("unused")
 public class CWLNotAWorkflowException extends CWLValidationException {
 
   public CWLNotAWorkflowException(String message) {

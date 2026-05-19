@@ -79,7 +79,8 @@ public class WorkflowForm {
     return packedId;
   }
 
-  public void setPackedId(String packedId) {
+  @SuppressWarnings("unused")
+  public void getGitDetailsSetPackedId(String packedId) {
     this.packedId = packedId;
   }
 
@@ -90,7 +91,11 @@ public class WorkflowForm {
    * @return The same string without trailing slashes
    */
   private String trimTrailingSlashes(String url) {
-    return url.replaceAll("\\/+$", "");
+    int end = url.length();
+    while (end > 0 && url.charAt(end - 1) == '/') {
+      end--;
+    }
+    return url.substring(0, end);
   }
 
   @Override

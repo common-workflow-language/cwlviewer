@@ -62,8 +62,8 @@ public class ROBundleFactory {
    * @throws IOException Any API errors which may have occurred
    */
   @Async
-  public void createWorkflowRO(Workflow workflow) throws IOException, InterruptedException {
-    logger.info("Creating Research Object Bundle for workflow " + workflow.getID());
+  public void createWorkflowRO(Workflow workflow) throws IOException {
+    logger.info("Creating Research Object Bundle for workflow " + workflow.getId());
 
     // Get the whole containing folder, not just the workflow itself
     GitDetails githubInfo = workflow.getRetrievedFrom();
@@ -91,6 +91,6 @@ public class ROBundleFactory {
     // Add RO Bundle to associated workflow model
     workflow.setRoBundlePath(bundleLocation.toString());
     workflowRepository.save(workflow);
-    logger.info("Finished saving Research Object Bundle for workflow " + workflow.getID());
+    logger.info("Finished saving Research Object Bundle for workflow " + workflow.getId());
   }
 }
