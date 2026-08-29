@@ -1,0 +1,27 @@
+name: Docker Image Build
+
+on:
+  workflow_run:
+    workflows: ["CWL Viewer Build"]
+    branches: [main]
+    types:
+      - completed
+
+jobs:
+  build-image:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Docker Image Build and Push
+        run: |
+          DATE=$(date +%s)
+          GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
+          VERSION= ${GIT_HASH}-${DATE}
+          docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          docker build . --file Dockerfile --tag ${{ secrets.DOCKER_HUB_USERNAME }}/cwlviewer:${VERSION}
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/cwlviewer:${VERSION}
